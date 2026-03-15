@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Project 90 — Conquistas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/components.css">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/components.css">
+<style>
+
+/* ── MAIN ── */
+.con-main { padding: 32px 36px; overflow-y: auto; display: flex; flex-direction: column; gap: 32px; }
+
+.topbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+.page-title { font-family: 'DM Serif Display', serif; font-size: 26px; font-weight: 400; display: flex; align-items: baseline; gap: 10px; }
+.page-title em { font-style: italic; opacity: 0.45; font-size: 22px; }
+
+/* ── STAT CARDS ── */
+.g4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+.stat-card { background: var(--surface); border: 1px solid var(--border); padding: 20px 22px; }
+.stat-lbl { font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--mid); margin-bottom: 8px; }
+.stat-val { font-family: 'Bebas Neue', sans-serif; font-size: 44px; line-height: 1; }
+.stat-sub { font-size: 10px; letter-spacing: 0.1em; color: var(--mid); margin-top: 6px; }
+.stat-delta { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; letter-spacing: 0.1em; margin-top: 6px; }
+.stat-delta.up { color: #86efac; }
+
+/* ── OVERALL PROGRESS BANNER ── */
+.progress-banner {
+  background: var(--surface); border: 1px solid var(--border);
+  padding: 24px 28px;
+  display: grid; grid-template-columns: 1fr auto; gap: 24px; align-items: center;
+}
+.pb-left {}
+.pb-title { font-family: 'DM Serif Display', serif; font-size: 18px; font-weight: 400; margin-bottom: 6px; }
+.pb-title em { font-style: italic; opacity: 0.4; }
+.pb-sub { font-size: 10px; letter-spacing: 0.1em; color: var(--mid); margin-bottom: 16px; }
+.pb-bar-bg { height: 2px; background: var(--muted); }
+.pb-bar-fill { height: 100%; background: var(--white); transition: width 1.2s cubic-bezier(0.16,1,0.3,1); }
+.pb-markers { display: flex; justify-content: space-between; margin-top: 8px; }
+.pb-marker { font-size: 9px; letter-spacing: 0.1em; color: var(--mid); }
+.pb-marker.reached { color: var(--white); }
+.pb-right { text-align: right; }
+.pb-big { font-family: 'Bebas Neue', sans-serif; font-size: 64px; line-height: 0.9; }
+.pb-big-sub { font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--mid); margin-top: 6px; }
+
+/* ── CATEGORY SECTION ── */
+.cat-section { display: flex; flex-direction: column; gap: 16px; }
+.cat-header {
+  display: flex; align-items: center; gap: 14px;
+  padding-bottom: 12px; border-bottom: 1px solid var(--border);
+}
+.cat-icon { font-size: 15px; }
+.cat-name { font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--mid); flex: 1; }
+.cat-count { font-size: 10px; letter-spacing: 0.1em; color: var(--mid); }
+.cat-count span { color: var(--white); }
+
+/* ── ACHIEVEMENT GRID ── */
+.ach-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+
+/* ── ACHIEVEMENT CARD ── */
+.ach-card {
+  background: var(--surface); border: 1px solid var(--border);
+  padding: 20px 18px 18px;
+  display: flex; flex-direction: column; gap: 12px;
+  position: relative; overflow: hidden;
+  transition: border-color 0.25s, background 0.25s;
+  cursor: default;
+}
+.ach-card:hover { border-color: var(--border2); }
+.ach-card.unlocked {
+  border-color: rgba(245,245,240,0.22);
+}
+.ach-card.unlocked:hover { border-color: rgba(245,245,240,0.38); }
+
+/* ghost number watermark */
+.ach-ghost {
+  position: absolute; bottom: -8px; right: 6px;
+  font-family: 'Bebas Neue', sans-serif; font-size: 56px; line-height: 1;
+  color: rgba(245,245,240,0.03); pointer-events: none; user-select: none;
+  transition: color 0.3s;
+}
+.ach-card.unlocked .ach-ghost { color: rgba(245,245,240,0.06); }
+
+/* icon */
+.ach-icon-wrap {
+  width: 40px; height: 40px; border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; transition: border-color 0.25s;
+  filter: grayscale(1); opacity: 0.3;
+  position: relative; flex-shrink: 0;
+}
+.ach-card.unlocked .ach-icon-wrap {
+  filter: none; opacity: 1; border-color: rgba(245,245,240,0.25);
+}
+
+/* unlocked shimmer sweep */
+.ach-card.unlocked .ach-icon-wrap::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(105deg, transparent 40%, rgba(245,245,240,0.12) 50%, transparent 60%);
+  background-size: 200% 100%;
+  animation: shimmer 3s ease-in-out infinite;
+}
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* text */
+.ach-body { flex: 1; }
+.ach-name { font-size: 11px; letter-spacing: 0.06em; color: var(--mid); line-height: 1.4; margin-bottom: 4px; }
+.ach-card.unlocked .ach-name { color: var(--white); }
+.ach-desc { font-size: 10px; letter-spacing: 0.04em; color: var(--mid); line-height: 1.6; opacity: 0.7; }
+
+/* progress bar at bottom */
+.ach-prog-wrap { }
+.ach-prog-top {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 5px;
+}
+.ach-prog-req { font-size: 9px; letter-spacing: 0.1em; color: var(--mid); }
+.ach-prog-pct { font-size: 9px; letter-spacing: 0.1em; color: var(--mid); }
+.ach-prog-pct.done { color: #86efac; }
+.ach-prog-bg { height: 1px; background: var(--muted); }
+.ach-prog-fill { height: 100%; background: var(--white); transition: width 1s cubic-bezier(0.16,1,0.3,1); }
+.ach-card.unlocked .ach-prog-fill { background: #86efac; }
+
+/* unlocked badge */
+.ach-badge {
+  position: absolute; top: 12px; right: 12px;
+  font-size: 8px; letter-spacing: 0.14em; text-transform: uppercase;
+  padding: 2px 7px; border: 1px solid rgba(134,239,172,0.3);
+  color: #86efac; background: rgba(134,239,172,0.07);
+  opacity: 0; transition: opacity 0.3s;
+}
+.ach-card.unlocked .ach-badge { opacity: 1; }
+
+/* locked overlay text */
+.ach-locked-lbl {
+  font-size: 8px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted);
+}
+.ach-card.unlocked .ach-locked-lbl { display: none; }
+
+/* ── NEXT UP BANNER ── */
+.next-up {
+  background: var(--surface); border: 1px solid var(--border2);
+  padding: 20px 24px;
+  display: flex; align-items: center; gap: 20px;
+}
+.nu-icon { font-size: 24px; flex-shrink: 0; }
+.nu-body { flex: 1; }
+.nu-lbl { font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--mid); margin-bottom: 4px; }
+.nu-name { font-size: 14px; letter-spacing: 0.04em; margin-bottom: 8px; }
+.nu-bar-bg { height: 2px; background: var(--muted); }
+.nu-bar-fill { height: 100%; background: var(--white); transition: width 1s cubic-bezier(0.16,1,0.3,1); }
+.nu-meta { display: flex; justify-content: space-between; margin-top: 6px; font-size: 9px; letter-spacing: 0.1em; color: var(--mid); }
+.nu-right { text-align: right; flex-shrink: 0; }
+.nu-pct { font-family: 'Bebas Neue', sans-serif; font-size: 32px; line-height: 1; }
+.nu-sub { font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--mid); margin-top: 2px; }
+
+/* ── UNLOCK ANIMATION OVERLAY ── */
+.unlock-overlay {
+  position: fixed; inset: 0; z-index: 500;
+  background: rgba(8,8,8,0.92);
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.4s;
+}
+.unlock-overlay.show { opacity: 1; pointer-events: all; }
+.unlock-modal {
+  text-align: center; padding: 56px 64px;
+  border: 1px solid rgba(245,245,240,0.2);
+  background: var(--surface);
+  transform: scale(0.92);
+  transition: transform 0.4s cubic-bezier(0.16,1,0.3,1);
+  max-width: 380px; width: 100%;
+}
+.unlock-overlay.show .unlock-modal { transform: scale(1); }
+.unlock-icon { font-size: 52px; display: block; margin-bottom: 20px; animation: popIn 0.5s cubic-bezier(0.16,1,0.3,1) 0.2s both; }
+@keyframes popIn { from { transform: scale(0.4); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.unlock-eyebrow { font-size: 9px; letter-spacing: 0.3em; text-transform: uppercase; color: #86efac; margin-bottom: 10px; }
+.unlock-title { font-family: 'DM Serif Display', serif; font-size: 26px; font-weight: 400; margin-bottom: 8px; }
+.unlock-title em { font-style: italic; opacity: 0.5; }
+.unlock-desc { font-size: 12px; letter-spacing: 0.04em; color: var(--mid); line-height: 1.7; margin-bottom: 32px; }
+.unlock-close {
+  padding: 11px 32px; background: var(--white); color: var(--bg);
+  border: none; font-family: 'DM Mono', monospace; font-size: 11px;
+  letter-spacing: 0.16em; text-transform: uppercase; cursor: pointer;
+  transition: opacity 0.2s;
+}
+.unlock-close:hover { opacity: 0.85; }
+.unlock-points {
+  font-family: 'Bebas Neue', sans-serif; font-size: 28px; line-height: 1;
+  color: #86efac; margin-bottom: 24px; letter-spacing: 0.06em;
+}
+.unlock-queue {
+  margin-top: 16px; font-size: 9px; letter-spacing: 0.2em;
+  text-transform: uppercase; color: var(--mid); min-height: 14px;
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 1100px) { .ach-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 900px) {
+  body { overflow: auto; }
+  .app { grid-template-columns: 1fr; }
+  .sidebar { display: none; }
+  .con-main { padding: 20px; }
+  .g4 { grid-template-columns: 1fr 1fr; }
+  .ach-grid { grid-template-columns: 1fr 1fr; }
+  .progress-banner { grid-template-columns: 1fr; }
+  .pb-right { text-align: left; }
+}
+@media (max-width: 520px) {
+  .g4 { grid-template-columns: 1fr; }
+  .ach-grid { grid-template-columns: 1fr; }
+}
+
+/* ── APP Z-INDEX ── */
+.app,.dia-main { position: relative; z-index: 1; }
+</style>
+</head>
+<body>
+
+<div id="cur"></div>
+<div id="cur-ring"></div>
+<div id="tip" class="tip"></div>
+
+<!-- UNLOCK OVERLAY -->
+<div class="unlock-overlay" id="unlock-overlay">
+  <div class="unlock-modal">
+    <span class="unlock-icon" id="ul-icon">🏆</span>
+    <div class="unlock-eyebrow">Conquista desbloqueada</div>
+    <div class="unlock-title" id="ul-title">Nome <em>aqui.</em></div>
+    <div class="unlock-desc" id="ul-desc">Descrição da conquista.</div>
+    <div class="unlock-points" id="ul-points">+0 pts</div>
+    <button class="unlock-close" onclick="closeUnlock()" id="ul-btn">Continuar →</button>
+    <div class="unlock-queue" id="ul-queue"></div>
+  </div>
+</div>
+
+<div class="app">
+
+  <!-- ══ SIDEBAR ══ -->
+  <aside class="sidebar">
+    <div class="sb-logo">
+      <a href="index.html" class="sb-logomark">Project 90</a>
+      <div class="sb-logosub">Transformação pessoal</div>
+    </div>
+
+    <div class="sb-day">
+      <div class="sb-daynum">34</div>
+      <div class="sb-daylbl">de 90 dias</div>
+      <div style="display:flex;justify-content:space-between;font-size:10px;letter-spacing:0.1em;color:var(--mid);margin-top:10px">
+        <span>Progresso</span><span>38%</span>
+      </div>
+      <div class="sb-prog-bar-bg"><div class="sb-prog-bar-fill" id="sb-fill" style="width:0%"></div></div>
+      <div class="sb-prog-meta"><span>56 restantes</span><span>38%</span></div>
+    </div>
+
+    <nav class="sb-nav">
+      <a class="sb-item" href="dashboard.html"><span class="sb-item-icon">◈</span> Dashboard</a>
+      <a class="sb-item" href="habitos.html"><span class="sb-item-icon">◉</span> Hábitos</a>
+      <a class="sb-item" href="metricas.html"><span class="sb-item-icon">△</span> Métricas</a>
+      <a class="sb-item" href="diario.html"><span class="sb-item-icon">◻</span> Diário</a>
+      <a class="sb-item active" href="conquistas.html"><span class="sb-item-icon">◆</span> Conquistas</a>
+    </nav>
+
+    <div class="sb-bottom">
+      <div class="sb-streak">
+        <span class="sb-streak-icon">🔥</span>
+        <div>
+          <div class="sb-streak-val">28</div>
+          <div class="sb-streak-lbl">Dias seguidos</div>
+        </div>
+      </div>
+      <a href="login.html" class="sb-logout">← Sair</a>
+    </div>
+  </aside>
+
+  <!-- ══ MAIN ══ -->
+  <main class="con-main">
+
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <div class="page-title">Conquistas <em id="unlocked-count">4 / 20</em></div>
+    </div>
+
+    <!-- STAT CARDS -->
+    <div class="g4">
+      <div class="stat-card">
+        <div class="stat-lbl">Desbloqueadas</div>
+        <div class="stat-val" id="sc-unlocked">4</div>
+        <div class="stat-sub">de 20 conquistas</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-lbl">Pontos totais</div>
+        <div class="stat-val" id="sc-points">850</div>
+        <div class="stat-delta up">↑ +150 esta semana</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-lbl">Mais próxima</div>
+        <div class="stat-val" id="sc-next-pct">74%</div>
+        <div class="stat-sub" id="sc-next-name">Madrugador</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-lbl">Nível</div>
+        <div class="stat-val">02</div>
+        <div class="stat-sub">Disciplinado</div>
+      </div>
+    </div>
+
+    <!-- OVERALL PROGRESS BANNER -->
+    <div class="progress-banner">
+      <div class="pb-left">
+        <div class="pb-title">Jornada do <em>desafio.</em></div>
+        <div class="pb-sub">Dia 34 de 90 — cada dia completo conta.</div>
+        <div class="pb-bar-bg">
+          <div class="pb-bar-fill" id="pb-fill" style="width:0%"></div>
+        </div>
+        <div class="pb-markers">
+          <span class="pb-marker reached">Dia 1</span>
+          <span class="pb-marker reached">Dia 7</span>
+          <span class="pb-marker reached">Dia 14</span>
+          <span class="pb-marker reached">Dia 21</span>
+          <span class="pb-marker reached">Dia 28</span>
+          <span class="pb-marker reached">Dia 34</span>
+          <span class="pb-marker">Dia 45</span>
+          <span class="pb-marker">Dia 60</span>
+          <span class="pb-marker">Dia 75</span>
+          <span class="pb-marker">Dia 90</span>
+        </div>
+      </div>
+      <div class="pb-right">
+        <div class="pb-big">38%</div>
+        <div class="pb-big-sub">do desafio</div>
+      </div>
+    </div>
+
+    <!-- NEXT UP -->
+    <div id="next-up-wrap"></div>
+
+    <!-- ACHIEVEMENT CATEGORIES -->
+    <div id="categories-wrap"></div>
+
+  </main>
+</div>
+
+<script>
+/* ════════════════════════════════════
+   CURSOR
+════════════════════════════════════ */
+(function() {
+  const cur  = document.getElementById('cur');
+  const ring = document.getElementById('cur-ring');
+  let mx=0,my=0,rx=0,ry=0;
+  document.addEventListener('mousemove', e => {
+    mx=e.clientX; my=e.clientY;
+    cur.style.transform=`translate(${mx-3}px,${my-3}px)`;
+  });
+  (function tick(){
+    rx+=(mx-rx-15)*0.1; ry+=(my-ry-15)*0.1;
+    ring.style.transform=`translate(${rx}px,${ry}px)`;
+    requestAnimationFrame(tick);
+  })();
+})();
+
+/* ════════════════════════════════════
+   TOOLTIP
+════════════════════════════════════ */
+const tip = document.getElementById('tip');
+let tipOn = false;
+function showTip(e, html) {
+  tip.innerHTML = html; tip.classList.add('on'); tipOn = true;
+  tip.style.left=(e.clientX+14)+'px'; tip.style.top=(e.clientY-28)+'px';
+}
+function hideTip() { tip.classList.remove('on'); tipOn = false; }
+document.addEventListener('mousemove', e => {
+  if (tipOn) { tip.style.left=(e.clientX+14)+'px'; tip.style.top=(e.clientY-28)+'px'; }
+});
+
+/* ════════════════════════════════════
+   CONSTANTS
+════════════════════════════════════ */
+const DAY  = 34;
+const DAYS = 90;
+
+/* ════════════════════════════════════
+   ACHIEVEMENT DEFINITIONS
+   current/unlocked são calculados em
+   runtime — não ficam hardcoded aqui
+════════════════════════════════════ */
+const categories = [
+  {
+    id: 'jornada', name: 'Jornada', icon: '◈',
+    achievements: [
+      { id:'day1',    icon:'🌱', name:'Primeiro passo',    points:50,   target:1,  req:'Completar o dia 1',       desc:'Você iniciou o desafio. A jornada começa com um único dia.' },
+      { id:'week1',   icon:'🔥', name:'Primeira semana',   points:100,  target:7,  req:'7 dias seguidos',         desc:'7 dias consecutivos. O início é sempre o mais difícil.' },
+      { id:'week2',   icon:'⚡', name:'Quinzena sólida',   points:150,  target:15, req:'15 dias seguidos',        desc:'Duas semanas sem quebrar. O hábito começa a se formar.' },
+      { id:'day30',   icon:'💎', name:'Um mês inteiro',    points:250,  target:30, req:'30 dias seguidos',        desc:'30 dias consecutivos. Você está no 1% dos que chegam aqui.' },
+      { id:'halfway', icon:'🌗', name:'Metade do caminho', points:300,  target:45, req:'45 dias completos',       desc:'45 dias completos. A reta final começa a aparecer.' },
+      { id:'day60',   icon:'🌕', name:'Dois terços',       points:400,  target:60, req:'60 dias seguidos',        desc:'60 dias. O comportamento já está instalado.' },
+      { id:'day90',   icon:'🏆', name:'Project Complete',  points:1000, target:90, req:'90 dias completos',       desc:'90 dias. Você não completou apenas um desafio — tornou-se outra pessoa.' },
+    ],
+  },
+  {
+    id: 'habitos', name: 'Hábitos', icon: '◉',
+    achievements: [
+      { id:'perfect_week', icon:'🎯', name:'Semana perfeita',    points:150, target:7,   req:'7 dias 100%',          desc:'Todos os hábitos concluídos por 7 dias seguidos.' },
+      { id:'early_bird',   icon:'🌅', name:'Madrugador',         points:200, target:25,  req:'25 vezes às 6h',       desc:'Acordou às 6h por 25 dias dentro do desafio.' },
+      { id:'athlete',      icon:'🏋️', name:'Atleta',            points:200, target:20,  req:'20 treinos',           desc:'20 treinos completados dentro do desafio.' },
+      { id:'no_scroll',    icon:'📵', name:'Desintoxicado',      points:250, target:30,  req:'30 dias sem redes',    desc:'Sem redes sociais por 30 dias seguidos.' },
+      { id:'reader',       icon:'📚', name:'Leitor voraz',       points:200, target:21,  req:'21 sessões de leitura',desc:'21 sessões de leitura completadas.' },
+      { id:'zen',          icon:'🧘', name:'Mente zen',          points:150, target:21,  req:'21 meditações',        desc:'21 sessões de meditação completadas.' },
+    ],
+  },
+  {
+    id: 'diario', name: 'Diário', icon: '◻',
+    achievements: [
+      { id:'first_entry', icon:'✍️', name:'Primeira reflexão',    points:50,  target:1,  req:'1 entrada no diário',     desc:'Escreveu a primeira entrada no diário.' },
+      { id:'journal7',    icon:'📓', name:'Uma semana escrita',   points:150, target:7,  req:'7 entradas seguidas',     desc:'7 entradas consecutivas no diário de reflexão.' },
+      { id:'journal30',   icon:'📔', name:'Cronista do desafio',  points:350, target:30, req:'30 entradas',             desc:'Registrou 30 dias no diário. Isso é um tesouro.' },
+    ],
+  },
+  {
+    id: 'especial', name: 'Especial', icon: '◆',
+    achievements: [
+      { id:'comeback',   icon:'🔄', name:'Volta por cima',       points:100, target:1,  req:'Retomar após uma falha',  desc:'Falhou um dia e voltou no seguinte sem desistir.' },
+      { id:'discipline', icon:'🗿', name:'Disciplina de ferro',  points:400, target:14, req:'14 dias perfeitos',       desc:'14 dias consecutivos com todos os hábitos 100%.' },
+      { id:'all5',       icon:'⭐', name:'Mestre dos hábitos',   points:300, target:7,  req:'7x todos os hábitos',     desc:'Todos os hábitos concluídos no mesmo dia, 7 vezes.' },
+    ],
+  },
+];
+
+/* ════════════════════════════════════
+   LOAD / SAVE — FONTES DE DADOS
+════════════════════════════════════ */
+
+// Hábitos salvos por habitos.html
+
+
+// Diário salvo por diario.html
+
+
+// Estado de conquistas já desbloqueadas (persiste entre visitas)
+
+
+/* ════════════════════════════════════
+   LOAD / SAVE — FONTES DE DADOS
+════════════════════════════════════ */
+
+// Hábitos salvos por habitos.html
+function loadHabits() {
+  try { const r = localStorage.getItem('p90_habits'); if (r) return JSON.parse(r); } catch(e) {}
+  const base = [
+    { id:1, name:'Acordar às 6h',     createdDay:1, paused:false,
+      history:['done','done','done','done','done','done','done','done','done','done','done','done','done','done','done','done','done','done','done','done','done','done','done','done','done','done','done','done','done','done','done','done','done','done'] },
+    { id:2, name:'Exercício 30min',   createdDay:1, paused:false,
+      history:['done','done','partial','done','done','done','done','miss','done','done','done','done','done','done','done','done','done','done','done','miss','done','done','done','done','done','done','done','done','done','done','partial','done','done','done'] },
+    { id:3, name:'Sem redes sociais', createdDay:1, paused:false,
+      history:['done','done','done','partial','miss','done','done','done','done','done','done','done','partial','done','done','done','done','done','done','done','done','done','done','miss','done','done','done','done','done','done','done','done','done','done'] },
+    { id:4, name:'Leitura 20min',     createdDay:1, paused:false,
+      history:['done','miss','done','done','done','done','done','miss','done','done','partial','done','done','done','done','done','miss','done','done','done','done','miss','miss','done','done','done','done','miss','done','done','done','done','done','miss'] },
+    { id:5, name:'Meditação',         createdDay:1, paused:false,
+      history:['done','done','done','done','done','miss','done','done','partial','done','done','done','done','miss','done','done','done','done','miss','done','done','done','done','done','miss','done','done','miss','done','done','done','done','done','done'] },
+  ];
+  return base;
+}
+
+// Diário salvo por diario.html
+function loadJournal() {
+  try { const r = localStorage.getItem('p90_journal'); if (r) return JSON.parse(r); } catch(e) {}
+  return { 1:{}, 7:{}, 14:{}, 21:{}, 28:{} };
+}
+
+// Estado de conquistas
+function loadAchievementsState() {
+  try { const r = localStorage.getItem('p90_achievements'); if (r) return JSON.parse(r); } catch(e) {}
+  return {};
+}
+
+function saveAchievementsState(state) {
+  localStorage.setItem('p90_achievements', JSON.stringify(state));
+}
+
+/* ════════════════════════════════════
+   COMPUTE PROGRESS
+   Calcula o valor atual de cada conquista
+   direto dos dados reais do localStorage
+════════════════════════════════════ */
+function computeProgress(habits, journal) {
+  const active = habits.filter(h => !h.paused);
+
+  function habitVal(h, dayIdx) {
+    const s = h.history[dayIdx];
+    return s === 'done' ? 1 : s === 'partial' ? 0.5 : 0;
+  }
+  function maxStreak(totalDays, condFn) {
+    let best = 0, cur = 0;
+    for (let i = 0; i < totalDays; i++) {
+      if (condFn(i)) { cur++; best = Math.max(best, cur); } else cur = 0;
+    }
+    return best;
+  }
+  function countDays(totalDays, condFn) {
+    let n = 0;
+    for (let i = 0; i < totalDays; i++) if (condFn(i)) n++;
+    return n;
+  }
+  function allDone(dayIdx) {
+    return active.length > 0 && active.every(h => {
+      if (h.createdDay - 1 > dayIdx) return true;
+      return habitVal(h, dayIdx) === 1;
+    });
+  }
+  function hasComeback() {
+    for (const h of active)
+      for (let i = 1; i < h.history.length; i++)
+        if (habitVal(h, i-1) === 0 && habitVal(h, i) === 1) return 1;
+    return 0;
+  }
+  function streakForHabit(name) {
+    const h = active.find(x => x.name === name);
+    if (!h) return 0;
+    return maxStreak(h.history.length, i => habitVal(h, i) === 1);
+  }
+  function countForHabit(name) {
+    const h = active.find(x => x.name === name);
+    if (!h) return 0;
+    return h.history.filter(s => s === 'done').length;
+  }
+
+  const perfStreak   = maxStreak(DAY, allDone);
+  const daysActive   = countDays(DAY, i => active.some(h => habitVal(h, i) > 0));
+  const allDoneCount = countDays(DAY, allDone);
+  const journalEntries = Object.keys(journal).length;
+  const journalStreak = (function() {
+    let best = 0, cur = 0;
+    for (let d = 1; d <= DAY; d++) {
+      if (journal[d]) { cur++; best = Math.max(best, cur); } else cur = 0;
+    }
+    return best;
+  })();
+
+  return {
+    day1:         Math.min(1, daysActive),
+    week1:        maxStreak(DAY, i => active.some(h => habitVal(h, i) > 0)),
+    week2:        maxStreak(DAY, i => active.some(h => habitVal(h, i) > 0)),
+    day30:        maxStreak(DAY, i => active.some(h => habitVal(h, i) > 0)),
+    halfway:      daysActive,
+    day60:        maxStreak(DAY, i => active.some(h => habitVal(h, i) > 0)),
+    day90:        maxStreak(DAY, i => active.some(h => habitVal(h, i) > 0)),
+    perfect_week: perfStreak,
+    early_bird:   countForHabit('Acordar às 6h'),
+    athlete:      countForHabit('Exercício 30min'),
+    no_scroll:    streakForHabit('Sem redes sociais'),
+    reader:       countForHabit('Leitura 20min'),
+    zen:          countForHabit('Meditação'),
+    first_entry:  Math.min(1, journalEntries),
+    journal7:     journalStreak,
+    journal30:    journalEntries,
+    comeback:     hasComeback(),
+    discipline:   perfStreak,
+    all5:         allDoneCount,
+  };
+}
+
+/* ════════════════════════════════════
+   CHECK NEW UNLOCKS
+   Compara progresso com estado salvo,
+   retorna lista de conquistas recém-atingidas
+════════════════════════════════════ */
+function checkNewUnlocks(progress, savedState) {
+  const all    = categories.flatMap(c => c.achievements);
+  const newOnes = [];
+
+  all.forEach(a => {
+    const cur = progress[a.id] ?? 0;
+    const wasUnlocked = !!savedState[a.id];
+    const isUnlocked  = cur >= a.target;
+
+    if (isUnlocked && !wasUnlocked) {
+      newOnes.push(a);
+    }
+  });
+
+  return newOnes;
+}
+
+/* ════════════════════════════════════
+   ENRICH CATEGORIES
+   Injeta current + unlocked + unlockedDay
+   nas definições, vindos do progresso real
+════════════════════════════════════ */
+function enrichCategories(progress, savedState) {
+  categories.forEach(cat => {
+    cat.achievements.forEach(a => {
+      a.current    = progress[a.id] ?? 0;
+      a.unlocked   = a.current >= a.target;
+      a.unlockedDay = savedState[a.id]?.unlockedDay ?? null;
+    });
+  });
+}
+
+/* ════════════════════════════════════
+   UNLOCK MODAL — fila sequencial
+════════════════════════════════════ */
+let unlockQueue = [];
+let showingUnlock = false;
+
+function queueUnlocks(newAchs) {
+  unlockQueue.push(...newAchs);
+  if (!showingUnlock) showNextUnlock();
+}
+
+function showNextUnlock() {
+  if (unlockQueue.length === 0) { showingUnlock = false; return; }
+  showingUnlock = true;
+  const a = unlockQueue.shift();
+  showUnlockModal(a);
+}
+
+function showUnlockModal(a) {
+  document.getElementById('ul-icon').textContent   = a.icon;
+  document.getElementById('ul-title').innerHTML    = `${a.name} <em>desbloqueada.</em>`;
+  document.getElementById('ul-desc').textContent   = a.desc;
+  document.getElementById('ul-points').textContent = `+${a.points} pts`;
+  document.getElementById('ul-points').style.color = '#86efac';
+  document.getElementById('ul-btn').textContent    = unlockQueue.length > 0 ? `Próxima →` : 'Continuar →';
+  document.getElementById('ul-queue').textContent  =
+    unlockQueue.length > 0 ? `mais ${unlockQueue.length} conquista${unlockQueue.length > 1 ? 's' : ''}` : '';
+  document.getElementById('unlock-overlay').classList.add('show');
+}
+
+function closeUnlock() {
+  document.getElementById('unlock-overlay').classList.remove('show');
+  // pequeno delay antes de mostrar a próxima
+  setTimeout(showNextUnlock, 320);
+}
+
+/* ════════════════════════════════════
+   INIT
+════════════════════════════════════ */
+function init() {
+  setTimeout(() => { document.getElementById('sb-fill').style.width = '38%'; }, 400);
+  setTimeout(() => { document.getElementById('pb-fill').style.width = (DAY/DAYS*100).toFixed(1)+'%'; }, 500);
+
+  // 1. carregar dados reais
+  const habits     = loadHabits();
+  const journal    = loadJournal();
+  const savedState = loadAchievementsState();
+
+  // 2. calcular progresso real
+  const progress = computeProgress(habits, journal);
+
+  // 3. detectar novas conquistas
+  const newUnlocks = checkNewUnlocks(progress, savedState);
+
+  // 4. persistir estado atualizado
+  if (newUnlocks.length > 0) {
+    newUnlocks.forEach(a => {
+      savedState[a.id] = { unlockedDay: DAY, seenModal: false };
+    });
+    saveAchievementsState(savedState);
+  }
+
+  // 5. enriquecer definições com dados reais
+  enrichCategories(progress, savedState);
+
+  // 6. renderizar UI
+  renderStats();
+  renderNextUp();
+  renderCategories();
+
+  // 7. disparar modais de novas conquistas
+  if (newUnlocks.length > 0) {
+    setTimeout(() => queueUnlocks(newUnlocks), 800);
+  }
+}
+
+/* ════════════════════════════════════
+   STATS
+════════════════════════════════════ */
+function renderStats() {
+  const all     = categories.flatMap(c => c.achievements);
+  const unlocked = all.filter(a => a.unlocked);
+  const points   = unlocked.reduce((s,a) => s + a.points, 0);
+
+  document.getElementById('sc-unlocked').textContent  = unlocked.length;
+  document.getElementById('sc-points').textContent    = points;
+  document.getElementById('unlocked-count').textContent = `${unlocked.length} / ${all.length}`;
+
+  // find closest locked
+  const locked = all.filter(a => !a.unlocked);
+  if (locked.length) {
+    const closest = locked.reduce((best, a) => {
+      const pct = Math.min(100, Math.round(a.current / a.target * 100));
+      const bpct = Math.min(100, Math.round(best.current / best.target * 100));
+      return pct > bpct ? a : best;
+    });
+    const pct = Math.min(100, Math.round(closest.current / closest.target * 100));
+    document.getElementById('sc-next-pct').textContent  = pct + '%';
+    document.getElementById('sc-next-name').textContent = closest.name;
+  }
+}
+
+/* ════════════════════════════════════
+   NEXT UP BANNER
+════════════════════════════════════ */
+function renderNextUp() {
+  const all    = categories.flatMap(c => c.achievements);
+  const locked = all.filter(a => !a.unlocked);
+  if (!locked.length) {
+    document.getElementById('next-up-wrap').innerHTML = '';
+    return;
+  }
+
+  const closest = locked.reduce((best, a) => {
+    const pct  = Math.min(100, a.current / a.target * 100);
+    const bpct = Math.min(100, best.current / best.target * 100);
+    return pct > bpct ? a : best;
+  });
+
+  const pct       = Math.min(100, Math.round(closest.current / closest.target * 100));
+  const remaining = closest.target - Math.min(closest.current, closest.target);
+
+  document.getElementById('next-up-wrap').innerHTML = `
+  <div class="next-up">
+    <div class="nu-icon">${closest.icon}</div>
+    <div class="nu-body">
+      <div class="nu-lbl">Próxima conquista</div>
+      <div class="nu-name">${closest.name}</div>
+      <div class="nu-bar-bg"><div class="nu-bar-fill" id="nu-fill" style="width:0%"></div></div>
+      <div class="nu-meta">
+        <span>${closest.req}</span>
+        <span>${closest.current} / ${closest.target} — faltam ${remaining}</span>
+      </div>
+    </div>
+    <div class="nu-right">
+      <div class="nu-pct">${pct}%</div>
+      <div class="nu-sub">${closest.points} pts</div>
+    </div>
+  </div>`;
+
+  setTimeout(() => {
+    const fill = document.getElementById('nu-fill');
+    if (fill) fill.style.width = pct + '%';
+  }, 400);
+}
+
+/* ════════════════════════════════════
+   CATEGORIES + CARDS
+════════════════════════════════════ */
+function renderCategories() {
+  const wrap = document.getElementById('categories-wrap');
+  wrap.innerHTML = '';
+
+  categories.forEach((cat, ci) => {
+    const unlocked = cat.achievements.filter(a => a.unlocked).length;
+    const total    = cat.achievements.length;
+
+    const section = document.createElement('div');
+    section.className = 'cat-section';
+    section.innerHTML = `
+      <div class="cat-header">
+        <span class="cat-icon">${cat.icon}</span>
+        <span class="cat-name">${cat.name}</span>
+        <span class="cat-count"><span>${unlocked}</span> / ${total} desbloqueadas</span>
+      </div>
+      <div class="ach-grid" id="grid-${cat.id}"></div>`;
+
+    wrap.appendChild(section);
+
+    const grid = section.querySelector(`#grid-${cat.id}`);
+    cat.achievements.forEach((a, ai) => {
+      grid.appendChild(buildCard(a, ci * 10 + ai));
+    });
+  });
+}
+
+function buildCard(a, idx) {
+  const pct = Math.min(100, Math.round(a.current / a.target * 100));
+  const card = document.createElement('div');
+  card.className = `ach-card${a.unlocked ? ' unlocked' : ''}`;
+
+  card.innerHTML = `
+    <div class="ach-ghost">${String(idx + 1).padStart(2,'0')}</div>
+    ${a.unlocked ? '<div class="ach-badge">✓ Obtida</div>' : ''}
+    <div class="ach-icon-wrap">${a.icon}</div>
+    <div class="ach-body">
+      <div class="ach-name">${a.name}</div>
+      <div class="ach-desc">${a.desc}</div>
+    </div>
+    <div class="ach-prog-wrap">
+      <div class="ach-prog-top">
+        <span class="ach-locked-lbl">${a.req}</span>
+        <span class="ach-prog-pct ${a.unlocked ? 'done' : ''}" id="apct-${a.id}">
+          ${a.unlocked ? '✓ Completo' : pct + '%'}
+        </span>
+      </div>
+      <div class="ach-prog-bg">
+        <div class="ach-prog-fill" id="apb-${a.id}" style="width:0%"></div>
+      </div>
+    </div>`;
+
+  // tooltip on hover
+  card.addEventListener('mouseenter', e => {
+    if (!a.unlocked) {
+      showTip(e, `${a.current} / ${a.target} · ${a.points} pts`);
+    } else {
+      showTip(e, `Desbloqueada no dia ${a.unlockedDay ?? '?'} · ${a.points} pts`);
+    }
+  });
+  card.addEventListener('mouseleave', hideTip);
+
+  // click locked card: shows progress detail
+  if (!a.unlocked) {
+    card.style.cursor = 'pointer';
+    card.addEventListener('click', () => {
+      showUnlockPreview(a, pct);
+    });
+  }
+
+  // animate progress bar after render
+  setTimeout(() => {
+    const bar = document.getElementById(`apb-${a.id}`);
+    if (bar) bar.style.width = pct + '%';
+  }, 200 + idx * 40);
+
+  return card;
+}
+
+/* ════════════════════════════════════
+   UNLOCK MODAL (preview para conquistas bloqueadas)
+════════════════════════════════════ */
+function showUnlockPreview(a, pct) {
+  const remaining = a.target - Math.min(a.current, a.target);
+  document.getElementById('ul-icon').textContent  = a.icon;
+  document.getElementById('ul-title').innerHTML   = `${a.name} <em>—</em>`;
+  document.getElementById('ul-desc').innerHTML    =
+    `${a.desc}<br><br><span style="color:var(--mid)">${a.req} &nbsp;·&nbsp; ${a.current} / ${a.target} &nbsp;·&nbsp; Faltam ${remaining}</span>`;
+  document.getElementById('ul-points').textContent = `${a.points} pts`;
+  document.getElementById('ul-points').style.color = 'var(--mid)';
+  document.getElementById('ul-queue').textContent  = '';
+  document.getElementById('ul-btn').textContent    = 'Fechar ×';
+  document.getElementById('unlock-overlay').classList.add('show');
+}
+
+document.getElementById('unlock-overlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('unlock-overlay')) closeUnlock();
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeUnlock(); });
+
+init();
+
+/* ── BG CANVAS ── */
+(function() {
+  const canvas = document.createElement('canvas');
+  canvas.id = 'bg-canvas';
+  canvas.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;';
+  document.body.insertBefore(canvas, document.body.firstChild);
+  const ctx = canvas.getContext('2d'), SIZE = 80;
+  let W, H, cols, rows, nodes, t = 0;
+  function resize() {
+    W = canvas.width  = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+    cols = Math.ceil(W/SIZE)+2; rows = Math.ceil(H/SIZE)+2; nodes = [];
+    for (let r=0;r<rows;r++) for (let c=0;c<cols;c++) nodes.push({phase:Math.random()*Math.PI*2});
+  }
+  function draw() {
+    ctx.clearRect(0,0,W,H); ctx.lineWidth = 0.4;
+    const offX=(t*6)%SIZE, offY=(t*3)%SIZE;
+    for (let c=0;c<cols;c++) { const x=c*SIZE-offX,w=0.5+0.5*Math.sin(t*0.4+c*0.35); ctx.strokeStyle=`rgba(245,245,240,${0.006+w*0.012})`; ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke(); }
+    for (let r=0;r<rows;r++) { const y=r*SIZE-offY,w=0.5+0.5*Math.sin(t*0.35+r*0.4+1.2); ctx.strokeStyle=`rgba(245,245,240,${0.006+w*0.012})`; ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
+    for (let r=0;r<rows;r++) for (let c=0;c<cols;c++) { const nd=nodes[r*cols+c],x=c*SIZE-offX,y=r*SIZE-offY,p=0.5+0.5*Math.sin(t*0.7+nd.phase); ctx.beginPath(); ctx.arc(x,y,0.5+p*0.9,0,Math.PI*2); ctx.fillStyle=`rgba(245,245,240,${p*0.07})`; ctx.fill(); }
+    const grd=ctx.createRadialGradient(W*0.65,H*0.5,0,W*0.65,H*0.5,Math.max(W,H)*0.75);
+    grd.addColorStop(0,'rgba(8,8,8,0)'); grd.addColorStop(0.6,'rgba(8,8,8,0)'); grd.addColorStop(1,'rgba(8,8,8,0.7)');
+    ctx.fillStyle=grd; ctx.fillRect(0,0,W,H);
+    t+=0.006; requestAnimationFrame(draw);
+  }
+  window.addEventListener('resize',resize); resize(); draw();
+})();
+
+/* ── CARD HOVER GLOW ── */
+(function() {
+  document.querySelectorAll('.card,.stat-card,.stat-card,.progress-banner,.ach-card').forEach(card => {
+    card.addEventListener('mousemove', e => {
+      const r=card.getBoundingClientRect();
+      const x=((e.clientX-r.left)/r.width*100).toFixed(1);
+      const y=((e.clientY-r.top)/r.height*100).toFixed(1);
+      card.style.background=`radial-gradient(circle at ${x}% ${y}%, rgba(245,245,240,0.04) 0%, var(--surface) 60%)`;
+    });
+    card.addEventListener('mouseleave', ()=>{ card.style.background=''; });
+  });
+})();
+
+/* ── ANIM HELPERS ── */
+function _easeOut(p){ return 1-Math.pow(1-p,3); }
+function _countUp(target,duration,cb,delay){
+  setTimeout(()=>{
+    const start=performance.now();
+    (function tick(now){
+      const p=Math.min((now-start)/duration,1);
+      cb(Math.round(_easeOut(p)*target));
+      if(p<1) requestAnimationFrame(tick);
+    })(start);
+  }, delay||0);
+}
+function _animBar(el,pct,duration,delay){
+  if(!el) return;
+  setTimeout(()=>{ el.style.transition=`width ${duration}ms cubic-bezier(0.16,1,0.3,1)`; el.style.width=pct+'%'; }, delay||0);
+}
+
+
+/* ── ENTRANCE ANIMATIONS ── */
+(function animateEntrance() {
+  // animate all stat-val numbers that are purely numeric (strip % d etc)
+  document.querySelectorAll('.stat-val').forEach((el, i) => {
+    const text = el.textContent.trim();
+    const match = text.match(/^(\d+)/);
+    if (!match) return;
+    const target = parseInt(match[1]);
+    const suffix = text.replace(match[1], '');
+    el.textContent = '0' + suffix;
+    _countUp(target, 900, v => el.textContent = v + suffix, 150 + i * 150);
+  });
+
+  // animate .pb-bar-fill (progress banner bar)
+  document.querySelectorAll('.pb-bar-fill').forEach(el => {
+    const pct = parseFloat(el.style.width) || 0;
+    el.style.width = '0%';
+    _animBar(el, pct, 1400, 300);
+  });
+
+  // animate achievement progress bars
+  document.querySelectorAll('.ach-prog-fill, .ach-bar-fill').forEach((el, i) => {
+    const pct = parseFloat(el.style.width) || 0;
+    el.style.width = '0%';
+    _animBar(el, pct, 800, 200 + i * 60);
+  });
+
+  // animate sidebar
+  const sbFill = document.getElementById('sb-fill');
+  if (sbFill) { const pct=parseFloat(sbFill.style.width)||0; sbFill.style.width='0%'; _animBar(sbFill,pct,1200,400); }
+  const streakEl = document.getElementById('sb-streak-val');
+  if (streakEl) { const v=parseInt(streakEl.textContent)||0; streakEl.textContent='0'; _countUp(v,700,n=>streakEl.textContent=n,500); }
+})();
+
+</script>
+</body>
+</html>

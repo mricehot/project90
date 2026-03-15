@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Project 90 — Login</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+/* ── RESET ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ── TOKENS ── */
+:root {
+  --bg:       #080808;
+  --surface:  #111111;
+  --surface2: #181818;
+  --border:   rgba(245,245,240,0.08);
+  --border2:  rgba(245,245,240,0.16);
+  --white:    #f5f5f0;
+  --mid:      #555555;
+  --muted:    #2a2a2a;
+  --green:    #86efac;
+  --red:      #fca5a5;
+}
+
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg); color: var(--white);
+  font-family: 'DM Mono', monospace; font-weight: 300;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden; min-height: 100vh; cursor: none;
+}
+
+/* ── CURSOR ── */
+#cur {
+  width: 6px; height: 6px; background: var(--white); border-radius: 50%;
+  position: fixed; top: 0; left: 0; pointer-events: none; z-index: 9999;
+  mix-blend-mode: difference; will-change: transform;
+}
+#cur-ring {
+  width: 30px; height: 30px; border: 1px solid rgba(245,245,240,0.3); border-radius: 50%;
+  position: fixed; top: 0; left: 0; pointer-events: none; z-index: 9998;
+  mix-blend-mode: difference; will-change: transform;
+}
+
+/* ── KEYFRAMES ── */
+@keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: none; } }
+@keyframes spin   { to { transform: rotate(360deg); } }
+@keyframes flicker {
+  0%,100% { opacity:1; } 92% { opacity:1; } 93% { opacity:0.15; }
+  94% { opacity:1; } 96% { opacity:0.08; } 97% { opacity:1; }
+  98% { opacity:0.6; } 99% { opacity:1; }
+}
+
+/* ── PAGE ── */
+.login-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 40px 24px; position: relative; }
+#bg-canvas  { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+
+.login-card {
+  width: 100%; max-width: 860px; display: grid; grid-template-columns: 1fr 1fr;
+  border: 1px solid rgba(245,245,240,0.16); position: relative; z-index: 2;
+  animation: fadeUp 0.7s cubic-bezier(0.16,1,0.3,1) both;
+}
+
+/* LEFT */
+.login-left {
+  background: var(--surface); padding: 48px 40px;
+  display: flex; flex-direction: column; justify-content: space-between;
+  position: relative; overflow: hidden; border-right: 1px solid var(--border);
+}
+.login-left::before {
+  content: ''; position: absolute; inset: 0;
+  background-image: linear-gradient(rgba(245,245,240,0.03) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(245,245,240,0.03) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse 120% 100% at 20% 60%, black 10%, transparent 80%);
+  pointer-events: none;
+}
+.left-top    { position: relative; z-index: 2; }
+.left-logo   { font-family: 'Bebas Neue', sans-serif; font-size: 15px; letter-spacing: 0.2em; color: var(--white); text-decoration: none; display: flex; align-items: center; gap: 10px; opacity: 0.7; }
+.left-logo::before { content: ''; display: block; width: 18px; height: 1px; background: var(--mid); }
+.left-center { position: relative; z-index: 2; flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 32px 0; }
+.left-big    { font-family: 'Bebas Neue', sans-serif; font-size: clamp(80px, 12vw, 140px); line-height: 0.85; letter-spacing: -0.01em; animation: flicker 4s infinite; }
+.left-sub    { font-family: 'DM Serif Display', serif; font-style: italic; font-size: 17px; color: var(--white); opacity: 0.45; margin-top: 10px; }
+.left-desc   { font-size: 12px; line-height: 1.85; color: var(--mid); margin-top: 20px; max-width: 260px; }
+.left-bottom { position: relative; z-index: 2; }
+
+.hm-mini { display: grid; grid-template-columns: repeat(13, 1fr); gap: 3px; margin-bottom: 14px; }
+.hmc     { aspect-ratio: 1; border-radius: 1px; background: rgba(245,245,240,0.06); transition: background 1.2s ease; }
+.hmc.p   { background: var(--white); }
+.hmc.h   { background: rgba(245,245,240,0.32); }
+.hmc.f   { background: rgba(245,245,240,0.1); }
+
+.left-stats    { display: flex; border: 1px solid var(--border); }
+.ls            { flex: 1; padding: 10px 0; text-align: center; border-right: 1px solid var(--border); }
+.ls:last-child { border-right: none; }
+.ls-val        { font-family: 'Bebas Neue', sans-serif; font-size: 22px; line-height: 1; }
+.ls-lbl        { font-size: 8px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--mid); margin-top: 3px; }
+
+/* RIGHT */
+.login-right { background: var(--bg); padding: 48px 44px; display: flex; flex-direction: column; justify-content: center; }
+
+.form-eyebrow { font-size: 9px; letter-spacing: 0.28em; text-transform: uppercase; color: var(--mid); margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+.form-eyebrow::before { content: ''; display: inline-block; width: 16px; height: 1px; background: var(--mid); }
+.form-heading    { font-family: 'DM Serif Display', serif; font-size: clamp(24px, 3vw, 32px); font-weight: 400; line-height: 1.2; margin-bottom: 32px; }
+.form-heading em { font-style: italic; opacity: 0.4; }
+
+.field-wrap  { margin-bottom: 14px; }
+.field-lbl   { font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--mid); display: block; margin-bottom: 7px; }
+.field-input {
+  width: 100%; background: var(--surface); border: 1px solid var(--border); color: var(--white);
+  font-family: 'DM Mono', monospace; font-weight: 300; font-size: 13px; letter-spacing: 0.04em;
+  padding: 12px 14px; outline: none; transition: border-color 0.2s;
+}
+.field-input:focus { border-color: rgba(245,245,240,0.35); }
+.field-input::placeholder { color: var(--mid); }
+.field-row { display: flex; gap: 8px; }
+
+.btn-pass {
+  background: var(--surface); border: 1px solid var(--border); color: var(--mid);
+  padding: 12px 14px; cursor: pointer; font-family: 'DM Mono', monospace; font-size: 11px;
+  letter-spacing: 0.05em; transition: color 0.2s, border-color 0.2s; white-space: nowrap;
+}
+.btn-pass:hover { color: var(--white); border-color: var(--border2); }
+
+.forgot { text-align: right; margin-top: 6px; font-size: 10px; letter-spacing: 0.1em; color: #444; cursor: pointer; transition: color 0.2s; }
+.forgot:hover { color: var(--white); }
+
+.form-error   { font-size:11px; letter-spacing:0.07em; color:#fca5a5; margin-top:8px; display:none; padding:10px 14px; border:1px solid rgba(252,165,165,0.2); background:rgba(252,165,165,0.05); }
+.form-error.show   { display: block; }
+.form-success { font-size:11px; letter-spacing:0.07em; color:#86efac; margin-top:8px; display:none; padding:10px 14px; border:1px solid rgba(134,239,172,0.2); background:rgba(134,239,172,0.05); }
+.form-success.show { display: block; }
+
+.btn-login {
+  width: 100%; margin-top: 24px; padding: 14px; background: var(--white); color: var(--bg);
+  border: none; cursor: pointer; font-family: 'DM Mono', monospace; font-size: 12px;
+  letter-spacing: 0.18em; text-transform: uppercase; transition: opacity 0.2s, transform 0.15s;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+}
+.btn-login:hover { opacity: 0.88; transform: translateY(-1px); }
+.btn-arrow { width: 16px; height: 1px; background: var(--bg); position: relative; transition: width 0.25s; }
+.btn-login:hover .btn-arrow { width: 24px; }
+.btn-arrow::after { content: ''; position: absolute; right: 0; top: -3px; border-top: 3px solid transparent; border-bottom: 3px solid transparent; border-left: 5px solid var(--bg); }
+.spin { width: 14px; height: 14px; border: 1.5px solid rgba(8,8,8,0.3); border-top-color: var(--bg); border-radius: 50%; animation: spin 0.7s linear infinite; display: none; }
+
+.login-divider { display: flex; align-items: center; gap: 10px; margin: 20px 0; font-size: 10px; letter-spacing: 0.15em; color: #333; }
+.login-divider::before, .login-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+.signup-row { text-align: center; font-size: 11px; letter-spacing: 0.08em; color: #444; }
+.signup-row a { color: var(--white); text-decoration: none; border-bottom: 1px solid rgba(245,245,240,0.2); padding-bottom: 1px; transition: border-color 0.2s; }
+.signup-row a:hover { border-color: var(--white); }
+.demo-hint { margin-top: 18px; padding: 10px 14px; border: 1px solid var(--border); font-size: 11px; letter-spacing: 0.06em; color: var(--mid); text-align: center; }
+.demo-hint span { color: var(--white); }
+
+@media (max-width: 720px) {
+  body { overflow: auto; }
+  .login-page { padding: 0; align-items: stretch; }
+  .login-card { grid-template-columns: 1fr; max-width: 100%; border: none; }
+  .login-left { display: none; }
+  .login-right { padding: 48px 32px; min-height: 100vh; }
+}
+</style>
+</head>
+<body>
+
+<div id="cur"></div>
+<div id="cur-ring"></div>
+<canvas id="bg-canvas"></canvas>
+
+<div class="login-page">
+  <div class="login-card">
+
+    <div class="login-left">
+      <div class="left-top"><a href="#" class="left-logo">Project 90</a></div>
+      <div class="left-center">
+        <div class="left-big">90</div>
+        <div class="left-sub">dias para mudar tudo.</div>
+        <p class="left-desc">Construa os hábitos que você sempre quis. Um dia de cada vez, por 90 dias.</p>
+      </div>
+      <div class="left-bottom">
+        <div class="hm-mini" id="hm-mini"></div>
+        <div class="left-stats">
+          <div class="ls"><div class="ls-val" id="ls-disc">87%</div><div class="ls-lbl">Disciplina</div></div>
+          <div class="ls"><div class="ls-val" id="ls-streak">🔥12</div><div class="ls-lbl">Streak</div></div>
+          <div class="ls"><div class="ls-val" id="ls-rest">56</div><div class="ls-lbl">Restantes</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="login-right">
+      <div class="form-eyebrow">Acesso</div>
+      <div class="form-heading">Bem-vindo de <em>volta.</em></div>
+      <div class="field-wrap">
+        <label class="field-lbl" for="email">Email</label>
+        <input class="field-input" type="email" id="email" placeholder="seu@email.com" autocomplete="email" />
+      </div>
+      <div class="field-wrap">
+        <label class="field-lbl" for="password">Senha</label>
+        <div class="field-row">
+          <input class="field-input" type="password" id="password" placeholder="••••••••" autocomplete="current-password" style="flex:1" />
+          <button class="btn-pass" id="toggle-pass" type="button">ver</button>
+        </div>
+        <div class="forgot" id="forgot-btn">Esqueceu a senha?</div>
+      </div>
+      <div class="form-error" id="form-error"></div>
+      <div class="form-success" id="form-success"></div>
+      <button class="btn-login" id="login-btn" type="button">
+        <div class="spin" id="spin"></div>
+        <span id="btn-text">Entrar no projeto</span>
+        <div class="btn-arrow"></div>
+      </button>
+      <div class="login-divider">ou</div>
+      <div class="signup-row">Não tem conta? <a href="#">Saiba mais</a> &nbsp;·&nbsp; <a href="#">Ver demo</a></div>
+      <div class="demo-hint">Demo: <span>demo@project90.com</span> / <span>123456</span></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+/* ── CURSOR ── */
+(function() {
+  const cur = document.getElementById('cur'), ring = document.getElementById('cur-ring');
+  let mx=0,my=0,rx=0,ry=0;
+  document.addEventListener('mousemove', e => {
+    mx=e.clientX; my=e.clientY;
+    cur.style.transform=`translate(${mx-3}px,${my-3}px)`;
+  });
+  (function tick(){ rx+=(mx-rx-15)*0.1; ry+=(my-ry-15)*0.1; ring.style.transform=`translate(${rx}px,${ry}px)`; requestAnimationFrame(tick); })();
+})();
+
+/* ── HEATMAP ── */
+(function() {
+  const grid = document.getElementById('hm-mini');
+  const CELLS = 65, STATES = ['p','p','p','h','h','f','e','e','e'];
+  grid.innerHTML = Array.from({length:CELLS}, () => '<div class="hmc e"></div>').join('');
+  const cells = grid.querySelectorAll('.hmc');
+  function applyState(i,s){ cells[i].className='hmc '+s; }
+  cells.forEach((_,i) => setTimeout(() => applyState(i, STATES[Math.floor(Math.random()*STATES.length)]), i*30));
+  setInterval(() => {
+    for (let k=0, n=3+Math.floor(Math.random()*4); k<n; k++) {
+      const i = Math.floor(Math.random()*CELLS);
+      setTimeout(() => applyState(i, STATES[Math.floor(Math.random()*STATES.length)]), k*120);
+    }
+  }, 900);
+})();
+
+/* ── LIVE STATS ── */
+(function() {
+  const disc=document.getElementById('ls-disc'), streak=document.getElementById('ls-streak'), rest=document.getElementById('ls-rest');
+  let dv=87,sv=12,rv=56,dt=87,st=12,rt=56;
+  function rnd(v,mn,mx,r){ return Math.round(Math.min(mx,Math.max(mn,v+(Math.random()*r*2-r)))); }
+  setInterval(()=>{ dt=rnd(dt,78,99,4); st=rnd(st,7,28,3); rt=rnd(rt,40,70,5); },3000);
+  (function tick(){
+    dv+=(dt-dv)*0.04; sv+=(st-sv)*0.03; rv+=(rt-rv)*0.035;
+    disc.textContent=Math.round(dv)+'%'; streak.textContent='🔥'+Math.round(sv); rest.textContent=Math.round(rv);
+    requestAnimationFrame(tick);
+  })();
+})();
+
+/* ── PASSWORD TOGGLE ── */
+document.getElementById('toggle-pass').addEventListener('click', function() {
+  const inp = document.getElementById('password');
+  inp.type = inp.type==='password' ? 'text' : 'password';
+  this.textContent = inp.type==='password' ? 'ver' : 'ocultar';
+});
+
+/* ── FORGOT ── */
+document.getElementById('forgot-btn').addEventListener('click', () => {
+  const err = document.getElementById('form-error');
+  err.textContent='Link de recuperação enviado para o seu email.';
+  Object.assign(err.style,{color:'#86efac',borderColor:'rgba(134,239,172,0.2)',background:'rgba(134,239,172,0.05)'});
+  err.classList.add('show');
+  setTimeout(()=>{ err.classList.remove('show'); err.style.cssText=''; },3000);
+});
+
+/* ── LOGIN ── */
+function doLogin() {
+  const email=document.getElementById('email').value.trim(), pass=document.getElementById('password').value;
+  const errEl=document.getElementById('form-error'), sucEl=document.getElementById('form-success');
+  const spinEl=document.getElementById('spin'), btnTxt=document.getElementById('btn-text'), btn=document.getElementById('login-btn');
+  errEl.classList.remove('show'); sucEl.classList.remove('show'); errEl.style.cssText='';
+  if (!email||!pass){ errEl.textContent='Preencha email e senha.'; errEl.classList.add('show'); return; }
+  if (!email.includes('@')){ errEl.textContent='Email inválido.'; errEl.classList.add('show'); return; }
+  spinEl.style.display='block'; btnTxt.textContent='Verificando...'; btn.style.pointerEvents='none';
+  setTimeout(()=>{
+    spinEl.style.display='none'; btnTxt.textContent='Entrar no projeto'; btn.style.pointerEvents='';
+    if (email==='demo@project90.com'&&pass==='123456') {
+      sucEl.textContent='✓ Acesso confirmado. Redirecionando...'; sucEl.classList.add('show');
+      setTimeout(()=>{ window.location.href='dashboard.html'; }, 1000);
+    } else { errEl.textContent='Email ou senha incorretos.'; errEl.classList.add('show'); }
+  },1400);
+}
+document.getElementById('login-btn').addEventListener('click', doLogin);
+document.getElementById('password').addEventListener('keydown', e=>{ if(e.key==='Enter') doLogin(); });
+document.getElementById('email').addEventListener('keydown', e=>{ if(e.key==='Enter') document.getElementById('password').focus(); });
+
+/* ── BG CANVAS ── */
+(function() {
+  const canvas=document.getElementById('bg-canvas'), ctx=canvas.getContext('2d'), SIZE=72;
+  let W,H,cols,rows,nodes,t=0;
+  function resize(){
+    W=canvas.width=window.innerWidth; H=canvas.height=window.innerHeight;
+    cols=Math.ceil(W/SIZE)+2; rows=Math.ceil(H/SIZE)+2;
+    nodes=[];
+    for(let r=0;r<rows;r++) for(let c=0;c<cols;c++) nodes.push({phase:Math.random()*Math.PI*2});
+  }
+  function draw(){
+    ctx.clearRect(0,0,W,H); ctx.lineWidth=0.5;
+    const offX=(t*8)%SIZE, offY=(t*4)%SIZE;
+    for(let c=0;c<cols;c++){
+      const x=c*SIZE-offX, w=0.5+0.5*Math.sin(t*0.5+c*0.4);
+      ctx.strokeStyle=`rgba(245,245,240,${0.012+w*0.028})`; ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke();
+    }
+    for(let r=0;r<rows;r++){
+      const y=r*SIZE-offY, w=0.5+0.5*Math.sin(t*0.4+r*0.5+1.2);
+      ctx.strokeStyle=`rgba(245,245,240,${0.012+w*0.028})`; ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke();
+    }
+    for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){
+      const nd=nodes[r*cols+c], x=c*SIZE-offX, y=r*SIZE-offY, p=0.5+0.5*Math.sin(t*0.9+nd.phase);
+      ctx.beginPath(); ctx.arc(x,y,0.6+p*1.2,0,Math.PI*2);
+      ctx.fillStyle=`rgba(245,245,240,${p*0.12})`; ctx.fill();
+    }
+    const grd=ctx.createRadialGradient(W/2,H/2,0,W/2,H/2,Math.max(W,H)*0.7);
+    grd.addColorStop(0,'rgba(8,8,8,0)'); grd.addColorStop(0.5,'rgba(8,8,8,0)'); grd.addColorStop(1,'rgba(8,8,8,0.82)');
+    ctx.fillStyle=grd; ctx.fillRect(0,0,W,H);
+    t+=0.008; requestAnimationFrame(draw);
+  }
+  window.addEventListener('resize',resize); resize(); draw();
+})();
+</script>
+</body>
+</html>
