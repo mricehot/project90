@@ -286,6 +286,37 @@ body {
 
 /* ── APP Z-INDEX ── */
 .app,.dia-main,.met-main,.hab-main,.con-main{position:relative;z-index:1;}
+
+/* ══ HIDRATAÇÃO ══ */
+.cup{width:34px;height:38px;border:1px solid var(--border2);display:flex;align-items:flex-end;cursor:pointer;position:relative;overflow:hidden;transition:border-color .2s,transform .15s;}
+.cup:hover{border-color:rgba(147,197,253,.5);transform:translateY(-2px);}
+.cup-fill{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(to top,rgba(147,197,253,.6),rgba(147,197,253,.22));height:0%;transition:height .5s cubic-bezier(.16,1,.3,1);}
+.cup-icon{position:relative;z-index:1;width:100%;text-align:center;font-size:15px;padding-bottom:3px;line-height:1;filter:grayscale(1);opacity:.3;transition:filter .3s,opacity .3s;}
+.cup.filled .cup-icon{filter:none;opacity:1;}
+.cup.filled{border-color:rgba(147,197,253,.45);}
+/* POPUP */
+.water-overlay{position:fixed;inset:0;z-index:400;background:rgba(8,8,8,.88);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .3s;}
+.water-overlay.open{opacity:1;pointer-events:all;}
+.water-modal{background:var(--surface,#111);border:1px solid rgba(245,245,240,.16);padding:40px 44px;width:100%;max-width:420px;transform:translateY(16px);transition:transform .35s cubic-bezier(.16,1,.3,1);}
+.water-overlay.open .water-modal{transform:translateY(0);}
+.wm-title{font-family:'DM Serif Display',serif;font-size:22px;font-weight:400;margin-bottom:28px;}
+.wm-title em{font-style:italic;opacity:.4;}
+.wm-field{margin-bottom:20px;}
+.wm-lbl{font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:var(--mid,#555);display:block;margin-bottom:8px;}
+.wm-input{width:100%;background:var(--surface2,#181818);border:1px solid rgba(245,245,240,.08);color:var(--white,#f5f5f0);font-family:'DM Mono',monospace;font-weight:300;font-size:13px;letter-spacing:.04em;padding:11px 14px;outline:none;transition:border-color .2s;}
+.wm-input:focus{border-color:rgba(245,245,240,.3);}
+.wm-select{width:100%;background:var(--surface2,#181818);border:1px solid rgba(245,245,240,.08);color:var(--white,#f5f5f0);font-family:'DM Mono',monospace;font-weight:300;font-size:13px;padding:11px 14px;outline:none;cursor:pointer;appearance:none;transition:border-color .2s;}
+.wm-select:focus{border-color:rgba(245,245,240,.3);}
+.wm-select option{background:var(--surface2,#181818);}
+.wm-preview{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;}
+.wm-cup-prev{width:28px;height:32px;border:1px solid rgba(245,245,240,.16);display:flex;align-items:center;justify-content:center;font-size:12px;opacity:.5;}
+.wm-cup-prev.on{opacity:1;background:rgba(147,197,253,.12);border-color:rgba(147,197,253,.4);}
+.wm-footer{display:flex;gap:10px;margin-top:28px;}
+.wm-btn{flex:1;padding:12px;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;border:none;transition:opacity .2s;}
+.wm-btn.primary{background:var(--white,#f5f5f0);color:#080808;}
+.wm-btn.ghost{background:none;border:1px solid rgba(245,245,240,.16);color:var(--mid,#555);}
+.wm-btn:hover{opacity:.85;}
+
 </style>
 </head>
 <body>
@@ -293,6 +324,43 @@ body {
 <div id="cur"></div>
 <div id="cur-ring"></div>
 <div class="toast" id="toast"></div>
+
+
+<!-- WATER CONFIG POPUP -->
+<div class="water-overlay" id="water-overlay">
+  <div class="water-modal">
+    <div class="wm-title">Hidratação <em>diária.</em></div>
+
+    <div class="wm-field">
+      <label class="wm-lbl" for="wm-goal-cups">Meta de copos por dia</label>
+      <input class="wm-input" type="number" id="wm-goal-cups" min="4" max="16" value="8" oninput="wmPreview()">
+    </div>
+
+    <div class="wm-field">
+      <label class="wm-lbl" for="wm-cup-ml">Volume por copo (ml)</label>
+      <select class="wm-select" id="wm-cup-ml" onchange="wmPreview()">
+        <option value="150">150 ml — copo pequeno</option>
+        <option value="200">200 ml — copo médio</option>
+        <option value="250" selected>250 ml — copo grande</option>
+        <option value="300">300 ml — caneca</option>
+        <option value="500">500 ml — garrafa pequena</option>
+      </select>
+    </div>
+
+    <div class="wm-field">
+      <label class="wm-lbl">Pré-visualização</label>
+      <div class="wm-preview" id="wm-preview"></div>
+      <div style="font-size:10px;letter-spacing:.1em;color:var(--mid,#555);margin-top:8px">
+        Meta total: <span id="wm-total-ml" style="color:var(--white,#f5f5f0)">2000 ml</span>
+      </div>
+    </div>
+
+    <div class="wm-footer">
+      <button class="wm-btn ghost" onclick="closeWaterConfig()">Cancelar</button>
+      <button class="wm-btn primary" onclick="saveWaterConfig()">Salvar configuração</button>
+    </div>
+  </div>
+</div>
 
 <div class="app">
 
@@ -785,6 +853,89 @@ function _animBar(el,pct,duration,delay){
   const streakEl = document.getElementById('sb-streak-val');
   if (streakEl) { const v=parseInt(streakEl.textContent)||0; streakEl.textContent='0'; _countUp(v,700,n=>streakEl.textContent=n,500); }
 })();
+
+
+/* ══ HIDRATAÇÃO ══ */
+const WATER_DATE_KEY  = 'p90_water_' + new Date().toDateString();
+const WATER_CFG_KEY   = 'p90_water_cfg';
+
+function loadWaterCfg() {
+  try { const r = localStorage.getItem(WATER_CFG_KEY); if (r) return JSON.parse(r); } catch(e) {}
+  return { cups: 8, ml: 250 };
+}
+function saveWaterCfgData(cfg) { localStorage.setItem(WATER_CFG_KEY, JSON.stringify(cfg)); }
+
+let waterCfg   = loadWaterCfg();
+let waterCount = parseInt(localStorage.getItem(WATER_DATE_KEY) || '0');
+
+function renderWater() {
+  const total = waterCfg.cups, ml = waterCfg.ml;
+  const cupsEl = document.getElementById('water-cups');
+  if (!cupsEl) return;
+  cupsEl.innerHTML = Array.from({length: total}, (_, i) => `
+    <div class="cup ${i < waterCount ? 'filled' : ''}" onclick="toggleCup(${i})" title="Copo ${i+1} — ${ml} ml">
+      <div class="cup-fill" style="height:${i < waterCount ? 100 : 0}%"></div>
+      <div class="cup-icon">💧</div>
+    </div>`).join('');
+  const pct = Math.round(waterCount / total * 100);
+  const el_bar = document.getElementById('water-bar');
+  const el_lbl = document.getElementById('water-lbl');
+  const el_ml  = document.getElementById('water-ml');
+  const el_meta = document.getElementById('water-meta-lbl');
+  if (el_bar)  el_bar.style.width = pct + '%';
+  if (el_lbl)  el_lbl.textContent = waterCount + ' / ' + total + ' copos';
+  if (el_ml)   el_ml.textContent  = (waterCount * ml) + ' ml';
+  if (el_meta) el_meta.textContent = 'Meta: ' + (total * ml) + ' ml';
+}
+
+function toggleCup(i) {
+  waterCount = (waterCount === i + 1) ? i : i + 1;
+  localStorage.setItem(WATER_DATE_KEY, waterCount);
+  renderWater();
+}
+function resetWater() {
+  waterCount = 0;
+  localStorage.setItem(WATER_DATE_KEY, 0);
+  renderWater();
+}
+
+/* CONFIG POPUP */
+function openWaterConfig() {
+  const overlay = document.getElementById('water-overlay');
+  if (!overlay) return;
+  document.getElementById('wm-goal-cups').value = waterCfg.cups;
+  document.getElementById('wm-cup-ml').value    = waterCfg.ml;
+  wmPreview();
+  overlay.classList.add('open');
+}
+function closeWaterConfig() {
+  const overlay = document.getElementById('water-overlay');
+  if (overlay) overlay.classList.remove('open');
+}
+function saveWaterConfig() {
+  waterCfg.cups = parseInt(document.getElementById('wm-goal-cups').value) || 8;
+  waterCfg.ml   = parseInt(document.getElementById('wm-cup-ml').value)    || 250;
+  saveWaterCfgData(waterCfg);
+  if (waterCount > waterCfg.cups) { waterCount = waterCfg.cups; localStorage.setItem(WATER_DATE_KEY, waterCount); }
+  closeWaterConfig();
+  renderWater();
+}
+function wmPreview() {
+  const n  = parseInt(document.getElementById('wm-goal-cups').value) || 8;
+  const ml = parseInt(document.getElementById('wm-cup-ml').value)    || 250;
+  const prev = document.getElementById('wm-preview');
+  const tot  = document.getElementById('wm-total-ml');
+  if (prev) prev.innerHTML = Array.from({length: Math.min(n, 16)}, (_, i) =>
+    `<div class="wm-cup-prev ${i < waterCount ? 'on' : ''}">💧</div>`).join('');
+  if (tot) tot.textContent = (n * ml) + ' ml';
+}
+document.addEventListener('click', e => {
+  const overlay = document.getElementById('water-overlay');
+  if (overlay && e.target === overlay) closeWaterConfig();
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeWaterConfig(); });
+
+renderWater();
 
 </script>
 </body>

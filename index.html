@@ -9,136 +9,188 @@
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 :root{
-  --bg:#080808;--s:#111111;--s2:#181818;
-  --b:rgba(245,245,240,0.08);--b2:rgba(245,245,240,0.16);
+  --bg:#080808;--s:#111;--s2:#181818;
+  --b:rgba(245,245,240,.08);--b2:rgba(245,245,240,.16);
   --w:#f5f5f0;--m:#555;--mu:#2a2a2a;--g:#86efac;
   --gut:clamp(24px,5vw,72px);--max:1100px;
 }
 html{scroll-behavior:smooth;}
 body{background:var(--bg);color:var(--w);font-family:'DM Mono',monospace;font-weight:300;-webkit-font-smoothing:antialiased;overflow-x:hidden;cursor:none;}
-
-/* ── CURSOR ── */
 #cur{width:6px;height:6px;background:var(--w);border-radius:50%;position:fixed;top:0;left:0;pointer-events:none;z-index:9999;mix-blend-mode:difference;will-change:transform;}
 #cur-ring{width:30px;height:30px;border:1px solid rgba(245,245,240,.3);border-radius:50%;position:fixed;top:0;left:0;pointer-events:none;z-index:9998;mix-blend-mode:difference;will-change:transform;}
 #bg-canvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;}
 
-/* ── KEYFRAMES ── */
+/* KEYFRAMES */
 @keyframes fadeUp{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:none}}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
-@keyframes flicker{0%,89%,100%{opacity:1}90%{opacity:.08}91%{opacity:1}96%{opacity:.04}97%{opacity:1}}
-@keyframes scrollPulse{0%,100%{opacity:.2;transform:scaleY(.6)}50%{opacity:1;transform:scaleY(1)}}
+@keyframes scrollPulse{0%,100%{opacity:.2;transform:scaleY(.5)}50%{opacity:1;transform:scaleY(1)}}
 @keyframes ticker{from{transform:translateX(0)}to{transform:translateX(-50%)}}
-@keyframes barUp{from{transform:scaleY(0)}to{transform:scaleY(1)}}
-@keyframes dotPulse{0%,100%{transform:scale(1);opacity:.6}50%{transform:scale(1.4);opacity:1}}
-@keyframes scanLine{0%{top:-2px;opacity:0}5%{opacity:.6}95%{opacity:.6}100%{top:100%;opacity:0}}
-@keyframes glowPulse{0%,100%{box-shadow:0 0 0 0 rgba(134,239,172,0)}50%{box-shadow:0 0 20px 4px rgba(134,239,172,.12)}}
-@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+@keyframes dotPulse{0%,100%{transform:scale(1);opacity:.5}50%{transform:scale(1.6);opacity:1}}
+@keyframes scanLine{0%{top:-2px;opacity:0}5%{opacity:.7}95%{opacity:.7}100%{top:100%;opacity:0}}
 
-/* ── NAV ── */
+/* ══ FX TITLES — BURN IN ══ */
+.fx-burn{display:inline-block;position:relative;color:transparent;}
+.fx-burn.fired{animation:burnIn 1s cubic-bezier(.16,1,.3,1) .4s forwards;}
+.fx-burn.loop{animation:burnIn 1s cubic-bezier(.16,1,.3,1) .4s forwards, burnPulse 5s 2s infinite;}
+@keyframes burnIn{
+  0%  {color:transparent;text-shadow:0 0 60px rgba(245,245,240,1),0 0 120px rgba(245,245,240,.8),0 0 200px rgba(245,245,240,.4);}
+  25% {color:rgba(245,245,240,.15);text-shadow:0 0 40px rgba(245,245,240,.9),0 0 80px rgba(245,245,240,.6);}
+  55% {color:rgba(245,245,240,.7);text-shadow:0 0 12px rgba(245,245,240,.5),0 0 28px rgba(245,245,240,.2);}
+  80% {color:rgba(245,245,240,.95);text-shadow:0 0 4px rgba(245,245,240,.2);}
+  100%{color:#f5f5f0;text-shadow:none;}
+}
+@keyframes burnPulse{
+  0%,80%,100%{text-shadow:none;}
+  82%{text-shadow:0 0 20px rgba(245,245,240,.8),0 0 50px rgba(245,245,240,.4);}
+  84%{text-shadow:0 0 6px rgba(245,245,240,.3);}
+  86%{text-shadow:0 0 30px rgba(245,245,240,.6),0 0 60px rgba(245,245,240,.3);}
+  88%{text-shadow:none;}
+}
+
+/* FLICKER + LIGHTNING — mais agressivo */
+@keyframes flicker{
+  0%,82%,100%{opacity:1;text-shadow:none}
+  83%{opacity:.05}84%{opacity:1}
+  87%{opacity:.08;text-shadow:0 0 20px rgba(245,245,240,.4)}
+  88%{opacity:1}
+  93%{opacity:.03}94%{opacity:1}
+  97%{opacity:.06;text-shadow:0 0 40px rgba(245,245,240,.6),0 0 80px rgba(245,245,240,.3)}
+  98%{opacity:1}
+}
+@keyframes lightning{
+  0%,88%,100%{opacity:0}
+  89%{opacity:.7}90%{opacity:0}91%{opacity:.5}92%{opacity:0}
+  96%{opacity:.9}97%{opacity:0}
+}
+@keyframes glitch{
+  0%,90%,100%{clip-path:none;transform:none}
+  91%{clip-path:inset(40% 0 40% 0);transform:translate(-3px,0)}
+  92%{clip-path:inset(70% 0 10% 0);transform:translate(3px,0)}
+  93%{clip-path:none;transform:none}
+  97%{clip-path:inset(20% 0 65% 0);transform:translate(-2px,0)}
+  98%{clip-path:none;transform:none}
+}
+@keyframes revealNum{from{opacity:0;transform:scale(.9) translateY(20px)}to{opacity:1;transform:none}}
+
+/* NAV */
 .nav{position:fixed;top:0;left:0;right:0;z-index:200;transition:background .4s,border-color .4s;}
-.nav.scrolled{background:rgba(8,8,8,.94);border-bottom:1px solid var(--b);backdrop-filter:blur(20px);}
+.nav.scrolled{background:rgba(8,8,8,.95);border-bottom:1px solid var(--b);backdrop-filter:blur(20px);}
 .nav-inner{max-width:var(--max);margin:0 auto;padding:0 var(--gut);height:64px;display:flex;align-items:center;justify-content:space-between;}
-.nav-logo{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:.14em;color:var(--w);text-decoration:none;transition:opacity .2s;}
-.nav-logo:hover{opacity:.75;}
+.nav-logo{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:.14em;color:var(--w);text-decoration:none;}
 .nav-links{display:flex;gap:40px;list-style:none;}
 .nav-links a{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--m);text-decoration:none;transition:color .2s;position:relative;}
 .nav-links a::after{content:'';position:absolute;bottom:-3px;left:0;width:0;height:1px;background:var(--w);transition:width .3s;}
 .nav-links a:hover{color:var(--w);}
 .nav-links a:hover::after{width:100%;}
-.nav-right{display:flex;align-items:center;gap:10px;}
-.nav-btn{padding:8px 20px;border:1px solid var(--b2);background:none;color:var(--w);font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;text-decoration:none;transition:background .2s,border-color .2s;}
-.nav-btn:hover{background:rgba(245,245,240,.06);border-color:rgba(245,245,240,.3);}
+.nav-right{display:flex;gap:10px;}
+.nav-btn{padding:8px 20px;border:1px solid var(--b2);background:none;color:var(--w);font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;text-decoration:none;transition:background .2s;}
+.nav-btn:hover{background:rgba(245,245,240,.06);}
 .nav-btn.solid{background:var(--w);color:var(--bg);border-color:var(--w);}
-.nav-btn.solid:hover{background:rgba(245,245,240,.88);}
+.nav-btn.solid:hover{opacity:.88;}
 
-/* ── LAYOUT ── */
+/* LAYOUT */
 .wrap{max-width:var(--max);margin:0 auto;padding:0 var(--gut);position:relative;z-index:2;}
-.section{padding:clamp(80px,10vw,140px) var(--gut);position:relative;z-index:2;}
+.section{padding:clamp(80px,10vw,130px) var(--gut);position:relative;z-index:2;}
 .section-center{text-align:center;}
 .divider{height:1px;background:var(--b);position:relative;z-index:2;}
-
-/* ── LABEL ── */
 .label{font-size:10px;letter-spacing:.28em;text-transform:uppercase;color:var(--m);margin-bottom:28px;display:flex;align-items:center;gap:14px;}
 .section-center .label{justify-content:center;}
-.label::before{content:'';display:inline-block;width:24px;height:1px;background:var(--m);}
-.section-center .label::after{content:'';display:inline-block;width:24px;height:1px;background:var(--m);}
+.label::before,.section-center .label::after{content:'';display:inline-block;width:24px;height:1px;background:var(--m);}
 
-/* ── REVEAL ── */
-.reveal{opacity:0;transform:translateY(32px);transition:opacity 1s cubic-bezier(.16,1,.3,1),transform 1s cubic-bezier(.16,1,.3,1);}
+/* REVEAL */
+.reveal{opacity:0;transform:translateY(28px);transition:opacity .9s cubic-bezier(.16,1,.3,1),transform .9s cubic-bezier(.16,1,.3,1);}
 .reveal.in{opacity:1;transform:none;}
-.reveal-left{opacity:0;transform:translateX(-32px);transition:opacity 1s cubic-bezier(.16,1,.3,1),transform 1s cubic-bezier(.16,1,.3,1);}
-.reveal-left.in{opacity:1;transform:none;}
-.reveal-right{opacity:0;transform:translateX(32px);transition:opacity 1s cubic-bezier(.16,1,.3,1),transform 1s cubic-bezier(.16,1,.3,1);}
-.reveal-right.in{opacity:1;transform:none;}
+.reveal-l{opacity:0;transform:translateX(-28px);transition:opacity .9s cubic-bezier(.16,1,.3,1),transform .9s cubic-bezier(.16,1,.3,1);}
+.reveal-l.in{opacity:1;transform:none;}
+.reveal-r{opacity:0;transform:translateX(28px);transition:opacity .9s cubic-bezier(.16,1,.3,1),transform .9s cubic-bezier(.16,1,.3,1);}
+.reveal-r.in{opacity:1;transform:none;}
 
-/* ── BTN ── */
-.btn{display:inline-block;padding:15px 44px;background:var(--w);color:var(--bg);font-family:'DM Mono',monospace;font-size:12px;letter-spacing:.16em;text-transform:uppercase;text-decoration:none;border:none;cursor:pointer;transition:transform .2s,box-shadow .2s,opacity .2s;position:relative;overflow:hidden;}
-.btn::after{content:'';position:absolute;inset:0;background:rgba(0,0,0,.1);transform:translateY(100%);transition:transform .3s cubic-bezier(.16,1,.3,1);}
+/* BTNS */
+.btn{display:inline-block;padding:15px 44px;background:var(--w);color:var(--bg);font-family:'DM Mono',monospace;font-size:12px;letter-spacing:.16em;text-transform:uppercase;text-decoration:none;border:none;cursor:pointer;transition:transform .2s,box-shadow .2s;}
 .btn:hover{transform:translateY(-2px);box-shadow:0 12px 40px rgba(245,245,240,.15);}
-.btn:hover::after{transform:translateY(0);}
 .btn-ghost{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--m);text-decoration:none;transition:color .2s;cursor:pointer;display:inline-flex;align-items:center;gap:8px;border:none;background:none;font-family:'DM Mono',monospace;}
 .btn-ghost:hover{color:var(--w);}
-.btn-ghost .arrow{transition:transform .25s;}
-.btn-ghost:hover .arrow{transform:translateX(5px);}
+.btn-ghost .arr{transition:transform .25s;}
+.btn-ghost:hover .arr{transform:translateX(5px);}
 
-/* ── HERO ── */
+/* HERO */
 .hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:100px var(--gut) 80px;position:relative;z-index:2;}
-.hero-bg-grid{position:absolute;inset:0;z-index:0;background-image:linear-gradient(rgba(245,245,240,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(245,245,240,.03) 1px,transparent 1px);background-size:64px 64px;mask-image:radial-gradient(ellipse 85% 75% at 50% 50%,black 20%,transparent 100%);}
-.hero-tag{font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:var(--m);margin-bottom:32px;display:flex;align-items:center;gap:16px;animation:fadeUp .8s cubic-bezier(.16,1,.3,1) .15s both;}
+.hero-grid-bg{position:absolute;inset:0;background-image:linear-gradient(rgba(245,245,240,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(245,245,240,.03) 1px,transparent 1px);background-size:64px 64px;mask-image:radial-gradient(ellipse 85% 75% at 50% 50%,black 20%,transparent 100%);}
+.hero-tag{font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:var(--m);margin-bottom:32px;display:flex;align-items:center;gap:16px;animation:fadeUp .8s .15s both;}
 .hero-tag::before,.hero-tag::after{content:'';width:40px;height:1px;background:var(--m);}
-.hero-dot{width:5px;height:5px;border-radius:50%;background:var(--g);animation:dotPulse 2s ease-in-out infinite;}
-.hero-num{font-family:'Bebas Neue',sans-serif;font-size:clamp(160px,27vw,340px);line-height:.82;letter-spacing:-.02em;color:var(--w);animation:fadeUp .9s cubic-bezier(.16,1,.3,1) .25s both,flicker 8s 3s infinite;position:relative;z-index:2;}
-.hero-num-ghost{position:absolute;inset:0;font-family:'Bebas Neue',sans-serif;font-size:clamp(160px,27vw,340px);line-height:.82;color:transparent;-webkit-text-stroke:1px rgba(245,245,240,.08);pointer-events:none;z-index:1;animation:fadeIn 1.5s .5s both;}
-.hero-tagline{font-family:'DM Serif Display',serif;font-style:italic;font-size:clamp(22px,3.5vw,44px);color:var(--w);opacity:.5;margin-top:16px;animation:fadeUp .8s cubic-bezier(.16,1,.3,1) .35s both;}
-.hero-body{font-size:14px;line-height:2;color:var(--m);max-width:480px;margin:28px auto 0;animation:fadeUp .8s cubic-bezier(.16,1,.3,1) .45s both;}
-.hero-actions{display:flex;align-items:center;justify-content:center;gap:24px;flex-wrap:wrap;margin-top:56px;animation:fadeUp .8s cubic-bezier(.16,1,.3,1) .55s both;}
+.hero-dot{width:5px;height:5px;border-radius:50%;background:var(--g);animation:dotPulse 1.8s ease-in-out infinite;}
+
+/* THE BIG NUMBER */
+.hero-num-wrap{position:relative;display:inline-block;animation:revealNum .9s cubic-bezier(.16,1,.3,1) .25s both;}
+.hero-num{font-family:'Bebas Neue',sans-serif;font-size:clamp(200px,32vw,400px);line-height:.82;letter-spacing:-.02em;color:var(--w);position:relative;z-index:2;
+  animation:flicker 5s 2s infinite;}
+.hero-num-ghost{position:absolute;inset:0;font-family:'Bebas Neue',sans-serif;font-size:clamp(200px,32vw,400px);line-height:.82;color:transparent;-webkit-text-stroke:1px rgba(245,245,240,.06);pointer-events:none;z-index:1;}
+/* lightning overlay */
+.hero-lightning{position:absolute;inset:0;z-index:3;pointer-events:none;
+  background:rgba(245,245,240,.04);
+  animation:lightning 5s 2s infinite;}
+/* glitch copy */
+.hero-num-glitch{position:absolute;inset:0;font-family:'Bebas Neue',sans-serif;font-size:clamp(200px,32vw,400px);line-height:.82;color:var(--w);z-index:4;pointer-events:none;opacity:0;
+  animation:glitch 5s 2s infinite;}
+
+.hero-tagline{font-family:'DM Serif Display',serif;font-style:italic;font-size:clamp(22px,3.5vw,44px);color:var(--w);opacity:.45;margin-top:16px;animation:fadeUp .8s .35s both;}
+.hero-body{font-size:14px;line-height:2;color:var(--m);max-width:500px;margin:28px auto 0;animation:fadeUp .8s .45s both;}
+.hero-actions{display:flex;align-items:center;justify-content:center;gap:24px;flex-wrap:wrap;margin-top:52px;animation:fadeUp .8s .55s both;}
 .hero-scroll{position:absolute;bottom:32px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:12px;animation:fadeIn 1s 1.2s both;}
 .hero-scroll span{font-size:8px;letter-spacing:.3em;text-transform:uppercase;color:var(--m);}
 .scroll-line{width:1px;height:40px;background:linear-gradient(to bottom,var(--m),transparent);transform-origin:top;animation:scrollPulse 2.5s ease-in-out infinite;}
 
-/* ── TICKER ── */
-.ticker-wrap{overflow:hidden;border-top:1px solid var(--b);border-bottom:1px solid var(--b);padding:14px 0;position:relative;z-index:2;}
-.ticker-track{display:flex;gap:0;white-space:nowrap;animation:ticker 22s linear infinite;}
+/* TICKER */
+.ticker-wrap{overflow:hidden;border-top:1px solid var(--b);border-bottom:1px solid var(--b);padding:13px 0;position:relative;z-index:2;}
+.ticker-track{display:flex;white-space:nowrap;animation:ticker 28s linear infinite;}
 .ticker-item{display:inline-flex;align-items:center;gap:24px;padding:0 40px;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--m);}
-.ticker-sep{color:rgba(245,245,240,.15);font-size:14px;}
+.ticker-sep{color:rgba(245,245,240,.15);}
 
-/* ── STATS ── */
+/* STATS */
 .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--b);}
-.stat-item{background:var(--bg);padding:44px 36px;text-align:center;position:relative;overflow:hidden;transition:background .3s;}
+.stat-item{background:var(--bg);padding:44px 32px;text-align:center;position:relative;overflow:hidden;transition:background .3s;}
 .stat-item:hover{background:var(--s);}
-.stat-item::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:1px;height:0;background:rgba(245,245,240,.2);transition:height .6s cubic-bezier(.16,1,.3,1);}
-.stat-item:hover::before{height:100%;}
-.stat-n{font-family:'Bebas Neue',sans-serif;font-size:60px;line-height:1;margin-bottom:8px;}
+.stat-item::after{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%) scaleY(0);width:1px;height:100%;background:rgba(245,245,240,.15);transform-origin:top;transition:transform .6s cubic-bezier(.16,1,.3,1);}
+.stat-item:hover::after{transform:translateX(-50%) scaleY(1);}
+.stat-n{font-family:'Bebas Neue',sans-serif;font-size:58px;line-height:1;margin-bottom:8px;}
 .stat-l{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--m);}
-.stat-sub{font-size:11px;color:rgba(245,245,240,.3);margin-top:4px;}
+.stat-sub{font-size:10px;color:rgba(245,245,240,.25);margin-top:4px;}
 
-/* ── MANIFESTO ── */
-.manifesto-big{font-family:'DM Serif Display',serif;font-size:clamp(32px,5vw,62px);line-height:1.12;font-weight:400;max-width:900px;margin:0 auto 36px;}
+/* MANIFESTO */
+.manifesto-big{font-family:'DM Serif Display',serif;font-size:clamp(32px,5vw,60px);line-height:1.12;font-weight:400;max-width:900px;margin:0 auto 36px;}
 .manifesto-big em{font-style:italic;opacity:.32;}
-.manifesto-sub{font-size:14px;line-height:2;color:var(--m);max-width:540px;margin:0 auto 48px;}
-.manifesto-list{display:flex;justify-content:center;gap:40px;flex-wrap:wrap;}
-.manifesto-pt{display:flex;align-items:center;gap:10px;font-size:11px;letter-spacing:.12em;color:var(--m);}
+.manifesto-sub{font-size:14px;line-height:2;color:var(--m);max-width:540px;margin:0 auto 44px;}
+.manifesto-pts{display:flex;justify-content:center;gap:36px;flex-wrap:wrap;}
+.manifesto-pt{display:flex;align-items:center;gap:10px;font-size:11px;letter-spacing:.1em;color:var(--m);}
 .manifesto-pt::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--g);flex-shrink:0;}
 
-/* ── FEATURES ── */
+/* BIG NUMBER SECTION (reutiliza efeito do hero) */
+.big-num-section{text-align:center;position:relative;overflow:hidden;}
+.big-num-wrap{display:inline-block;position:relative;}
+.big-num{font-family:'Bebas Neue',sans-serif;line-height:.85;color:var(--w);position:relative;z-index:2;animation:flicker 4s ease-in-out infinite;}
+.big-num-lightning{position:absolute;inset:0;z-index:3;pointer-events:none;background:rgba(245,245,240,.04);animation:lightning 4s infinite;}
+.big-num-glitch{position:absolute;inset:0;font-family:'Bebas Neue',sans-serif;line-height:.85;color:var(--w);z-index:4;pointer-events:none;opacity:0;animation:glitch 4s infinite;}
+.big-num-ghost{position:absolute;inset:0;font-family:'Bebas Neue',sans-serif;line-height:.85;color:transparent;-webkit-text-stroke:1px rgba(245,245,240,.06);z-index:1;pointer-events:none;}
+
+/* FEATURES */
 .feat-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--b);}
-.feat-card{background:var(--bg);padding:56px 48px;position:relative;overflow:hidden;transition:background .35s;cursor:default;}
-.feat-card:hover{background:var(--s);}
-.feat-scan{position:absolute;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(245,245,240,.08),rgba(245,245,240,.18),rgba(245,245,240,.08),transparent);top:-2px;opacity:0;}
-.feat-card:hover .feat-scan{animation:scanLine 1.8s ease-in-out forwards;}
-.feat-num{position:absolute;top:28px;right:32px;font-family:'Bebas Neue',sans-serif;font-size:90px;line-height:1;color:rgba(245,245,240,.03);user-select:none;transition:color .35s;}
-.feat-card:hover .feat-num{color:rgba(245,245,240,.07);}
-.feat-icon-wrap{width:44px;height:44px;border:1px solid var(--b2);display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:28px;transition:border-color .3s,transform .3s;}
-.feat-card:hover .feat-icon-wrap{border-color:rgba(245,245,240,.4);transform:scale(1.05);}
-.feat-title{font-family:'DM Serif Display',serif;font-size:24px;font-weight:400;margin-bottom:14px;transition:transform .3s;}
-.feat-card:hover .feat-title{transform:translateX(4px);}
-.feat-body{font-size:13px;line-height:1.9;color:var(--m);margin-bottom:28px;}
+.feat{background:var(--bg);padding:52px 44px;position:relative;overflow:hidden;transition:background .3s;}
+.feat:hover{background:var(--s);}
+.feat-scan{position:absolute;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(245,245,240,.08),rgba(245,245,240,.2),rgba(245,245,240,.08),transparent);top:-2px;opacity:0;}
+.feat:hover .feat-scan{animation:scanLine 1.6s ease-in-out forwards;}
+.feat-n{position:absolute;top:24px;right:28px;font-family:'Bebas Neue',sans-serif;font-size:88px;line-height:1;color:rgba(245,245,240,.03);user-select:none;transition:color .3s;}
+.feat:hover .feat-n{color:rgba(245,245,240,.07);}
+.feat-icon{width:42px;height:42px;border:1px solid var(--b2);display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:26px;transition:border-color .3s,transform .3s;}
+.feat:hover .feat-icon{border-color:rgba(245,245,240,.4);transform:scale(1.06);}
+.feat-title{font-family:'DM Serif Display',serif;font-size:22px;font-weight:400;margin-bottom:12px;transition:transform .3s;}
+.feat:hover .feat-title{transform:translateX(4px);}
+.feat-body{font-size:13px;line-height:1.9;color:var(--m);margin-bottom:24px;}
 .feat-tag{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--m);border:1px solid var(--b);padding:4px 12px;display:inline-block;transition:border-color .2s,color .2s;}
-.feat-card:hover .feat-tag{border-color:rgba(245,245,240,.35);color:rgba(245,245,240,.7);}
-.feat-preview{margin-top:24px;}
+.feat:hover .feat-tag{border-color:rgba(245,245,240,.35);color:rgba(245,245,240,.7);}
+.feat-preview{margin-top:22px;}
 
 /* mini elements */
-.mini-card{background:var(--s2);border:1px solid var(--b);padding:14px 16px;}
+.mini-card{background:var(--s2);border:1px solid var(--b);padding:13px 15px;}
 .mini-row{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--b);}
 .mini-row:last-child{border-bottom:none;}
 .mini-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
@@ -150,141 +202,144 @@ body{background:var(--bg);color:var(--w);font-family:'DM Mono',monospace;font-we
 .mini-bar-wrap{height:2px;background:var(--mu);}
 .mini-bar{height:100%;background:var(--w);width:0%;transition:width 1.2s cubic-bezier(.16,1,.3,1);}
 .mini-heat{display:grid;grid-template-columns:repeat(13,1fr);gap:2px;}
-.mhc{aspect-ratio:1;border-radius:1px;transition:opacity .2s;}
-.mhc:hover{opacity:.7;}
+.mhc{aspect-ratio:1;border-radius:1px;}
 .mhc.p{background:var(--w);}
 .mhc.h{background:rgba(245,245,240,.35);}
 .mhc.f{background:rgba(245,245,240,.1);}
 .mhc.e{background:rgba(245,245,240,.04);}
-.mini-chart{display:flex;align-items:flex-end;gap:5px;height:56px;}
+.mini-chart{display:flex;align-items:flex-end;gap:5px;height:52px;}
 .mcbar{flex:1;border-radius:1px 1px 0 0;transform-origin:bottom;transform:scaleY(0);transition:transform .9s cubic-bezier(.16,1,.3,1);}
-.mcbar.low{background:rgba(245,245,240,.2);}
-.mcbar.high{background:rgba(245,245,240,.85);}
-.mini-journal{background:var(--s2);border:1px solid var(--b);padding:14px 16px;}
-.mini-jlbl{font-size:8px;letter-spacing:.22em;text-transform:uppercase;color:var(--m);margin-bottom:8px;}
-.mini-jtext{font-size:11px;line-height:1.7;color:rgba(245,245,240,.5);min-height:38px;}
+.mcbar.lo{background:rgba(245,245,240,.2);}
+.mcbar.hi{background:rgba(245,245,240,.85);}
+.mini-journal{background:var(--s2);border:1px solid var(--b);padding:12px 14px;}
+.mini-jlbl{font-size:8px;letter-spacing:.22em;text-transform:uppercase;color:var(--m);margin-bottom:7px;}
+.mini-jtext{font-size:11px;line-height:1.7;color:rgba(245,245,240,.5);min-height:36px;}
 .mini-ach-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
-.mini-ach{border:1px solid var(--b);padding:12px 8px;text-align:center;transition:border-color .2s,transform .2s;}
+.mini-ach{border:1px solid var(--b);padding:10px 8px;text-align:center;transition:border-color .2s,transform .2s;}
 .mini-ach:hover{transform:translateY(-2px);}
 .mini-ach.un{border-color:rgba(245,245,240,.22);}
-.mini-ach-icon{font-size:16px;display:block;margin-bottom:5px;filter:grayscale(1);opacity:.3;transition:filter .3s,opacity .3s;}
+.mini-ach-icon{font-size:15px;display:block;margin-bottom:4px;filter:grayscale(1);opacity:.3;}
 .mini-ach.un .mini-ach-icon{filter:none;opacity:1;}
 .mini-ach-lbl{font-size:7px;letter-spacing:.1em;text-transform:uppercase;color:var(--m);}
 .mini-ach.un .mini-ach-lbl{color:var(--w);}
 
-/* ── STEPS ── */
-.steps-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--b);margin-top:60px;}
-.step{background:var(--bg);padding:56px 44px;position:relative;overflow:hidden;transition:background .3s;}
+/* STEPS */
+.steps-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--b);margin-top:56px;}
+.step{background:var(--bg);padding:52px 40px;position:relative;overflow:hidden;transition:background .3s;}
 .step:hover{background:#0d0d0d;}
-.step-num{position:absolute;top:22px;right:26px;font-family:'Bebas Neue',sans-serif;font-size:88px;color:rgba(245,245,240,.04);line-height:1;user-select:none;}
-.step-icon{width:40px;height:40px;border:1px solid rgba(245,245,240,.15);display:flex;align-items:center;justify-content:center;font-size:17px;margin-bottom:28px;transition:border-color .3s;}
+.step-n{position:absolute;top:20px;right:24px;font-family:'Bebas Neue',sans-serif;font-size:84px;color:rgba(245,245,240,.04);line-height:1;user-select:none;}
+.step-icon{width:38px;height:38px;border:1px solid rgba(245,245,240,.15);display:flex;align-items:center;justify-content:center;font-size:16px;margin-bottom:26px;transition:border-color .3s;}
 .step:hover .step-icon{border-color:rgba(245,245,240,.45);}
-.step h3{font-family:'DM Serif Display',serif;font-size:22px;font-weight:400;margin-bottom:14px;}
+.step h3{font-family:'DM Serif Display',serif;font-size:21px;font-weight:400;margin-bottom:12px;}
 .step p{font-size:13px;line-height:1.9;color:var(--m);}
-.step-connector{display:none;}
 
-/* ── PILARES ── */
-.pilares-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:32px;margin-top:56px;}
-.pilar{padding-top:28px;border-top:1px solid var(--b);transition:border-color .3s;}
+/* PILARES */
+.pilares{display:grid;grid-template-columns:repeat(4,1fr);gap:28px;margin-top:52px;}
+.pilar{padding-top:24px;border-top:1px solid var(--b);transition:border-color .3s;}
 .pilar:hover{border-color:rgba(245,245,240,.35);}
-.pilar-num{font-size:10px;letter-spacing:.22em;color:var(--m);margin-bottom:16px;}
-.pilar h3{font-family:'DM Serif Display',serif;font-size:20px;font-weight:400;margin-bottom:12px;}
+.pilar-n{font-size:10px;letter-spacing:.22em;color:var(--m);margin-bottom:14px;}
+.pilar h3{font-family:'DM Serif Display',serif;font-size:20px;font-weight:400;margin-bottom:10px;}
 .pilar p{font-size:12px;line-height:1.95;color:var(--m);}
-.pilar-habits{margin-top:16px;display:flex;flex-direction:column;gap:6px;}
-.pilar-habit{font-size:10px;letter-spacing:.06em;color:rgba(245,245,240,.35);display:flex;align-items:center;gap:8px;}
-.pilar-habit::before{content:'';width:4px;height:4px;border-radius:50%;background:rgba(245,245,240,.2);flex-shrink:0;}
+.pilar-list{margin-top:14px;display:flex;flex-direction:column;gap:5px;}
+.pilar-item{font-size:10px;letter-spacing:.05em;color:rgba(245,245,240,.3);display:flex;align-items:center;gap:8px;}
+.pilar-item::before{content:'';width:3px;height:3px;border-radius:50%;background:rgba(245,245,240,.2);flex-shrink:0;}
 
-/* ── SPLIT SECTION ── */
-.split{display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center;}
-.split-title{font-family:'DM Serif Display',serif;font-size:clamp(26px,3.5vw,46px);font-weight:400;line-height:1.2;margin-bottom:20px;}
-.split-title em{font-style:italic;opacity:.4;}
-.split-body{font-size:13px;line-height:2;color:var(--m);margin-bottom:36px;}
-.split-stats{display:flex;gap:32px;margin-bottom:36px;}
-.split-stat{}
-.split-stat-n{font-family:'Bebas Neue',sans-serif;font-size:44px;line-height:1;margin-bottom:4px;}
-.split-stat-l{font-size:10px;letter-spacing:.14em;color:var(--m);}
+/* SPLIT */
+.split{display:grid;grid-template-columns:1fr 1fr;gap:72px;align-items:center;}
+.split-title{font-family:'DM Serif Display',serif;font-size:clamp(26px,3.5vw,44px);font-weight:400;line-height:1.2;margin-bottom:18px;}
+.split-title em{font-style:italic;opacity:.38;}
+.split-body{font-size:13px;line-height:2;color:var(--m);margin-bottom:32px;}
+.split-nums{display:flex;gap:28px;margin-bottom:32px;}
+.split-num-n{font-family:'Bebas Neue',sans-serif;font-size:42px;line-height:1;margin-bottom:3px;}
+.split-num-l{font-size:10px;letter-spacing:.14em;color:var(--m);}
 
-/* ── PROGRESS BANNER ── */
-.prog-wrap{border:1px solid var(--b);padding:44px 52px;position:relative;overflow:hidden;}
+/* PROGRESS BANNER */
+.prog-wrap{border:1px solid var(--b);padding:40px 48px;position:relative;overflow:hidden;}
 .prog-wrap::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(245,245,240,.02),transparent 60%);pointer-events:none;}
-.prog-inner{display:grid;grid-template-columns:1fr auto;gap:52px;align-items:center;}
-.prog-title{font-family:'DM Serif Display',serif;font-size:clamp(22px,3vw,38px);font-weight:400;margin-bottom:8px;}
+.prog-grid{display:grid;grid-template-columns:1fr auto;gap:48px;align-items:center;}
+.prog-title{font-family:'DM Serif Display',serif;font-size:clamp(22px,3vw,36px);font-weight:400;margin-bottom:8px;}
 .prog-title em{font-style:italic;opacity:.38;}
-.prog-sub{font-size:12px;letter-spacing:.07em;color:var(--m);margin-bottom:28px;}
+.prog-sub{font-size:12px;letter-spacing:.06em;color:var(--m);margin-bottom:24px;}
 .prog-bar-bg{height:2px;background:var(--mu);}
-.prog-bar-fill{height:100%;background:var(--w);width:0%;transition:width 1.6s cubic-bezier(.16,1,.3,1);}
+.prog-bar{height:100%;background:var(--w);transition:width 1.6s cubic-bezier(.16,1,.3,1);}
 .prog-marks{display:flex;justify-content:space-between;margin-top:10px;}
 .prog-mark{font-size:9px;letter-spacing:.1em;color:var(--m);}
 .prog-mark.on{color:var(--w);}
-.prog-big{font-family:'Bebas Neue',sans-serif;font-size:88px;line-height:.9;text-align:right;}
-.prog-big-sub{font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:var(--m);margin-top:6px;text-align:right;}
+.prog-big{font-family:'Bebas Neue',sans-serif;font-size:84px;line-height:.9;text-align:right;animation:flicker 6s 1s infinite;}
+.prog-big-sub{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--m);margin-top:6px;text-align:right;}
 
-/* ── TIMELINE ── */
-.timeline{display:flex;flex-direction:column;gap:0;position:relative;margin-top:56px;}
+/* TIMELINE */
+.timeline{display:flex;flex-direction:column;position:relative;margin-top:52px;}
 .timeline::before{content:'';position:absolute;left:0;top:0;bottom:0;width:1px;background:var(--b);}
-.tl-item{padding:0 0 48px 40px;position:relative;opacity:0;transform:translateX(-16px);transition:opacity .8s cubic-bezier(.16,1,.3,1),transform .8s cubic-bezier(.16,1,.3,1);}
+.tl-item{padding:0 0 44px 36px;position:relative;opacity:0;transform:translateX(-14px);transition:opacity .8s cubic-bezier(.16,1,.3,1),transform .8s cubic-bezier(.16,1,.3,1);}
 .tl-item.in{opacity:1;transform:none;}
 .tl-item::before{content:'';position:absolute;left:-4px;top:6px;width:9px;height:9px;border-radius:50%;background:var(--mu);border:1px solid var(--b2);transition:background .3s,border-color .3s;}
 .tl-item.in::before{background:var(--w);border-color:var(--w);}
-.tl-day{font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:.14em;color:var(--m);margin-bottom:8px;}
-.tl-title{font-size:14px;letter-spacing:.04em;margin-bottom:6px;}
-.tl-body{font-size:12px;line-height:1.8;color:var(--m);}
+.tl-day{font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:.14em;color:var(--m);margin-bottom:6px;}
+.tl-t{font-size:13px;letter-spacing:.04em;margin-bottom:5px;}
+.tl-b{font-size:12px;line-height:1.8;color:var(--m);}
 
-/* ── SOCIAL PROOF ── */
-.proofs-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--b);margin-top:56px;}
-.proof{background:var(--bg);padding:40px 36px;transition:background .3s;}
+/* DEPOIMENTOS */
+.proofs{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--b);margin-top:52px;}
+.proof{background:var(--bg);padding:36px 32px;transition:background .3s;}
 .proof:hover{background:var(--s);}
-.proof-quote{font-family:'DM Serif Display',serif;font-style:italic;font-size:17px;line-height:1.65;color:rgba(245,245,240,.7);margin-bottom:24px;}
-.proof-quote::before{content:'"';opacity:.3;font-size:28px;line-height:.7;display:block;margin-bottom:8px;}
-.proof-author{display:flex;align-items:center;gap:12px;}
-.proof-avatar{width:32px;height:32px;border-radius:50%;background:var(--mu);border:1px solid var(--b2);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--m);font-weight:500;flex-shrink:0;}
-.proof-name{font-size:11px;letter-spacing:.08em;}
-.proof-meta{font-size:10px;color:var(--m);margin-top:2px;letter-spacing:.06em;}
 .proof-stars{display:flex;gap:3px;margin-bottom:14px;}
 .proof-star{color:var(--w);font-size:10px;}
+.proof-q{font-family:'DM Serif Display',serif;font-style:italic;font-size:16px;line-height:1.65;color:rgba(245,245,240,.7);margin-bottom:22px;}
+.proof-q::before{content:'"';opacity:.3;font-size:26px;line-height:.7;display:block;margin-bottom:6px;}
+.proof-author{display:flex;align-items:center;gap:12px;}
+.proof-av{width:30px;height:30px;border-radius:50%;background:var(--mu);border:1px solid var(--b2);display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--m);flex-shrink:0;}
+.proof-name{font-size:11px;letter-spacing:.06em;}
+.proof-meta{font-size:9px;color:var(--m);margin-top:2px;}
 
-/* ── FAQ ── */
-.faq-list{max-width:720px;margin:52px auto 0;}
+/* FAQ */
+.faq-list{max-width:720px;margin:48px auto 0;}
 .faq-item{border-top:1px solid var(--b);overflow:hidden;}
 .faq-item:last-child{border-bottom:1px solid var(--b);}
-.faq-q{width:100%;background:none;border:none;color:var(--w);font-family:'DM Mono',monospace;font-weight:300;font-size:14px;letter-spacing:.03em;padding:22px 0;display:flex;justify-content:space-between;align-items:center;cursor:pointer;text-align:left;transition:color .2s;gap:16px;}
+.faq-q{width:100%;background:none;border:none;color:var(--w);font-family:'DM Mono',monospace;font-weight:300;font-size:14px;letter-spacing:.03em;padding:20px 0;display:flex;justify-content:space-between;align-items:center;cursor:pointer;text-align:left;transition:color .2s;gap:16px;}
 .faq-q:hover{color:rgba(245,245,240,.6);}
 .faq-icon{width:22px;height:22px;border:1px solid var(--m);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--m);flex-shrink:0;transition:transform .3s,border-color .2s,color .2s;}
 .faq-item.open .faq-icon{transform:rotate(45deg);border-color:var(--w);color:var(--w);}
 .faq-a{font-size:13px;line-height:1.95;color:var(--m);max-height:0;overflow:hidden;transition:max-height .45s cubic-bezier(.16,1,.3,1),padding .3s;}
-.faq-item.open .faq-a{max-height:300px;padding-bottom:22px;}
+.faq-item.open .faq-a{max-height:300px;padding-bottom:20px;}
 
-/* ── CTA ── */
-.cta-wrap{padding:clamp(80px,12vw,180px) var(--gut);text-align:center;position:relative;z-index:2;overflow:hidden;}
+/* CTA */
+.cta-wrap{padding:clamp(80px,12vw,160px) var(--gut);text-align:center;position:relative;z-index:2;overflow:hidden;}
 .cta-ghost{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-family:'Bebas Neue',sans-serif;font-size:clamp(80px,18vw,240px);color:rgba(245,245,240,.018);white-space:nowrap;pointer-events:none;letter-spacing:.06em;user-select:none;}
-.cta-title{font-family:'DM Serif Display',serif;font-size:clamp(36px,5.5vw,72px);font-weight:400;margin-bottom:18px;position:relative;z-index:2;line-height:1.1;}
-.cta-title em{font-style:italic;opacity:.38;}
-.cta-body{font-size:14px;color:var(--m);margin-bottom:52px;letter-spacing:.04em;position:relative;z-index:2;}
+.cta-title{font-family:'DM Serif Display',serif;font-size:clamp(36px,5.5vw,70px);font-weight:400;margin-bottom:16px;position:relative;z-index:2;line-height:1.1;}
+.cta-title em{font-style:italic;opacity:.36;}
+.cta-body{font-size:14px;color:var(--m);margin-bottom:48px;position:relative;z-index:2;}
 .cta-note{font-size:11px;color:var(--m);margin-top:22px;letter-spacing:.1em;display:block;position:relative;z-index:2;}
+/* big number in CTA */
+.cta-num-wrap{position:relative;display:inline-block;margin-bottom:16px;}
+.cta-num{font-family:'Bebas Neue',sans-serif;font-size:clamp(100px,18vw,220px);line-height:.85;color:var(--w);position:relative;z-index:2;animation:flicker 4.5s .5s infinite;}
+.cta-num-lightning{position:absolute;inset:0;z-index:3;pointer-events:none;background:rgba(245,245,240,.04);animation:lightning 4.5s .5s infinite;}
+.cta-num-glitch{position:absolute;inset:0;font-family:'Bebas Neue',sans-serif;font-size:clamp(100px,18vw,220px);line-height:.85;color:var(--w);z-index:4;pointer-events:none;opacity:0;animation:glitch 4.5s .5s infinite;}
+.cta-num-ghost{position:absolute;inset:0;font-family:'Bebas Neue',sans-serif;font-size:clamp(100px,18vw,220px);line-height:.85;color:transparent;-webkit-text-stroke:1px rgba(245,245,240,.05);z-index:1;pointer-events:none;}
 
-/* ── FOOTER ── */
-footer{border-top:1px solid var(--b);padding:40px var(--gut);position:relative;z-index:2;}
+/* FOOTER */
+footer{border-top:1px solid var(--b);padding:36px var(--gut);position:relative;z-index:2;}
 .footer-inner{max-width:var(--max);margin:0 auto;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:32px;}
 .footer-brand{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:.15em;}
-.footer-links{display:flex;gap:32px;list-style:none;justify-content:center;}
+.footer-links{display:flex;gap:28px;list-style:none;justify-content:center;}
 .footer-links a{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--m);text-decoration:none;transition:color .2s;}
 .footer-links a:hover{color:var(--w);}
 .footer-copy{font-size:11px;color:var(--m);text-align:right;}
 
 @media(max-width:1000px){
   .nav-links{display:none;}
-  .feat-grid,.split,.pilares-grid{grid-template-columns:1fr;}
-  .steps-grid,.proofs-grid{grid-template-columns:1fr;}
+  .feat-grid,.split,.pilares{grid-template-columns:1fr;}
+  .steps-grid,.proofs{grid-template-columns:1fr;}
   .stats-grid{grid-template-columns:1fr 1fr;}
   .footer-inner{grid-template-columns:1fr;text-align:center;}
   .footer-links{justify-content:center;}
   .footer-copy{text-align:center;}
-  .prog-inner{grid-template-columns:1fr;}
+  .prog-grid{grid-template-columns:1fr;}
 }
 @media(max-width:600px){
   .stats-grid{grid-template-columns:1fr;}
-  .hero-actions{flex-direction:column;align-items:center;gap:16px;}
-  .pilares-grid{grid-template-columns:1fr 1fr;}
+  .hero-actions{flex-direction:column;align-items:center;}
+  .pilares{grid-template-columns:1fr 1fr;}
 }
 </style>
 </head>
@@ -302,7 +357,6 @@ footer{border-top:1px solid var(--b);padding:40px var(--gut);position:relative;z
       <li><a href="#features">Funcionalidades</a></li>
       <li><a href="#metodo">Método</a></li>
       <li><a href="#pilares">Pilares</a></li>
-      <li><a href="#depoimentos">Depoimentos</a></li>
       <li><a href="#faq">FAQ</a></li>
     </ul>
     <div class="nav-right">
@@ -314,43 +368,42 @@ footer{border-top:1px solid var(--b);padding:40px var(--gut);position:relative;z
 
 <!-- HERO -->
 <section class="hero">
-  <div class="hero-bg-grid"></div>
+  <div class="hero-grid-bg"></div>
   <div class="hero-tag"><div class="hero-dot"></div>O desafio<div class="hero-dot"></div></div>
-  <div style="position:relative;z-index:2;">
+  <div class="hero-num-wrap">
     <div class="hero-num-ghost">90</div>
     <div class="hero-num">90</div>
+    <div class="hero-lightning"></div>
+    <div class="hero-num-glitch">90</div>
   </div>
   <div class="hero-tagline">dias para mudar tudo.</div>
-  <p class="hero-body">Não é motivação. Não é força de vontade.<br>É um sistema completo de 90 dias para construir hábitos que ficam — com rastreamento diário, métricas reais, diário de reflexão e conquistas.</p>
+  <p class="hero-body">Não é motivação. Não é força de vontade.<br>É um sistema de 90 dias para construir hábitos que ficam — com rastreamento, hidratação, métricas e reflexão diária.</p>
   <div class="hero-actions">
     <a href="login.html" class="btn">Começar agora</a>
-    <a href="#features" class="btn-ghost">Explorar funcionalidades <span class="arrow">→</span></a>
+    <a href="#features" class="btn-ghost">Explorar funcionalidades <span class="arr">→</span></a>
   </div>
-  <div class="hero-scroll">
-    <div class="scroll-line"></div>
-    <span>Role para baixo</span>
-  </div>
+  <div class="hero-scroll"><div class="scroll-line"></div><span>Role</span></div>
 </section>
 
 <!-- TICKER -->
 <div class="ticker-wrap">
   <div class="ticker-track">
     <span class="ticker-item">Dashboard <span class="ticker-sep">·</span></span>
-    <span class="ticker-item">Rastreador de hábitos <span class="ticker-sep">·</span></span>
-    <span class="ticker-item">Métricas em tempo real <span class="ticker-sep">·</span></span>
-    <span class="ticker-item">Diário de reflexão <span class="ticker-sep">·</span></span>
-    <span class="ticker-item">Sistema de conquistas <span class="ticker-sep">·</span></span>
-    <span class="ticker-item">Calendário de progresso <span class="ticker-sep">·</span></span>
-    <span class="ticker-item">Streak e metas <span class="ticker-sep">·</span></span>
-    <span class="ticker-item">90 dias completos <span class="ticker-sep">·</span></span>
+    <span class="ticker-item">Rastreador de Hábitos <span class="ticker-sep">·</span></span>
+    <span class="ticker-item">Hidratação Diária <span class="ticker-sep">·</span></span>
+    <span class="ticker-item">Métricas em Tempo Real <span class="ticker-sep">·</span></span>
+    <span class="ticker-item">Diário de Reflexão <span class="ticker-sep">·</span></span>
+    <span class="ticker-item">Conquistas <span class="ticker-sep">·</span></span>
+    <span class="ticker-item">Calendário 90 dias <span class="ticker-sep">·</span></span>
+    <span class="ticker-item">Streak &amp; Metas <span class="ticker-sep">·</span></span>
     <span class="ticker-item">Dashboard <span class="ticker-sep">·</span></span>
-    <span class="ticker-item">Rastreador de hábitos <span class="ticker-sep">·</span></span>
-    <span class="ticker-item">Métricas em tempo real <span class="ticker-sep">·</span></span>
-    <span class="ticker-item">Diário de reflexão <span class="ticker-sep">·</span></span>
-    <span class="ticker-item">Sistema de conquistas <span class="ticker-sep">·</span></span>
-    <span class="ticker-item">Calendário de progresso <span class="ticker-sep">·</span></span>
-    <span class="ticker-item">Streak e metas <span class="ticker-sep">·</span></span>
-    <span class="ticker-item">90 dias completos <span class="ticker-sep">·</span></span>
+    <span class="ticker-item">Rastreador de Hábitos <span class="ticker-sep">·</span></span>
+    <span class="ticker-item">Hidratação Diária <span class="ticker-sep">·</span></span>
+    <span class="ticker-item">Métricas em Tempo Real <span class="ticker-sep">·</span></span>
+    <span class="ticker-item">Diário de Reflexão <span class="ticker-sep">·</span></span>
+    <span class="ticker-item">Conquistas <span class="ticker-sep">·</span></span>
+    <span class="ticker-item">Calendário 90 dias <span class="ticker-sep">·</span></span>
+    <span class="ticker-item">Streak &amp; Metas <span class="ticker-sep">·</span></span>
   </div>
 </div>
 
@@ -361,7 +414,7 @@ footer{border-top:1px solid var(--b);padding:40px var(--gut);position:relative;z
       <div class="stat-item"><div class="stat-n" id="sn1">0</div><div class="stat-l">Dias de desafio</div><div class="stat-sub">do início ao fim</div></div>
       <div class="stat-item"><div class="stat-n" id="sn2">0</div><div class="stat-l">Hábitos rastreáveis</div><div class="stat-sub">por ciclo</div></div>
       <div class="stat-item"><div class="stat-n" id="sn3">0</div><div class="stat-l">Módulos integrados</div><div class="stat-sub">em um sistema</div></div>
-      <div class="stat-item"><div class="stat-n" id="sn4">0</div><div class="stat-l">Conquistas desbloqueáveis</div><div class="stat-sub">ao longo do desafio</div></div>
+      <div class="stat-item"><div class="stat-n" id="sn4">0</div><div class="stat-l">Conquistas</div><div class="stat-sub">desbloqueáveis</div></div>
     </div>
   </div>
 </section>
@@ -372,13 +425,14 @@ footer{border-top:1px solid var(--b);padding:40px var(--gut);position:relative;z
   <div class="wrap">
     <div class="reveal">
       <div class="label">Manifesto</div>
-      <h2 class="manifesto-big">Hábitos não se <em>criam</em> por motivação.<br>Criam-se por <em>sistema</em> e repetição.</h2>
-      <p class="manifesto-sub">Noventa dias é o tempo que a ciência aponta para consolidar comportamentos complexos. Não estamos aqui para te motivar com frases bonitas — estamos aqui para te dar estrutura, clareza e um sistema que realmente funciona.</p>
-      <div class="manifesto-list">
+      <h2 class="manifesto-big">Hábitos não se <em data-fx="glitch">criam</em> por motivação.<br>Criam-se por <em data-fx="glitch">sistema</em> e repetição.</h2>
+      <p class="manifesto-sub">Noventa dias é o tempo que a ciência aponta para consolidar comportamentos complexos. Um sistema completo — hábitos, hidratação, reflexão e dados reais — para que você não precise de motivação para aparecer.</p>
+      <div class="manifesto-pts">
+        <div class="manifesto-pt">Hidratação monitorada</div>
         <div class="manifesto-pt">Sem motivação necessária</div>
-        <div class="manifesto-pt">Sistema comprovado</div>
         <div class="manifesto-pt">Dados reais, não estimativas</div>
         <div class="manifesto-pt">Reflexão diária</div>
+        <div class="manifesto-pt">Sistema comprovado</div>
       </div>
     </div>
   </div>
@@ -388,35 +442,35 @@ footer{border-top:1px solid var(--b);padding:40px var(--gut);position:relative;z
 <div class="divider"></div>
 <section class="section" id="features">
   <div class="wrap">
-    <div class="label reveal">6 Módulos integrados</div>
+    <div class="label reveal">7 módulos integrados</div>
+    <h2 class="manifesto-big reveal" style="font-size:clamp(28px,4vw,54px);margin-bottom:48px">O sistema que <em data-fx="glitch">transforma</em><br>hábitos em identidade.</h2>
     <div class="feat-grid">
 
       <!-- 01 DASHBOARD -->
-      <div class="feat-card reveal">
+      <div class="feat reveal">
         <div class="feat-scan"></div>
-        <div class="feat-num">01</div>
-        <div class="feat-icon-wrap">◈</div>
+        <div class="feat-n">01</div>
+        <div class="feat-icon">◈</div>
         <div class="feat-title">Dashboard</div>
-        <p class="feat-body">Visão completa do seu progresso num relance. Stat cards animados com disciplina geral, dias completos, streak atual e hábitos do dia. Calendário de 90 dias com dots coloridos por status — perfeito, parcial ou falhou. Gráfico de evolução acumulada com projeção até o dia 90.</p>
+        <p class="feat-body">Visão completa do progresso. Stat cards animados, calendário de 90 dias com dots coloridos por status, consistência por hábito e gráfico de evolução acumulada com projeção até o dia 90.</p>
         <span class="feat-tag">↗ dashboard.html</span>
         <div class="feat-preview">
-          <div class="mini-heat" id="mini-heat" style="margin-bottom:16px"></div>
+          <div class="mini-heat" id="mini-heat" style="margin-bottom:14px"></div>
           <div style="display:flex;flex-direction:column;gap:7px">
-            <div style="display:flex;align-items:center;gap:10px"><span style="font-size:10px;flex:1;letter-spacing:.03em">Acordar às 6h</span><div class="mini-bar-wrap" style="flex:2"><div class="mini-bar" id="mb1"></div></div><span style="font-size:10px;color:var(--m)">100%</span></div>
-            <div style="display:flex;align-items:center;gap:10px"><span style="font-size:10px;flex:1;letter-spacing:.03em">Exercício 30min</span><div class="mini-bar-wrap" style="flex:2"><div class="mini-bar" id="mb2"></div></div><span style="font-size:10px;color:var(--m)">88%</span></div>
-            <div style="display:flex;align-items:center;gap:10px"><span style="font-size:10px;flex:1;letter-spacing:.03em">Sem redes sociais</span><div class="mini-bar-wrap" style="flex:2"><div class="mini-bar" id="mb3"></div></div><span style="font-size:10px;color:var(--m)">91%</span></div>
-            <div style="display:flex;align-items:center;gap:10px"><span style="font-size:10px;flex:1;letter-spacing:.03em">Meditação</span><div class="mini-bar-wrap" style="flex:2"><div class="mini-bar" id="mb4"></div></div><span style="font-size:10px;color:var(--m)">82%</span></div>
+            <div style="display:flex;align-items:center;gap:10px"><span style="font-size:10px;flex:1">Acordar às 6h</span><div class="mini-bar-wrap" style="flex:2"><div class="mini-bar" id="mb1"></div></div><span style="font-size:10px;color:var(--m)">100%</span></div>
+            <div style="display:flex;align-items:center;gap:10px"><span style="font-size:10px;flex:1">Exercício 30min</span><div class="mini-bar-wrap" style="flex:2"><div class="mini-bar" id="mb2"></div></div><span style="font-size:10px;color:var(--m)">88%</span></div>
+            <div style="display:flex;align-items:center;gap:10px"><span style="font-size:10px;flex:1">Sem redes sociais</span><div class="mini-bar-wrap" style="flex:2"><div class="mini-bar" id="mb3"></div></div><span style="font-size:10px;color:var(--m)">91%</span></div>
           </div>
         </div>
       </div>
 
       <!-- 02 HÁBITOS -->
-      <div class="feat-card reveal" style="transition-delay:.07s">
+      <div class="feat reveal" style="transition-delay:.07s">
         <div class="feat-scan"></div>
-        <div class="feat-num">02</div>
-        <div class="feat-icon-wrap">◉</div>
+        <div class="feat-n">02</div>
+        <div class="feat-icon">◉</div>
         <div class="feat-title">Rastreador de Hábitos</div>
-        <p class="feat-body">Crie e rastreie hábitos por pilar — Corpo, Mente, Produção, Conexão. Marque o status com um clique (feito, parcial ou falhou). Veja a streak crescer, edite metas, configure frequência semanal e pause hábitos temporariamente sem perder o histórico.</p>
+        <p class="feat-body">Crie e rastreie hábitos por pilar — Corpo, Mente, Produção, Conexão. Marque o status diário, veja a streak crescer, configure frequência semanal e pause sem perder histórico.</p>
         <span class="feat-tag">↗ habitos.html</span>
         <div class="feat-preview">
           <div class="mini-card">
@@ -429,37 +483,63 @@ footer{border-top:1px solid var(--b);padding:40px var(--gut);position:relative;z
         </div>
       </div>
 
-      <!-- 03 MÉTRICAS -->
-      <div class="feat-card reveal" style="transition-delay:.14s">
+      <!-- 03 HIDRATAÇÃO -->
+      <div class="feat reveal" style="transition-delay:.14s">
         <div class="feat-scan"></div>
-        <div class="feat-num">03</div>
-        <div class="feat-icon-wrap">△</div>
+        <div class="feat-n">03</div>
+        <div class="feat-icon">💧</div>
+        <div class="feat-title">Hidratação</div>
+        <p class="feat-body">A única variável inegociável do dia. Marque cada copo bebido com um clique — persiste entre sessões e reseta à meia-noite. Configure meta e volume. Métricas semanais e conquistas dedicadas a quem mantém a consistência hídrica.</p>
+        <span class="feat-tag">💧 presente em todas as páginas</span>
+        <div class="feat-preview">
+          <div style="display:flex;align-items:flex-end;gap:8px;height:60px;margin-bottom:8px">
+            <div style="flex:1;background:rgba(147,197,253,.22);border-radius:1px 1px 0 0;height:63%"></div>
+            <div style="flex:1;background:rgba(147,197,253,.85);border-radius:1px 1px 0 0;height:100%"></div>
+            <div style="flex:1;background:rgba(147,197,253,.22);border-radius:1px 1px 0 0;height:75%"></div>
+            <div style="flex:1;background:rgba(147,197,253,.85);border-radius:1px 1px 0 0;height:100%"></div>
+            <div style="flex:1;background:rgba(147,197,253,.22);border-radius:1px 1px 0 0;height:88%"></div>
+            <div style="flex:1;background:rgba(147,197,253,.22);border-radius:1px 1px 0 0;height:50%"></div>
+            <div style="flex:1;background:rgba(147,197,253,.85);outline:1px solid rgba(147,197,253,.5);border-radius:1px 1px 0 0;height:75%"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--m);margin-bottom:12px">
+            <span>Seg</span><span>Ter</span><span>Qua</span><span>Qui</span><span>Sex</span><span>Sáb</span><span style="color:var(--w)">Hj</span>
+          </div>
+          <div style="height:1px;background:var(--mu)"><div style="height:100%;background:rgba(147,197,253,.6);width:75%"></div></div>
+          <div style="display:flex;justify-content:space-between;margin-top:5px;font-size:9px;letter-spacing:.08em;color:var(--m)"><span>1500 ml hoje</span><span>meta: 2000 ml</span></div>
+        </div>
+      </div>
+
+      <!-- 04 MÉTRICAS -->
+      <div class="feat reveal" style="transition-delay:.21s">
+        <div class="feat-scan"></div>
+        <div class="feat-n">04</div>
+        <div class="feat-icon">△</div>
         <div class="feat-title">Métricas & Gráficos</div>
-        <p class="feat-body">Dados reais sobre cada aspecto do seu desafio. Gráfico de linhas com evolução acumulada e projeção até o dia 90. Barras de performance semanal com destaque para os dias 100%. Sparklines por hábito mostrando tendência das últimas semanas. Tudo calculado do histórico real.</p>
+        <p class="feat-body">Evolução acumulada com projeção ao dia 90, performance semanal por pilar, sparklines de tendência por hábito e métricas de hidratação. Dados reais — não estimativas.</p>
         <span class="feat-tag">↗ metricas.html</span>
         <div class="feat-preview">
           <div class="mini-chart" id="mini-chart">
-            <div class="mcbar low" style="height:40%"></div>
-            <div class="mcbar low" style="height:55%"></div>
-            <div class="mcbar low" style="height:45%"></div>
-            <div class="mcbar high" style="height:100%"></div>
-            <div class="mcbar low" style="height:65%"></div>
-            <div class="mcbar low" style="height:30%"></div>
-            <div class="mcbar high" style="height:100%"></div>
+            <div class="mcbar lo" style="height:40%"></div>
+            <div class="mcbar lo" style="height:55%"></div>
+            <div class="mcbar lo" style="height:45%"></div>
+            <div class="mcbar hi" style="height:100%"></div>
+            <div class="mcbar lo" style="height:65%"></div>
+            <div class="mcbar lo" style="height:30%"></div>
+            <div class="mcbar hi" style="height:100%"></div>
           </div>
-          <div style="display:flex;justify-content:space-between;margin-top:8px;font-size:9px;letter-spacing:.1em;color:var(--m)">
+          <div style="display:flex;justify-content:space-between;margin-top:8px;font-size:9px;color:var(--m)">
             <span>Seg</span><span>Ter</span><span>Qua</span><span>Qui</span><span>Sex</span><span>Sáb</span><span>Dom</span>
           </div>
         </div>
       </div>
 
-      <!-- 04 DIÁRIO -->
-      <div class="feat-card reveal" style="transition-delay:.21s">
+      <!-- 05 DIÁRIO -->
+      <div class="feat reveal" style="transition-delay:.28s">
         <div class="feat-scan"></div>
-        <div class="feat-num">04</div>
-        <div class="feat-icon-wrap">◻</div>
+        <div class="feat-n">05</div>
+        <div class="feat-icon">◻</div>
         <div class="feat-title">Diário de Reflexão</div>
-        <p class="feat-body">Reflexão diária em 4 dimensões — o que funcionou, o que melhorar amanhã, espaço de escrita livre e 3 gratidões do dia. Navegue pelo histórico com o calendário lateral. Autosave ao sair do campo. Seleção de humor com emojis. Contadores de caracteres em tempo real.</p>
+        <p class="feat-body">Reflexão diária em 4 dimensões — o que funcionou, o que melhorar, espaço livre e 3 gratidões. Calendário lateral, autosave, seleção de humor e histórico completo dos 90 dias.</p>
         <span class="feat-tag">↗ diario.html</span>
         <div class="feat-preview">
           <div class="mini-journal">
@@ -467,57 +547,58 @@ footer{border-top:1px solid var(--b);padding:40px var(--gut);position:relative;z
             <div class="mini-jtext" id="typing-el"></div>
           </div>
           <div style="display:flex;gap:8px;margin-top:10px">
-            <div style="border:1px solid var(--b2);padding:6px 10px;font-size:10px;letter-spacing:.08em;color:rgba(245,245,240,.5)">🔥 Em chamas</div>
-            <div style="border:1px solid rgba(245,245,240,.25);padding:6px 10px;font-size:10px;letter-spacing:.08em;background:rgba(245,245,240,.04)">💪 Forte</div>
+            <div style="border:1px solid var(--b2);padding:6px 10px;font-size:10px;color:rgba(245,245,240,.5)">🔥 Em chamas</div>
+            <div style="border:1px solid rgba(245,245,240,.25);padding:6px 10px;font-size:10px;background:rgba(245,245,240,.04)">💪 Forte</div>
           </div>
         </div>
       </div>
 
-      <!-- 05 CONQUISTAS -->
-      <div class="feat-card reveal" style="transition-delay:.28s">
+      <!-- 06 CONQUISTAS -->
+      <div class="feat reveal" style="transition-delay:.35s">
         <div class="feat-scan"></div>
-        <div class="feat-num">05</div>
-        <div class="feat-icon-wrap">◆</div>
+        <div class="feat-n">06</div>
+        <div class="feat-icon">◆</div>
         <div class="feat-title">Sistema de Conquistas</div>
-        <p class="feat-body">20 conquistas distribuídas em 4 categorias — Jornada, Hábitos, Diário e Especial. Cada uma com progresso real calculado do histórico. Modal animado de desbloqueio com fila sequencial para quando você conquista múltiplas de uma vez. Sistema de pontos acumulativos.</p>
+        <p class="feat-body">26 conquistas em 5 categorias — Jornada, Hábitos, Diário, Hidratação e Especial. Modal animado de desbloqueio, fila sequencial e sistema de pontos que refletem sua dedicação real.</p>
         <span class="feat-tag">↗ conquistas.html</span>
         <div class="feat-preview">
           <div class="mini-ach-grid">
             <div class="mini-ach un"><span class="mini-ach-icon">🌱</span><div class="mini-ach-lbl">1ª Semana</div></div>
-            <div class="mini-ach un"><span class="mini-ach-icon">💪</span><div class="mini-ach-lbl">Quinzena</div></div>
+            <div class="mini-ach un"><span class="mini-ach-icon">💧</span><div class="mini-ach-lbl">Hidratado</div></div>
             <div class="mini-ach un"><span class="mini-ach-icon">🎯</span><div class="mini-ach-lbl">Mestre</div></div>
             <div class="mini-ach"><span class="mini-ach-icon">🏆</span><div class="mini-ach-lbl">90 Dias</div></div>
           </div>
-          <div style="margin-top:14px;padding:10px 12px;background:var(--s2);border:1px solid var(--b);display:flex;align-items:center;gap:12px">
-            <span style="font-size:20px">⚡</span>
+          <div style="margin-top:12px;padding:10px 12px;background:var(--s2);border:1px solid var(--b);display:flex;align-items:center;gap:12px">
+            <span style="font-size:18px">💧</span>
             <div style="flex:1">
-              <div style="font-size:10px;letter-spacing:.1em;color:var(--m);margin-bottom:5px">Próxima: Metade do caminho — 74%</div>
-              <div style="height:2px;background:var(--mu)"><div id="ach-prog-bar" style="height:100%;background:var(--w);width:0%;transition:width 1.2s cubic-bezier(.16,1,.3,1)"></div></div>
+              <div style="font-size:10px;color:var(--m);margin-bottom:5px">Semana hidratada — 57%</div>
+              <div style="height:2px;background:var(--mu)"><div id="ach-prog-bar" style="height:100%;background:rgba(147,197,253,.7);width:0%;transition:width 1.2s cubic-bezier(.16,1,.3,1)"></div></div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- 06 SISTEMA -->
-      <div class="feat-card reveal" style="transition-delay:.35s">
+      <!-- 07 SISTEMA -->
+      <div class="feat reveal" style="transition-delay:.42s;grid-column:1/-1">
         <div class="feat-scan"></div>
-        <div class="feat-num">06</div>
-        <div class="feat-icon-wrap">◎</div>
+        <div class="feat-n">07</div>
+        <div class="feat-icon">◎</div>
         <div class="feat-title">Sistema Integrado</div>
-        <p class="feat-body">Todas as páginas conectadas por um store de dados local. Hábitos criados em Hábitos aparecem no Dashboard, alimentam as Métricas e disparam Conquistas. Cursor personalizado com anel inercial, grid animado de fundo, efeitos de entrada escalonados e hover glow em cada card.</p>
-        <span class="feat-tag">6 módulos · 1 fonte de dados</span>
-        <div class="feat-preview">
-          <div style="padding:18px;background:var(--s2);border:1px solid var(--b)">
-            <div style="display:flex;justify-content:space-between;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--m);margin-bottom:12px"><span>Progresso geral do desafio</span><span id="sys-pct">0%</span></div>
+        <p class="feat-body" style="max-width:600px">Todas as páginas conectadas via localStorage. Hábitos, hidratação, diário e conquistas compartilham a mesma fonte de dados. Cursor personalizado com anel inercial, grid animado de fundo, efeitos de entrada e hover glow em cada card.</p>
+        <span class="feat-tag">7 módulos · 1 sistema</span>
+        <div class="feat-preview" style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;max-width:560px">
+          <div style="padding:16px;background:var(--s2);border:1px solid var(--b)">
+            <div style="font-size:8px;letter-spacing:.16em;text-transform:uppercase;color:var(--m);margin-bottom:8px">Progresso</div>
             <div style="height:2px;background:var(--mu)"><div id="sys-bar" style="height:100%;background:var(--w);width:0%;transition:width 1.6s cubic-bezier(.16,1,.3,1)"></div></div>
-            <div style="display:flex;justify-content:space-between;margin-top:10px;font-size:9px;color:var(--m)">
-              <span>Dia 1</span><span style="color:var(--w)">Dia 34</span><span>Dia 90</span>
-            </div>
-            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:16px">
-              <div style="padding:8px;background:var(--bg);border:1px solid var(--b);text-align:center"><div style="font-family:'Bebas Neue',sans-serif;font-size:22px" id="sys-n1">0</div><div style="font-size:8px;letter-spacing:.1em;color:var(--m)">Disciplina</div></div>
-              <div style="padding:8px;background:var(--bg);border:1px solid var(--b);text-align:center"><div style="font-family:'Bebas Neue',sans-serif;font-size:22px" id="sys-n2">0</div><div style="font-size:8px;letter-spacing:.1em;color:var(--m)">Streak</div></div>
-              <div style="padding:8px;background:var(--bg);border:1px solid var(--b);text-align:center"><div style="font-family:'Bebas Neue',sans-serif;font-size:22px" id="sys-n3">0</div><div style="font-size:8px;letter-spacing:.1em;color:var(--m)">Conquistas</div></div>
-            </div>
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;margin-top:8px" id="sys-pct">0%</div>
+          </div>
+          <div style="padding:16px;background:var(--s2);border:1px solid var(--b)">
+            <div style="font-size:8px;letter-spacing:.16em;text-transform:uppercase;color:var(--m);margin-bottom:8px">Disciplina</div>
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:24px" id="sys-n1">0%</div>
+          </div>
+          <div style="padding:16px;background:var(--s2);border:1px solid var(--b)">
+            <div style="font-size:8px;letter-spacing:.16em;text-transform:uppercase;color:var(--m);margin-bottom:8px">Streak</div>
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:24px" id="sys-n2">0d</div>
           </div>
         </div>
       </div>
@@ -530,25 +611,23 @@ footer{border-top:1px solid var(--b);padding:40px var(--gut);position:relative;z
 <div class="divider"></div>
 <section class="section section-center" id="metodo">
   <div class="wrap">
-    <div class="label reveal">Método</div>
+    <div class="label reveal">Como funciona</div>
+    <h2 class="manifesto-big reveal" style="font-size:clamp(28px,4vw,54px);margin-bottom:0">Três passos.<br>Noventa dias. Uma <em data-fx="glitch">pessoa diferente.</em></h2>
     <div class="steps-grid">
       <div class="step reveal">
-        <div class="step-num">01</div>
-        <div class="step-icon">◎</div>
+        <div class="step-n">01</div><div class="step-icon">◎</div>
         <h3>Defina seus hábitos</h3>
-        <p>Escolha de 3 a 5 hábitos que realmente importam. Simples, concretos e mensuráveis. Organize por pilar: Corpo, Mente, Produção ou Conexão. Configure a frequência semanal de cada um.</p>
+        <p>Escolha de 3 a 5 hábitos por pilar. Simples, concretos e mensuráveis. Configure a meta diária de água. Sem excessos — consistência é o único método.</p>
       </div>
       <div class="step reveal" style="transition-delay:.1s">
-        <div class="step-num">02</div>
-        <div class="step-icon">▣</div>
-        <h3>Registre e reflita</h3>
-        <p>Toda noite marque os hábitos do dia. Escreva uma linha no diário sobre o que funcionou e o que melhorar. 10 minutos por dia constroem clareza que muda tudo.</p>
+        <div class="step-n">02</div><div class="step-icon">▣</div>
+        <h3>Registre cada dia</h3>
+        <p>Marque os hábitos, beba seus copos de água, escreva no diário. 10 minutos por dia constroem clareza e identidade que muda tudo ao longo de 90 dias.</p>
       </div>
       <div class="step reveal" style="transition-delay:.2s">
-        <div class="step-num">03</div>
-        <div class="step-icon">△</div>
-        <h3>Analise e evolua</h3>
-        <p>As métricas mostram padrões invisíveis. Qual hábito está caindo? Qual dia da semana é mais difícil? Use os dados para ajustar antes de perder o fio.</p>
+        <div class="step-n">03</div><div class="step-icon">△</div>
+        <h3>Complete os 90 dias</h3>
+        <p>Ao chegar no dia 90 você não terá completado apenas um desafio. Terá se tornado outra pessoa — com hábitos, corpo e mente transformados.</p>
       </div>
     </div>
   </div>
@@ -559,96 +638,80 @@ footer{border-top:1px solid var(--b);padding:40px var(--gut);position:relative;z
 <section class="section" id="pilares">
   <div class="wrap">
     <div class="label reveal">Os 4 pilares</div>
-    <div class="pilares-grid">
+    <h2 class="manifesto-big reveal" style="font-size:clamp(28px,4vw,54px);margin-bottom:0">Quatro áreas.<br>Um ciclo de <em data-fx="glitch">evolução</em> completo.</h2>
+    <div class="pilares">
       <div class="pilar reveal">
-        <div class="pilar-num">01</div>
-        <h3>Corpo</h3>
-        <p>A base de tudo. Sem um corpo funcional, a mente não opera, a produção despenca e as relações sofrem. Sono, exercício e movimento são inegociáveis.</p>
-        <div class="pilar-habits">
-          <div class="pilar-habit">Acordar às 6h</div>
-          <div class="pilar-habit">Exercício 30min</div>
-          <div class="pilar-habit">Sem álcool</div>
-          <div class="pilar-habit">8h de sono</div>
+        <div class="pilar-n">01</div><h3>Corpo</h3>
+        <p>Sono, exercício e hidratação. Sem um corpo funcional tudo o mais desmorona.</p>
+        <div class="pilar-list">
+          <div class="pilar-item">Acordar às 6h</div>
+          <div class="pilar-item">Exercício 30min</div>
+          <div class="pilar-item">8 copos de água</div>
+          <div class="pilar-item">8h de sono</div>
         </div>
       </div>
       <div class="pilar reveal" style="transition-delay:.08s">
-        <div class="pilar-num">02</div>
-        <h3>Mente</h3>
-        <p>Meditação, leitura e foco profundo. A mente é o músculo mais importante a treinar — e o mais negligenciado. Clareza mental não é sorte, é prática.</p>
-        <div class="pilar-habits">
-          <div class="pilar-habit">Meditação 10min</div>
-          <div class="pilar-habit">Leitura 20min</div>
-          <div class="pilar-habit">Sem redes sociais</div>
-          <div class="pilar-habit">Journaling</div>
+        <div class="pilar-n">02</div><h3>Mente</h3>
+        <p>Meditação, leitura e foco. A mente é o músculo mais importante a treinar.</p>
+        <div class="pilar-list">
+          <div class="pilar-item">Meditação 10min</div>
+          <div class="pilar-item">Leitura 20min</div>
+          <div class="pilar-item">Sem redes sociais</div>
+          <div class="pilar-item">Journaling</div>
         </div>
       </div>
       <div class="pilar reveal" style="transition-delay:.16s">
-        <div class="pilar-num">03</div>
-        <h3>Produção</h3>
-        <p>Trabalho profundo, sem distração. Crie algo todo dia. Quantidade gera qualidade. A produção constante é o único caminho para resultados extraordinários.</p>
-        <div class="pilar-habits">
-          <div class="pilar-habit">2h de foco profundo</div>
-          <div class="pilar-habit">Sem celular até 9h</div>
-          <div class="pilar-habit">Lista do dia</div>
-          <div class="pilar-habit">Review semanal</div>
+        <div class="pilar-n">03</div><h3>Produção</h3>
+        <p>Trabalho profundo, sem distração. Crie algo todo dia. Quantidade gera qualidade.</p>
+        <div class="pilar-list">
+          <div class="pilar-item">2h de foco profundo</div>
+          <div class="pilar-item">Sem celular até 9h</div>
+          <div class="pilar-item">Lista do dia</div>
+          <div class="pilar-item">Review semanal</div>
         </div>
       </div>
       <div class="pilar reveal" style="transition-delay:.24s">
-        <div class="pilar-num">04</div>
-        <h3>Conexão</h3>
-        <p>Relacionamentos reais, gratidão e presença. Somos o resultado das pessoas ao nosso redor. Investir nas conexões certas é investir em si mesmo.</p>
-        <div class="pilar-habits">
-          <div class="pilar-habit">Ligar para família</div>
-          <div class="pilar-habit">Gratidão 3 coisas</div>
-          <div class="pilar-habit">Sem notificações 19h</div>
-          <div class="pilar-habit">Presente à mesa</div>
+        <div class="pilar-n">04</div><h3>Conexão</h3>
+        <p>Relacionamentos reais, gratidão e presença. Somos o resultado das pessoas ao redor.</p>
+        <div class="pilar-list">
+          <div class="pilar-item">Ligar para família</div>
+          <div class="pilar-item">Gratidão 3 coisas</div>
+          <div class="pilar-item">Sem notif. 19h</div>
+          <div class="pilar-item">Presente à mesa</div>
         </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- SPLIT: PROGRESSO -->
+<!-- SPLIT + PROGRESS -->
 <div class="divider"></div>
 <section class="section">
   <div class="wrap">
     <div class="split">
-      <div class="reveal-left">
+      <div class="reveal-l">
         <div class="label">Progresso real</div>
-        <h2 class="split-title">Cada dia marcado<br>é um <em>tijolo.</em></h2>
-        <p class="split-body">90 tijolos formam uma parede. Não é sobre motivação nem inspiração — é sobre aparecer todo dia e fazer a coisa certa, mesmo quando não está com vontade. O sistema registra tudo. A streak não mente.</p>
-        <div class="split-stats">
-          <div class="split-stat">
-            <div class="split-stat-n" id="sp-n1">0</div>
-            <div class="split-stat-l">Dias de dados</div>
-          </div>
-          <div class="split-stat">
-            <div class="split-stat-n" id="sp-n2">0%</div>
-            <div class="split-stat-l">Disciplina geral</div>
-          </div>
-          <div class="split-stat">
-            <div class="split-stat-n" id="sp-n3">0</div>
-            <div class="split-stat-l">Streak atual</div>
-          </div>
+        <h2 class="split-title">Cada dia marcado<br>é um <em data-fx="glitch">tijolo.</em></h2>
+        <p class="split-body">90 tijolos formam uma parede. Não é sobre motivação — é sobre aparecer todo dia, marcar os hábitos, beber a água, escrever uma linha. O sistema registra tudo. A streak não mente.</p>
+        <div class="split-nums">
+          <div><div class="split-num-n" id="sp1">0</div><div class="split-num-l">Dias de dados</div></div>
+          <div><div class="split-num-n" id="sp2">0%</div><div class="split-num-l">Disciplina geral</div></div>
+          <div><div class="split-num-n" id="sp3">0</div><div class="split-num-l">Streak atual</div></div>
         </div>
-        <a href="dashboard.html" class="btn-ghost">Ver dashboard ao vivo <span class="arrow">→</span></a>
+        <a href="dashboard.html" class="btn-ghost">Ver dashboard ao vivo <span class="arr">→</span></a>
       </div>
-      <div class="reveal-right">
+      <div class="reveal-r">
         <div class="prog-wrap">
-          <div class="prog-inner">
+          <div class="prog-grid">
             <div>
-              <div class="prog-title">Jornada do <em>desafio.</em></div>
+              <div class="prog-title">Jornada do <em data-fx="glitch">desafio.</em></div>
               <div class="prog-sub">Dia 34 de 90 — a reta de crescimento começa aqui.</div>
-              <div class="prog-bar-bg"><div class="prog-bar-fill" id="prog-fill"></div></div>
+              <div class="prog-bar-bg"><div class="prog-bar" id="prog-fill" style="width:0%"></div></div>
               <div class="prog-marks">
-                <span class="prog-mark on">Dia 1</span>
-                <span class="prog-mark on">7</span>
-                <span class="prog-mark on">14</span>
-                <span class="prog-mark on">21</span>
-                <span class="prog-mark on">34</span>
-                <span class="prog-mark">45</span>
-                <span class="prog-mark">60</span>
-                <span class="prog-mark">90</span>
+                <span class="prog-mark on">1</span><span class="prog-mark on">7</span>
+                <span class="prog-mark on">14</span><span class="prog-mark on">21</span>
+                <span class="prog-mark on">34</span><span class="prog-mark">45</span>
+                <span class="prog-mark">60</span><span class="prog-mark">90</span>
               </div>
             </div>
             <div>
@@ -667,27 +730,29 @@ footer{border-top:1px solid var(--b);padding:40px var(--gut);position:relative;z
 <section class="section">
   <div class="wrap">
     <div class="label reveal">O que acontece em 90 dias</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:start">
-      <div>
-        <div class="timeline" id="timeline">
-          <div class="tl-item"><div class="tl-day">Dias 1–7</div><div class="tl-title">O início mais difícil</div><div class="tl-body">Resistência máxima. O cérebro ainda não associou o comportamento a recompensa. A streak começa a criar um compromisso visual.</div></div>
-          <div class="tl-item"><div class="tl-day">Dias 8–21</div><div class="tl-title">O primeiro padrão</div><div class="tl-body">Os hábitos começam a se encaixar na rotina. A motivação oscila, mas o sistema segura. Primeira quebra de streak — e primeiro retorno.</div></div>
-          <div class="tl-item"><div class="tl-day">Dias 22–45</div><div class="tl-title">O ponto de inflexão</div><div class="tl-body">A resistência cai. Você começa a fazer os hábitos por inércia positiva, não por força de vontade. As métricas começam a mostrar tendências claras.</div></div>
-          <div class="tl-item"><div class="tl-day">Dias 46–75</div><div class="tl-title">O novo normal</div><div class="tl-body">O comportamento já é parte da identidade. Dias sem fazer o hábito começam a parecer estranhos. A consistência é quase automática.</div></div>
-          <div class="tl-item" style="padding-bottom:0"><div class="tl-day">Dias 76–90</div><div class="tl-title">A transformação real</div><div class="tl-body">Você não completou um desafio. Você tornou-se outra pessoa. O que era esforço virou quem você é.</div></div>
-        </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:72px;align-items:start">
+      <div class="timeline" id="tl">
+        <div class="tl-item"><div class="tl-day">Dias 1–7</div><div class="tl-t">O início mais difícil</div><div class="tl-b">Resistência máxima. O cérebro ainda não associou comportamento a recompensa. A streak cria compromisso visual.</div></div>
+        <div class="tl-item"><div class="tl-day">Dias 8–21</div><div class="tl-t">O primeiro padrão</div><div class="tl-b">Os hábitos começam a se encaixar. A motivação oscila, mas o sistema segura. Primeira quebra — e primeiro retorno.</div></div>
+        <div class="tl-item"><div class="tl-day">Dias 22–45</div><div class="tl-t">O ponto de inflexão</div><div class="tl-b">A resistência cai. Você faz os hábitos por inércia positiva. As métricas mostram tendências claras.</div></div>
+        <div class="tl-item"><div class="tl-day">Dias 46–75</div><div class="tl-t">O novo normal</div><div class="tl-b">O comportamento já é parte da identidade. Dias sem o hábito começam a parecer estranhos.</div></div>
+        <div class="tl-item" style="padding-bottom:0"><div class="tl-day">Dias 76–90</div><div class="tl-t">A transformação real</div><div class="tl-b">Você não completou um desafio. Tornou-se outra pessoa. O que era esforço virou quem você é.</div></div>
       </div>
-      <div class="reveal-right" style="padding-top:8px">
-        <div class="manifesto-big" style="font-size:clamp(24px,3vw,38px);margin-bottom:24px">A identidade muda antes da <em>motivação.</em></div>
-        <p style="font-size:13px;line-height:2;color:var(--m);margin-bottom:32px">A maioria espera sentir vontade para agir. Mas a ciência diz o contrário — a ação cria a identidade, e a identidade cria a motivação. O Project 90 te coloca em ação enquanto a transformação acontece por baixo.</p>
-        <div style="display:flex;flex-direction:column;gap:16px">
-          <div style="display:flex;align-items:flex-start;gap:14px;padding:16px;border:1px solid var(--b)">
-            <div style="font-size:20px;flex-shrink:0">🧠</div>
-            <div><div style="font-size:12px;letter-spacing:.04em;margin-bottom:4px">Neurociência</div><div style="font-size:12px;color:var(--m);line-height:1.8">Hábitos se formam por repetição de loops: gatilho → rotina → recompensa. 90 dias garantem que o loop está instalado.</div></div>
+      <div class="reveal-r">
+        <h2 class="manifesto-big" style="font-size:clamp(24px,3vw,38px);margin-bottom:24px">A identidade muda antes da <em data-fx="glitch">motivação.</em></h2>
+        <p style="font-size:13px;line-height:2;color:var(--m);margin-bottom:28px">A ação cria a identidade, e a identidade cria a motivação. O Project 90 te coloca em ação enquanto a transformação acontece.</p>
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <div style="display:flex;gap:14px;padding:16px;border:1px solid var(--b)">
+            <div style="width:2px;background:rgba(245,245,240,.15);flex-shrink:0"></div>
+            <div><div style="font-size:11px;letter-spacing:.08em;margin-bottom:4px">Neurociência</div><div style="font-size:12px;color:var(--m);line-height:1.8">Hábitos se formam por loops: gatilho → rotina → recompensa. 90 dias garantem o loop instalado.</div></div>
           </div>
-          <div style="display:flex;align-items:flex-start;gap:14px;padding:16px;border:1px solid var(--b)">
-            <div style="font-size:20px;flex-shrink:0">📊</div>
-            <div><div style="font-size:12px;letter-spacing:.04em;margin-bottom:4px">Dados</div><div style="font-size:12px;color:var(--m);line-height:1.8">Pesquisa de Lally et al. (UCL) mostra que hábitos complexos levam em média 66 dias para se automatizar — não 21.</div></div>
+          <div style="display:flex;gap:14px;padding:16px;border:1px solid var(--b)">
+            <div style="width:2px;background:rgba(147,197,253,.4);flex-shrink:0"></div>
+            <div><div style="font-size:11px;letter-spacing:.08em;margin-bottom:4px">Hidratação</div><div style="font-size:12px;color:var(--m);line-height:1.8">2 litros por dia aumentam foco, disposição e recuperação muscular. O corpo que você quer começa aqui.</div></div>
+          </div>
+          <div style="display:flex;gap:14px;padding:16px;border:1px solid var(--b)">
+            <div style="width:2px;background:rgba(245,245,240,.15);flex-shrink:0"></div>
+            <div><div style="font-size:11px;letter-spacing:.08em;margin-bottom:4px">Pesquisa</div><div style="font-size:12px;color:var(--m);line-height:1.8">Lally et al. (UCL): hábitos complexos levam em média 66 dias — não 21. 90 dias é o ponto seguro.</div></div>
           </div>
         </div>
       </div>
@@ -700,30 +765,22 @@ footer{border-top:1px solid var(--b);padding:40px var(--gut);position:relative;z
 <section class="section" id="depoimentos">
   <div class="wrap">
     <div class="label reveal">Depoimentos</div>
-    <div class="proofs-grid">
+    <h2 class="manifesto-big reveal" style="font-size:clamp(28px,4vw,54px);margin-bottom:0">Quem <em data-fx="glitch">chegou</em> ao dia 90.</h2>
+    <div class="proofs">
       <div class="proof reveal">
         <div class="proof-stars"><span class="proof-star">★</span><span class="proof-star">★</span><span class="proof-star">★</span><span class="proof-star">★</span><span class="proof-star">★</span></div>
-        <div class="proof-quote">No dia 34 eu percebi que estava acordando antes do alarme. Sem esforço, sem sacrifício. O hábito simplesmente virou quem eu sou.</div>
-        <div class="proof-author">
-          <div class="proof-avatar">RG</div>
-          <div><div class="proof-name">Rafael G.</div><div class="proof-meta">Dia 87 do desafio · Streak: 52d</div></div>
-        </div>
+        <div class="proof-q">No dia 34 percebi que acordava antes do alarme. Sem esforço. O hábito simplesmente virou quem sou.</div>
+        <div class="proof-author"><div class="proof-av">RG</div><div><div class="proof-name">Rafael G.</div><div class="proof-meta">Dia 87 · Streak: 52d</div></div></div>
       </div>
       <div class="proof reveal" style="transition-delay:.08s">
         <div class="proof-stars"><span class="proof-star">★</span><span class="proof-star">★</span><span class="proof-star">★</span><span class="proof-star">★</span><span class="proof-star">★</span></div>
-        <div class="proof-quote">O diário de reflexão mudou tudo. Escrever o que funcionou e o que melhorar toda noite me deu clareza que nunca tive antes.</div>
-        <div class="proof-author">
-          <div class="proof-avatar">LC</div>
-          <div><div class="proof-name">Luisa C.</div><div class="proof-meta">Completou 90 dias · 4 conquistas</div></div>
-        </div>
+        <div class="proof-q">O tracker de hidratação foi o que mudou tudo. Nunca tinha bebido 2 litros por dia antes. Hoje parece óbvio.</div>
+        <div class="proof-author"><div class="proof-av">LC</div><div><div class="proof-name">Luisa C.</div><div class="proof-meta">Completou 90 dias · 5 conquistas</div></div></div>
       </div>
       <div class="proof reveal" style="transition-delay:.16s">
         <div class="proof-stars"><span class="proof-star">★</span><span class="proof-star">★</span><span class="proof-star">★</span><span class="proof-star">★</span><span class="proof-star">★</span></div>
-        <div class="proof-quote">As métricas me mostraram que sexta-feira era meu ponto fraco. Ajustei a rotina e a disciplina saltou de 74% para 91% em duas semanas.</div>
-        <div class="proof-author">
-          <div class="proof-avatar">MB</div>
-          <div><div class="proof-name">Marcos B.</div><div class="proof-meta">Dia 61 do desafio · 87% disciplina</div></div>
-        </div>
+        <div class="proof-q">As métricas me mostraram que sexta era meu ponto fraco. Ajustei e a disciplina foi de 74% para 91% em duas semanas.</div>
+        <div class="proof-author"><div class="proof-av">MB</div><div><div class="proof-name">Marcos B.</div><div class="proof-meta">Dia 61 · 87% disciplina</div></div></div>
       </div>
     </div>
   </div>
@@ -736,12 +793,11 @@ footer{border-top:1px solid var(--b);padding:40px var(--gut);position:relative;z
     <div class="reveal">
       <div class="label">Perguntas frequentes</div>
       <div class="faq-list">
-        <div class="faq-item"><button class="faq-q">Preciso de experiência prévia com hábitos?<div class="faq-icon">+</div></button><div class="faq-a">Não. O Project 90 é para qualquer pessoa que queira mudar. Você define os hábitos que fazem sentido para o seu nível e objetivo. Pode começar com apenas 3 hábitos simples e escalar.</div></div>
-        <div class="faq-item"><button class="faq-q">E se eu falhar em um dia?<div class="faq-icon">+</div></button><div class="faq-a">Nunca pule dois dias seguidos. Um dia perdido é humano. Dois dias é o início de um novo hábito — o de desistir. O rastreador mostra exatamente onde você caiu, e o diário te ajuda a entender por quê.</div></div>
-        <div class="faq-item"><button class="faq-q">Quantos hábitos devo escolher para começar?<div class="faq-icon">+</div></button><div class="faq-a">Entre 3 e 5. Menos que isso e o impacto é pequeno. Mais que isso e a carga cognitiva te derruba. Comece com 3 hábitos não-negociáveis. Adicione mais somente quando os primeiros forem automáticos.</div></div>
-        <div class="faq-item"><button class="faq-q">Por que 90 dias e não 21 ou 30?<div class="faq-icon">+</div></button><div class="faq-a">21 dias é um mito popularizado sem base científica. A pesquisa de Philippa Lally na UCL mostra que hábitos complexos levam em média 66 dias para se automatizar — com range de 18 a 254 dias. 90 dias é o ponto onde quase todos os hábitos estão consolidados.</div></div>
-        <div class="faq-item"><button class="faq-q">Os dados ficam salvos entre sessões?<div class="faq-icon">+</div></button><div class="faq-a">Sim. Todos os dados são salvos localmente no seu navegador via localStorage. Nada sai do seu dispositivo. Você pode fechar e reabrir sem perder nada. Os dados persistem enquanto não limpar o cache do navegador.</div></div>
-        <div class="faq-item"><button class="faq-q">Posso usar no celular?<div class="faq-icon">+</div></button><div class="faq-a">Sim. Todas as páginas são responsivas. A sidebar da aplicação se esconde em telas menores e a experiência é adaptada para mobile. Funciona em qualquer navegador moderno.</div></div>
+        <div class="faq-item"><button class="faq-q">Preciso de experiência prévia?<div class="faq-icon">+</div></button><div class="faq-a">Não. Você define os hábitos que fazem sentido para o seu nível. Pode começar com 3 hábitos simples — exercício, água e sono — e escalar.</div></div>
+        <div class="faq-item"><button class="faq-q">E se eu falhar em um dia?<div class="faq-icon">+</div></button><div class="faq-a">Nunca pule dois dias seguidos. Um dia perdido é humano. Dois dias é o início de um novo hábito — o de desistir.</div></div>
+        <div class="faq-item"><button class="faq-q">Por que rastrear a hidratação?<div class="faq-icon">+</div></button><div class="faq-a">Desidratação leve (1-2%) já reduz o foco em até 20%. É o hábito mais simples de manter e com maior impacto imediato em energia e performance.</div></div>
+        <div class="faq-item"><button class="faq-q">Por que 90 dias e não 21 ou 30?<div class="faq-icon">+</div></button><div class="faq-a">21 dias é um mito. Pesquisa da UCL mostra média de 66 dias para automatizar hábitos complexos. 90 dias é o ponto onde quase todos estão consolidados.</div></div>
+        <div class="faq-item"><button class="faq-q">Os dados ficam salvos?<div class="faq-icon">+</div></button><div class="faq-a">Sim. Tudo salvo localmente via localStorage. Nada sai do seu dispositivo. Persiste enquanto não limpar o cache do navegador.</div></div>
       </div>
     </div>
   </div>
@@ -752,8 +808,14 @@ footer{border-top:1px solid var(--b);padding:40px var(--gut);position:relative;z
 <section class="cta-wrap">
   <div class="cta-ghost">COMECE HOJE</div>
   <div class="reveal">
-    <h2 class="cta-title">Seu dia 1 começa<br><em>agora.</em></h2>
-    <p class="cta-body">90 dias. Sem desculpas. Sem pausas.<br>Só você e o sistema.</p>
+    <div class="cta-num-wrap">
+      <div class="cta-num-ghost">90</div>
+      <div class="cta-num">90</div>
+      <div class="cta-num-lightning"></div>
+      <div class="cta-num-glitch">90</div>
+    </div>
+    <h2 class="cta-title" style="font-size:clamp(28px,4vw,52px)">Seu dia 1 começa <em data-fx="glitch">agora.</em></h2>
+    <p class="cta-body">90 dias. Sem desculpas. Sem pausas. Só você e o sistema.</p>
     <a href="login.html" class="btn">Iniciar Project 90</a>
     <span class="cta-note">Demo disponível sem cadastro · <a href="dashboard.html" style="color:var(--w);text-decoration:none">Ver dashboard →</a></span>
   </div>
@@ -769,14 +831,13 @@ footer{border-top:1px solid var(--b);padding:40px var(--gut);position:relative;z
       <li><a href="metricas.html">Métricas</a></li>
       <li><a href="diario.html">Diário</a></li>
       <li><a href="conquistas.html">Conquistas</a></li>
-      <li><a href="login.html">Entrar</a></li>
     </ul>
-    <div class="footer-copy">© 2025 Project 90 — Transformação pessoal</div>
+    <div class="footer-copy">© 2025 Project 90</div>
   </div>
 </footer>
 
 <script>
-/* ── CURSOR ── */
+/* CURSOR */
 (function(){
   const c=document.getElementById('cur'),r=document.getElementById('cur-ring');
   let mx=0,my=0,rx=0,ry=0;
@@ -784,7 +845,7 @@ footer{border-top:1px solid var(--b);padding:40px var(--gut);position:relative;z
   (function t(){rx+=(mx-rx-15)*.1;ry+=(my-ry-15)*.1;r.style.transform=`translate(${rx}px,${ry}px)`;requestAnimationFrame(t);})();
 })();
 
-/* ── BG CANVAS ── */
+/* BG CANVAS */
 (function(){
   const cv=document.getElementById('bg-canvas'),ctx=cv.getContext('2d'),SZ=80;
   let W,H,cols,rows,nodes,t=0;
@@ -803,15 +864,14 @@ footer{border-top:1px solid var(--b);padding:40px var(--gut);position:relative;z
   window.addEventListener('resize',resize);resize();draw();
 })();
 
-/* ── NAV SCROLL ── */
-const navEl=document.getElementById('nav');
-window.addEventListener('scroll',()=>navEl.classList.toggle('scrolled',scrollY>50),{passive:true});
+/* NAV */
+window.addEventListener('scroll',()=>document.getElementById('nav').classList.toggle('scrolled',scrollY>50),{passive:true});
 
-/* ── REVEAL ── */
+/* REVEAL */
 const rObs=new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('in');});},{threshold:.08});
-document.querySelectorAll('.reveal,.reveal-left,.reveal-right').forEach(el=>rObs.observe(el));
+document.querySelectorAll('.reveal,.reveal-l,.reveal-r').forEach(el=>rObs.observe(el));
 
-/* ── FAQ ── */
+/* FAQ */
 document.querySelectorAll('.faq-q').forEach(btn=>{
   btn.addEventListener('click',()=>{
     const item=btn.closest('.faq-item'),open=item.classList.contains('open');
@@ -820,7 +880,7 @@ document.querySelectorAll('.faq-q').forEach(btn=>{
   });
 });
 
-/* ── COUNTUP ── */
+/* COUNTUP */
 function countUp(el,target,suffix,dur,delay){
   if(!el)return;
   setTimeout(()=>{
@@ -829,76 +889,64 @@ function countUp(el,target,suffix,dur,delay){
   },delay||0);
 }
 
-/* ── STATS ── */
+/* STATS */
 const stObs=new IntersectionObserver(entries=>{
   if(entries[0].isIntersecting){
     countUp(document.getElementById('sn1'),90,'',1400);
     countUp(document.getElementById('sn2'),5,'+',1000,150);
-    countUp(document.getElementById('sn3'),6,'',900,300);
-    countUp(document.getElementById('sn4'),20,'',1100,450);
+    countUp(document.getElementById('sn3'),7,'',900,300);
+    countUp(document.getElementById('sn4'),26,'',1100,450);
     stObs.disconnect();
   }
 },{threshold:.5});
 stObs.observe(document.querySelector('.stats-grid'));
 
-/* ── MINI HEATMAP ── */
+/* MINI HEATMAP */
 (function(){
   const fixed=[1,1,1,1,.5,1,1,1,1,1,0,1,1,1,1,1,1,.5,1,1,1,1,1,0,1,1,1,1,1,1,.5,1,1,.5];
-  const grid=document.getElementById('mini-heat');
   const cells=Array.from({length:91},(_,i)=>i<34?fixed[i]:null);
-  grid.innerHTML=cells.map(v=>`<div class="mhc ${v===null?'e':v===1?'p':v===.5?'h':'f'}"></div>`).join('');
+  document.getElementById('mini-heat').innerHTML=cells.map(v=>`<div class="mhc ${v===null?'e':v===1?'p':v===.5?'h':'f'}"></div>`).join('');
 })();
 
-/* ── FEATURES ANIMATE ── */
+/* FEATURES ANIMATE */
 let featDone=false;
 const fObs=new IntersectionObserver(entries=>{
   if(entries[0].isIntersecting&&!featDone){
     featDone=true;
-    // bars
-    [['mb1',100],['mb2',88],['mb3',91],['mb4',82]].forEach(([id,pct],i)=>{
+    [['mb1',100],['mb2',88],['mb3',91]].forEach(([id,pct],i)=>{
       setTimeout(()=>{const el=document.getElementById(id);if(el)el.style.width=pct+'%';},200+i*120);
     });
-    // chart bars
     setTimeout(()=>{document.querySelectorAll('.mcbar').forEach((b,i)=>{setTimeout(()=>{b.style.transform='scaleY(1)';},i*80);});},300);
-    // ach prog bar
-    setTimeout(()=>{const b=document.getElementById('ach-prog-bar');if(b)b.style.width='74%';},400);
-    // sys bar + countup
+    setTimeout(()=>{const b=document.getElementById('ach-prog-bar');if(b)b.style.width='57%';},400);
     setTimeout(()=>{
       const sb=document.getElementById('sys-bar');if(sb)sb.style.width='38%';
-      const pc=document.getElementById('sys-pct');
-      if(pc){const s=performance.now();(function t(n){const p=Math.min((n-s)/1200,1),e=1-Math.pow(1-p,3);pc.textContent=Math.round(e*38)+'%';if(p<1)requestAnimationFrame(t);})(s);}
-      countUp(document.getElementById('sys-n1'),87,'%',900,0);
-      countUp(document.getElementById('sys-n2'),28,'',800,100);
-      countUp(document.getElementById('sys-n3'),3,'',700,200);
+      countUp(document.getElementById('sys-pct'),38,'%',900);
+      countUp(document.getElementById('sys-n1'),87,'%',900,100);
+      countUp(document.getElementById('sys-n2'),28,'d',800,200);
     },350);
   }
 },{threshold:.1});
 fObs.observe(document.querySelector('.feat-grid'));
 
-/* ── PROG BANNER ── */
+/* PROGRESS BANNER */
 const pObs=new IntersectionObserver(entries=>{
   if(entries[0].isIntersecting){
     setTimeout(()=>{const f=document.getElementById('prog-fill');if(f)f.style.width='38%';},350);
-    countUp(document.getElementById('sp-n1'),34,'',900,400);
-    countUp(document.getElementById('sp-n2'),87,'%',1000,550);
-    countUp(document.getElementById('sp-n3'),28,'',800,700);
+    countUp(document.getElementById('sp1'),34,'',900,400);
+    countUp(document.getElementById('sp2'),87,'%',1000,550);
+    countUp(document.getElementById('sp3'),28,'',800,700);
     pObs.disconnect();
   }
 },{threshold:.3});
-const pgEl=document.querySelector('.prog-wrap');if(pgEl)pObs.observe(pgEl);
+const pg=document.querySelector('.prog-wrap');if(pg)pObs.observe(pg);
 
-/* ── TIMELINE ── */
-const tlObs=new IntersectionObserver(entries=>{
-  entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('in');});
-},{threshold:.2});
-document.querySelectorAll('.tl-item').forEach((el,i)=>{
-  el.style.transitionDelay=`${i*.12}s`;
-  tlObs.observe(el);
-});
+/* TIMELINE */
+const tlObs=new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('in');});},{threshold:.2});
+document.querySelectorAll('.tl-item').forEach((el,i)=>{el.style.transitionDelay=`${i*.1}s`;tlObs.observe(el);});
 
-/* ── TYPING EFFECT ── */
+/* TYPING */
 (function(){
-  const text='Completei todos os hábitos pela terceira vez seguida. Acordei antes do alarme — sem esforço.';
+  const text='Completei todos os hábitos e bebi 8 copos de água pela primeira vez. Parece óbvio agora.';
   const el=document.getElementById('typing-el');
   let i=0,started=false;
   const obs=new IntersectionObserver(entries=>{
@@ -911,13 +959,28 @@ document.querySelectorAll('.tl-item').forEach((el,i)=>{
   if(el)obs.observe(el);
 })();
 
-/* ── CARD HOVER GLOW ── */
-document.querySelectorAll('.feat-card,.proof,.step').forEach(card=>{
+/* ══ FX ENGINE — BURN IN ══ */
+(function(){
+  document.querySelectorAll('[data-fx="glitch"]').forEach(el => {
+    el.classList.add('fx-burn');
+    const obs = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting) {
+        el.classList.add('fired');
+        el.addEventListener('animationend', () => {
+          el.classList.replace('fired', 'loop');
+        }, { once: true });
+        obs.disconnect();
+      }
+    }, { threshold: .6 });
+    obs.observe(el);
+  });
+})();
+document.querySelectorAll('.feat,.proof,.step').forEach(card=>{
   card.addEventListener('mousemove',e=>{
     const r=card.getBoundingClientRect();
     const x=((e.clientX-r.left)/r.width*100).toFixed(1);
     const y=((e.clientY-r.top)/r.height*100).toFixed(1);
-    card.style.background=`radial-gradient(circle at ${x}% ${y}%, rgba(245,245,240,.045) 0%, var(--s) 55%)`;
+    card.style.background=`radial-gradient(circle at ${x}% ${y}%,rgba(245,245,240,.045) 0%,var(--s) 55%)`;
   });
   card.addEventListener('mouseleave',()=>{card.style.background='';});
 });

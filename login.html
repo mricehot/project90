@@ -132,17 +132,16 @@ body {
 .form-success { font-size:11px; letter-spacing:0.07em; color:#86efac; margin-top:8px; display:none; padding:10px 14px; border:1px solid rgba(134,239,172,0.2); background:rgba(134,239,172,0.05); }
 .form-success.show { display: block; }
 
-.btn-login {
-  width: 100%; margin-top: 24px; padding: 14px; background: var(--white); color: var(--bg);
-  border: none; cursor: pointer; font-family: 'DM Mono', monospace; font-size: 12px;
-  letter-spacing: 0.18em; text-transform: uppercase; transition: opacity 0.2s, transform 0.15s;
-  display: flex; align-items: center; justify-content: center; gap: 10px;
+.btn-google {
+  width: 100%; margin-top: 8px; padding: 14px; background: none;
+  border: 1px solid var(--border2); color: var(--white); cursor: pointer;
+  font-family: 'DM Mono', monospace; font-size: 12px; letter-spacing: 0.14em;
+  text-transform: uppercase; transition: background 0.2s, border-color 0.2s, transform 0.15s;
+  display: flex; align-items: center; justify-content: center; gap: 12px;
 }
-.btn-login:hover { opacity: 0.88; transform: translateY(-1px); }
-.btn-arrow { width: 16px; height: 1px; background: var(--bg); position: relative; transition: width 0.25s; }
-.btn-login:hover .btn-arrow { width: 24px; }
-.btn-arrow::after { content: ''; position: absolute; right: 0; top: -3px; border-top: 3px solid transparent; border-bottom: 3px solid transparent; border-left: 5px solid var(--bg); }
-.spin { width: 14px; height: 14px; border: 1.5px solid rgba(8,8,8,0.3); border-top-color: var(--bg); border-radius: 50%; animation: spin 0.7s linear infinite; display: none; }
+.btn-google:hover { background: rgba(245,245,240,0.05); border-color: rgba(245,245,240,0.35); transform: translateY(-1px); }
+.btn-google:active { transform: translateY(0); }
+@keyframes pulse { 0%,100%{opacity:.4} 50%{opacity:1} }
 
 .login-divider { display: flex; align-items: center; gap: 10px; margin: 20px 0; font-size: 10px; letter-spacing: 0.15em; color: #333; }
 .login-divider::before, .login-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
@@ -190,28 +189,37 @@ body {
     <div class="login-right">
       <div class="form-eyebrow">Acesso</div>
       <div class="form-heading">Bem-vindo de <em>volta.</em></div>
-      <div class="field-wrap">
-        <label class="field-lbl" for="email">Email</label>
-        <input class="field-input" type="email" id="email" placeholder="seu@email.com" autocomplete="email" />
-      </div>
-      <div class="field-wrap">
-        <label class="field-lbl" for="password">Senha</label>
-        <div class="field-row">
-          <input class="field-input" type="password" id="password" placeholder="••••••••" autocomplete="current-password" style="flex:1" />
-          <button class="btn-pass" id="toggle-pass" type="button">ver</button>
-        </div>
-        <div class="forgot" id="forgot-btn">Esqueceu a senha?</div>
-      </div>
+
+      <p style="font-size:12px;line-height:1.85;color:var(--mid);margin-bottom:32px">
+        Faça login com sua conta Google para acessar seu Project 90 e continuar de onde parou.
+      </p>
+
       <div class="form-error" id="form-error"></div>
       <div class="form-success" id="form-success"></div>
-      <button class="btn-login" id="login-btn" type="button">
-        <div class="spin" id="spin"></div>
-        <span id="btn-text">Entrar no projeto</span>
-        <div class="btn-arrow"></div>
+
+      <button class="btn-google" id="login-btn" type="button" onclick="doLogin()">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z" fill="#4285F4"/>
+          <path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z" fill="#34A853"/>
+          <path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/>
+          <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z" fill="#EA4335"/>
+        </svg>
+        <span id="btn-text">Continuar com Google</span>
       </button>
-      <div class="login-divider">ou</div>
-      <div class="signup-row">Não tem conta? <a href="#">Saiba mais</a> &nbsp;·&nbsp; <a href="#">Ver demo</a></div>
-      <div class="demo-hint">Demo: <span>demo@project90.com</span> / <span>123456</span></div>
+
+      <div style="margin-top:20px;padding:12px 14px;border:1px solid var(--border);display:flex;align-items:center;gap:10px">
+        <div style="width:4px;height:4px;border-radius:50%;background:var(--green);flex-shrink:0;animation:pulse 2s ease-in-out infinite"></div>
+        <span style="font-size:11px;letter-spacing:.06em;color:var(--mid)">Demo disponível — <a href="dashboard.html" style="color:var(--white);text-decoration:none;border-bottom:1px solid rgba(245,245,240,.2)">ver dashboard sem login →</a></span>
+      </div>
+
+      <div style="margin-top:32px;padding-top:24px;border-top:1px solid var(--border)">
+        <div style="font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:#333;margin-bottom:12px;text-align:center">Ao entrar você concorda com os</div>
+        <div style="text-align:center">
+          <a href="index.html" style="font-size:10px;letter-spacing:.08em;color:#444;text-decoration:none;border-bottom:1px solid #333;padding-bottom:1px;transition:color .2s" onmouseover="this.style.color='var(--white)'" onmouseout="this.style.color='#444'">Termos de uso</a>
+          <span style="color:#333;margin:0 8px">·</span>
+          <a href="index.html" style="font-size:10px;letter-spacing:.08em;color:#444;text-decoration:none;border-bottom:1px solid #333;padding-bottom:1px;transition:color .2s" onmouseover="this.style.color='var(--white)'" onmouseout="this.style.color='#444'">Privacidade</a>
+        </div>
+      </div>
     </div>
 
   </div>
@@ -274,26 +282,18 @@ document.getElementById('forgot-btn').addEventListener('click', () => {
   setTimeout(()=>{ err.classList.remove('show'); err.style.cssText=''; },3000);
 });
 
-/* ── LOGIN ── */
 function doLogin() {
-  const email=document.getElementById('email').value.trim(), pass=document.getElementById('password').value;
-  const errEl=document.getElementById('form-error'), sucEl=document.getElementById('form-success');
-  const spinEl=document.getElementById('spin'), btnTxt=document.getElementById('btn-text'), btn=document.getElementById('login-btn');
-  errEl.classList.remove('show'); sucEl.classList.remove('show'); errEl.style.cssText='';
-  if (!email||!pass){ errEl.textContent='Preencha email e senha.'; errEl.classList.add('show'); return; }
-  if (!email.includes('@')){ errEl.textContent='Email inválido.'; errEl.classList.add('show'); return; }
-  spinEl.style.display='block'; btnTxt.textContent='Verificando...'; btn.style.pointerEvents='none';
-  setTimeout(()=>{
-    spinEl.style.display='none'; btnTxt.textContent='Entrar no projeto'; btn.style.pointerEvents='';
-    if (email==='demo@project90.com'&&pass==='123456') {
-      sucEl.textContent='✓ Acesso confirmado. Redirecionando...'; sucEl.classList.add('show');
-      setTimeout(()=>{ window.location.href='dashboard.html'; }, 1000);
-    } else { errEl.textContent='Email ou senha incorretos.'; errEl.classList.add('show'); }
-  },1400);
+  const btn = document.getElementById('login-btn');
+  const txt = document.getElementById('btn-text');
+  const suc = document.getElementById('form-success');
+  btn.style.pointerEvents = 'none';
+  txt.textContent = 'Autenticando...';
+  setTimeout(() => {
+    suc.textContent = '✓ Conta verificada. Redirecionando...';
+    suc.classList.add('show');
+    setTimeout(() => { window.location.href = 'dashboard.html'; }, 1000);
+  }, 1400);
 }
-document.getElementById('login-btn').addEventListener('click', doLogin);
-document.getElementById('password').addEventListener('keydown', e=>{ if(e.key==='Enter') doLogin(); });
-document.getElementById('email').addEventListener('keydown', e=>{ if(e.key==='Enter') document.getElementById('password').focus(); });
 
 /* ── BG CANVAS ── */
 (function() {

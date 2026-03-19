@@ -189,9 +189,6 @@ body {
 @media (max-width: 520px) {
   .g4 { grid-template-columns: 1fr; }
 }
-
-/* ── APP Z-INDEX ── */
-.app,.dia-main,.met-main,.hab-main,.con-main{position:relative;z-index:1;}
 </style>
 </head>
 <body>
@@ -276,6 +273,68 @@ body {
       </div>
     </div>
 
+    <!-- HIDRATAÇÃO + CALENDÁRIO -->
+    <div class="g2">
+
+      <div class="card">
+        <div class="card-hd">
+          <span class="card-title">Hidratação</span>
+          <span class="card-action" id="wm-today-lbl">—</span>
+        </div>
+        <div style="font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--mid);margin-bottom:20px">Últimos 7 dias — copos</div>
+        <div style="display:flex;align-items:flex-end;gap:10px;height:80px" id="wm-bars"></div>
+        <div style="display:flex;gap:10px;margin-top:8px" id="wm-labels"></div>
+        <div style="margin-top:20px;height:2px;background:var(--muted)">
+          <div id="wm-prog" style="height:100%;background:rgba(147,197,253,.65);width:0%;transition:width 1.2s cubic-bezier(.16,1,.3,1)"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:9px;letter-spacing:.1em;color:var(--mid)">
+          <span id="wm-ml-hoje">—</span>
+          <span id="wm-ml-meta">—</span>
+        </div>
+
+        <!-- stats row -->
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);margin-top:24px">
+          <div style="background:var(--surface2);padding:14px 12px">
+            <div style="font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--mid);margin-bottom:6px">Média 7d</div>
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;line-height:1" id="wm-avg">—</div>
+            <div style="font-size:9px;color:var(--mid);margin-top:3px">copos/dia</div>
+          </div>
+          <div style="background:var(--surface2);padding:14px 12px">
+            <div style="font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--mid);margin-bottom:6px">Meta atingida</div>
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;line-height:1" id="wm-hit">—</div>
+            <div style="font-size:9px;color:var(--mid);margin-top:3px">de 7 dias</div>
+          </div>
+          <div style="background:var(--surface2);padding:14px 12px">
+            <div style="font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--mid);margin-bottom:6px">Streak</div>
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;line-height:1" id="wm-streak">—</div>
+            <div style="font-size:9px;color:var(--mid);margin-top:3px">dias seguidos</div>
+          </div>
+        </div>
+
+        <!-- consistency bar per day of week -->
+        <div style="margin-top:20px">
+          <div style="font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--mid);margin-bottom:12px">% da meta por dia da semana</div>
+          <div id="wm-dow-bars" style="display:flex;flex-direction:column;gap:8px"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-hd">
+          <span class="card-title">Calendário — 90 dias</span>
+          <span class="card-action" id="hm-pct">—</span>
+        </div>
+        <div class="hm-labels" id="hm-labels"></div>
+        <div class="hm-grid" id="hm-grid"></div>
+        <div class="hm-legend">
+          <div class="leg-item"><div class="leg-dot" style="background:var(--white)"></div>Perfeito</div>
+          <div class="leg-item"><div class="leg-dot" style="background:rgba(245,245,240,0.38)"></div>Parcial</div>
+          <div class="leg-item"><div class="leg-dot" style="background:rgba(245,245,240,0.12)"></div>Falhou</div>
+          <div class="leg-item"><div class="leg-dot" style="background:var(--surface2);border:1px solid var(--border)"></div>Futuro</div>
+        </div>
+      </div>
+
+    </div>
+
     <!-- EVOLUÇÃO + PILARES -->
     <div class="g21">
       <div class="card">
@@ -324,33 +383,17 @@ body {
           <span class="card-title">Tendência por hábito</span>
           <span class="card-action">últimos <span id="spark-period">14</span>d</span>
         </div>
-        <div id="spark-list"></div>
+        <div id="spark-list" style="max-height:220px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--muted) transparent;"></div>
       </div>
     </div>
 
-    <!-- HEATMAP + CONSISTÊNCIA -->
-    <div class="g21">
-      <div class="card">
-        <div class="card-hd">
-          <span class="card-title">Calendário — 90 dias</span>
-          <span class="card-action" id="hm-pct">—</span>
-        </div>
-        <div class="hm-labels" id="hm-labels"></div>
-        <div class="hm-grid" id="hm-grid"></div>
-        <div class="hm-legend">
-          <div class="leg-item"><div class="leg-dot" style="background:var(--white)"></div>Perfeito</div>
-          <div class="leg-item"><div class="leg-dot" style="background:rgba(245,245,240,0.38)"></div>Parcial</div>
-          <div class="leg-item"><div class="leg-dot" style="background:rgba(245,245,240,0.12)"></div>Falhou</div>
-          <div class="leg-item"><div class="leg-dot" style="background:var(--surface2);border:1px solid var(--border)"></div>Futuro</div>
-        </div>
+    <!-- CONSISTÊNCIA por hábito -->
+    <div class="card">
+      <div class="card-hd">
+        <span class="card-title">Consistência</span>
+        <span class="card-action">% / streak</span>
       </div>
-      <div class="card">
-        <div class="card-hd">
-          <span class="card-title">Consistência</span>
-          <span class="card-action">% / streak</span>
-        </div>
-        <div id="consist-table"></div>
-      </div>
+      <div id="consist-table"></div>
     </div>
 
   </main>
@@ -375,16 +418,24 @@ document.addEventListener('mousemove',function(e){ if(tipOn){ tip.style.left=(e.
 var DAY=34, DAYS=90;
 
 var habits=[
-  {id:1,name:'Acordar às 6h',    pillar:'Corpo',streak:28,
+  {id:1,name:'Acordar às 6h',       pillar:'Corpo',    streak:28,
    history:[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]},
-  {id:2,name:'Exercício 30min',  pillar:'Corpo',streak:12,
+  {id:2,name:'Exercício 30min',     pillar:'Corpo',    streak:12,
    history:[1,1,0.5,1,1,1,1,0,1,1,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,1,1,0.5,1,1,1]},
-  {id:3,name:'Sem redes sociais',pillar:'Mente',streak:12,
+  {id:3,name:'Sem redes sociais',   pillar:'Mente',    streak:12,
    history:[1,1,1,0.5,0,1,1,1,1,1,1,1,0.5,1,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,1,1]},
-  {id:4,name:'Leitura 20min',    pillar:'Mente',streak:4,
+  {id:4,name:'Leitura 20min',       pillar:'Mente',    streak:4,
    history:[1,0,1,1,1,1,1,0,1,1,0.5,1,1,1,1,1,0,1,1,1,1,0,0,1,1,1,1,0,1,1,1,1,1,0]},
-  {id:5,name:'Meditação',        pillar:'Mente',streak:7,
+  {id:5,name:'Meditação',           pillar:'Mente',    streak:7,
    history:[1,1,1,1,1,0,1,1,0.5,1,1,1,1,0,1,1,1,1,0,1,1,1,1,1,0,1,1,0,1,1,1,1,1,1]},
+  {id:6,name:'2h foco profundo',    pillar:'Produção', streak:10,
+   history:[1,1,1,0,1,1,1,1,0.5,1,1,1,1,1,0,1,1,1,1,1,0.5,1,1,1,1,0,1,1,1,1,1,0.5,1,1]},
+  {id:7,name:'Sem celular até 9h',  pillar:'Produção', streak:6,
+   history:[1,1,0,1,1,1,0.5,1,1,1,0,1,1,1,1,0.5,1,1,1,1,1,0,1,1,1,1,1,1,0,1,1,1,1,0.5]},
+  {id:8,name:'Gratidão 3 coisas',   pillar:'Conexão',  streak:18,
+   history:[1,1,1,1,1,1,1,0.5,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,1,0.5,1,1,1,1,1,1]},
+  {id:9,name:'Presente à mesa',     pillar:'Conexão',  streak:22,
+   history:[1,1,1,1,1,1,1,1,1,1,1,0.5,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,1,1,0.5,1,1,1,1]},
 ];
 
 var fixed=[1,1,1,1,0.5,1,1,1,1,1,0,1,1,1,1,1,1,0.5,1,1,1,1,1,0,1,1,1,1,1,1,0.5,1,1,0.5];
@@ -605,88 +656,86 @@ function renderRadials(){
   }).join('');
 }
 
-init();
-
-/* ── BG CANVAS ── */
-(function() {
-  const canvas = document.createElement('canvas');
-  canvas.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;';
-  document.body.insertBefore(canvas, document.body.firstChild);
-  const ctx = canvas.getContext('2d'), SIZE = 80;
-  let W, H, cols, rows, nodes, t = 0;
-  function resize() {
-    W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight;
-    cols = Math.ceil(W/SIZE)+2; rows = Math.ceil(H/SIZE)+2; nodes = [];
-    for (let r=0;r<rows;r++) for (let c=0;c<cols;c++) nodes.push({phase:Math.random()*Math.PI*2});
-  }
-  function draw() {
-    ctx.clearRect(0,0,W,H); ctx.lineWidth=0.4;
-    const offX=(t*6)%SIZE, offY=(t*3)%SIZE;
-    for (let c=0;c<cols;c++){const x=c*SIZE-offX,w=0.5+0.5*Math.sin(t*0.4+c*0.35);ctx.strokeStyle=`rgba(245,245,240,${0.006+w*0.012})`;ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
-    for (let r=0;r<rows;r++){const y=r*SIZE-offY,w=0.5+0.5*Math.sin(t*0.35+r*0.4+1.2);ctx.strokeStyle=`rgba(245,245,240,${0.006+w*0.012})`;ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
-    for (let r=0;r<rows;r++) for (let c=0;c<cols;c++){const nd=nodes[r*cols+c],x=c*SIZE-offX,y=r*SIZE-offY,p=0.5+0.5*Math.sin(t*0.7+nd.phase);ctx.beginPath();ctx.arc(x,y,0.5+p*0.9,0,Math.PI*2);ctx.fillStyle=`rgba(245,245,240,${p*0.07})`;ctx.fill();}
-    const grd=ctx.createRadialGradient(W*0.65,H*0.5,0,W*0.65,H*0.5,Math.max(W,H)*0.75);
-    grd.addColorStop(0,'rgba(8,8,8,0)');grd.addColorStop(0.6,'rgba(8,8,8,0)');grd.addColorStop(1,'rgba(8,8,8,0.7)');
-    ctx.fillStyle=grd;ctx.fillRect(0,0,W,H);
-    t+=0.006;requestAnimationFrame(draw);
-  }
-  window.addEventListener('resize',resize);resize();draw();
-})();
-
-/* ── CARD HOVER GLOW ── */
+/* ══ HIDRATAÇÃO — MÉTRICAS ══ */
 (function(){
-  document.querySelectorAll('.card,.stat-card,.progress-banner,.ach-card').forEach(card=>{
-    card.addEventListener('mousemove',e=>{
-      const r=card.getBoundingClientRect();
-      const x=((e.clientX-r.left)/r.width*100).toFixed(1);
-      const y=((e.clientY-r.top)/r.height*100).toFixed(1);
-      card.style.background=`radial-gradient(circle at ${x}% ${y}%, rgba(245,245,240,0.04) 0%, var(--surface) 60%)`;
+  var DAYS_PT  = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+  var cfg = (function(){ try{ var r=localStorage.getItem('p90_water_cfg'); if(r) return JSON.parse(r); }catch(e){} return {cups:8,ml:250}; })();
+  var goal = cfg.cups, ml = cfg.ml;
+
+  var mockCounts = [5, 8, 6, 8, 7, 4, 6];
+  var today = new Date();
+  var days7  = Array.from({length:7}, function(_,i){ var d=new Date(today); d.setDate(d.getDate()-6+i); return d; });
+  var todayN = mockCounts[6];
+
+  // card-action
+  var lbl=document.getElementById('wm-today-lbl');
+  if(lbl) lbl.textContent = todayN+' / '+goal+' copos hoje';
+
+  // bars
+  var barsEl=document.getElementById('wm-bars'), labelsEl=document.getElementById('wm-labels');
+  if(barsEl && labelsEl){
+    var maxC = Math.max.apply(null, mockCounts.concat([goal]));
+    mockCounts.forEach(function(c,i){
+      var pct=Math.round(c/maxC*100), isToday=i===6, hit=c>=goal;
+      var bar=document.createElement('div');
+      bar.style.cssText='flex:1;border-radius:1px 1px 0 0;height:0%;transition:height .8s cubic-bezier(.16,1,.3,1) '+(i*70)+'ms;position:relative;';
+      bar.style.background=hit?'rgba(147,197,253,.85)':'rgba(147,197,253,.22)';
+      if(isToday) bar.style.outline='1px solid rgba(147,197,253,.5)';
+      var num=document.createElement('div');
+      num.style.cssText='position:absolute;top:-16px;left:50%;transform:translateX(-50%);font-size:9px;color:rgba(147,197,253,.75);white-space:nowrap;';
+      num.textContent=c; bar.appendChild(num); barsEl.appendChild(bar);
+      setTimeout(function(b,p){return function(){b.style.height=p+'%';};}(bar,pct), 150+i*70);
+      var lbl2=document.createElement('div');
+      lbl2.style.cssText='flex:1;font-size:9px;text-align:center;letter-spacing:.05em;color:'+(isToday?'var(--white,#f5f5f0)':'var(--mid,#555)')+';';
+      lbl2.textContent=isToday?'Hj':DAYS_PT[days7[i].getDay()].slice(0,3);
+      labelsEl.appendChild(lbl2);
     });
-    card.addEventListener('mouseleave',()=>{card.style.background='';});
-  });
+  }
+
+  // progress bar today
+  var pct=Math.min(100,Math.round(todayN/goal*100));
+  setTimeout(function(){var pb=document.getElementById('wm-prog');if(pb)pb.style.width=pct+'%';},300);
+  var mh=document.getElementById('wm-ml-hoje'); if(mh) mh.textContent=(todayN*ml)+' ml hoje';
+  var mm=document.getElementById('wm-ml-meta'); if(mm) mm.textContent='meta: '+(goal*ml)+' ml';
+
+  // stats
+  var avg=Math.round(mockCounts.reduce(function(a,b){return a+b;},0)/mockCounts.length*10)/10;
+  var hit=mockCounts.filter(function(c){return c>=goal;}).length;
+  var streak=0; for(var i=mockCounts.length-1;i>=0;i--){if(mockCounts[i]>=goal)streak++;else break;}
+  var avgEl=document.getElementById('wm-avg');       if(avgEl) avgEl.textContent=Number.isInteger(avg)?avg:avg.toFixed(1);
+  var hitEl=document.getElementById('wm-hit');       if(hitEl) hitEl.textContent=hit;
+  var stEl =document.getElementById('wm-streak');    if(stEl)  stEl.textContent=streak+'d';
+
+  // % da meta por dia da semana (mock: Dom–Sáb)
+  var dowData = [
+    {day:'Segunda', pct:88},
+    {day:'Terça',   pct:75},
+    {day:'Quarta',  pct:100},
+    {day:'Quinta',  pct:100},
+    {day:'Sexta',   pct:63},
+    {day:'Sábado',  pct:100},
+    {day:'Domingo', pct:75},
+  ];
+  var dowEl=document.getElementById('wm-dow-bars');
+  if(dowEl){
+    dowEl.innerHTML=dowData.map(function(d){
+      return '<div style="display:flex;align-items:center;gap:10px">'+
+        '<span style="font-size:10px;letter-spacing:.04em;color:var(--mid,#555);width:64px;flex-shrink:0">'+d.day+'</span>'+
+        '<div style="flex:1;height:2px;background:var(--muted,#2a2a2a)">'+
+          '<div style="height:100%;background:rgba(147,197,253,'+(d.pct>=100?.85:.45)+');width:0%;transition:width 1s cubic-bezier(.16,1,.3,1)" data-w="'+d.pct+'%"></div>'+
+        '</div>'+
+        '<span style="font-size:9px;letter-spacing:.1em;color:var(--mid,#555);min-width:28px;text-align:right">'+d.pct+'%</span>'+
+      '</div>';
+    }).join('');
+    setTimeout(function(){
+      dowEl.querySelectorAll('[data-w]').forEach(function(el){
+        el.style.width=el.getAttribute('data-w');
+      });
+    },400);
+  }
 })();
 
-/* ── ANIM HELPERS ── */
-function _easeOut(p){return 1-Math.pow(1-p,3);}
-function _countUp(target,duration,cb,delay){
-  setTimeout(()=>{
-    const start=performance.now();
-    (function tick(now){const p=Math.min((now-start)/duration,1);cb(Math.round(_easeOut(p)*target));if(p<1)requestAnimationFrame(tick);})(start);
-  },delay||0);
-}
-function _animBar(el,pct,duration,delay){
-  if(!el)return;
-  setTimeout(()=>{el.style.transition=`width ${duration}ms cubic-bezier(0.16,1,0.3,1)`;el.style.width=pct+'%';},delay||0);
-}
-
-
-/* ── ENTRANCE ANIMATIONS ── */
-(function animateEntrance() {
-  // stat-val numbers
-  document.querySelectorAll('.stat-val').forEach((el, i) => {
-    const text  = el.textContent.trim();
-    const match = text.match(/^(\d+)/);
-    if (!match) return;
-    const target = parseInt(match[1]);
-    const suffix = text.replace(match[1], '');
-    el.textContent = '0' + suffix;
-    _countUp(target, 900, v => el.textContent = v + suffix, 150 + i*150);
-  });
-
-  // all progress bars (width set inline)
-  document.querySelectorAll('.hc-bar, .co-bar, .goal-bar-fill, .pb-bar-fill, .ach-prog-fill, .sb-prog-bar-fill').forEach((el, i) => {
-    const pct = parseFloat(el.style.width) || 0;
-    el.style.width = '0%';
-    _animBar(el, pct, 900, 200 + i*80);
-  });
-
-  // sidebar
-  const sbFill = document.getElementById('sb-fill');
-  if (sbFill) { const p=parseFloat(sbFill.style.width)||0; sbFill.style.width='0%'; _animBar(sbFill,p,1200,400); }
-  const streakEl = document.getElementById('sb-streak-val');
-  if (streakEl) { const v=parseInt(streakEl.textContent)||0; streakEl.textContent='0'; _countUp(v,700,n=>streakEl.textContent=n,500); }
-})();
-
+init();
 </script>
 </body>
 </html>

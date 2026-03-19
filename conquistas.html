@@ -219,8 +219,26 @@
   .ach-grid { grid-template-columns: 1fr; }
 }
 
-/* ── APP Z-INDEX ── */
-.app,.dia-main { position: relative; z-index: 1; }
+/* ══ POPUP HIDRATAÇÃO ══ */
+.water-overlay{position:fixed;inset:0;z-index:400;background:rgba(8,8,8,.88);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .3s;}
+.water-overlay.open{opacity:1;pointer-events:all;}
+.water-modal{background:#111111;border:1px solid rgba(245,245,240,.16);padding:40px 44px;width:100%;max-width:420px;transform:translateY(16px);transition:transform .35s cubic-bezier(.16,1,.3,1);}
+.water-overlay.open .water-modal{transform:translateY(0);}
+.wm-title{font-family:'DM Serif Display',serif;font-size:22px;font-weight:400;margin-bottom:28px;}
+.wm-title em{font-style:italic;opacity:.4;}
+.wm-field{margin-bottom:20px;}
+.wm-lbl{font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:#555;display:block;margin-bottom:8px;}
+.wm-input{width:100%;background:#181818;border:1px solid rgba(245,245,240,.08);color:#f5f5f0;font-family:'DM Mono',monospace;font-weight:300;font-size:13px;padding:11px 14px;outline:none;transition:border-color .2s;}
+.wm-input:focus{border-color:rgba(245,245,240,.3);}
+.wm-select{width:100%;background:#181818;border:1px solid rgba(245,245,240,.08);color:#f5f5f0;font-family:'DM Mono',monospace;font-weight:300;font-size:13px;padding:11px 14px;outline:none;cursor:pointer;appearance:none;}
+.wm-select option{background:#181818;}
+.wm-preview{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;}
+.wm-footer{display:flex;gap:10px;margin-top:28px;}
+.wm-btn{flex:1;padding:12px;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;border:none;transition:opacity .2s;}
+.wm-btn.primary{background:#f5f5f0;color:#080808;}
+.wm-btn.ghost{background:none;border:1px solid rgba(245,245,240,.16);color:#555;}
+.wm-btn:hover{opacity:.82;}
+.app,.con-main{position:relative;z-index:1;}
 </style>
 </head>
 <body>
@@ -239,6 +257,36 @@
     <div class="unlock-points" id="ul-points">+0 pts</div>
     <button class="unlock-close" onclick="closeUnlock()" id="ul-btn">Continuar →</button>
     <div class="unlock-queue" id="ul-queue"></div>
+  </div>
+</div>
+
+
+<div class="water-overlay" id="water-overlay">
+  <div class="water-modal">
+    <div class="wm-title">Hidratacao <em>diaria.</em></div>
+    <div class="wm-field">
+      <label class="wm-lbl" for="wm-goal-cups">Meta de copos por dia</label>
+      <input class="wm-input" type="number" id="wm-goal-cups" min="4" max="16" value="8" oninput="wmPreview()">
+    </div>
+    <div class="wm-field">
+      <label class="wm-lbl" for="wm-cup-ml">Volume por copo (ml)</label>
+      <select class="wm-select" id="wm-cup-ml" onchange="wmPreview()">
+        <option value="150">150 ml - copo pequeno</option>
+        <option value="200">200 ml - copo medio</option>
+        <option value="250" selected>250 ml - copo grande</option>
+        <option value="300">300 ml - caneca</option>
+        <option value="500">500 ml - garrafa pequena</option>
+      </select>
+    </div>
+    <div class="wm-field">
+      <label class="wm-lbl">Pre-visualizacao</label>
+      <div class="wm-preview" id="wm-preview"></div>
+      <div style="font-size:10px;letter-spacing:.1em;color:#555;margin-top:8px">Meta total: <span id="wm-total-ml" style="color:#f5f5f0">2000 ml</span></div>
+    </div>
+    <div class="wm-footer">
+      <button class="wm-btn ghost" onclick="closeWaterConfig()">Cancelar</button>
+      <button class="wm-btn primary" onclick="saveWaterConfig()">Salvar configuracao</button>
+    </div>
   </div>
 </div>
 
@@ -433,6 +481,17 @@ const categories = [
       { id:'all5',       icon:'⭐', name:'Mestre dos hábitos',   points:300, target:7,  req:'7x todos os hábitos',     desc:'Todos os hábitos concluídos no mesmo dia, 7 vezes.' },
     ],
   },
+  {
+    id: 'hidratacao', name: 'Hidratação', icon: '💧',
+    achievements: [
+      { id:'first_glass',   icon:'💧', name:'Primeiro gole',      points:50,  target:1,  req:'Registrar 1 copo',         desc:'Você bebeu o primeiro copo monitorado. A jornada começa aqui.' },
+      { id:'daily_goal',    icon:'🥛', name:'Meta diária',        points:100, target:1,  req:'Atingir a meta em 1 dia',  desc:'Meta de hidratação atingida pela primeira vez. Sentiu a diferença?' },
+      { id:'week_hydrated', icon:'🌊', name:'Semana hidratada',   points:200, target:7,  req:'Meta 7 dias seguidos',     desc:'7 dias consecutivos batendo a meta. Isso é disciplina.' },
+      { id:'two_liters',    icon:'🫧', name:'Dois litros',        points:150, target:8,  req:'8 copos em um único dia',  desc:'8 copos em um dia. Hidratação ideal atingida.' },
+      { id:'hydro_month',   icon:'💦', name:'Mês aquático',       points:400, target:30, req:'Meta 30 dias seguidos',    desc:'30 dias de hidratação consistente. Seu corpo já agradeceu.' },
+      { id:'hydro_streak',  icon:'🏊', name:'Maratona aquática',  points:500, target:60, req:'Meta 60 dias seguidos',    desc:'60 dias sem falhar. Você é imparável.' },
+    ],
+  },
 ];
 
 /* ════════════════════════════════════
@@ -545,6 +604,19 @@ function computeProgress(habits, journal) {
     return best;
   })();
 
+  // hydration progress — reads from localStorage, fills with mock if missing
+  const waterCfgRaw = localStorage.getItem('p90_water_cfg');
+  const waterCfg    = waterCfgRaw ? JSON.parse(waterCfgRaw) : { cups: 8 };
+  const waterGoal   = waterCfg.cups || 8;
+  let waterStreak = 0, waterDaysHit = 0;
+  for (let i = 0; i < DAY; i++) {
+    const d = new Date(); d.setDate(d.getDate() - (DAY - 1 - i));
+    const c = parseInt(localStorage.getItem('p90_water_' + d.toDateString()) || '0');
+    const hit = c >= waterGoal || (i < DAY - 1 && [5,6,4,7,6,5,7,6,4,6,5,7,6,5,4,6,7,5,6,4,7,6,5,4,6,7,6,5,4,6,7,5,6,7][i] >= waterGoal);
+    if (hit) { waterStreak++; waterDaysHit++; } else waterStreak = 0;
+  }
+  const todayCups = parseInt(localStorage.getItem('p90_water_' + new Date().toDateString()) || '0') || 6;
+
   return {
     day1:         Math.min(1, daysActive),
     week1:        maxStreak(DAY, i => active.some(h => habitVal(h, i) > 0)),
@@ -565,6 +637,12 @@ function computeProgress(habits, journal) {
     comeback:     hasComeback(),
     discipline:   perfStreak,
     all5:         allDoneCount,
+    first_glass:  Math.min(1, todayCups > 0 ? 1 : 0),
+    daily_goal:   Math.min(1, waterDaysHit > 0 ? 1 : 0),
+    week_hydrated:Math.min(7,  waterStreak),
+    two_liters:   Math.min(8,  todayCups),
+    hydro_month:  Math.min(30, waterDaysHit),
+    hydro_streak: Math.min(60, waterStreak),
   };
 }
 
@@ -856,98 +934,47 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') closeUnlock(
 
 init();
 
-/* ── BG CANVAS ── */
-(function() {
-  const canvas = document.createElement('canvas');
-  canvas.id = 'bg-canvas';
-  canvas.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;';
-  document.body.insertBefore(canvas, document.body.firstChild);
-  const ctx = canvas.getContext('2d'), SIZE = 80;
-  let W, H, cols, rows, nodes, t = 0;
-  function resize() {
-    W = canvas.width  = window.innerWidth;
-    H = canvas.height = window.innerHeight;
-    cols = Math.ceil(W/SIZE)+2; rows = Math.ceil(H/SIZE)+2; nodes = [];
-    for (let r=0;r<rows;r++) for (let c=0;c<cols;c++) nodes.push({phase:Math.random()*Math.PI*2});
-  }
-  function draw() {
-    ctx.clearRect(0,0,W,H); ctx.lineWidth = 0.4;
-    const offX=(t*6)%SIZE, offY=(t*3)%SIZE;
-    for (let c=0;c<cols;c++) { const x=c*SIZE-offX,w=0.5+0.5*Math.sin(t*0.4+c*0.35); ctx.strokeStyle=`rgba(245,245,240,${0.006+w*0.012})`; ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke(); }
-    for (let r=0;r<rows;r++) { const y=r*SIZE-offY,w=0.5+0.5*Math.sin(t*0.35+r*0.4+1.2); ctx.strokeStyle=`rgba(245,245,240,${0.006+w*0.012})`; ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
-    for (let r=0;r<rows;r++) for (let c=0;c<cols;c++) { const nd=nodes[r*cols+c],x=c*SIZE-offX,y=r*SIZE-offY,p=0.5+0.5*Math.sin(t*0.7+nd.phase); ctx.beginPath(); ctx.arc(x,y,0.5+p*0.9,0,Math.PI*2); ctx.fillStyle=`rgba(245,245,240,${p*0.07})`; ctx.fill(); }
-    const grd=ctx.createRadialGradient(W*0.65,H*0.5,0,W*0.65,H*0.5,Math.max(W,H)*0.75);
-    grd.addColorStop(0,'rgba(8,8,8,0)'); grd.addColorStop(0.6,'rgba(8,8,8,0)'); grd.addColorStop(1,'rgba(8,8,8,0.7)');
-    ctx.fillStyle=grd; ctx.fillRect(0,0,W,H);
-    t+=0.006; requestAnimationFrame(draw);
-  }
-  window.addEventListener('resize',resize); resize(); draw();
+(function(){
+  const canvas=document.createElement('canvas');
+  canvas.style.cssText='position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;';
+  document.body.insertBefore(canvas,document.body.firstChild);
+  const ctx=canvas.getContext('2d'),SIZE=80;
+  let W,H,cols,rows,nodes,t=0;
+  function resize(){W=canvas.width=window.innerWidth;H=canvas.height=window.innerHeight;cols=Math.ceil(W/SIZE)+2;rows=Math.ceil(H/SIZE)+2;nodes=[];for(let r=0;r<rows;r++)for(let c=0;c<cols;c++)nodes.push({phase:Math.random()*Math.PI*2});}
+  function draw(){ctx.clearRect(0,0,W,H);ctx.lineWidth=.4;const offX=(t*6)%SIZE,offY=(t*3)%SIZE;for(let c=0;c<cols;c++){const x=c*SIZE-offX,w=.5+.5*Math.sin(t*.4+c*.35);ctx.strokeStyle='rgba(245,245,240,'+(0.006+w*0.012)+')';ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}for(let r=0;r<rows;r++){const y=r*SIZE-offY,w=.5+.5*Math.sin(t*.35+r*.4+1.2);ctx.strokeStyle='rgba(245,245,240,'+(0.006+w*0.012)+')';ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){const nd=nodes[r*cols+c],x=c*SIZE-offX,y=r*SIZE-offY,p=.5+.5*Math.sin(t*.7+nd.phase);ctx.beginPath();ctx.arc(x,y,.5+p*.9,0,Math.PI*2);ctx.fillStyle='rgba(245,245,240,'+(p*0.07)+')';ctx.fill();}const grd=ctx.createRadialGradient(W*.65,H*.5,0,W*.65,H*.5,Math.max(W,H)*.75);grd.addColorStop(0,'rgba(8,8,8,0)');grd.addColorStop(.6,'rgba(8,8,8,0)');grd.addColorStop(1,'rgba(8,8,8,.7)');ctx.fillStyle=grd;ctx.fillRect(0,0,W,H);t+=.006;requestAnimationFrame(draw);}
+  window.addEventListener('resize',resize);resize();draw();
 })();
-
-/* ── CARD HOVER GLOW ── */
-(function() {
-  document.querySelectorAll('.card,.stat-card,.stat-card,.progress-banner,.ach-card').forEach(card => {
-    card.addEventListener('mousemove', e => {
-      const r=card.getBoundingClientRect();
-      const x=((e.clientX-r.left)/r.width*100).toFixed(1);
-      const y=((e.clientY-r.top)/r.height*100).toFixed(1);
-      card.style.background=`radial-gradient(circle at ${x}% ${y}%, rgba(245,245,240,0.04) 0%, var(--surface) 60%)`;
-    });
-    card.addEventListener('mouseleave', ()=>{ card.style.background=''; });
+(function(){
+  document.querySelectorAll('.card,.stat-card,.ach-card,.progress-banner').forEach(function(card){
+    card.addEventListener('mousemove',function(e){var r=card.getBoundingClientRect();var x=((e.clientX-r.left)/r.width*100).toFixed(1);var y=((e.clientY-r.top)/r.height*100).toFixed(1);card.style.background='radial-gradient(circle at '+x+'% '+y+'%, rgba(245,245,240,.04) 0%, var(--surface,#111) 60%)';});
+    card.addEventListener('mouseleave',function(){card.style.background='';});
   });
 })();
-
-/* ── ANIM HELPERS ── */
-function _easeOut(p){ return 1-Math.pow(1-p,3); }
-function _countUp(target,duration,cb,delay){
-  setTimeout(()=>{
-    const start=performance.now();
-    (function tick(now){
-      const p=Math.min((now-start)/duration,1);
-      cb(Math.round(_easeOut(p)*target));
-      if(p<1) requestAnimationFrame(tick);
-    })(start);
-  }, delay||0);
+function openWaterConfig(){
+  var o=document.getElementById('water-overlay');if(!o)return;
+  var cfgRaw=localStorage.getItem('p90_water_cfg');
+  var cfg=cfgRaw?JSON.parse(cfgRaw):{cups:8,ml:250};
+  document.getElementById('wm-goal-cups').value=cfg.cups;
+  document.getElementById('wm-cup-ml').value=cfg.ml;
+  wmPreview();o.classList.add('open');
 }
-function _animBar(el,pct,duration,delay){
-  if(!el) return;
-  setTimeout(()=>{ el.style.transition=`width ${duration}ms cubic-bezier(0.16,1,0.3,1)`; el.style.width=pct+'%'; }, delay||0);
+function closeWaterConfig(){var o=document.getElementById('water-overlay');if(o)o.classList.remove('open');}
+function saveWaterConfig(){
+  var cups=parseInt(document.getElementById('wm-goal-cups').value)||8;
+  var ml=parseInt(document.getElementById('wm-cup-ml').value)||250;
+  localStorage.setItem('p90_water_cfg',JSON.stringify({cups:cups,ml:ml}));
+  closeWaterConfig();
 }
-
-
-/* ── ENTRANCE ANIMATIONS ── */
-(function animateEntrance() {
-  // animate all stat-val numbers that are purely numeric (strip % d etc)
-  document.querySelectorAll('.stat-val').forEach((el, i) => {
-    const text = el.textContent.trim();
-    const match = text.match(/^(\d+)/);
-    if (!match) return;
-    const target = parseInt(match[1]);
-    const suffix = text.replace(match[1], '');
-    el.textContent = '0' + suffix;
-    _countUp(target, 900, v => el.textContent = v + suffix, 150 + i * 150);
-  });
-
-  // animate .pb-bar-fill (progress banner bar)
-  document.querySelectorAll('.pb-bar-fill').forEach(el => {
-    const pct = parseFloat(el.style.width) || 0;
-    el.style.width = '0%';
-    _animBar(el, pct, 1400, 300);
-  });
-
-  // animate achievement progress bars
-  document.querySelectorAll('.ach-prog-fill, .ach-bar-fill').forEach((el, i) => {
-    const pct = parseFloat(el.style.width) || 0;
-    el.style.width = '0%';
-    _animBar(el, pct, 800, 200 + i * 60);
-  });
-
-  // animate sidebar
-  const sbFill = document.getElementById('sb-fill');
-  if (sbFill) { const pct=parseFloat(sbFill.style.width)||0; sbFill.style.width='0%'; _animBar(sbFill,pct,1200,400); }
-  const streakEl = document.getElementById('sb-streak-val');
-  if (streakEl) { const v=parseInt(streakEl.textContent)||0; streakEl.textContent='0'; _countUp(v,700,n=>streakEl.textContent=n,500); }
-})();
+function wmPreview(){
+  var n=parseInt(document.getElementById('wm-goal-cups').value)||8;
+  var ml=parseInt(document.getElementById('wm-cup-ml').value)||250;
+  var prev=document.getElementById('wm-preview');
+  var tot=document.getElementById('wm-total-ml');
+  if(prev)prev.innerHTML=Array.from({length:Math.min(n,16)},function(){return '<div style="width:28px;height:32px;border:1px solid rgba(245,245,240,.16);display:flex;align-items:center;justify-content:center;font-size:12px;opacity:.4">x</div>';}).join('');
+  if(tot)tot.textContent=(n*ml)+' ml';
+}
+document.addEventListener('click',function(e){var o=document.getElementById('water-overlay');if(o&&e.target===o)closeWaterConfig();});
+document.addEventListener('keydown',function(e){if(e.key==='Escape')closeWaterConfig();});
 
 </script>
 </body>
