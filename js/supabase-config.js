@@ -9,5 +9,5 @@
    A chave "anon" é pública por design (o acesso é controlado por
    Row Level Security no banco). Não coloque aqui a "service_role".
 ═══════════════════════════════════════════════ */
-window.SUPABASE_URL      = "https://SEU-PROJETO.supabase.co";
-window.SUPABASE_ANON_KEY = "SUA-ANON-KEY";
+window.SUPABASE_URL      = "https://zbtmxvgvoxxropxphrhr.supabase.co";
+window.SUPABASE_ANON_KEY = "sb_publishable_nf5FOu21h99fcfJlj4Llgg_-JhDqgWy";
