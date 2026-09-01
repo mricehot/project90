@@ -159,6 +159,9 @@ body {
   .login-right { padding: 48px 32px; min-height: 100vh; }
 }
 </style>
+<script src="js/supabase-config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase.js"></script>
 </head>
 <body>
 
@@ -266,33 +269,67 @@ body {
   })();
 })();
 
-/* ── PASSWORD TOGGLE ── */
-document.getElementById('toggle-pass').addEventListener('click', function() {
-  const inp = document.getElementById('password');
-  inp.type = inp.type==='password' ? 'text' : 'password';
-  this.textContent = inp.type==='password' ? 'ver' : 'ocultar';
-});
+/* ── PASSWORD TOGGLE (só se existirem os campos) ── */
+(function(){
+  const t = document.getElementById('toggle-pass');
+  if (!t) return;
+  t.addEventListener('click', function() {
+    const inp = document.getElementById('password');
+    inp.type = inp.type==='password' ? 'text' : 'password';
+    this.textContent = inp.type==='password' ? 'ver' : 'ocultar';
+  });
+})();
 
-/* ── FORGOT ── */
-document.getElementById('forgot-btn').addEventListener('click', () => {
-  const err = document.getElementById('form-error');
-  err.textContent='Link de recuperação enviado para o seu email.';
-  Object.assign(err.style,{color:'#86efac',borderColor:'rgba(134,239,172,0.2)',background:'rgba(134,239,172,0.05)'});
-  err.classList.add('show');
-  setTimeout(()=>{ err.classList.remove('show'); err.style.cssText=''; },3000);
-});
+/* ── FORGOT (só se existir o botão) ── */
+(function(){
+  const f = document.getElementById('forgot-btn');
+  if (!f) return;
+  f.addEventListener('click', async () => {
+    const err = document.getElementById('form-error');
+    const email = (document.getElementById('email') || {}).value;
+    if (window.sb && email) {
+      await window.sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname });
+    }
+    err.textContent='Link de recuperação enviado para o seu email.';
+    Object.assign(err.style,{color:'#86efac',borderColor:'rgba(134,239,172,0.2)',background:'rgba(134,239,172,0.05)'});
+    err.classList.add('show');
+    setTimeout(()=>{ err.classList.remove('show'); err.style.cssText=''; },3000);
+  });
+})();
 
-function doLogin() {
+/* ── AUTH (Supabase) ── */
+function _authMsg(kind, text) {
+  const el = document.getElementById(kind === 'ok' ? 'form-success' : 'form-error');
+  if (!el) return;
+  el.textContent = text;
+  el.classList.add('show');
+  if (kind !== 'ok') setTimeout(() => el.classList.remove('show'), 5000);
+}
+
+// Já autenticado? vai direto pro app.
+(async function () {
+  if (!window.sb) return;
+  const params = new URLSearchParams(location.hash.slice(1) + '&' + location.search.slice(1));
+  if (params.get('error_description')) _authMsg('err', decodeURIComponent(params.get('error_description')));
+  const { data: { session } } = await window.sb.auth.getSession();
+  if (session) window.location.replace('dashboard.html');
+})();
+
+async function doLogin() {
+  if (!window.sb) { _authMsg('err', 'Configure js/supabase-config.js com a URL e a anon key do projeto.'); return; }
   const btn = document.getElementById('login-btn');
   const txt = document.getElementById('btn-text');
-  const suc = document.getElementById('form-success');
   btn.style.pointerEvents = 'none';
-  txt.textContent = 'Autenticando...';
-  setTimeout(() => {
-    suc.textContent = '✓ Conta verificada. Redirecionando...';
-    suc.classList.add('show');
-    setTimeout(() => { window.location.href = 'dashboard.html'; }, 1000);
-  }, 1400);
+  txt.textContent = 'Redirecionando para o Google...';
+  const { error } = await window.sb.auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo: location.origin + location.pathname.replace(/[^/]*$/, 'dashboard.html') }
+  });
+  if (error) {
+    _authMsg('err', error.message || 'Não foi possível iniciar o login.');
+    btn.style.pointerEvents = '';
+    txt.textContent = 'Continuar com Google';
+  }
 }
 
 /* ── BG CANVAS ── */
