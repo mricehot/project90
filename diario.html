@@ -489,6 +489,9 @@ body {
   </div>
 </div>
 
+<script src="js/supabase-config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase.js"></script>
 <script src="js/store.js"></script>
 <script>
 /* ── CURSOR ── */
@@ -758,6 +761,13 @@ function showToast(msg) {
   toastTimer=setTimeout(function(){ el.classList.remove('show'); }, 2000);
 }
 
+window.addEventListener('p90:synced', function () {
+  DAY = Store.getCurrentDay();
+  DAYS = Store.getTotalDays();
+  habits = Store.getHabits().filter(function (h) { return !h.paused; });
+  entries = Store.getJournal();
+  init();
+});
 init();
 
 /* ── BG CANVAS ── */

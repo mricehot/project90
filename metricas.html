@@ -7,6 +7,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="js/supabase-config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase.js"></script>
 <script src="js/store.js"></script>
 <style>
 /* ── RESET ── */
@@ -775,6 +778,12 @@ function renderRadials(){
   }
 })();
 
+window.addEventListener('p90:synced', function () {
+  DAY = Store.getCurrentDay();
+  DAYS = Store.getTotalDays();
+  habits = getActiveHabits().map(toMetricHabit);
+  init();
+});
 init();
 </script>
 </body>
