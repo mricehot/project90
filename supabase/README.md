@@ -28,7 +28,7 @@ Os scripts criam:
 | `profiles` | 1 linha por usuário (nome, avatar, email) |
 | `challenge_meta` | data de início + duração (dia atual é calculado) |
 | `habits` | hábitos; `freq` e `history` como `jsonb`; `core_key` marca os fixos |
-| **hábitos fixos** | 17 hábitos nos 4 pilares (Corpo/Mente/Produção/Conexão), semeados em todo usuário via `seed_core_habits()`; não podem ser excluídos e alimentam os achievements por `core_key` |
+| **hábitos fixos** | só os 5 ligados a achievements (`acordar_cedo`, `exercitar`, `ler`, `meditar`, `sem_redes`), semeados via `seed_core_habits()`; não podem ser excluídos (só pausados). O resto da rotina é livre. |
 | `journal_entries` | 1 entrada por dia do desafio |
 | `achievements` | estado de desbloqueio por conquista |
 | `water_config` / `water_logs` | widget de hidratação |
@@ -76,8 +76,9 @@ npx serve .
 ```
 
 Abra `http://localhost:3000/login.html`, entre com o Google e você cai no
-dashboard. Um usuário novo começa no **dia 1** já com os **17 hábitos fixos**
-(pode adicionar os dele por cima; os fixos não podem ser excluídos, só pausados).
+dashboard. Um usuário novo começa no **dia 1** com **5 hábitos fixos** (os que
+alimentam achievements) e monta o resto da rotina livremente. Os 5 fixos não
+podem ser excluídos, só pausados.
 
 ## Como o front usa isso
 
