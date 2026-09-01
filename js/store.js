@@ -96,6 +96,7 @@ const Store = (() => {
       paused:     !!h.paused,
       createdDay: h.createdDay != null ? h.createdDay : (h.created_day || 1),
       history:    Array.isArray(h.history) ? h.history : [],
+      coreKey:    h.coreKey != null ? h.coreKey : (h.core_key != null ? h.core_key : null),
     };
   }
 
@@ -113,6 +114,7 @@ const Store = (() => {
       created_day: h.createdDay || 1,
       history:     Array.isArray(h.history) ? h.history : [],
       sort_order:  idx,
+      core_key:    h.coreKey != null ? h.coreKey : null,
     };
   }
 
@@ -435,13 +437,16 @@ const Store = (() => {
   function computeAchievementProgress(habits, journal, currentDay) {
     const active = habits.filter(h => !h.paused);
 
-    function streakForHabit(name) {
-      const h = active.find(x => x.name === name);
+    // As conquistas ligadas a um hábito específico agora casam pela CHAVE
+    // estável (coreKey), não pelo nome exibido — ver supabase 0002_core_habits.
+    function _core(key) { return active.find(x => x.coreKey === key); }
+    function streakForKey(key) {
+      const h = _core(key);
       if (!h) return 0;
       return maxStreak(currentDay, i => habitVal(h, i) === 1);
     }
-    function countForHabit(name) {
-      const h = active.find(x => x.name === name);
+    function countForKey(key) {
+      const h = _core(key);
       if (!h) return 0;
       return h.history.filter(s => s === 'done').length;
     }
@@ -477,11 +482,11 @@ const Store = (() => {
       day60:        dayStreak,
       day90:        dayStreak,
       perfect_week: perfStreak,
-      early_bird:   countForHabit('Acordar às 6h'),
-      athlete:      countForHabit('Exercício 30min'),
-      no_scroll:    streakForHabit('Sem redes sociais'),
-      reader:       countForHabit('Leitura 20min'),
-      zen:          countForHabit('Meditação'),
+      early_bird:   countForKey('acordar_cedo'),
+      athlete:      countForKey('exercitar'),
+      no_scroll:    streakForKey('sem_redes'),
+      reader:       countForKey('ler'),
+      zen:          countForKey('meditar'),
       first_entry:  Math.min(1, journalEntries),
       journal7:     journalStreak,
       journal30:    journalEntries,

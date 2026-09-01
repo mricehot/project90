@@ -11,8 +11,9 @@ Backend do app: Postgres + Auth do Supabase. O front continua 100% estático
 ## 2. Aplicar o schema
 
 **Opção A — painel (mais rápido):**
-Dashboard → **SQL Editor** → **New query** → cole todo o
-`supabase/migrations/0001_init.sql` → **Run**.
+Dashboard → **SQL Editor** → **New query** → rode os arquivos **na ordem**:
+1. `supabase/migrations/0001_init.sql` → **Run**
+2. `supabase/migrations/0002_core_habits.sql` → **Run**
 
 **Opção B — CLI:**
 ```bash
@@ -20,18 +21,20 @@ supabase link --project-ref SEU_REF
 supabase db push
 ```
 
-O script cria:
+Os scripts criam:
 
 | Objeto | O quê |
 | --- | --- |
 | `profiles` | 1 linha por usuário (nome, avatar, email) |
 | `challenge_meta` | data de início + duração (dia atual é calculado) |
-| `habits` | hábitos; `freq` e `history` como `jsonb` |
+| `habits` | hábitos; `freq` e `history` como `jsonb`; `core_key` marca os fixos |
+| **hábitos fixos** | 17 hábitos nos 4 pilares (Corpo/Mente/Produção/Conexão), semeados em todo usuário via `seed_core_habits()`; não podem ser excluídos e alimentam os achievements por `core_key` |
 | `journal_entries` | 1 entrada por dia do desafio |
 | `achievements` | estado de desbloqueio por conquista |
 | `water_config` / `water_logs` | widget de hidratação |
 | **RLS** | ligado em tudo — cada usuário só vê as próprias linhas |
-| `handle_new_user()` | trigger em `auth.users`: cria profile + meta + water_config |
+| `handle_new_user()` | trigger em `auth.users`: cria profile + meta + water_config + hábitos fixos |
+| `seed_core_habits(user)` | semeia os hábitos fixos que faltam (idempotente) |
 | `challenge_day()` | dia atual do desafio (1-based, limitado ao total) |
 | `set_habit_status(habit_id, day_index, status)` | marca um dia e recalcula `streak`/`max_streak` |
 | `unlock_achievement(id, day)` / `mark_achievement_seen(id)` | conquistas |
@@ -73,7 +76,8 @@ npx serve .
 ```
 
 Abra `http://localhost:3000/login.html`, entre com o Google e você cai no
-dashboard. Um usuário novo começa **sem hábitos** e no **dia 1**.
+dashboard. Um usuário novo começa no **dia 1** já com os **17 hábitos fixos**
+(pode adicionar os dele por cima; os fixos não podem ser excluídos, só pausados).
 
 ## Como o front usa isso
 
@@ -93,3 +97,9 @@ dashboard. Um usuário novo começa **sem hábitos** e no **dia 1**.
   existem — falta só trocar as chamadas nas páginas.
 - `Store.js` (raiz, com S maiúsculo) é a versão **antiga** só-localStorage e
   não é usada por nenhuma página (todas carregam `js/store.js`). Pode apagar.
+- **Rollover de dia**: nada ainda acrescenta um slot novo em `habits.history` a
+  cada dia — o `history` fica com 1 posição. A função `set_habit_status(habit_id,
+  day_index, status)` (0001) já sabe preencher até um índice qualquer; falta o
+  front chamá-la por dia. Enquanto isso, os achievements de contagem
+  (`athlete`, `reader`, `zen`, `early_bird`, `no_scroll`) só avançam de fato
+  depois desse ajuste.
