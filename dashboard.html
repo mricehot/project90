@@ -206,7 +206,7 @@ body { overflow: hidden; }
         <span>Progresso</span><span id="sb-pct">38%</span>
       </div>
       <div class="sb-prog-bar-bg"><div class="sb-prog-bar-fill" id="sb-fill" style="width:0%"></div></div>
-      <div class="sb-prog-meta"><span id="sb-days-left">56 restantes</span><span>38%</span></div>
+      <div class="sb-prog-meta"><span id="sb-days-left">56 restantes</span><span id="sb-pct2">38%</span></div>
     </div>
 
     <nav class="sb-nav">
@@ -326,43 +326,57 @@ body { overflow: hidden; }
 </div>
 
 
+<script src="js/store.js"></script>
 <script>
-const DAY  = 34;
-const DAYS = 90;
+const DAY  = Store.getCurrentDay();
+const DAYS = Store.getTotalDays();
 
-const habits = [
-  { id:1, name:'Acordar às 6h',     streak:28, max:28, done:true,
-    history:[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1] },
-  { id:2, name:'Exercício 30min',   streak:12, max:18, done:true,
-    history:[1,1,0.5,1,1,1,1,0,1,1,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,1,1,0.5,1,1,1] },
-  { id:3, name:'Sem redes sociais', streak:12, max:22, done:true,
-    history:[1,1,1,0.5,0,1,1,1,1,1,1,1,0.5,1,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,1,1] },
-  { id:4, name:'Leitura 20min',     streak:4,  max:14, done:false,
-    history:[1,0,1,1,1,1,1,0,1,1,0.5,1,1,1,1,1,0,1,1,1,1,0,0,1,1,1,1,0,1,1,1,1,1,0] },
-  { id:5, name:'Meditação',         streak:7,  max:15, done:false,
-    history:[1,1,1,1,1,0,1,1,0.5,1,1,1,1,0,1,1,1,1,0,1,1,1,1,1,0,1,1,0,1,1,1,1,1,1] },
-];
+/* ═══════════════════════════════
+   HÁBITOS REAIS — via js/store.js (fonte única de verdade,
+   compartilhada com habitos.html e metricas.html)
+═══════════════════════════════ */
+function saveRealHabits(list) { Store.saveHabits(list); }
 
-const goals = [
-  { name:'Horas de estudo',    current:14, target:20, unit:'h' },
-  { name:'Treinos realizados', current:4,  target:5,  unit:''  },
-  { name:'Páginas lidas',      current:68, target:100, unit:'' },
-  { name:'Meditações',         current:5,  target:7,  unit:'x' },
-];
+let realHabits = Store.getHabits();
+function getActiveHabits() { return realHabits.filter(h => !h.paused); }
 
-const achievements = [
-  { name:'Primeira semana',    icon:'🌱', req:'7 dias seguidos',    unlocked:true  },
-  { name:'Quinzena sólida',    icon:'💪', req:'15 dias seguidos',   unlocked:true  },
-  { name:'Metade do caminho',  icon:'⚡', req:'45 dias completos',  unlocked:false },
-  { name:'Mestre dos hábitos', icon:'🎯', req:'Todos 7 dias',       unlocked:true  },
-  { name:'Madrugador',         icon:'🌅', req:'30x às 6h',          unlocked:false },
-  { name:'Atleta',             icon:'🏋️', req:'20 treinos no mês', unlocked:false },
-  { name:'Leitor voraz',       icon:'📚', req:'200 páginas',        unlocked:false },
-  { name:'Project Complete',   icon:'🏆', req:'90 dias completos',  unlocked:false },
-];
+function statusToNum(s) { return s === 'done' ? 1 : s === 'partial' ? 0.5 : 0; }
 
-const fixed = [1,1,1,1,0.5,1,1,1,1,1,0,1,1,1,1,1,1,0.5,1,1,1,1,1,0,1,1,1,1,1,1,0.5,1,1,0.5];
-const dayStatuses = Array.from({length:90}, (_,i) => i < DAY ? fixed[i] : -1);
+// Adapta um hábito real (formato de habitos.html) para o formato usado
+// nos cards/gráficos deste dashboard.
+function toDashHabit(h) {
+  const numHistory = h.history.map(statusToNum);
+  return { id: h.id, name: h.name, streak: h.streak, max: h.maxStreak,
+           done: numHistory[numHistory.length - 1] === 1, history: numHistory };
+}
+
+let habits = getActiveHabits().map(toDashHabit);
+
+// Status geral (0 / 0.5 / 1) de cada um dos 90 dias — via Store.dayCompletionPct
+// (que já respeita createdDay e pausa de cada hábito). -1 = dia ainda não chegou.
+function computeDayStatuses() {
+  const arr = [];
+  for (let i = 0; i < DAYS; i++) {
+    if (i >= DAY) { arr.push(-1); continue; }
+    const pct = Store.dayCompletionPct(realHabits, i);
+    arr.push(pct === 100 ? 1 : pct === 0 ? 0 : 0.5);
+  }
+  return arr;
+}
+let dayStatuses = computeDayStatuses();
+
+// Streak atual (dias seguidos com ao menos um hábito feito) e maior streak
+// entre os hábitos ativos — usados nos stat cards e na sidebar.
+function currentStreakOverall() { return Store.currentStreak(realHabits, DAY); }
+function bestMaxStreak() {
+  const active = getActiveHabits();
+  return active.length ? Math.max(...active.map(h => h.maxStreak)) : 0;
+}
+
+function refreshFromRealHabits() {
+  habits = getActiveHabits().map(toDashHabit);
+  dayStatuses = computeDayStatuses();
+}
 
 /* ═══════════════════════════════
    INIT
@@ -413,28 +427,32 @@ function initSidebar() {
   const pct = Math.round((DAY / DAYS) * 100);
   document.getElementById('sb-daynum').textContent    = DAY;
   document.getElementById('sb-pct').textContent       = pct + '%';
+  document.getElementById('sb-pct2').textContent      = pct + '%';
   document.getElementById('sb-days-left').textContent = (DAYS - DAY) + ' restantes';
-  countUp(habits[0].streak, 700, v => document.getElementById('sb-streak-val').textContent = v, 600);
+  countUp(currentStreakOverall(), 700, v => document.getElementById('sb-streak-val').textContent = v, 600);
   setTimeout(() => animBar(document.getElementById('sb-fill'), pct, 1200), 500);
 }
 
 /* ─ STATS ─ */
 function renderStats() {
   const doneToday = habits.filter(h => h.done).length;
-  const complete  = dayStatuses.filter(s => s === 1).length;
-  const disc      = Math.round(dayStatuses.filter(s => s > 0 && s !== -1).length / DAY * 100);
+  const complete  = dayStatuses.slice(0, DAY).filter(s => s === 1).length;
+  const disc      = DAY > 0 ? Math.round(dayStatuses.slice(0, DAY).filter(s => s > 0).length / DAY * 100) : 0;
   const pending   = habits.length - doneToday;
   const msgEl     = document.getElementById('sc-today-msg');
+  const streakNow = currentStreakOverall();
+  const streakMax = bestMaxStreak();
 
-  countUp(disc,             900, v => document.getElementById('sc-disc').textContent    = v + '%', 200);
-  countUp(complete,         800, v => document.getElementById('sc-comp').textContent    = v,       350);
-  countUp(habits[0].streak, 800, v => document.getElementById('sc-streak').textContent = v,       500);
-  countUp(habits[0].max,    600, v => document.getElementById('sc-max').textContent    = v,       500);
-  countUp(DAY,              500, v => document.getElementById('sc-days').textContent   = v,       350);
+  countUp(disc,      900, v => document.getElementById('sc-disc').textContent   = v + '%', 200);
+  countUp(complete,  800, v => document.getElementById('sc-comp').textContent   = v,       350);
+  countUp(streakNow, 800, v => document.getElementById('sc-streak').textContent = v,       500);
+  countUp(streakMax, 600, v => document.getElementById('sc-max').textContent    = v,       500);
+  countUp(DAY,       500, v => document.getElementById('sc-days').textContent   = v,       350);
 
   setTimeout(() => {
     document.getElementById('sc-today').textContent = `${doneToday}/${habits.length}`;
-    if (pending === 0) { msgEl.textContent = '✓ Dia completo!';  msgEl.className = 'stat-delta up'; }
+    if (habits.length === 0) { msgEl.textContent = 'Nenhum hábito ainda'; msgEl.className = 'stat-delta'; }
+    else if (pending === 0) { msgEl.textContent = '✓ Dia completo!';  msgEl.className = 'stat-delta up'; }
     else { msgEl.textContent = `↓ ${pending} pendente${pending>1?'s':''}`; msgEl.className = 'stat-delta dn'; }
   }, 700);
 }
@@ -460,6 +478,11 @@ function renderHeatmap() {
 
 /* ─ CONSISTENCY ─ */
 function renderConsistency() {
+  if (!habits.length) {
+    document.getElementById('consist-list').innerHTML =
+      '<div style="font-size:11px;color:var(--mid);padding:8px 0">Nenhum hábito cadastrado ainda.</div>';
+    return;
+  }
   document.getElementById('consist-list').innerHTML = habits.map(h => {
     const pct = h.history.length ? Math.round(h.history.filter(v=>v>0).length / h.history.length * 100) : 0;
     return `<div class="co-row">
@@ -477,6 +500,15 @@ function renderConsistency() {
 
 /* ─ HABITS ─ */
 function renderHabits() {
+  if (!habits.length) {
+    document.getElementById('habits-list').innerHTML =
+      '<div style="text-align:center;padding:24px 12px;font-size:12px;color:var(--mid);line-height:1.8">' +
+      'Nenhum hábito cadastrado ainda.<br>' +
+      '<a href="habitos.html" style="color:var(--white)">Adicionar o primeiro hábito →</a></div>';
+    renderStats();
+    renderConsistency();
+    return;
+  }
   document.getElementById('habits-list').innerHTML = habits.map(h => `
     <div class="h-row">
       <div class="h-check ${h.done?'done':''}" onclick="toggleHabit(${h.id})">${h.done?'✓':''}</div>
@@ -492,11 +524,47 @@ function renderHabits() {
   renderConsistency();
 }
 
-function toggleHabit(id) { const h=habits.find(x=>x.id===id); h.done=!h.done; renderHabits(); }
-function checkAll() { habits.forEach(h=>h.done=true); renderHabits(); }
+function toggleHabit(id) {
+  const h = realHabits.find(x => x.id === id);
+  if (!h) return;
+  const last = h.history[h.history.length - 1];
+  if (last === 'done') {
+    h.history[h.history.length - 1] = 'miss';
+    h.streak = Math.max(0, h.streak - 1);
+  } else {
+    h.history[h.history.length - 1] = 'done';
+    h.streak += 1;
+    if (h.streak > h.maxStreak) h.maxStreak = h.streak;
+  }
+  saveRealHabits(realHabits);
+  refreshFromRealHabits();
+  renderHabits(); renderHeatmap(); initSidebar();
+}
+
+function checkAll() {
+  getActiveHabits().forEach(h => {
+    if (h.history[h.history.length - 1] !== 'done') {
+      h.history[h.history.length - 1] = 'done';
+      h.streak += 1;
+      if (h.streak > h.maxStreak) h.maxStreak = h.streak;
+    }
+  });
+  saveRealHabits(realHabits);
+  refreshFromRealHabits();
+  renderHabits(); renderHeatmap(); initSidebar();
+}
+
 function addHabit() {
   const name = prompt('Nome do novo hábito:');
-  if (name && name.trim()) { habits.push({id:habits.length+1,name:name.trim(),streak:0,max:0,done:false,history:[]}); renderHabits(); }
+  if (!name || !name.trim()) return;
+  const nextId = Math.max(0, ...realHabits.map(h => h.id)) + 1;
+  realHabits.push({
+    id: nextId, name: name.trim(), pillar: 'Corpo', freq: [0,1,2,3,4,5,6],
+    goal: '', streak: 0, maxStreak: 0, paused: false, createdDay: DAY, history: ['miss'],
+  });
+  saveRealHabits(realHabits);
+  refreshFromRealHabits();
+  renderHabits(); renderHeatmap(); initSidebar();
 }
 
 /* ─ WEEKLY CHART ─ */
@@ -505,7 +573,7 @@ function renderWeeklyChart() {
   const now  = new Date();
   const data = Array.from({length:7}, (_,i) => {
     const vals = habits.map(h => h.history[DAY-7+i] ?? 0);
-    return Math.round(vals.reduce((a,b)=>a+b,0)/vals.length*100);
+    return vals.length ? Math.round(vals.reduce((a,b)=>a+b,0)/vals.length*100) : 0;
   });
   const labels = Array.from({length:7}, (_,i) => {
     const d = new Date(now); d.setDate(d.getDate()-6+i); return DAYS_LABELS[d.getDay()];
@@ -687,7 +755,6 @@ renderWater();
 
 init();
 </script>
-<script src="js/store.js"></script>
 <script src="js/ui.js"></script>
 </body>
 </html>

@@ -8,8 +8,6 @@
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/base.css">
 <link rel="stylesheet" href="css/components.css">
-<link rel="stylesheet" href="css/base.css">
-<link rel="stylesheet" href="css/components.css">
 <style>
 
 html { scroll-behavior: smooth; }
@@ -212,7 +210,7 @@ body {
         <span>Progresso</span><span id="sb-pct">38%</span>
       </div>
       <div class="sb-prog-bar-bg"><div class="sb-prog-bar-fill" id="sb-fill" style="width:0%"></div></div>
-      <div class="sb-prog-meta"><span id="sb-days-left">56 restantes</span><span>38%</span></div>
+      <div class="sb-prog-meta"><span id="sb-days-left">56 restantes</span><span id="sb-pct2">38%</span></div>
     </div>
 
     <nav class="sb-nav">
@@ -334,40 +332,19 @@ body {
   })();
 })();
 </script>
+<script src="js/store.js"></script>
 <script>
 /* ═══════════════════════════════════
-   DATA
+   DATA — via js/store.js (fonte única de verdade,
+   compartilhada com dashboard.html e metricas.html)
 ═══════════════════════════════════ */
-const DAY  = 34;
-const DAYS = 90;
+const DAY  = Store.getCurrentDay();
+const DAYS = Store.getTotalDays();
 const DAYS_LABELS = ['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];
 
-function buildHistory(streak, total, quality) {
-  const h = [];
-  for (let i = 0; i < total; i++) {
-    const daysAgo = total - 1 - i;
-    if (daysAgo < streak) { h.push('done'); continue; }
-    const r = Math.random();
-    if (quality === 'high') h.push(r > 0.15 ? 'done' : r > 0.05 ? 'partial' : 'miss');
-    else                    h.push(r > 0.3  ? 'done' : r > 0.1  ? 'partial' : 'miss');
-  }
-  return h;
-}
+function saveHabits() { Store.saveHabits(habits); }
 
-function loadHabits() {
-  try { const raw = localStorage.getItem('p90_habits'); if (raw) return JSON.parse(raw); } catch(e) {}
-  return [
-    { id:1, name:'Acordar às 6h',     pillar:'Corpo',  freq:[0,1,2,3,4,5,6], goal:'',       streak:28, maxStreak:28, paused:false, createdDay:1, history:buildHistory(28,34,'high') },
-    { id:2, name:'Exercício 30min',   pillar:'Corpo',  freq:[0,1,2,3,4],     goal:'30 min', streak:12, maxStreak:18, paused:false, createdDay:1, history:buildHistory(12,34,'med')  },
-    { id:3, name:'Sem redes sociais', pillar:'Mente',  freq:[0,1,2,3,4,5,6], goal:'',       streak:12, maxStreak:22, paused:false, createdDay:1, history:buildHistory(12,34,'high') },
-    { id:4, name:'Leitura 20min',     pillar:'Mente',  freq:[0,1,2,3,4,5,6], goal:'20 min', streak:4,  maxStreak:14, paused:false, createdDay:1, history:buildHistory(4,34,'med')   },
-    { id:5, name:'Meditação',         pillar:'Mente',  freq:[0,1,2,3,4,5,6], goal:'10 min', streak:7,  maxStreak:15, paused:false, createdDay:1, history:buildHistory(7,34,'med')   },
-  ];
-}
-
-function saveHabits() { localStorage.setItem('p90_habits', JSON.stringify(habits)); }
-
-let habits = loadHabits();
+let habits = Store.getHabits();
 let nextId = Math.max(...habits.map(h => h.id), 0) + 1;
 
 /* ═══════════════════════════════════
@@ -375,8 +352,10 @@ let nextId = Math.max(...habits.map(h => h.id), 0) + 1;
 ═══════════════════════════════════ */
 function initSidebar() {
   const pct = Math.round((DAY / DAYS) * 100);
-  document.getElementById('sb-pct').textContent        = pct + '%';
-  document.getElementById('sb-days-left').textContent  = (DAYS - DAY) + ' restantes';
+  document.getElementById('sb-daynum').textContent    = DAY;
+  document.getElementById('sb-pct').textContent       = pct + '%';
+  document.getElementById('sb-pct2').textContent      = pct + '%';
+  document.getElementById('sb-days-left').textContent = (DAYS - DAY) + ' restantes';
   _animBar(document.getElementById('sb-fill'), pct, 1200, 400);
   const bestStreak = Math.max(...habits.filter(h => !h.paused).map(h => h.streak), 0);
   _countUp(bestStreak, 700, v => document.getElementById('sb-streak-val').textContent = v, 500);
@@ -455,7 +434,13 @@ function renderList(containerId, list) {
       if (inFreq) {
         if (isToday && !isDone)   dotCls = 'today-empty';
         else if (isToday && isDone) dotCls = 'done';
-        else if (isPast)          dotCls = Math.random() > 0.25 ? 'done' : 'partial';
+        else if (isPast) {
+          // usa o histórico real do hábito em vez de sortear a cada render
+          const daysAgo = today === 0 ? (7 - jsDay) : (today - jsDay);
+          const idx = h.history.length - 1 - daysAgo;
+          const status = idx >= 0 ? h.history[idx] : null;
+          dotCls = status === 'done' ? 'done' : status === 'partial' ? 'partial' : '';
+        }
       }
       return `<div class="wd"><div class="wd-day">${lbl}</div><div class="wd-dot ${dotCls}" style="${!inFreq ? 'opacity:0.15' : ''}"></div></div>`;
     }).join('');

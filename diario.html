@@ -371,13 +371,13 @@ body {
       <div class="sb-logosub">Transformação pessoal</div>
     </div>
     <div class="sb-day">
-      <div class="sb-daynum">34</div>
+      <div class="sb-daynum" id="sb-daynum">34</div>
       <div class="sb-daylbl">de 90 dias</div>
       <div style="display:flex;justify-content:space-between;font-size:10px;letter-spacing:0.1em;color:var(--mid);margin-top:10px">
-        <span>Progresso</span><span>38%</span>
+        <span>Progresso</span><span id="sb-pct">38%</span>
       </div>
       <div class="sb-prog-bar-bg"><div class="sb-prog-bar-fill" id="sb-fill" style="width:0%"></div></div>
-      <div class="sb-prog-meta"><span>56 restantes</span><span>38%</span></div>
+      <div class="sb-prog-meta"><span id="sb-days-left">56 restantes</span><span id="sb-pct2">38%</span></div>
     </div>
     <nav class="sb-nav">
       <a class="sb-item" href="dashboard.html"><span class="sb-item-icon">◈</span> Dashboard</a>
@@ -390,7 +390,7 @@ body {
       <div class="sb-streak">
         <span class="sb-streak-icon">🔥</span>
         <div>
-          <div class="sb-streak-val">28</div>
+          <div class="sb-streak-val" id="sb-streak-val">28</div>
           <div class="sb-streak-lbl">Dias seguidos</div>
         </div>
       </div>
@@ -489,6 +489,7 @@ body {
   </div>
 </div>
 
+<script src="js/store.js"></script>
 <script>
 /* ── CURSOR ── */
 (function(){
@@ -498,12 +499,13 @@ body {
   (function tick(){ rx+=(mx-rx-15)*0.1; ry+=(my-ry-15)*0.1; ring.style.transform='translate('+rx+'px,'+ry+'px)'; requestAnimationFrame(tick); })();
 })();
 
-/* ── CONSTANTS ── */
-var DAY  = 34;
-var DAYS = 90;
+/* ── CONSTANTS — dia atual calculado a partir da data real de início
+   do desafio (via js/store.js), não é mais um número fixo ── */
+var DAY  = Store.getCurrentDay();
+var DAYS = Store.getTotalDays();
 
 var TODAY = new Date(); TODAY.setHours(0,0,0,0);
-var START_DATE = new Date(TODAY); START_DATE.setDate(START_DATE.getDate() - (DAY - 1));
+var START_DATE = Store.getStartDate();
 
 var MONTHS_PT  = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 var MONTHS_ABR = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
@@ -511,43 +513,13 @@ var DAYS_PT    = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
 var DAYS_FULL  = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
 var DOW_LABELS = ['D','S','T','Q','Q','S','S'];
 
-/* ── MOCK HABITS ── */
-var habits = [
-  { id:1, name:'Acordar às 6h',     createdDay:1,
-    history:['done','done','done','done','done','done','done','done','done','done','done','done','done','done','done','done','done','done','done','done','done','done','done','done','done','done','done','done','done','done','done','done','done','done'] },
-  { id:2, name:'Exercício 30min',   createdDay:1,
-    history:['done','done','partial','done','done','done','done','miss','done','done','done','done','done','done','done','done','done','done','done','miss','done','done','done','done','done','done','done','done','done','done','partial','done','done','done'] },
-  { id:3, name:'Sem redes sociais', createdDay:1,
-    history:['done','done','done','partial','miss','done','done','done','done','done','done','done','partial','done','done','done','done','done','done','done','done','done','done','miss','done','done','done','done','done','done','done','done','done','done'] },
-  { id:4, name:'Leitura 20min',     createdDay:1,
-    history:['done','miss','done','done','done','done','done','miss','done','done','partial','done','done','done','done','done','miss','done','done','done','done','miss','miss','done','done','done','done','miss','done','done','done','done','done','miss'] },
-  { id:5, name:'Meditação',         createdDay:1,
-    history:['done','done','done','done','done','miss','done','done','partial','done','done','done','done','miss','done','done','done','done','miss','done','done','done','done','done','miss','done','done','miss','done','done','done','done','done','done'] },
-];
+/* ── HÁBITOS — via js/store.js, mesma fonte usada por habitos.html ── */
+var habits = Store.getHabits().filter(function(h){ return !h.paused; });
 
-/* ── MOCK ENTRIES ── */
-var ENTRIES = {
-  1:  { mood:'🔥', good:'Primeiro dia do desafio. Energia alta.', improve:'Criar uma rotina melhor para a manhã.', free:'Animado para começar os 90 dias. Sinto que desta vez vai ser diferente.', gratitude:'1. Saúde\n2. Família\n3. Oportunidade de recomeçar' },
-  2:  { mood:'💪', good:'Acordei às 6h sem dificuldade. Treino completo.', improve:'Reduzir tempo no celular à noite.', free:'Segundo dia seguido. A rotina matinal já está começando a parecer natural.', gratitude:'1. Energia de manhã\n2. Boa música no treino\n3. Clima fresco' },
-  3:  { mood:'💪', good:'Meditação completa, leitura e sem redes sociais.', improve:'Preparar as refeições com antecedência.', free:'Sentindo que estou construindo algo. A consistência está chegando.', gratitude:'1. Foco no trabalho\n2. Livro empolgante\n3. Silêncio da manhã' },
-  5:  { mood:'😐', good:'Mantive os hábitos essenciais apesar do dia agitado.', improve:'Dormir antes das 23h.', free:'Dia corrido no trabalho. Mas completei. Isso importa.', gratitude:'1. Capacidade de persistir\n2. Apoio da família\n3. Fim de semana chegando' },
-  7:  { mood:'💪', good:'Completei a primeira semana sem falhar nenhum hábito.', improve:'Dormir mais cedo.', free:'7 dias seguidos. A streak me motiva mais do que eu esperava.', gratitude:'1. Disciplina crescendo\n2. Amigos que apoiam\n3. Boa leitura esta semana' },
-  9:  { mood:'🔥', good:'Treino intenso. Leitura de 40min. Acima da meta.', improve:'Não pular o alongamento.', free:'Um dos melhores dias até agora. Quando todos os hábitos se alinham, o dia flui.', gratitude:'1. Corpo saudável\n2. Foco total\n3. Sol da manhã' },
-  12: { mood:'💪', good:'12 dias consecutivos. Nova marca pessoal.', improve:'Meditar com menos distração.', free:'A identidade está mudando. Já não preciso me forçar tanto — vira automático.', gratitude:'1. Progresso invisível mas real\n2. Sono profundo\n3. Café da manhã calmo' },
-  14: { mood:'💪', good:'Duas semanas completas. O exercício já virou automático.', improve:'Meditar com mais atenção, não só marcar como feito.', free:'Percebi que quando acordo às 6h tenho muito mais foco no resto do dia.', gratitude:'1. Corpo respondendo bem\n2. Livro incrível\n3. Tempo de qualidade sozinho' },
-  17: { mood:'😓', good:'Acordei cedo e fiz o mínimo. Não falhei.', improve:'Não deixar o estresse do trabalho contaminar a rotina.', free:'Semana difícil. Mas a sequência se manteve. Às vezes "suficiente" é o suficiente.', gratitude:'1. Resiliência\n2. Chá quente\n3. Uma boa conversa' },
-  19: { mood:'💪', good:'Voltei com tudo após os dias difíceis. Treino dobrado.', improve:'Manter esse nível de energia.', free:'Aquela sensação de recuperação. Como se o corpo e a mente tivessem resetado.', gratitude:'1. Capacidade de reagir\n2. Motivação renovada\n3. Clareza mental' },
-  21: { mood:'😐', good:'Mantive os hábitos mesmo num dia difícil no trabalho.', improve:'Não usar o celular como recompensa.', free:'Dia puxado. Mas completar os hábitos mesmo assim me lembrou por que estou fazendo isso.', gratitude:'1. Resiliência\n2. Café\n3. Música' },
-  24: { mood:'💪', good:'Meditação mais profunda. Leitura de 35min.', improve:'Trocar redes sociais por leitura no período da tarde.', free:'Semana boa. Cada dia fica um pouco mais fácil. O sistema está funcionando.', gratitude:'1. Foco crescente\n2. Livro novo começado\n3. Treino bem-feito' },
-  26: { mood:'🔥', good:'Perfeito em todos os 5 hábitos. Dia completo.', improve:'Nada — manter isso.', free:'Dia 100%. Quando tudo se encaixa parece quase irreal. Mas é real. Eu fiz.', gratitude:'1. Disciplina consistente\n2. Saúde plena\n3. Propósito claro' },
-  28: { mood:'💪', good:'Quatro semanas. Melhor streak de todas.', improve:'Aumentar intensidade do treino.', free:'28 dias. A identidade de "pessoa disciplinada" está começando a parecer real.', gratitude:'1. Progresso visível\n2. Sono melhorou muito\n3. Clareza mental' },
-  30: { mood:'💪', good:'30 dias. Um mês inteiro. Isso é grande.', improve:'Adicionar um novo hábito no mês 2.', free:'Quem eu era há 30 dias parece distante. Não dramático — só diferente. Mais firme.', gratitude:'1. Um mês de consistência\n2. Família que acredita em mim\n3. Corpo mais forte' },
-  32: { mood:'💪', good:'Foco intenso no trabalho. Todos os hábitos completos.', improve:'Sair mais para o sol durante o dia.', free:'Os hábitos já são parte de quem sou. Não preciso mais lembrar — simplesmente acontecem.', gratitude:'1. Automação da disciplina\n2. Mente clara\n3. Noites bem dormidas' },
-  34: { mood:'💪', good:'Dia 34. Completei todos os hábitos com energia alta.', improve:'Preparar o próximo mês com novas metas.', free:'Mais da metade do primeiro mês vivido com intenção. O desafio ficou mais fácil — mas o compromisso ficou mais sério.', gratitude:'1. Progresso real e mensurável\n2. Rotina sólida\n3. Confiança que cresceu' },
-};
-
-/* ── STATE ── */
-var entries = JSON.parse(JSON.stringify(ENTRIES)); // mutable copy
+/* ── STATE — persistência via js/store.js (mesma chave 'p90_journal'
+   usada por conquistas.html para calcular o progresso do diário) ── */
+function persistEntries() { Store.saveJournal(entries); }
+var entries = Store.getJournal();
 var currentDay  = DAY;
 var currentMood = null;
 var isDirty     = false;
@@ -563,7 +535,15 @@ function fmtDateShort(d) { return d.getDate()+' '+MONTHS_ABR[d.getMonth()]; }
 function init() {
   var now=new Date();
   document.getElementById('today-lbl').textContent = DAYS_PT[now.getDay()]+', '+now.getDate()+' '+MONTHS_ABR[now.getMonth()];
-  setTimeout(function(){ document.getElementById('sb-fill').style.width='38%'; }, 400);
+
+  var pct = Math.round(DAY/DAYS*100);
+  document.getElementById('sb-daynum').textContent = DAY;
+  document.getElementById('sb-pct').textContent = pct+'%';
+  document.getElementById('sb-pct2').textContent = pct+'%';
+  document.getElementById('sb-days-left').textContent = (DAYS-DAY)+' restantes';
+  document.getElementById('sb-streak-val').textContent = Store.currentStreak(Store.getHabits(), DAY);
+  setTimeout(function(){ document.getElementById('sb-fill').style.width=pct+'%'; }, 400);
+
   renderCalendar();
   renderEntriesList();
   loadDayIntoEditor(currentDay);
@@ -630,6 +610,7 @@ function saveCurrentDay() {
   var hasContent = data.good || data.improve || data.free || data.gratitude || data.mood;
   if (!hasContent) { showToast('Nada para salvar ainda'); return; }
   entries[currentDay] = data;
+  persistEntries();
   setDirty(false);
   renderEntriesList();
   renderCalendar();
@@ -662,7 +643,12 @@ function updateCharCount(id, len, max) {
 
 /* ── HABITS CHECK-IN ── */
 function renderHabitsCheckin(n) {
-  document.getElementById('habits-checkin').innerHTML = habits.map(function(h){
+  var el = document.getElementById('habits-checkin');
+  if (!habits.length) {
+    el.innerHTML = '<div style="font-size:11px;color:var(--mid);padding:4px 0">Nenhum hábito cadastrado ainda — <a href="habitos.html" style="color:var(--white)">adicione um</a>.</div>';
+    return;
+  }
+  el.innerHTML = habits.map(function(h){
     var raw    = h.history[n - h.createdDay];
     var status = raw || 'miss';
     var cls    = status==='done'?'done':status==='partial'?'partial':'miss';

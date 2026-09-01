@@ -8,8 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/base.css">
 <link rel="stylesheet" href="css/components.css">
-<link rel="stylesheet" href="css/base.css">
-<link rel="stylesheet" href="css/components.css">
+<script src="js/store.js"></script>
 <style>
 
 /* ── MAIN ── */
@@ -300,13 +299,13 @@
     </div>
 
     <div class="sb-day">
-      <div class="sb-daynum">34</div>
+      <div class="sb-daynum" id="sb-daynum">34</div>
       <div class="sb-daylbl">de 90 dias</div>
       <div style="display:flex;justify-content:space-between;font-size:10px;letter-spacing:0.1em;color:var(--mid);margin-top:10px">
-        <span>Progresso</span><span>38%</span>
+        <span>Progresso</span><span id="sb-pct">38%</span>
       </div>
       <div class="sb-prog-bar-bg"><div class="sb-prog-bar-fill" id="sb-fill" style="width:0%"></div></div>
-      <div class="sb-prog-meta"><span>56 restantes</span><span>38%</span></div>
+      <div class="sb-prog-meta"><span id="sb-days-left">56 restantes</span><span id="sb-pct2">38%</span></div>
     </div>
 
     <nav class="sb-nav">
@@ -321,7 +320,7 @@
       <div class="sb-streak">
         <span class="sb-streak-icon">🔥</span>
         <div>
-          <div class="sb-streak-val">28</div>
+          <div class="sb-streak-val" id="sb-streak-val">28</div>
           <div class="sb-streak-lbl">Dias seguidos</div>
         </div>
       </div>
@@ -341,23 +340,23 @@
     <div class="g4">
       <div class="stat-card">
         <div class="stat-lbl">Desbloqueadas</div>
-        <div class="stat-val" id="sc-unlocked">4</div>
-        <div class="stat-sub">de 20 conquistas</div>
+        <div class="stat-val" id="sc-unlocked">0</div>
+        <div class="stat-sub" id="sc-unlocked-sub">de 0 conquistas</div>
       </div>
       <div class="stat-card">
         <div class="stat-lbl">Pontos totais</div>
-        <div class="stat-val" id="sc-points">850</div>
-        <div class="stat-delta up">↑ +150 esta semana</div>
+        <div class="stat-val" id="sc-points">0</div>
+        <div class="stat-delta" id="sc-points-delta"></div>
       </div>
       <div class="stat-card">
         <div class="stat-lbl">Mais próxima</div>
-        <div class="stat-val" id="sc-next-pct">74%</div>
-        <div class="stat-sub" id="sc-next-name">Madrugador</div>
+        <div class="stat-val" id="sc-next-pct">—</div>
+        <div class="stat-sub" id="sc-next-name">—</div>
       </div>
       <div class="stat-card">
         <div class="stat-lbl">Nível</div>
-        <div class="stat-val">02</div>
-        <div class="stat-sub">Disciplinado</div>
+        <div class="stat-val" id="sc-level">01</div>
+        <div class="stat-sub" id="sc-level-name">Iniciante</div>
       </div>
     </div>
 
@@ -365,25 +364,14 @@
     <div class="progress-banner">
       <div class="pb-left">
         <div class="pb-title">Jornada do <em>desafio.</em></div>
-        <div class="pb-sub">Dia 34 de 90 — cada dia completo conta.</div>
+        <div class="pb-sub" id="pb-sub">Dia 34 de 90 — cada dia completo conta.</div>
         <div class="pb-bar-bg">
           <div class="pb-bar-fill" id="pb-fill" style="width:0%"></div>
         </div>
-        <div class="pb-markers">
-          <span class="pb-marker reached">Dia 1</span>
-          <span class="pb-marker reached">Dia 7</span>
-          <span class="pb-marker reached">Dia 14</span>
-          <span class="pb-marker reached">Dia 21</span>
-          <span class="pb-marker reached">Dia 28</span>
-          <span class="pb-marker reached">Dia 34</span>
-          <span class="pb-marker">Dia 45</span>
-          <span class="pb-marker">Dia 60</span>
-          <span class="pb-marker">Dia 75</span>
-          <span class="pb-marker">Dia 90</span>
-        </div>
+        <div class="pb-markers" id="pb-markers"></div>
       </div>
       <div class="pb-right">
-        <div class="pb-big">38%</div>
+        <div class="pb-big" id="pb-big">38%</div>
         <div class="pb-big-sub">do desafio</div>
       </div>
     </div>
@@ -433,8 +421,8 @@ document.addEventListener('mousemove', e => {
 /* ════════════════════════════════════
    CONSTANTS
 ════════════════════════════════════ */
-const DAY  = 34;
-const DAYS = 90;
+const DAY  = Store.getCurrentDay();
+const DAYS = Store.getTotalDays();
 
 /* ════════════════════════════════════
    ACHIEVEMENT DEFINITIONS
@@ -496,113 +484,22 @@ const categories = [
 
 /* ════════════════════════════════════
    LOAD / SAVE — FONTES DE DADOS
+   via js/store.js (fonte única de verdade, compartilhada
+   com habitos.html, dashboard.html, metricas.html e diario.html)
 ════════════════════════════════════ */
-
-// Hábitos salvos por habitos.html
-
-
-// Diário salvo por diario.html
-
-
-// Estado de conquistas já desbloqueadas (persiste entre visitas)
-
-
-/* ════════════════════════════════════
-   LOAD / SAVE — FONTES DE DADOS
-════════════════════════════════════ */
-
-// Hábitos salvos por habitos.html
-function loadHabits() {
-  try { const r = localStorage.getItem('p90_habits'); if (r) return JSON.parse(r); } catch(e) {}
-  const base = [
-    { id:1, name:'Acordar às 6h',     createdDay:1, paused:false,
-      history:['done','done','done','done','done','done','done','done','done','done','done','done','done','done','done','done','done','done','done','done','done','done','done','done','done','done','done','done','done','done','done','done','done','done'] },
-    { id:2, name:'Exercício 30min',   createdDay:1, paused:false,
-      history:['done','done','partial','done','done','done','done','miss','done','done','done','done','done','done','done','done','done','done','done','miss','done','done','done','done','done','done','done','done','done','done','partial','done','done','done'] },
-    { id:3, name:'Sem redes sociais', createdDay:1, paused:false,
-      history:['done','done','done','partial','miss','done','done','done','done','done','done','done','partial','done','done','done','done','done','done','done','done','done','done','miss','done','done','done','done','done','done','done','done','done','done'] },
-    { id:4, name:'Leitura 20min',     createdDay:1, paused:false,
-      history:['done','miss','done','done','done','done','done','miss','done','done','partial','done','done','done','done','done','miss','done','done','done','done','miss','miss','done','done','done','done','miss','done','done','done','done','done','miss'] },
-    { id:5, name:'Meditação',         createdDay:1, paused:false,
-      history:['done','done','done','done','done','miss','done','done','partial','done','done','done','done','miss','done','done','done','done','miss','done','done','done','done','done','miss','done','done','miss','done','done','done','done','done','done'] },
-  ];
-  return base;
-}
-
-// Diário salvo por diario.html
-function loadJournal() {
-  try { const r = localStorage.getItem('p90_journal'); if (r) return JSON.parse(r); } catch(e) {}
-  return { 1:{}, 7:{}, 14:{}, 21:{}, 28:{} };
-}
-
-// Estado de conquistas
-function loadAchievementsState() {
-  try { const r = localStorage.getItem('p90_achievements'); if (r) return JSON.parse(r); } catch(e) {}
-  return {};
-}
-
-function saveAchievementsState(state) {
-  localStorage.setItem('p90_achievements', JSON.stringify(state));
-}
+function loadHabits()            { return Store.getHabits(); }
+function loadJournal()           { return Store.getJournal(); }
+function loadAchievementsState() { return Store.getAchievements(); }
+function saveAchievementsState(state) { Store.saveAchievements(state); }
 
 /* ════════════════════════════════════
    COMPUTE PROGRESS
-   Calcula o valor atual de cada conquista
-   direto dos dados reais do localStorage
+   Reaproveita Store.computeAchievementProgress (js/store.js) para as
+   conquistas de Jornada/Hábitos/Diário/Especial, e completa aqui só a
+   parte de Hidratação (que store.js ainda não calcula).
 ════════════════════════════════════ */
 function computeProgress(habits, journal) {
-  const active = habits.filter(h => !h.paused);
-
-  function habitVal(h, dayIdx) {
-    const s = h.history[dayIdx];
-    return s === 'done' ? 1 : s === 'partial' ? 0.5 : 0;
-  }
-  function maxStreak(totalDays, condFn) {
-    let best = 0, cur = 0;
-    for (let i = 0; i < totalDays; i++) {
-      if (condFn(i)) { cur++; best = Math.max(best, cur); } else cur = 0;
-    }
-    return best;
-  }
-  function countDays(totalDays, condFn) {
-    let n = 0;
-    for (let i = 0; i < totalDays; i++) if (condFn(i)) n++;
-    return n;
-  }
-  function allDone(dayIdx) {
-    return active.length > 0 && active.every(h => {
-      if (h.createdDay - 1 > dayIdx) return true;
-      return habitVal(h, dayIdx) === 1;
-    });
-  }
-  function hasComeback() {
-    for (const h of active)
-      for (let i = 1; i < h.history.length; i++)
-        if (habitVal(h, i-1) === 0 && habitVal(h, i) === 1) return 1;
-    return 0;
-  }
-  function streakForHabit(name) {
-    const h = active.find(x => x.name === name);
-    if (!h) return 0;
-    return maxStreak(h.history.length, i => habitVal(h, i) === 1);
-  }
-  function countForHabit(name) {
-    const h = active.find(x => x.name === name);
-    if (!h) return 0;
-    return h.history.filter(s => s === 'done').length;
-  }
-
-  const perfStreak   = maxStreak(DAY, allDone);
-  const daysActive   = countDays(DAY, i => active.some(h => habitVal(h, i) > 0));
-  const allDoneCount = countDays(DAY, allDone);
-  const journalEntries = Object.keys(journal).length;
-  const journalStreak = (function() {
-    let best = 0, cur = 0;
-    for (let d = 1; d <= DAY; d++) {
-      if (journal[d]) { cur++; best = Math.max(best, cur); } else cur = 0;
-    }
-    return best;
-  })();
+  const base = Store.computeAchievementProgress(habits, journal, DAY);
 
   // hydration progress — reads from localStorage, fills with mock if missing
   const waterCfgRaw = localStorage.getItem('p90_water_cfg');
@@ -618,25 +515,7 @@ function computeProgress(habits, journal) {
   const todayCups = parseInt(localStorage.getItem('p90_water_' + new Date().toDateString()) || '0') || 6;
 
   return {
-    day1:         Math.min(1, daysActive),
-    week1:        maxStreak(DAY, i => active.some(h => habitVal(h, i) > 0)),
-    week2:        maxStreak(DAY, i => active.some(h => habitVal(h, i) > 0)),
-    day30:        maxStreak(DAY, i => active.some(h => habitVal(h, i) > 0)),
-    halfway:      daysActive,
-    day60:        maxStreak(DAY, i => active.some(h => habitVal(h, i) > 0)),
-    day90:        maxStreak(DAY, i => active.some(h => habitVal(h, i) > 0)),
-    perfect_week: perfStreak,
-    early_bird:   countForHabit('Acordar às 6h'),
-    athlete:      countForHabit('Exercício 30min'),
-    no_scroll:    streakForHabit('Sem redes sociais'),
-    reader:       countForHabit('Leitura 20min'),
-    zen:          countForHabit('Meditação'),
-    first_entry:  Math.min(1, journalEntries),
-    journal7:     journalStreak,
-    journal30:    journalEntries,
-    comeback:     hasComeback(),
-    discipline:   perfStreak,
-    all5:         allDoneCount,
+    ...base,
     first_glass:  Math.min(1, todayCups > 0 ? 1 : 0),
     daily_goal:   Math.min(1, waterDaysHit > 0 ? 1 : 0),
     week_hydrated:Math.min(7,  waterStreak),
@@ -722,9 +601,31 @@ function closeUnlock() {
 /* ════════════════════════════════════
    INIT
 ════════════════════════════════════ */
+function initSidebar() {
+  const pct = Math.round(DAY / DAYS * 100);
+  document.getElementById('sb-daynum').textContent = DAY;
+  document.getElementById('sb-pct').textContent = pct + '%';
+  document.getElementById('sb-pct2').textContent = pct + '%';
+  document.getElementById('sb-days-left').textContent = (DAYS - DAY) + ' restantes';
+  document.getElementById('sb-streak-val').textContent = Store.currentStreak(Store.getHabits(), DAY);
+  setTimeout(() => { document.getElementById('sb-fill').style.width = pct + '%'; }, 400);
+}
+
+function renderProgressBanner() {
+  const pct = DAY / DAYS * 100;
+  document.getElementById('pb-sub').textContent = `Dia ${DAY} de ${DAYS} — cada dia completo conta.`;
+  document.getElementById('pb-big').textContent = Math.round(pct) + '%';
+  setTimeout(() => { document.getElementById('pb-fill').style.width = pct.toFixed(1) + '%'; }, 500);
+
+  const markerDays = [1, 7, 14, 21, 28, 45, 60, 75, 90].filter(d => d <= DAYS);
+  document.getElementById('pb-markers').innerHTML = markerDays.map(d =>
+    `<span class="pb-marker${d <= DAY ? ' reached' : ''}">Dia ${d}</span>`
+  ).join('');
+}
+
 function init() {
-  setTimeout(() => { document.getElementById('sb-fill').style.width = '38%'; }, 400);
-  setTimeout(() => { document.getElementById('pb-fill').style.width = (DAY/DAYS*100).toFixed(1)+'%'; }, 500);
+  initSidebar();
+  renderProgressBanner();
 
   // 1. carregar dados reais
   const habits     = loadHabits();
@@ -762,14 +663,34 @@ function init() {
 /* ════════════════════════════════════
    STATS
 ════════════════════════════════════ */
+const LEVELS = [
+  { min: 0,    name: 'Iniciante'   },
+  { min: 100,  name: 'Disciplinado' },
+  { min: 300,  name: 'Consistente' },
+  { min: 600,  name: 'Dedicado'    },
+  { min: 1000, name: 'Mestre'      },
+  { min: 1500, name: 'Lendário'    },
+];
+
+function levelForPoints(points) {
+  let idx = 0;
+  for (let i = 0; i < LEVELS.length; i++) { if (points >= LEVELS[i].min) idx = i; }
+  return { number: idx + 1, name: LEVELS[idx].name };
+}
+
 function renderStats() {
   const all     = categories.flatMap(c => c.achievements);
   const unlocked = all.filter(a => a.unlocked);
   const points   = unlocked.reduce((s,a) => s + a.points, 0);
 
   document.getElementById('sc-unlocked').textContent  = unlocked.length;
+  document.getElementById('sc-unlocked-sub').textContent = `de ${all.length} conquistas`;
   document.getElementById('sc-points').textContent    = points;
   document.getElementById('unlocked-count').textContent = `${unlocked.length} / ${all.length}`;
+
+  const level = levelForPoints(points);
+  document.getElementById('sc-level').textContent = String(level.number).padStart(2, '0');
+  document.getElementById('sc-level-name').textContent = level.name;
 
   // find closest locked
   const locked = all.filter(a => !a.unlocked);
@@ -782,6 +703,9 @@ function renderStats() {
     const pct = Math.min(100, Math.round(closest.current / closest.target * 100));
     document.getElementById('sc-next-pct').textContent  = pct + '%';
     document.getElementById('sc-next-name').textContent = closest.name;
+  } else {
+    document.getElementById('sc-next-pct').textContent  = '100%';
+    document.getElementById('sc-next-name').textContent = 'Todas desbloqueadas!';
   }
 }
 
