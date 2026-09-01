@@ -455,6 +455,7 @@ function renderList(containerId, list) {
           <div class="habit-name ${isDone ? 'crossed' : ''}">${h.name}</div>
           <div class="habit-meta-row">
             <span class="habit-pillar">${h.pillar}</span>
+            ${h.coreKey ? `<span class="habit-pillar" title="Hábito fixo do Project 90">fixo</span>` : ''}
             <span class="habit-freq">${freqLabel(h.freq)}</span>
             ${h.goal ? `<span class="habit-freq">· ${h.goal}</span>` : ''}
           </div>
@@ -464,7 +465,7 @@ function renderList(containerId, list) {
           <div class="habit-actions">
             <button class="hab-btn" title="Editar" onclick="openModal(${h.id})">✎</button>
             <button class="hab-btn" title="${h.paused ? 'Retomar' : 'Pausar'}" onclick="togglePause(${h.id})">${h.paused ? '▶' : '⏸'}</button>
-            <button class="hab-btn danger" title="Excluir" onclick="deleteHabit(${h.id})">✕</button>
+            ${h.coreKey ? '' : `<button class="hab-btn danger" title="Excluir" onclick="deleteHabit(${h.id})">✕</button>`}
           </div>
         </div>
       </div>
@@ -527,6 +528,7 @@ function togglePause(id) {
 function deleteHabit(id) {
   const h = habits.find(x => x.id === id);
   if (!h) return;
+  if (h.coreKey) { toast('Hábito fixo não pode ser excluído — você pode pausá-lo.'); return; }
   if (!confirm(`Excluir "${h.name}"? Esta ação não pode ser desfeita.`)) return;
   habits = habits.filter(x => x.id !== id);
   saveHabits(); renderAll(); toast('Hábito excluído');
