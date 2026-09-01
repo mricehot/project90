@@ -154,14 +154,27 @@ as $$
 $$;
 
 -- ============================================================================
---  5) BACKFILL / LIMPEZA
+--  5) BACKFILL / LIMPEZA para quem já existe
 --     - remove hábitos fixos que saíram da lista (caso uma versão anterior
 --       desta migration tenha semeado mais que os 5 atuais)
---     - semeia os 5 hábitos fixos para quem já existe
+--     - garante challenge_meta + water_config (usuários criados antes de 0001)
+--     - semeia os 5 hábitos fixos
 -- ============================================================================
 delete from public.habits
 where core_key is not null
   and core_key <> all (array['acordar_cedo','exercitar','ler','meditar','sem_redes']::text[]);
+
+insert into public.challenge_meta (user_id)
+select id from auth.users
+on conflict (user_id) do nothing;
+
+insert into public.water_config (user_id)
+select id from auth.users
+on conflict (user_id) do nothing;
+
+insert into public.profiles (id, email)
+select id, email from auth.users
+on conflict (id) do nothing;
 
 do $$
 declare
