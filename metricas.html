@@ -88,7 +88,7 @@ body {
 .sb-streak-lbl  { font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--mid); margin-top: 1px; }
 
 /* ── GRID ── */
-.g2  { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.g2  { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
 .g4  { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
 .g21 { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; }
 
@@ -285,24 +285,12 @@ body {
           <span class="card-title">Hidratação</span>
           <span class="card-action" id="wm-today-lbl">—</span>
         </div>
-        <div style="font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--mid);margin-bottom:20px">Últimos 7 dias — "Beber água"</div>
-        <div style="display:flex;align-items:flex-end;gap:10px;height:80px" id="wm-bars"></div>
-        <div style="display:flex;gap:10px;margin-top:8px" id="wm-labels"></div>
-        <div style="margin-top:20px;height:2px;background:var(--muted)">
-          <div id="wm-prog" style="height:100%;background:rgba(147,197,253,.65);width:0%;transition:width 1.2s cubic-bezier(.16,1,.3,1)"></div>
-        </div>
-
-        <!-- stats row -->
-        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--border);margin-top:24px">
-          <div style="background:var(--surface2);padding:14px 12px">
-            <div style="font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--mid);margin-bottom:6px">Meta atingida</div>
-            <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;line-height:1" id="wm-hit">—</div>
-            <div style="font-size:9px;color:var(--mid);margin-top:3px">de 7 dias</div>
-          </div>
-          <div style="background:var(--surface2);padding:14px 12px">
-            <div style="font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--mid);margin-bottom:6px">Streak</div>
-            <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;line-height:1" id="wm-streak">—</div>
-            <div style="font-size:9px;color:var(--mid);margin-top:3px">dias seguidos</div>
+        <div style="font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--mid);margin:2px 0 12px">Últimos 7 dias — "Beber água"</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap">
+          <div style="display:flex;gap:7px" id="wm-week"></div>
+          <div style="display:flex;gap:20px">
+            <div><span style="font-family:'Bebas Neue',sans-serif;font-size:20px" id="wm-hit">—</span><span style="font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--mid);margin-left:6px">/7 na meta</span></div>
+            <div><span style="font-family:'Bebas Neue',sans-serif;font-size:20px" id="wm-streak">—</span><span style="font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--mid);margin-left:6px">streak</span></div>
           </div>
         </div>
       </div>
@@ -706,27 +694,23 @@ function renderHydration(){
   var lbl = document.getElementById('wm-today-lbl');
   if (lbl) lbl.textContent = todayHit ? '✓ meta batida hoje' : 'meta pendente hoje';
 
-  var barsEl = document.getElementById('wm-bars'), labelsEl = document.getElementById('wm-labels');
-  if (barsEl && labelsEl) {
-    barsEl.innerHTML = ''; labelsEl.innerHTML = '';
+  var weekEl = document.getElementById('wm-week');
+  if (weekEl) {
     var today = new Date();
-    last7.forEach(function(hit, i){
+    weekEl.innerHTML = last7.map(function(hit, i){
       var isToday = i === 6;
-      var bar = document.createElement('div');
-      bar.style.cssText = 'flex:1;border-radius:1px 1px 0 0;height:0%;transition:height .8s cubic-bezier(.16,1,.3,1) '+(i*70)+'ms;';
-      bar.style.background = hit ? 'rgba(147,197,253,.85)' : 'rgba(147,197,253,.18)';
-      if (isToday) bar.style.outline = '1px solid rgba(147,197,253,.5)';
-      barsEl.appendChild(bar);
-      setTimeout((function(b,h){ return function(){ b.style.height = (h ? 100 : 12) + '%'; }; })(bar, hit), 150 + i*70);
       var d = new Date(today); d.setDate(d.getDate() - 6 + i);
-      var l = document.createElement('div');
-      l.style.cssText = 'flex:1;font-size:9px;text-align:center;letter-spacing:.05em;color:'+(isToday?'var(--white,#f5f5f0)':'var(--mid,#555)')+';';
-      l.textContent = isToday ? 'Hj' : DAYS_PT[d.getDay()];
-      labelsEl.appendChild(l);
-    });
+      var box = 'width:14px;height:14px;border:1px solid '
+        + (hit ? 'rgba(147,197,253,.5)' : 'var(--border)')
+        + ';background:' + (hit ? 'rgba(147,197,253,.85)' : 'transparent') + ';'
+        + (isToday ? 'outline:1px solid rgba(147,197,253,.55);outline-offset:1px;' : '');
+      return '<div style="display:flex;flex-direction:column;align-items:center;gap:5px">'
+        + '<div style="' + box + '"></div>'
+        + '<span style="font-size:8px;letter-spacing:.04em;color:' + (isToday ? 'var(--white,#f5f5f0)' : 'var(--mid,#555)') + '">'
+        + (isToday ? 'Hj' : DAYS_PT[d.getDay()]) + '</span></div>';
+    }).join('');
   }
 
-  setTimeout(function(){ var pb = document.getElementById('wm-prog'); if (pb) pb.style.width = Math.round(hitCount/7*100) + '%'; }, 300);
   var hitEl = document.getElementById('wm-hit');   if (hitEl) hitEl.textContent = hitCount;
   var stEl  = document.getElementById('wm-streak'); if (stEl)  stEl.textContent = curStreak + 'd';
 }
