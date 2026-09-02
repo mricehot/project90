@@ -1,16 +1,19 @@
 -- ============================================================================
 --  PROJECT 90 — Hábitos fixos (core habits)
 --
---  Todo usuário nasce com um conjunto fixo de hábitos, organizados nos 4
---  pilares (Corpo / Mente / Produção / Conexão). Eles alimentam os
---  achievements que dependem de um hábito específico. O usuário adiciona
---  os hábitos dele por cima; os fixos não podem ser excluídos.
+--  Todo usuário nasce APENAS com os hábitos que alimentam achievements
+--  específicos (5 no total). Todo o resto da rotina é livre — o usuário
+--  cria os hábitos dele e pode trocá-los à vontade. Só esses 5 não podem
+--  ser excluídos (podem ser pausados).
 --
---  O vínculo com os achievements agora é por CHAVE estável (`core_key`),
---  não pelo nome exibido — então dá pra renomear um hábito fixo sem quebrar
---  as conquistas.
+--  O vínculo com os achievements é por CHAVE estável (`core_key`), não pelo
+--  nome exibido — então dá pra renomear um hábito fixo sem quebrar a conquista:
+--    acordar_cedo -> Madrugador   exercitar -> Atleta   sem_redes -> Desintoxicado
+--    ler -> Leitor voraz          meditar   -> Mente zen
 --
 --  Aplicar depois de 0001_init.sql (SQL Editor -> Run, ou supabase db push).
+--  Re-rodável: se uma versão anterior semeou mais hábitos fixos, o passo 5
+--  remove os que saíram da lista.
 -- ============================================================================
 
 -- 1) coluna de chave estável nos hábitos ------------------------------------
@@ -39,27 +42,12 @@ begin
   select c.id, p_user, c.name, c.pillar, c.freq, c.goal, 1, '["miss"]'::jsonb, c.id, c.key
   from (
     values
-      -- id ,  core_key             ,  pilar      ,  nome                        ,  freq                      ,  meta
-      (101, 'acordar_cedo',       'Corpo',    'Acordar cedo',                 '[0,1,2,3,4,5,6]'::jsonb, ''),
-      (102, 'exercitar',          'Corpo',    'Exercitar-se',                 '[0,1,2,3,4,5,6]'::jsonb, '30 min'),
-      (103, 'beber_agua',         'Corpo',    'Beber água',                   '[0,1,2,3,4,5,6]'::jsonb, '2 L'),
-      (104, 'dormir_bem',         'Corpo',    'Dormir bem',                   '[0,1,2,3,4,5,6]'::jsonb, '7-8 h'),
-      (105, 'alimentar_bem',      'Corpo',    'Alimentar-se bem',             '[0,1,2,3,4,5,6]'::jsonb, ''),
-
-      (106, 'ler',                'Mente',    'Ler',                          '[0,1,2,3,4,5,6]'::jsonb, '20 min'),
-      (107, 'meditar',            'Mente',    'Meditar / refletir',           '[0,1,2,3,4,5,6]'::jsonb, '10 min'),
-      (108, 'estudar',            'Mente',    'Estudar',                      '[0,1,2,3,4,5,6]'::jsonb, '30 min'),
-      (109, 'aprender_novo',      'Mente',    'Aprender algo novo',           '[0,1,2,3,4,5,6]'::jsonb, ''),
-      (110, 'sem_redes',          'Mente',    'Sem redes sociais',            '[0,1,2,3,4,5,6]'::jsonb, ''),
-
-      (111, 'planejar_dia',       'Produção', 'Planejar o dia',               '[0,1,2,3,4,5,6]'::jsonb, ''),
-      (112, 'tarefa_importante',  'Produção', 'Concluir tarefa importante',   '[0,1,2,3,4,5,6]'::jsonb, ''),
-      (113, 'organizar_ambiente', 'Produção', 'Organizar o ambiente',         '[0,1,2,3,4,5,6]'::jsonb, ''),
-      (114, 'cumprir_rotina',     'Produção', 'Cumprir a rotina',             '[0,1,2,3,4,5,6]'::jsonb, ''),
-
-      (115, 'manter_contato',     'Conexão',  'Manter contato com alguém',    '[0,1,2,3,4,5,6]'::jsonb, ''),
-      (116, 'ajudar_alguem',      'Conexão',  'Ajudar alguém',                '[0,1,2,3,4,5,6]'::jsonb, ''),
-      (117, 'gratidao',           'Conexão',  'Praticar gratidão',            '[0,1,2,3,4,5,6]'::jsonb, '')
+      -- id ,  core_key        ,  pilar   ,  nome                  ,  freq                      ,  meta      ,  achievement
+      (101, 'acordar_cedo', 'Corpo', 'Acordar cedo',        '[0,1,2,3,4,5,6]'::jsonb, ''),      -- Madrugador
+      (102, 'exercitar',    'Corpo', 'Exercitar-se',        '[0,1,2,3,4,5,6]'::jsonb, '30 min'), -- Atleta
+      (103, 'ler',          'Mente', 'Ler',                 '[0,1,2,3,4,5,6]'::jsonb, '20 min'), -- Leitor voraz
+      (104, 'meditar',      'Mente', 'Meditar / refletir',  '[0,1,2,3,4,5,6]'::jsonb, '10 min'), -- Mente zen
+      (105, 'sem_redes',    'Mente', 'Sem redes sociais',   '[0,1,2,3,4,5,6]'::jsonb, '')       -- Desintoxicado
   ) as c(id, key, pillar, name, freq, goal)
   where not exists (
     select 1 from public.habits h
@@ -166,8 +154,28 @@ as $$
 $$;
 
 -- ============================================================================
---  5) BACKFILL — semeia os hábitos fixos para quem já existe
+--  5) BACKFILL / LIMPEZA para quem já existe
+--     - remove hábitos fixos que saíram da lista (caso uma versão anterior
+--       desta migration tenha semeado mais que os 5 atuais)
+--     - garante challenge_meta + water_config (usuários criados antes de 0001)
+--     - semeia os 5 hábitos fixos
 -- ============================================================================
+delete from public.habits
+where core_key is not null
+  and core_key <> all (array['acordar_cedo','exercitar','ler','meditar','sem_redes']::text[]);
+
+insert into public.challenge_meta (user_id)
+select id from auth.users
+on conflict (user_id) do nothing;
+
+insert into public.water_config (user_id)
+select id from auth.users
+on conflict (user_id) do nothing;
+
+insert into public.profiles (id, email)
+select id, email from auth.users
+on conflict (id) do nothing;
+
 do $$
 declare
   u uuid;

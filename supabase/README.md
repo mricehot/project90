@@ -28,7 +28,7 @@ Os scripts criam:
 | `profiles` | 1 linha por usuário (nome, avatar, email) |
 | `challenge_meta` | data de início + duração (dia atual é calculado) |
 | `habits` | hábitos; `freq` e `history` como `jsonb`; `core_key` marca os fixos |
-| **hábitos fixos** | 17 hábitos nos 4 pilares (Corpo/Mente/Produção/Conexão), semeados em todo usuário via `seed_core_habits()`; não podem ser excluídos e alimentam os achievements por `core_key` |
+| **hábitos fixos** | só os 5 ligados a achievements (`acordar_cedo`, `exercitar`, `ler`, `meditar`, `sem_redes`), semeados via `seed_core_habits()`; não podem ser excluídos (só pausados). O resto da rotina é livre. |
 | `journal_entries` | 1 entrada por dia do desafio |
 | `achievements` | estado de desbloqueio por conquista |
 | `water_config` / `water_logs` | widget de hidratação |
@@ -76,8 +76,9 @@ npx serve .
 ```
 
 Abra `http://localhost:3000/login.html`, entre com o Google e você cai no
-dashboard. Um usuário novo começa no **dia 1** já com os **17 hábitos fixos**
-(pode adicionar os dele por cima; os fixos não podem ser excluídos, só pausados).
+dashboard. Um usuário novo começa no **dia 1** com **5 hábitos fixos** (os que
+alimentam achievements) e monta o resto da rotina livremente. Os 5 fixos não
+podem ser excluídos, só pausados.
 
 ## Como o front usa isso
 
@@ -97,9 +98,9 @@ dashboard. Um usuário novo começa no **dia 1** já com os **17 hábitos fixos*
   existem — falta só trocar as chamadas nas páginas.
 - `Store.js` (raiz, com S maiúsculo) é a versão **antiga** só-localStorage e
   não é usada por nenhuma página (todas carregam `js/store.js`). Pode apagar.
-- **Rollover de dia**: nada ainda acrescenta um slot novo em `habits.history` a
-  cada dia — o `history` fica com 1 posição. A função `set_habit_status(habit_id,
-  day_index, status)` (0001) já sabe preencher até um índice qualquer; falta o
-  front chamá-la por dia. Enquanto isso, os achievements de contagem
-  (`athlete`, `reader`, `zen`, `early_bird`, `no_scroll`) só avançam de fato
-  depois desse ajuste.
+- **Rollover de dia** (resolvido no cliente): no bootstrap, `Store._rollForward()`
+  preenche cada `habits.history` com `'miss'` até o dia atual e recalcula
+  `streak`/`maxStreak` a partir do array (mesma lógica de `set_habit_status`).
+  A gravação vai junto no fluxo write-through. Os toggles das páginas continuam
+  mexendo no último slot (= hoje). A função SQL `set_habit_status(habit_id,
+  day_index, status)` continua disponível para marcar um dia retroativo.
