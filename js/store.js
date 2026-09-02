@@ -15,8 +15,7 @@
        gravação para o Supabase em segundo plano.
 
    Espelho localStorage:  p90_cache  → { meta, currentDay, habits,
-                                         journal, achievements,
-                                         waterConfig, waterToday }
+                                         journal, achievements }
 ═══════════════════════════════════════════════ */
 
 const Store = (() => {
@@ -34,8 +33,6 @@ const Store = (() => {
       habits:       [],
       journal:      {},
       achievements: {},
-      waterConfig:  null,
-      waterToday:   0,
     };
   }
 
@@ -80,8 +77,6 @@ const Store = (() => {
       Object.keys(cache.achievements).forEach(k => delete cache.achievements[k]);
       Object.assign(cache.achievements, data.achievements);
     }
-    if (data.waterConfig) cache.waterConfig = data.waterConfig;
-    if (typeof data.waterToday === 'number') cache.waterToday = data.waterToday;
   }
 
   function _rowToHabit(h) {
@@ -390,35 +385,7 @@ const Store = (() => {
   }
 
   /* ──────────────────────────────────────────
-     ÁGUA (hidratação) — opcional, para migrar depois
-  ────────────────────────────────────────── */
-  function getWaterConfig() { return cache.waterConfig || { cups: 8, ml: 250 }; }
-
-  function saveWaterConfig(cfg) {
-    cache.waterConfig = { cups: cfg.cups, ml: cfg.ml };
-    _saveMirror();
-    _push(async () => {
-      const { error } = await window.sb.from('water_config')
-        .upsert({ user_id: _uid, cups: cfg.cups, ml: cfg.ml }, { onConflict: 'user_id' });
-      if (error) throw error;
-    });
-  }
-
-  function getWaterToday() { return cache.waterToday || 0; }
-
-  function setWaterToday(n) {
-    const target = Math.max(0, n | 0);
-    const delta = target - (cache.waterToday || 0);
-    cache.waterToday = target;
-    _saveMirror();
-    _push(async () => {
-      const { error } = await window.sb.rpc('add_water', { p_delta: delta });
-      if (error) throw error;
-    });
-  }
-
-  /* ──────────────────────────────────────────
-     COMPUTED HELPERS (idênticos aos de antes)
+     COMPUTED HELPERS
   ────────────────────────────────────────── */
 
   // Status de um hábito num dia: 1=done, 0.5=partial, 0=miss.
@@ -507,6 +474,10 @@ const Store = (() => {
       return best;
     })();
 
+    // Hidratação = hábito fixo `beber_agua` (ver supabase 0003_water_as_habit).
+    const waterDays   = countForKey('beber_agua');
+    const waterStreak = streakForKey('beber_agua');
+
     return {
       day1:         Math.min(1, daysActive),
       week1:        dayStreak,
@@ -527,6 +498,11 @@ const Store = (() => {
       comeback:     hasComeback(),
       discipline:   perfStreak,
       all5:         allDoneCount,
+      // hidratação (streaks do hábito beber_agua)
+      daily_goal:   Math.min(1, waterDays),
+      week_hydrated: waterStreak,
+      hydro_month:  waterStreak,
+      hydro_streak: waterStreak,
     };
   }
 
@@ -542,7 +518,6 @@ const Store = (() => {
     getHabits, saveHabits,
     getJournal, saveJournal, getJournalEntry, saveJournalEntry,
     getAchievements, saveAchievements, unlockAchievement, markAchievementSeen,
-    getWaterConfig, saveWaterConfig, getWaterToday, setWaterToday,
     // computed
     habitVal, dayCompletionPct, maxStreak, countDays,
     allHabitsDone, currentStreak, computeAchievementProgress,
