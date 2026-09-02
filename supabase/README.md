@@ -98,9 +98,9 @@ podem ser excluídos, só pausados.
   existem — falta só trocar as chamadas nas páginas.
 - `Store.js` (raiz, com S maiúsculo) é a versão **antiga** só-localStorage e
   não é usada por nenhuma página (todas carregam `js/store.js`). Pode apagar.
-- **Rollover de dia**: nada ainda acrescenta um slot novo em `habits.history` a
-  cada dia — o `history` fica com 1 posição. A função `set_habit_status(habit_id,
-  day_index, status)` (0001) já sabe preencher até um índice qualquer; falta o
-  front chamá-la por dia. Enquanto isso, os achievements de contagem
-  (`athlete`, `reader`, `zen`, `early_bird`, `no_scroll`) só avançam de fato
-  depois desse ajuste.
+- **Rollover de dia** (resolvido no cliente): no bootstrap, `Store._rollForward()`
+  preenche cada `habits.history` com `'miss'` até o dia atual e recalcula
+  `streak`/`maxStreak` a partir do array (mesma lógica de `set_habit_status`).
+  A gravação vai junto no fluxo write-through. Os toggles das páginas continuam
+  mexendo no último slot (= hoje). A função SQL `set_habit_status(habit_id,
+  day_index, status)` continua disponível para marcar um dia retroativo.

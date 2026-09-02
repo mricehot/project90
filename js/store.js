@@ -155,6 +155,39 @@ const Store = (() => {
     });
   }
 
+  // Avança o histórico de cada hábito até o dia atual: preenche com 'miss' os
+  // dias não registrados e recalcula streak / maxStreak a partir do array (o
+  // array é a fonte de verdade — mesma lógica de set_habit_status no Postgres).
+  // Roda uma vez no bootstrap; a gravação vai junto no fluxo write-through.
+  function _rollForward() {
+    const today = getCurrentDay();
+    let changed = false;
+
+    cache.habits.forEach(h => {
+      const want = today - ((h.createdDay || 1) - 1);
+      if (want < 1) return;
+      if (!Array.isArray(h.history)) h.history = [];
+      while (h.history.length < want) { h.history.push('miss'); changed = true; }
+
+      let cur = 0, best = 0;
+      for (let i = 0; i < h.history.length; i++) {
+        if (h.history[i] === 'done') { cur++; if (cur > best) best = cur; }
+        else cur = 0;
+      }
+      if (h.streak !== cur) { h.streak = cur; changed = true; }
+      if ((h.maxStreak || 0) < best) { h.maxStreak = best; changed = true; }
+    });
+
+    if (!changed) return;
+    _saveMirror();
+    _push(async () => {
+      const rows = cache.habits.map(_habitToRow);
+      if (!rows.length) return;
+      const { error } = await window.sb.from('habits').upsert(rows, { onConflict: 'user_id,id' });
+      if (error) throw error;
+    });
+  }
+
   function bootstrap() {
     if (_readyPromise) return _readyPromise;
 
@@ -182,6 +215,7 @@ const Store = (() => {
       }
 
       _applyServerData(data);
+      _rollForward();
       _saveMirror();
       _ready = true;
       window.dispatchEvent(new Event('p90:synced'));
