@@ -15,6 +15,7 @@ Dashboard → **SQL Editor** → **New query** → rode os arquivos **na ordem**
 1. `supabase/migrations/0001_init.sql` → **Run**
 2. `supabase/migrations/0002_core_habits.sql` → **Run**
 3. `supabase/migrations/0003_water_as_habit.sql` → **Run**
+4. `supabase/migrations/0004_journal_habit.sql` → **Run**
 
 **Opção B — CLI:**
 ```bash
@@ -29,7 +30,7 @@ Os scripts criam:
 | `profiles` | 1 linha por usuário (nome, avatar, email) |
 | `challenge_meta` | data de início + duração (dia atual é calculado) |
 | `habits` | hábitos; `freq` e `history` como `jsonb`; `core_key` marca os fixos |
-| **hábitos fixos** | os 6 ligados a achievements (`acordar_cedo`, `exercitar`, `ler`, `meditar`, `sem_redes`, `beber_agua`), semeados via `seed_core_habits()`; não podem ser excluídos (só pausados). O resto da rotina é livre. |
+| **hábitos fixos** | os 7 ligados a achievements (`acordar_cedo`, `exercitar`, `ler`, `meditar`, `sem_redes`, `beber_agua`, `escrever_diario`), semeados via `seed_core_habits()`; não podem ser excluídos (só pausados). O resto da rotina é livre. |
 | `journal_entries` | 1 entrada por dia do desafio |
 | `achievements` | estado de desbloqueio por conquista |
 | **RLS** | ligado em tudo — cada usuário só vê as próprias linhas |
@@ -101,6 +102,12 @@ podem ser excluídos, só pausados.
 - **Água** virou o hábito fixo `beber_agua` (migration `0003`). O contador de
   copos e as tabelas `water_*` foram removidos. CSS morto de `.water-overlay` /
   `.wm-*` / `.cup` ainda está nas páginas (inofensivo) — pode limpar depois.
+- **Diário** virou o hábito fixo `escrever_diario` (migration `0004`, pilar
+  Mente). O histórico dele não é marcado à mão: `Store._reconcileJournalHabit()`
+  deriva de `journal_entries` (dia com entrada = `'done'`) no bootstrap e a cada
+  `saveJournal`/`saveJournalEntry`. Em `habitos.html` o check do hábito abre
+  `diario.html`. Conquista nova: **Escritor diário** (`diary_streak`, 21 dias
+  seguidos — `journalStreak` no cliente).
 - `Store.js` (raiz, com S maiúsculo) é a versão **antiga** só-localStorage e
   não é usada por nenhuma página (todas carregam `js/store.js`). Pode apagar.
 - **Rollover de dia** (resolvido no cliente): no bootstrap, `Store._rollForward()`
