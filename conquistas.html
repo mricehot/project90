@@ -263,35 +263,6 @@
 </div>
 
 
-<div class="water-overlay" id="water-overlay">
-  <div class="water-modal">
-    <div class="wm-title">Hidratacao <em>diaria.</em></div>
-    <div class="wm-field">
-      <label class="wm-lbl" for="wm-goal-cups">Meta de copos por dia</label>
-      <input class="wm-input" type="number" id="wm-goal-cups" min="4" max="16" value="8" oninput="wmPreview()">
-    </div>
-    <div class="wm-field">
-      <label class="wm-lbl" for="wm-cup-ml">Volume por copo (ml)</label>
-      <select class="wm-select" id="wm-cup-ml" onchange="wmPreview()">
-        <option value="150">150 ml - copo pequeno</option>
-        <option value="200">200 ml - copo medio</option>
-        <option value="250" selected>250 ml - copo grande</option>
-        <option value="300">300 ml - caneca</option>
-        <option value="500">500 ml - garrafa pequena</option>
-      </select>
-    </div>
-    <div class="wm-field">
-      <label class="wm-lbl">Pre-visualizacao</label>
-      <div class="wm-preview" id="wm-preview"></div>
-      <div style="font-size:10px;letter-spacing:.1em;color:#555;margin-top:8px">Meta total: <span id="wm-total-ml" style="color:#f5f5f0">2000 ml</span></div>
-    </div>
-    <div class="wm-footer">
-      <button class="wm-btn ghost" onclick="closeWaterConfig()">Cancelar</button>
-      <button class="wm-btn primary" onclick="saveWaterConfig()">Salvar configuracao</button>
-    </div>
-  </div>
-</div>
-
 <div class="app">
 
   <!-- ══ SIDEBAR ══ -->
@@ -475,12 +446,10 @@ const categories = [
   {
     id: 'hidratacao', name: 'Hidratação', icon: '💧',
     achievements: [
-      { id:'first_glass',   icon:'💧', name:'Primeiro gole',      points:50,  target:1,  req:'Registrar 1 copo',         desc:'Você bebeu o primeiro copo monitorado. A jornada começa aqui.' },
-      { id:'daily_goal',    icon:'🥛', name:'Meta diária',        points:100, target:1,  req:'Atingir a meta em 1 dia',  desc:'Meta de hidratação atingida pela primeira vez. Sentiu a diferença?' },
-      { id:'week_hydrated', icon:'🌊', name:'Semana hidratada',   points:200, target:7,  req:'Meta 7 dias seguidos',     desc:'7 dias consecutivos batendo a meta. Isso é disciplina.' },
-      { id:'two_liters',    icon:'🫧', name:'Dois litros',        points:150, target:8,  req:'8 copos em um único dia',  desc:'8 copos em um dia. Hidratação ideal atingida.' },
-      { id:'hydro_month',   icon:'💦', name:'Mês aquático',       points:400, target:30, req:'Meta 30 dias seguidos',    desc:'30 dias de hidratação consistente. Seu corpo já agradeceu.' },
-      { id:'hydro_streak',  icon:'🏊', name:'Maratona aquática',  points:500, target:60, req:'Meta 60 dias seguidos',    desc:'60 dias sem falhar. Você é imparável.' },
+      { id:'daily_goal',    icon:'🥛', name:'Meta diária',        points:100, target:1,  req:'1º dia "Beber água"',    desc:'Bateu a meta de água pela primeira vez. Sentiu a diferença?' },
+      { id:'week_hydrated', icon:'🌊', name:'Semana hidratada',   points:200, target:7,  req:'7 dias "Beber água"',    desc:'7 dias seguidos batendo a meta de água. Isso é disciplina.' },
+      { id:'hydro_month',   icon:'💦', name:'Mês aquático',       points:400, target:30, req:'30 dias "Beber água"',   desc:'30 dias seguidos de hidratação. Seu corpo já agradeceu.' },
+      { id:'hydro_streak',  icon:'🏊', name:'Maratona aquática',  points:500, target:60, req:'60 dias "Beber água"',   desc:'60 dias seguidos sem falhar. Você é imparável.' },
     ],
   },
 ];
@@ -497,35 +466,11 @@ function saveAchievementsState(state) { Store.saveAchievements(state); }
 
 /* ════════════════════════════════════
    COMPUTE PROGRESS
-   Reaproveita Store.computeAchievementProgress (js/store.js) para as
-   conquistas de Jornada/Hábitos/Diário/Especial, e completa aqui só a
-   parte de Hidratação (que store.js ainda não calcula).
+   Tudo vem de Store.computeAchievementProgress (js/store.js), inclusive a
+   Hidratação — que agora é o hábito fixo `beber_agua`.
 ════════════════════════════════════ */
 function computeProgress(habits, journal) {
-  const base = Store.computeAchievementProgress(habits, journal, DAY);
-
-  // hydration progress — reads from localStorage, fills with mock if missing
-  const waterCfgRaw = localStorage.getItem('p90_water_cfg');
-  const waterCfg    = waterCfgRaw ? JSON.parse(waterCfgRaw) : { cups: 8 };
-  const waterGoal   = waterCfg.cups || 8;
-  let waterStreak = 0, waterDaysHit = 0;
-  for (let i = 0; i < DAY; i++) {
-    const d = new Date(); d.setDate(d.getDate() - (DAY - 1 - i));
-    const c = parseInt(localStorage.getItem('p90_water_' + d.toDateString()) || '0');
-    const hit = c >= waterGoal || (i < DAY - 1 && [5,6,4,7,6,5,7,6,4,6,5,7,6,5,4,6,7,5,6,4,7,6,5,4,6,7,6,5,4,6,7,5,6,7][i] >= waterGoal);
-    if (hit) { waterStreak++; waterDaysHit++; } else waterStreak = 0;
-  }
-  const todayCups = parseInt(localStorage.getItem('p90_water_' + new Date().toDateString()) || '0') || 6;
-
-  return {
-    ...base,
-    first_glass:  Math.min(1, todayCups > 0 ? 1 : 0),
-    daily_goal:   Math.min(1, waterDaysHit > 0 ? 1 : 0),
-    week_hydrated:Math.min(7,  waterStreak),
-    two_liters:   Math.min(8,  todayCups),
-    hydro_month:  Math.min(30, waterDaysHit),
-    hydro_streak: Math.min(60, waterStreak),
-  };
+  return Store.computeAchievementProgress(habits, journal, DAY);
 }
 
 /* ════════════════════════════════════
@@ -878,32 +823,6 @@ init();
     card.addEventListener('mouseleave',function(){card.style.background='';});
   });
 })();
-function openWaterConfig(){
-  var o=document.getElementById('water-overlay');if(!o)return;
-  var cfgRaw=localStorage.getItem('p90_water_cfg');
-  var cfg=cfgRaw?JSON.parse(cfgRaw):{cups:8,ml:250};
-  document.getElementById('wm-goal-cups').value=cfg.cups;
-  document.getElementById('wm-cup-ml').value=cfg.ml;
-  wmPreview();o.classList.add('open');
-}
-function closeWaterConfig(){var o=document.getElementById('water-overlay');if(o)o.classList.remove('open');}
-function saveWaterConfig(){
-  var cups=parseInt(document.getElementById('wm-goal-cups').value)||8;
-  var ml=parseInt(document.getElementById('wm-cup-ml').value)||250;
-  localStorage.setItem('p90_water_cfg',JSON.stringify({cups:cups,ml:ml}));
-  closeWaterConfig();
-}
-function wmPreview(){
-  var n=parseInt(document.getElementById('wm-goal-cups').value)||8;
-  var ml=parseInt(document.getElementById('wm-cup-ml').value)||250;
-  var prev=document.getElementById('wm-preview');
-  var tot=document.getElementById('wm-total-ml');
-  if(prev)prev.innerHTML=Array.from({length:Math.min(n,16)},function(){return '<div style="width:28px;height:32px;border:1px solid rgba(245,245,240,.16);display:flex;align-items:center;justify-content:center;font-size:12px;opacity:.4">x</div>';}).join('');
-  if(tot)tot.textContent=(n*ml)+' ml';
-}
-document.addEventListener('click',function(e){var o=document.getElementById('water-overlay');if(o&&e.target===o)closeWaterConfig();});
-document.addEventListener('keydown',function(e){if(e.key==='Escape')closeWaterConfig();});
-
 </script>
 </body>
 </html>

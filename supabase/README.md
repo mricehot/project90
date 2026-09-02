@@ -14,6 +14,7 @@ Backend do app: Postgres + Auth do Supabase. O front continua 100% estático
 Dashboard → **SQL Editor** → **New query** → rode os arquivos **na ordem**:
 1. `supabase/migrations/0001_init.sql` → **Run**
 2. `supabase/migrations/0002_core_habits.sql` → **Run**
+3. `supabase/migrations/0003_water_as_habit.sql` → **Run**
 
 **Opção B — CLI:**
 ```bash
@@ -28,18 +29,23 @@ Os scripts criam:
 | `profiles` | 1 linha por usuário (nome, avatar, email) |
 | `challenge_meta` | data de início + duração (dia atual é calculado) |
 | `habits` | hábitos; `freq` e `history` como `jsonb`; `core_key` marca os fixos |
-| **hábitos fixos** | só os 5 ligados a achievements (`acordar_cedo`, `exercitar`, `ler`, `meditar`, `sem_redes`), semeados via `seed_core_habits()`; não podem ser excluídos (só pausados). O resto da rotina é livre. |
+| **hábitos fixos** | os 6 ligados a achievements (`acordar_cedo`, `exercitar`, `ler`, `meditar`, `sem_redes`, `beber_agua`), semeados via `seed_core_habits()`; não podem ser excluídos (só pausados). O resto da rotina é livre. |
 | `journal_entries` | 1 entrada por dia do desafio |
 | `achievements` | estado de desbloqueio por conquista |
-| `water_config` / `water_logs` | widget de hidratação |
 | **RLS** | ligado em tudo — cada usuário só vê as próprias linhas |
-| `handle_new_user()` | trigger em `auth.users`: cria profile + meta + water_config + hábitos fixos |
+| `handle_new_user()` | trigger em `auth.users`: cria profile + meta + hábitos fixos |
 | `seed_core_habits(user)` | semeia os hábitos fixos que faltam (idempotente) |
 | `challenge_day()` | dia atual do desafio (1-based, limitado ao total) |
 | `set_habit_status(habit_id, day_index, status)` | marca um dia e recalcula `streak`/`max_streak` |
 | `unlock_achievement(id, day)` / `mark_achievement_seen(id)` | conquistas |
-| `add_water(delta)` / `reset_water()` | copos de água do dia |
 | `app_bootstrap()` | devolve todo o estado do usuário num JSON só (usado no load) |
+
+> `0003` remove o módulo de água dedicado (`water_config`, `water_logs`,
+> `add_water`, `reset_water`). "Beber água" virou o hábito fixo `beber_agua`
+> (meta no campo objetivo, marca diária done/miss). Os achievements de
+> Hidratação viram streaks desse hábito: `daily_goal` (1º dia), `week_hydrated`
+> (7), `hydro_month` (30), `hydro_streak` (60). `first_glass` e `two_liters`
+> saíram.
 
 ## 3. Ativar o login com Google
 
@@ -92,10 +98,9 @@ podem ser excluídos, só pausados.
 
 ## Pendências conhecidas
 
-- O widget de **água** nas páginas ainda lê/grava em `localStorage`
-  (`p90_water_*`). As tabelas e funções (`water_config`, `water_logs`,
-  `add_water`, `reset_water`) e os helpers `Store.getWater*/setWater*` já
-  existem — falta só trocar as chamadas nas páginas.
+- **Água** virou o hábito fixo `beber_agua` (migration `0003`). O contador de
+  copos e as tabelas `water_*` foram removidos. CSS morto de `.water-overlay` /
+  `.wm-*` / `.cup` ainda está nas páginas (inofensivo) — pode limpar depois.
 - `Store.js` (raiz, com S maiúsculo) é a versão **antiga** só-localStorage e
   não é usada por nenhuma página (todas carregam `js/store.js`). Pode apagar.
 - **Rollover de dia** (resolvido no cliente): no bootstrap, `Store._rollForward()`
