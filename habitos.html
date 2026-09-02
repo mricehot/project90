@@ -112,6 +112,15 @@ body {
 }
 .section-sep::before, .section-sep::after { content: ''; flex: 1; height: 1px; background: var(--border); }
 
+/* ── PILLAR GROUPS ── */
+.pillar-group { margin-bottom: 26px; }
+.pillar-group:last-child { margin-bottom: 0; }
+.pillar-hd { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.pillar-hd-name { font-family: 'Bebas Neue', sans-serif; font-size: 15px; letter-spacing: 0.12em; color: var(--white); white-space: nowrap; }
+.pillar-hd-count { font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--mid); white-space: nowrap; }
+.pillar-hd-bar { flex: 1; height: 1px; background: var(--border); overflow: hidden; }
+.pillar-hd-bar > span { display: block; height: 100%; background: var(--white); transition: width 0.8s cubic-bezier(0.16,1,0.3,1); }
+
 /* ── EMPTY STATE ── */
 .empty-state { text-align: center; padding: 64px 32px; border: 1px dashed rgba(245,245,240,0.12); background: var(--surface); }
 .empty-icon { font-size: 32px; margin-bottom: 16px; opacity: 0.4; }
@@ -257,7 +266,7 @@ body {
     <!-- ACTIVE HABITS -->
     <div id="active-section">
       <div class="section-sep" style="margin-bottom:16px">Ativos</div>
-      <div class="habits-wrap" id="active-list"></div>
+      <div id="active-list"></div>
     </div>
 
     <!-- PAUSED HABITS -->
@@ -402,14 +411,14 @@ function updateStats() {
 /* ═══════════════════════════════════
    RENDER
 ═══════════════════════════════════ */
+// Ordem fixa dos pilares; qualquer pilar fora dela vai pro fim.
+const PILLAR_ORDER = ['Corpo', 'Mente', 'Produção', 'Conexão'];
+
 function renderAll() {
   updateStats();
   const activeHabits = habits.filter(h => !h.paused);
   const pausedHabits = habits.filter(h =>  h.paused);
-  renderList('active-list', activeHabits);
-  const ps = document.getElementById('paused-section');
-  if (pausedHabits.length > 0) { ps.style.display = 'block'; renderList('paused-list', pausedHabits); }
-  else ps.style.display = 'none';
+
   if (activeHabits.length === 0) {
     document.getElementById('active-list').innerHTML = `
       <div class="empty-state">
@@ -418,36 +427,70 @@ function renderAll() {
         <p class="empty-sub">Escolha de 3 a 5 hábitos fundamentais.<br>Simples, concretos e mensuráveis.</p>
         <button class="btn-sm primary" onclick="openModal()">+ Criar primeiro hábito</button>
       </div>`;
+  } else {
+    renderActiveGrouped(activeHabits);
   }
+
+  const ps = document.getElementById('paused-section');
+  if (pausedHabits.length > 0) { ps.style.display = 'block'; renderList('paused-list', pausedHabits); }
+  else ps.style.display = 'none';
+}
+
+// Lista de hábitos ativos agrupada por pilar, com um cabeçalho por grupo
+// mostrando quantos foram feitos hoje.
+function renderActiveGrouped(list) {
+  const groups = {};
+  list.forEach(h => { const p = h.pillar || 'Outros'; (groups[p] = groups[p] || []).push(h); });
+  const order = [
+    ...PILLAR_ORDER.filter(p => groups[p]),
+    ...Object.keys(groups).filter(p => !PILLAR_ORDER.includes(p)),
+  ];
+
+  document.getElementById('active-list').innerHTML = order.map(p => {
+    const hs   = groups[p];
+    const done = hs.filter(h => h.history[h.history.length - 1] === 'done').length;
+    const pct  = Math.round(done / hs.length * 100);
+    return `
+      <div class="pillar-group">
+        <div class="pillar-hd">
+          <span class="pillar-hd-name">${p}</span>
+          <span class="pillar-hd-count">${done}/${hs.length} hoje</span>
+          <span class="pillar-hd-bar"><span style="width:${pct}%"></span></span>
+        </div>
+        <div class="habits-wrap">${hs.map(habitCardHTML).join('')}</div>
+      </div>`;
+  }).join('');
 }
 
 function renderList(containerId, list) {
   const el = document.getElementById(containerId);
-  if (list.length === 0) { el.innerHTML = ''; return; }
-  const today = new Date().getDay();
-  el.innerHTML = list.map(h => {
-    const isDone = h.history[h.history.length - 1] === 'done';
-    const pct    = h.history.length ? Math.round(h.history.filter(s => s === 'done').length / h.history.length * 100) : 0;
-    const weekDots = DAYS_LABELS.map((lbl, i) => {
-      const jsDay   = i === 6 ? 0 : i + 1;
-      const isToday = jsDay === today;
-      const isPast  = jsDay < today || (today === 0 && jsDay > 0);
-      const inFreq  = h.freq.includes(i);
-      let dotCls = '';
-      if (inFreq) {
-        if (isToday && !isDone)   dotCls = 'today-empty';
-        else if (isToday && isDone) dotCls = 'done';
-        else if (isPast) {
-          // usa o histórico real do hábito em vez de sortear a cada render
-          const daysAgo = today === 0 ? (7 - jsDay) : (today - jsDay);
-          const idx = h.history.length - 1 - daysAgo;
-          const status = idx >= 0 ? h.history[idx] : null;
-          dotCls = status === 'done' ? 'done' : status === 'partial' ? 'partial' : '';
-        }
+  el.innerHTML = list.map(habitCardHTML).join('');
+}
+
+function habitCardHTML(h) {
+  const today  = new Date().getDay();
+  const isDone = h.history[h.history.length - 1] === 'done';
+  const pct    = h.history.length ? Math.round(h.history.filter(s => s === 'done').length / h.history.length * 100) : 0;
+  const weekDots = DAYS_LABELS.map((lbl, i) => {
+    const jsDay   = i === 6 ? 0 : i + 1;
+    const isToday = jsDay === today;
+    const isPast  = jsDay < today || (today === 0 && jsDay > 0);
+    const inFreq  = h.freq.includes(i);
+    let dotCls = '';
+    if (inFreq) {
+      if (isToday && !isDone)   dotCls = 'today-empty';
+      else if (isToday && isDone) dotCls = 'done';
+      else if (isPast) {
+        // usa o histórico real do hábito em vez de sortear a cada render
+        const daysAgo = today === 0 ? (7 - jsDay) : (today - jsDay);
+        const idx = h.history.length - 1 - daysAgo;
+        const status = idx >= 0 ? h.history[idx] : null;
+        dotCls = status === 'done' ? 'done' : status === 'partial' ? 'partial' : '';
       }
-      return `<div class="wd"><div class="wd-day">${lbl}</div><div class="wd-dot ${dotCls}" style="${!inFreq ? 'opacity:0.15' : ''}"></div></div>`;
-    }).join('');
-    return `
+    }
+    return `<div class="wd"><div class="wd-day">${lbl}</div><div class="wd-dot ${dotCls}" style="${!inFreq ? 'opacity:0.15' : ''}"></div></div>`;
+  }).join('');
+  return `
     <div class="habit-card ${isDone ? 'done-today' : ''} ${h.paused ? 'paused' : ''}" id="hcard-${h.id}">
       <div class="habit-card-top">
         <div class="habit-check ${isDone ? 'done' : ''}" onclick="toggleToday(${h.id})">${isDone ? '✓' : ''}</div>
@@ -475,7 +518,6 @@ function renderList(containerId, list) {
         <div class="hpb-bg"><div class="hpb-fill" style="width:${pct}%"></div></div>
       </div>
     </div>`;
-  }).join('');
 }
 
 function freqLabel(freq) {
