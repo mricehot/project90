@@ -150,31 +150,60 @@ const Store = (() => {
     });
   }
 
-  // Avança o histórico de cada hábito até o dia atual: preenche com 'miss' os
-  // dias não registrados e recalcula streak / maxStreak a partir do array (o
-  // array é a fonte de verdade — mesma lógica de set_habit_status no Postgres).
-  // Roda uma vez no bootstrap; a gravação vai junto no fluxo write-through.
+  // Recalcula streak (corrida de 'done' terminando no último dia) e maxStreak
+  // (nunca diminui) a partir do array — mesma regra do set_habit_status no
+  // Postgres. Devolve true se mudou algo.
+  function _recalcStreak(h) {
+    let cur = 0, best = 0;
+    for (let i = 0; i < h.history.length; i++) {
+      if (h.history[i] === 'done') { cur++; if (cur > best) best = cur; }
+      else cur = 0;
+    }
+    let changed = false;
+    if (h.streak !== cur) { h.streak = cur; changed = true; }
+    if ((h.maxStreak || 0) < best) { h.maxStreak = best; changed = true; }
+    return changed;
+  }
+
+  // Avança o histórico de cada hábito até o dia atual (preenche com 'miss' os
+  // dias não registrados) e recalcula os streaks. Devolve true se mudou algo.
   function _rollForward() {
     const today = getCurrentDay();
     let changed = false;
-
     cache.habits.forEach(h => {
       const want = today - ((h.createdDay || 1) - 1);
       if (want < 1) return;
       if (!Array.isArray(h.history)) h.history = [];
       while (h.history.length < want) { h.history.push('miss'); changed = true; }
-
-      let cur = 0, best = 0;
-      for (let i = 0; i < h.history.length; i++) {
-        if (h.history[i] === 'done') { cur++; if (cur > best) best = cur; }
-        else cur = 0;
-      }
-      if (h.streak !== cur) { h.streak = cur; changed = true; }
-      if ((h.maxStreak || 0) < best) { h.maxStreak = best; changed = true; }
+      if (_recalcStreak(h)) changed = true;
     });
+    return changed;
+  }
 
-    if (!changed) return;
-    _saveMirror();
+  // "Escrever no diário" (core_key = escrever_diario) não é marcado à mão: o
+  // histórico dele é derivado de journal — todo dia com entrada vira 'done'.
+  // Só adiciona 'done'; nunca remove. Devolve true se mudou algo.
+  function _reconcileJournalHabit() {
+    const h = cache.habits.find(x => x.coreKey === 'escrever_diario');
+    if (!h) return false;
+    if (!Array.isArray(h.history)) h.history = [];
+    const start = (h.createdDay || 1) - 1;
+    let changed = false;
+    Object.keys(cache.journal).forEach(k => {
+      const dayNum = Number(k);
+      if (!dayNum) return;
+      const idx = (dayNum - 1) - start;
+      if (idx < 0) return;
+      while (h.history.length <= idx) h.history.push('miss');
+      if (h.history[idx] !== 'done') { h.history[idx] = 'done'; changed = true; }
+    });
+    if (changed) _recalcStreak(h);
+    return changed;
+  }
+
+  // Upsert de todos os hábitos no Supabase (usado quando roll-forward /
+  // reconcile mexeram no cache fora de um saveHabits explícito).
+  function _persistHabits() {
     _push(async () => {
       const rows = cache.habits.map(_habitToRow);
       if (!rows.length) return;
@@ -210,10 +239,12 @@ const Store = (() => {
       }
 
       _applyServerData(data);
-      _rollForward();
+      const dirty = _rollForward();
+      const dirty2 = _reconcileJournalHabit();
       _saveMirror();
       _ready = true;
       window.dispatchEvent(new Event('p90:synced'));
+      if (dirty || dirty2) _persistHabits();
     })();
 
     return _readyPromise;
@@ -306,6 +337,7 @@ const Store = (() => {
 
   function saveJournal(j) {
     _replaceObject(cache.journal, j && typeof j === 'object' ? j : {});
+    if (_reconcileJournalHabit()) _persistHabits();
     _saveMirror();
     _push(async () => {
       const rows = Object.keys(cache.journal).map(k => {
@@ -327,6 +359,7 @@ const Store = (() => {
 
   function saveJournalEntry(dayNum, entry) {
     cache.journal[dayNum] = entry;
+    if (_reconcileJournalHabit()) _persistHabits();
     _saveMirror();
     _push(async () => {
       const e = entry || {};
@@ -495,6 +528,7 @@ const Store = (() => {
       first_entry:  Math.min(1, journalEntries),
       journal7:     journalStreak,
       journal30:    journalEntries,
+      diary_streak: journalStreak,
       comeback:     hasComeback(),
       discipline:   perfStreak,
       all5:         allDoneCount,
