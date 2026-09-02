@@ -100,6 +100,8 @@ body {
 .wd-dot.done { background: var(--white); }
 .wd-dot.partial { background: rgba(245,245,240,0.35); }
 .wd-dot.today-empty { border: 1px solid var(--mid); background: transparent; }
+.wd-dot.wd-edit { cursor: pointer; transition: transform 0.12s, box-shadow 0.12s; }
+.wd-dot.wd-edit:hover { transform: scale(1.35); box-shadow: 0 0 0 1px var(--white); }
 
 .habit-progress { padding: 0 20px 16px; }
 .hpb-top { display: flex; justify-content: space-between; font-size: 10px; letter-spacing: 0.1em; color: var(--mid); margin-bottom: 6px; }
@@ -419,7 +421,11 @@ function renderAll() {
   const activeHabits = habits.filter(h => !h.paused);
   const pausedHabits = habits.filter(h =>  h.paused);
 
-  if (activeHabits.length === 0) {
+  if (activeHabits.length === 0 && !Store.isReady()) {
+    // ainda sincronizando com o Supabase — não mostrar o estado vazio real
+    document.getElementById('active-list').innerHTML =
+      `<div class="empty-state" style="border:none;background:none"><div class="empty-icon">◍</div><div class="empty-sub">Carregando seus hábitos…</div></div>`;
+  } else if (activeHabits.length === 0) {
     document.getElementById('active-list').innerHTML = `
       <div class="empty-state">
         <div class="empty-icon">◉</div>
@@ -476,19 +482,26 @@ function habitCardHTML(h) {
     const isToday = jsDay === today;
     const isPast  = jsDay < today || (today === 0 && jsDay > 0);
     const inFreq  = h.freq.includes(i);
-    let dotCls = '';
+    let dotCls = '', clickIdx = -1;
     if (inFreq) {
-      if (isToday && !isDone)   dotCls = 'today-empty';
-      else if (isToday && isDone) dotCls = 'done';
-      else if (isPast) {
+      if (isToday) {
+        dotCls = isDone ? 'done' : 'today-empty';
+      } else if (isPast) {
         // usa o histórico real do hábito em vez de sortear a cada render
         const daysAgo = today === 0 ? (7 - jsDay) : (today - jsDay);
         const idx = h.history.length - 1 - daysAgo;
-        const status = idx >= 0 ? h.history[idx] : null;
-        dotCls = status === 'done' ? 'done' : status === 'partial' ? 'partial' : '';
+        if (idx >= 0) {
+          clickIdx = idx;
+          const status = h.history[idx];
+          dotCls = status === 'done' ? 'done' : status === 'partial' ? 'partial' : '';
+        }
       }
     }
-    return `<div class="wd"><div class="wd-day">${lbl}</div><div class="wd-dot ${dotCls}" style="${!inFreq ? 'opacity:0.15' : ''}"></div></div>`;
+    const editable = clickIdx >= 0;
+    return `<div class="wd"><div class="wd-day">${lbl}</div>`
+      + `<div class="wd-dot ${dotCls}${editable ? ' wd-edit' : ''}"`
+      + (editable ? ` onclick="toggleDay(${h.id}, ${clickIdx})" title="Marcar/desmarcar este dia"` : '')
+      + ` style="${!inFreq ? 'opacity:0.15' : ''}"></div></div>`;
   }).join('');
   return `
     <div class="habit-card ${isDone ? 'done-today' : ''} ${h.paused ? 'paused' : ''}" id="hcard-${h.id}">
@@ -530,32 +543,49 @@ function freqLabel(freq) {
 /* ═══════════════════════════════════
    ACTIONS
 ═══════════════════════════════════ */
+// Recalcula streak/maxStreak a partir do array (mesma regra do backend
+// set_habit_status / Store._rollForward): streak = corrida de 'done'
+// terminando hoje; maxStreak nunca diminui.
+function recalcStreak(h) {
+  let cur = 0, best = 0;
+  for (let i = 0; i < h.history.length; i++) {
+    if (h.history[i] === 'done') { cur++; if (cur > best) best = cur; }
+    else cur = 0;
+  }
+  h.streak = cur;
+  h.maxStreak = Math.max(h.maxStreak || 0, best);
+}
+
 function toggleToday(id) {
   const h = habits.find(x => x.id === id);
-  if (!h) return;
-  const last = h.history[h.history.length - 1];
-  if (last === 'done') {
-    h.history[h.history.length - 1] = 'miss';
-    h.streak = Math.max(0, h.streak - 1);
-    toast('Hábito desmarcado');
-  } else {
-    h.history[h.history.length - 1] = 'done';
-    h.streak += 1;
-    if (h.streak > h.maxStreak) h.maxStreak = h.streak;
-    toast(h.streak >= 7 ? `🔥 ${h.streak} dias seguidos!` : 'Hábito concluído ✓');
-  }
+  if (!h || !h.history.length) return;
+  const wasDone = h.history[h.history.length - 1] === 'done';
+  h.history[h.history.length - 1] = wasDone ? 'miss' : 'done';
+  recalcStreak(h);
+  toast(wasDone ? 'Hábito desmarcado'
+               : (h.streak >= 7 ? `🔥 ${h.streak} dias seguidos!` : 'Hábito concluído ✓'));
   saveHabits(); renderAll(); initSidebar();
+}
+
+// Check-in retroativo: alterna um dia passado a partir da tirinha da semana.
+function toggleDay(id, idx) {
+  const h = habits.find(x => x.id === id);
+  if (!h || idx < 0 || idx >= h.history.length) return;
+  if (idx === h.history.length - 1) return toggleToday(id);
+  h.history[idx] = h.history[idx] === 'done' ? 'miss' : 'done';
+  recalcStreak(h);
+  saveHabits(); renderAll(); initSidebar();
+  toast('Dia atualizado');
 }
 
 function checkAll() {
   habits.filter(h => !h.paused).forEach(h => {
-    if (h.history[h.history.length - 1] !== 'done') {
+    if (h.history.length && h.history[h.history.length - 1] !== 'done') {
       h.history[h.history.length - 1] = 'done';
-      h.streak += 1;
-      if (h.streak > h.maxStreak) h.maxStreak = h.streak;
+      recalcStreak(h);
     }
   });
-  saveHabits(); renderAll(); toast('Todos os hábitos marcados ✓');
+  saveHabits(); renderAll(); initSidebar(); toast('Todos os hábitos marcados ✓');
 }
 
 function togglePause(id) {
