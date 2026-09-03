@@ -610,6 +610,7 @@ const Store = (() => {
       no_scroll:    streakForKey('sem_redes'),
       reader:       countForKey('ler'),
       zen:          countForKey('meditar'),
+      bible_reader: countForKey('ler_biblia'),
       first_entry:  Math.min(1, journalEntries),
       journal7:     journalStreak,
       journal30:    journalEntries,

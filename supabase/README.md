@@ -17,6 +17,7 @@ Dashboard → **SQL Editor** → **New query** → rode os arquivos **na ordem**
 3. `supabase/migrations/0003_water_as_habit.sql` → **Run**
 4. `supabase/migrations/0004_journal_habit.sql` → **Run**
 5. `supabase/migrations/0005_reset_progress.sql` → **Run**
+6. `supabase/migrations/0006_bible_habit.sql` → **Run**
 
 **Opção B — CLI:**
 ```bash
@@ -31,7 +32,7 @@ Os scripts criam:
 | `profiles` | 1 linha por usuário (nome, avatar, email) |
 | `challenge_meta` | data de início + duração (dia atual é calculado) |
 | `habits` | hábitos; `freq` e `history` como `jsonb`; `core_key` marca os fixos |
-| **hábitos fixos** | os 7 ligados a achievements (`acordar_cedo`, `exercitar`, `ler`, `meditar`, `sem_redes`, `beber_agua`, `escrever_diario`), semeados via `seed_core_habits()`; não podem ser excluídos (só pausados). O resto da rotina é livre. |
+| **hábitos fixos** | os 8 ligados a achievements (`acordar_cedo`, `exercitar`, `ler`, `meditar`, `sem_redes`, `beber_agua`, `escrever_diario`, `ler_biblia`), semeados via `seed_core_habits()`; não podem ser excluídos (só pausados). O resto da rotina é livre. |
 | `journal_entries` | 1 entrada por dia do desafio |
 | `achievements` | estado de desbloqueio por conquista |
 | **RLS** | ligado em tudo — cada usuário só vê as próprias linhas |
