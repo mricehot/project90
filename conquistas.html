@@ -416,6 +416,9 @@ const categories = [
       { id:'journal7',     icon:'📓', name:'Uma semana escrita',   points:150, target:7,  req:'7 entradas seguidas',      desc:'7 entradas consecutivas no diário de reflexão.' },
       { id:'diary_streak', icon:'🖋️', name:'Escritor diário',      points:250, target:21, req:'21 dias seguidos no diário', desc:'Cumpriu o hábito fixo "Escrever no diário" por 21 dias sem falhar.' },
       { id:'journal30',    icon:'📔', name:'Cronista do desafio',  points:350, target:30, req:'30 entradas',              desc:'Registrou 30 dias no diário. Isso é um tesouro.' },
+      { id:'first_review',    icon:'🧭', name:'Primeira revisão',      points:80,  target:1,  req:'1 revisão semanal',     desc:'Fez a primeira revisão de semana.' },
+      { id:'weekly_reviewer', icon:'📆', name:'Estrategista',          points:250, target:6,  req:'6 revisões semanais',   desc:'Revisou 6 semanas do desafio.' },
+      { id:'weekly_all',      icon:'🗺️', name:'Cartógrafo do progresso', points:450, target:12, req:'12 revisões semanais',  desc:'Revisou todas as 12 semanas completas do desafio.' },
     ],
   },
   {
@@ -442,7 +445,7 @@ function saveAchievementsState(state) { Store.saveAchievements(state); }
    COMPUTE PROGRESS — tudo vem de Store.computeAchievementProgress (js/store.js)
 ════════════════════════════════════ */
 function computeProgress(habits, journal) {
-  return Store.computeAchievementProgress(habits, journal, DAY);
+  return Store.computeAchievementProgress(habits, journal, DAY, Store.getWeeklyReviews());
 }
 
 /* ════════════════════════════════════
