@@ -15,7 +15,7 @@
 <style>
 
 /* ── MAIN ── */
-.con-main { padding: 32px 36px; overflow-y: auto; display: flex; flex-direction: column; gap: 32px; }
+.con-main { padding: 32px 36px; overflow-y: auto; display: flex; flex-direction: column; gap: 32px; max-width: 1160px; margin-inline: auto; }
 
 .topbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
 .page-title { font-family: 'DM Serif Display', serif; font-size: 26px; font-weight: 400; display: flex; align-items: baseline; gap: 10px; }
@@ -221,25 +221,6 @@
   .ach-grid { grid-template-columns: 1fr; }
 }
 
-/* ══ POPUP HIDRATAÇÃO ══ */
-.water-overlay{position:fixed;inset:0;z-index:400;background:rgba(8,8,8,.88);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .3s;}
-.water-overlay.open{opacity:1;pointer-events:all;}
-.water-modal{background:#111111;border:1px solid rgba(245,245,240,.16);padding:40px 44px;width:100%;max-width:420px;transform:translateY(16px);transition:transform .35s cubic-bezier(.16,1,.3,1);}
-.water-overlay.open .water-modal{transform:translateY(0);}
-.wm-title{font-family:'DM Serif Display',serif;font-size:22px;font-weight:400;margin-bottom:28px;}
-.wm-title em{font-style:italic;opacity:.4;}
-.wm-field{margin-bottom:20px;}
-.wm-lbl{font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:#555;display:block;margin-bottom:8px;}
-.wm-input{width:100%;background:#181818;border:1px solid rgba(245,245,240,.08);color:#f5f5f0;font-family:'DM Mono',monospace;font-weight:300;font-size:13px;padding:11px 14px;outline:none;transition:border-color .2s;}
-.wm-input:focus{border-color:rgba(245,245,240,.3);}
-.wm-select{width:100%;background:#181818;border:1px solid rgba(245,245,240,.08);color:#f5f5f0;font-family:'DM Mono',monospace;font-weight:300;font-size:13px;padding:11px 14px;outline:none;cursor:pointer;appearance:none;}
-.wm-select option{background:#181818;}
-.wm-preview{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;}
-.wm-footer{display:flex;gap:10px;margin-top:28px;}
-.wm-btn{flex:1;padding:12px;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;border:none;transition:opacity .2s;}
-.wm-btn.primary{background:#f5f5f0;color:#080808;}
-.wm-btn.ghost{background:none;border:1px solid rgba(245,245,240,.16);color:#555;}
-.wm-btn:hover{opacity:.82;}
 .app,.con-main{position:relative;z-index:1;}
 </style>
 </head>
@@ -444,15 +425,6 @@ const categories = [
       { id:'all5',       icon:'⭐', name:'Mestre dos hábitos',   points:300, target:7,  req:'7x todos os hábitos',     desc:'Todos os hábitos concluídos no mesmo dia, 7 vezes.' },
     ],
   },
-  {
-    id: 'hidratacao', name: 'Hidratação', icon: '💧',
-    achievements: [
-      { id:'daily_goal',    icon:'🥛', name:'Meta diária',        points:100, target:1,  req:'1º dia "Beber água"',    desc:'Bateu a meta de água pela primeira vez. Sentiu a diferença?' },
-      { id:'week_hydrated', icon:'🌊', name:'Semana hidratada',   points:200, target:7,  req:'7 dias "Beber água"',    desc:'7 dias seguidos batendo a meta de água. Isso é disciplina.' },
-      { id:'hydro_month',   icon:'💦', name:'Mês aquático',       points:400, target:30, req:'30 dias "Beber água"',   desc:'30 dias seguidos de hidratação. Seu corpo já agradeceu.' },
-      { id:'hydro_streak',  icon:'🏊', name:'Maratona aquática',  points:500, target:60, req:'60 dias "Beber água"',   desc:'60 dias seguidos sem falhar. Você é imparável.' },
-    ],
-  },
 ];
 
 /* ════════════════════════════════════
@@ -466,9 +438,7 @@ function loadAchievementsState() { return Store.getAchievements(); }
 function saveAchievementsState(state) { Store.saveAchievements(state); }
 
 /* ════════════════════════════════════
-   COMPUTE PROGRESS
-   Tudo vem de Store.computeAchievementProgress (js/store.js), inclusive a
-   Hidratação — que agora é o hábito fixo `beber_agua`.
+   COMPUTE PROGRESS — tudo vem de Store.computeAchievementProgress (js/store.js)
 ════════════════════════════════════ */
 function computeProgress(habits, journal) {
   return Store.computeAchievementProgress(habits, journal, DAY);

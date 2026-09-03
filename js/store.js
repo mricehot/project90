@@ -507,10 +507,6 @@ const Store = (() => {
       return best;
     })();
 
-    // Hidratação = hábito fixo `beber_agua` (ver supabase 0003_water_as_habit).
-    const waterDays   = countForKey('beber_agua');
-    const waterStreak = streakForKey('beber_agua');
-
     return {
       day1:         Math.min(1, daysActive),
       week1:        dayStreak,
@@ -532,11 +528,6 @@ const Store = (() => {
       comeback:     hasComeback(),
       discipline:   perfStreak,
       all5:         allDoneCount,
-      // hidratação (streaks do hábito beber_agua)
-      daily_goal:   Math.min(1, waterDays),
-      week_hydrated: waterStreak,
-      hydro_month:  waterStreak,
-      hydro_streak: waterStreak,
     };
   }
 
