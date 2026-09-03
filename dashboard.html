@@ -112,6 +112,37 @@ body { overflow: hidden; }
 
 .chart-wrap { position: relative; width: 100%; height: 180px; }
 
+/* ── NUDGE / ALERTA DE CHECK-IN ── */
+.nudge {
+  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  padding: 14px 18px; border: 1px solid var(--border2); background: var(--surface);
+  font-size: 12px; letter-spacing: 0.03em; color: var(--white);
+}
+.nudge.warn   { border-color: rgba(252,165,165,0.45); background: rgba(252,165,165,0.06); }
+.nudge.done   { border-color: rgba(134,239,172,0.4);  background: rgba(134,239,172,0.06); }
+.nudge-icon   { font-size: 16px; flex-shrink: 0; }
+.nudge-msg    { flex: 1; min-width: 200px; line-height: 1.5; }
+.nudge-msg b  { font-weight: 400; color: var(--white); }
+.nudge-actions{ display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.nudge-btn {
+  background: none; border: 1px solid var(--border2); color: var(--mid);
+  font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.12em;
+  text-transform: uppercase; padding: 6px 10px; cursor: pointer;
+  transition: color 0.2s, border-color 0.2s;
+}
+.nudge-btn:hover { color: var(--white); border-color: rgba(245,245,240,0.35); }
+.nudge-x { background: none; border: none; color: var(--mid); font-size: 15px; cursor: pointer; line-height: 1; padding: 2px 4px; }
+.nudge-x:hover { color: var(--white); }
+.nudge-pop {
+  width: 100%; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border);
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  font-size: 11px; letter-spacing: 0.06em; color: var(--mid);
+}
+.nudge-pop select {
+  background: var(--surface2); border: 1px solid var(--border); color: var(--white);
+  font-family: 'DM Mono', monospace; font-size: 11px; padding: 5px 8px; outline: none;
+}
+
 /* ── FRASE DE EFEITO (fora de qualquer box) ── */
 .dash-quote {
   font-family: 'DM Serif Display', serif;
@@ -198,6 +229,9 @@ body { overflow: hidden; }
         <button class="btn-sm primary" onclick="addHabit()">+ Hábito</button>
       </div>
     </div>
+
+    <!-- ALERTA DE CHECK-IN / STREAK EM RISCO -->
+    <div class="nudge" id="nudge" hidden></div>
 
     <!-- STAT CARDS -->
     <div class="g4">
@@ -330,7 +364,133 @@ function init() {
   renderHeatmap();
   renderWeeklyChart();
   renderProgressChart();
+  renderNudge();
 }
+
+/* ═══════════════════════════════
+   NUDGE — alerta de check-in / streak em risco + lembrete opt-in
+═══════════════════════════════ */
+function _todayKey() { return 'p90_' + new Date().toDateString(); }
+function _readReminder() {
+  try { const r = localStorage.getItem('p90_reminder'); return r ? JSON.parse(r) : null; } catch (e) { return null; }
+}
+
+function renderNudge() {
+  const box = document.getElementById('nudge');
+  if (!box) return;
+
+  const day    = Store.getCurrentDay();
+  const days   = Store.getTotalDays();
+  const dueRaw = Store.getHabits().filter(h => !h.paused && Store.scheduledOn(h, day - 1));
+  const done   = dueRaw.filter(h => Store.habitVal(h, day - 1) > 0).length;
+  const total  = dueRaw.length;
+  const streak = Store.currentStreak(Store.getHabits(), day);
+  const hour   = new Date().getHours();
+  const left   = total - done;
+
+  // dispensado hoje? só o alerta some; se o dia ficou completo, mostramos o positivo.
+  const dismissed = (function(){ try { return localStorage.getItem('p90_nudge_x_' + _todayKey()) === '1'; } catch(e){ return false; } })();
+
+  let tone = '', icon = '', msg = '';
+  if (total > 0 && done === total) {
+    tone = 'done'; icon = '✓';
+    msg = `<b>Dia ${day} fechado.</b> Todos os hábitos de hoje marcados. Volte amanhã.`;
+  } else if (dismissed) {
+    box.hidden = true; return;
+  } else if (streak >= 2 && done === 0 && hour >= 17) {
+    tone = 'warn'; icon = '🔥';
+    msg = `Sua sequência de <b>${streak} ${streak === 1 ? 'dia' : 'dias'}</b> acaba hoje se você não marcar nada. Faltam ~${24 - hour}h.`;
+  } else if (done === 0 && hour >= 12 && total > 0) {
+    tone = 'warn'; icon = '◉';
+    msg = `Você ainda não marcou nenhum hábito hoje. <b>Dia ${day} / ${days}.</b>`;
+  } else if (done > 0 && left > 0 && hour >= 20) {
+    tone = ''; icon = '→';
+    msg = `Faltam <b>${left} ${left === 1 ? 'hábito' : 'hábitos'}</b> para fechar o dia.`;
+  } else {
+    box.hidden = true; return;
+  }
+
+  const rem = _readReminder();
+  const remLbl = rem ? `🔔 ${String(rem.hour).padStart(2,'0')}h` : '🔔 Lembrete';
+
+  box.className = 'nudge' + (tone ? ' ' + tone : '');
+  box.hidden = false;
+  box.innerHTML =
+    `<span class="nudge-icon">${icon}</span>` +
+    `<span class="nudge-msg">${msg}</span>` +
+    `<span class="nudge-actions">` +
+      `<button class="nudge-btn" id="nudge-remind">${remLbl}</button>` +
+      `<button class="nudge-x" id="nudge-close" title="Dispensar por hoje">×</button>` +
+    `</span>`;
+
+  document.getElementById('nudge-close').onclick = () => {
+    try { localStorage.setItem('p90_nudge_x_' + _todayKey(), '1'); } catch (e) {}
+    renderNudge();
+  };
+  document.getElementById('nudge-remind').onclick = _toggleReminderPopover;
+}
+
+function _toggleReminderPopover() {
+  const box = document.getElementById('nudge');
+  const open = box.querySelector('.nudge-pop');
+  if (open) { open.remove(); return; }
+
+  const rem = _readReminder();
+  const pop = document.createElement('div');
+  pop.className = 'nudge-pop';
+  const opts = Array.from({ length: 18 }, (_, i) => i + 6)
+    .map(h => `<option value="${h}" ${rem && rem.hour === h ? 'selected' : ''}>${String(h).padStart(2,'0')}h</option>`).join('');
+  pop.innerHTML =
+    `Avisar no navegador todo dia às <select id="nudge-hour">${opts}</select>` +
+    `<button class="nudge-btn" id="nudge-rem-on">${rem ? 'Atualizar' : 'Ativar'}</button>` +
+    (rem ? `<button class="nudge-btn" id="nudge-rem-off">Desativar</button>` : '');
+  box.appendChild(pop);
+
+  document.getElementById('nudge-rem-on').onclick = async () => {
+    if (!('Notification' in window)) { toast('Seu navegador não suporta notificações.'); return; }
+    let perm = Notification.permission;
+    if (perm !== 'granted') perm = await Notification.requestPermission();
+    if (perm !== 'granted') { toast('Permissão de notificação negada.'); return; }
+    const h = parseInt(document.getElementById('nudge-hour').value, 10) || 20;
+    try { localStorage.setItem('p90_reminder', JSON.stringify({ hour: h })); } catch (e) {}
+    toast('Lembrete diário ativado para as ' + String(h).padStart(2,'0') + 'h.');
+    renderNudge();
+  };
+  const off = document.getElementById('nudge-rem-off');
+  if (off) off.onclick = () => {
+    try { localStorage.removeItem('p90_reminder'); } catch (e) {}
+    toast('Lembrete diário desativado.');
+    renderNudge();
+  };
+}
+
+// Dispara a notificação quando a hora chega e o dia não está completo.
+// Roda no load e a cada 5 min (funciona com a aba aberta, mesmo em segundo plano).
+function _maybeNotify() {
+  const rem = _readReminder();
+  if (!rem || !('Notification' in window) || Notification.permission !== 'granted') return;
+  if (new Date().getHours() < rem.hour) return;
+
+  const firedKey = 'p90_reminder_fired_' + _todayKey();
+  try { if (localStorage.getItem(firedKey) === '1') return; } catch (e) {}
+
+  const day   = Store.getCurrentDay();
+  const due   = Store.getHabits().filter(h => !h.paused && Store.scheduledOn(h, day - 1));
+  const done  = due.filter(h => Store.habitVal(h, day - 1) > 0).length;
+  if (due.length === 0 || done === due.length) return;
+
+  const left = due.length - done;
+  try {
+    new Notification('Project 90 — dia ' + day, {
+      body: done === 0
+        ? 'Você ainda não marcou nenhum hábito hoje.'
+        : `Faltam ${left} ${left === 1 ? 'hábito' : 'hábitos'} para fechar o dia.`,
+      tag: 'p90-daily'
+    });
+    localStorage.setItem(firedKey, '1');
+  } catch (e) {}
+}
+setInterval(_maybeNotify, 5 * 60 * 1000);
 
 function initTopbar() {
   const days   = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
@@ -629,8 +789,9 @@ document.addEventListener('mousemove',e=>{ if(tipOn){tip.style.left=(e.clientX+1
   window.addEventListener('resize',resize); resize(); draw();
 })();
 
-window.addEventListener('p90:synced', function () { refreshFromRealHabits(); init(); });
+window.addEventListener('p90:synced', function () { refreshFromRealHabits(); init(); _maybeNotify(); });
 init();
+_maybeNotify();
 
 /* ── FRASE DE EFEITO: sorteia uma a cada load ── */
 (function () {
