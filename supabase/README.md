@@ -19,6 +19,7 @@ Dashboard → **SQL Editor** → **New query** → rode os arquivos **na ordem**
 5. `supabase/migrations/0005_reset_progress.sql` → **Run**
 6. `supabase/migrations/0006_bible_habit.sql` → **Run**
 7. `supabase/migrations/0007_timezone.sql` → **Run**
+8. `supabase/migrations/0008_weekly_review.sql` → **Run**
 
 **Opção B — CLI:**
 ```bash
@@ -35,6 +36,7 @@ Os scripts criam:
 | `habits` | hábitos; `freq` e `history` como `jsonb`; `core_key` marca os fixos |
 | **hábitos fixos** | os 8 ligados a achievements (`acordar_cedo`, `exercitar`, `ler`, `meditar`, `sem_redes`, `beber_agua`, `escrever_diario`, `ler_biblia`), semeados via `seed_core_habits()`; não podem ser excluídos (só pausados). O resto da rotina é livre. |
 | `journal_entries` | 1 entrada por dia do desafio |
+| `weekly_reviews` | 1 revisão por semana do desafio (`0008`): o que funcionou, o que ajustar, foco da semana seguinte, nota 1–5. Editável no `diario.html`. |
 | `achievements` | estado de desbloqueio por conquista |
 | **RLS** | ligado em tudo — cada usuário só vê as próprias linhas |
 | `handle_new_user()` | trigger em `auth.users`: cria profile + meta + hábitos fixos |

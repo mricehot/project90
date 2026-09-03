@@ -148,6 +148,31 @@ body {
   border-right: 1px solid var(--border);
 }
 
+/* ── REVISÃO SEMANAL ── */
+.week-review {
+  border: 1px solid var(--border2); background: var(--surface2);
+  padding: 20px 22px; margin-bottom: 28px;
+}
+.wr-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 4px; }
+.wr-title { font-family: 'DM Serif Display', serif; font-size: 18px; color: var(--white); }
+.wr-sub   { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--mid); margin-top: 4px; }
+.wr-sub.pending { color: #fca5a5; }
+.wr-select {
+  background: var(--surface); border: 1px solid var(--border2); color: var(--white);
+  font-family: 'DM Mono', monospace; font-size: 11px; padding: 6px 10px; outline: none; cursor: pointer;
+}
+.wr-body { margin-top: 16px; }
+.wr-body .prompt-block { margin-bottom: 16px; }
+.wr-body .j-field { min-height: auto; }
+.wr-score { display: flex; gap: 8px; }
+.wr-score button {
+  width: 34px; height: 34px; border: 1px solid var(--border2); background: none; color: var(--mid);
+  font-family: 'Bebas Neue', sans-serif; font-size: 17px; cursor: pointer;
+  transition: color 0.2s, border-color 0.2s, background 0.2s;
+}
+.wr-score button:hover { color: var(--white); border-color: rgba(245,245,240,0.35); }
+.wr-score button.on { background: var(--white); color: var(--bg); border-color: var(--white); }
+
 /* ── ENTRY HEADER ── */
 .entry-header {
   display: flex; align-items: baseline; justify-content: space-between;
@@ -353,6 +378,39 @@ body {
     <!-- EDITOR -->
     <div class="editor-col" id="editor-col">
 
+      <!-- REVISÃO SEMANAL -->
+      <div class="week-review" id="week-review" hidden>
+        <div class="wr-head">
+          <div>
+            <div class="wr-title">Revisão semanal</div>
+            <div class="wr-sub" id="wr-sub">—</div>
+          </div>
+          <select class="wr-select" id="wr-week"></select>
+        </div>
+        <div class="wr-body">
+          <div class="prompt-block">
+            <div class="prompt-lbl">O que funcionou nesta semana</div>
+            <textarea class="j-field" id="wr-wins" rows="2" maxlength="600" placeholder="Onde você foi consistente, o que ganhou tração..."></textarea>
+          </div>
+          <div class="prompt-block">
+            <div class="prompt-lbl">O que atrapalhou · o que ajustar</div>
+            <textarea class="j-field" id="wr-friction" rows="2" maxlength="600" placeholder="O que quebrou a rotina e o que você muda na semana que vem..."></textarea>
+          </div>
+          <div class="prompt-block">
+            <div class="prompt-lbl">Foco para a próxima semana — uma frase</div>
+            <textarea class="j-field" id="wr-focus" rows="1" maxlength="200" placeholder="A única coisa que, se eu acertar, arrasta o resto..."></textarea>
+          </div>
+          <div class="prompt-block">
+            <div class="prompt-lbl">Nota da semana</div>
+            <div class="wr-score" id="wr-score"></div>
+          </div>
+          <div class="save-bar">
+            <div class="save-status" id="wr-status">—</div>
+            <button class="btn-sm primary" id="wr-save">Salvar revisão</button>
+          </div>
+        </div>
+      </div>
+
       <div class="entry-header">
         <div>
           <div style="font-size:9px;letter-spacing:0.22em;text-transform:uppercase;color:var(--mid);margin-bottom:6px">Dia do desafio</div>
@@ -484,8 +542,74 @@ function init() {
 
   renderCalendar();
   renderEntriesList();
+  renderWeeklyReview();
   loadDayIntoEditor(currentDay);
   setupListeners();
+}
+
+/* ── REVISÃO SEMANAL ── */
+var wrSelectedWeek = null;
+
+function renderWeeklyReview() {
+  var box = document.getElementById('week-review');
+  if (!box) return;
+  var weeks = Math.floor(DAY / 7);            // semanas totalmente no passado
+  if (weeks < 1) { box.hidden = true; return; }
+  box.hidden = false;
+
+  var reviews = Store.getWeeklyReviews();
+
+  if (wrSelectedWeek == null || wrSelectedWeek > weeks) {
+    wrSelectedWeek = weeks;
+    for (var w = 1; w <= weeks; w++) { if (!reviews[w]) { wrSelectedWeek = w; break; } }
+  }
+
+  var sel = document.getElementById('wr-week');
+  var opts = '';
+  for (var i = 1; i <= weeks; i++) {
+    opts += '<option value="' + i + '"' + (i === wrSelectedWeek ? ' selected' : '') + '>'
+          + 'Semana ' + i + (reviews[i] ? ' ✓' : ' — pendente') + '</option>';
+  }
+  sel.innerHTML = opts;
+  sel.onchange = function () { wrSelectedWeek = parseInt(sel.value, 10); renderWeeklyReview(); };
+
+  var r  = reviews[wrSelectedWeek] || {};
+  var d1 = (wrSelectedWeek - 1) * 7 + 1, d2 = wrSelectedWeek * 7;
+  var subEl = document.getElementById('wr-sub');
+  subEl.textContent = 'Semana ' + wrSelectedWeek + ' · dias ' + d1 + '–' + d2 + ' · ' + (reviews[wrSelectedWeek] ? 'salva' : 'pendente');
+  subEl.className = 'wr-sub' + (reviews[wrSelectedWeek] ? '' : ' pending');
+
+  document.getElementById('wr-wins').value     = r.wins || '';
+  document.getElementById('wr-friction').value = r.friction || '';
+  document.getElementById('wr-focus').value    = r.focus || '';
+  document.getElementById('wr-status').textContent = reviews[wrSelectedWeek] ? 'Revisão salva' : 'Ainda não revisada';
+
+  var scoreEl = document.getElementById('wr-score');
+  scoreEl.innerHTML = [1, 2, 3, 4, 5].map(function (n) {
+    return '<button type="button" data-n="' + n + '"' + (r.score === n ? ' class="on"' : '') + '>' + n + '</button>';
+  }).join('');
+  scoreEl.querySelectorAll('button').forEach(function (b) {
+    b.onclick = function () {
+      scoreEl.querySelectorAll('button').forEach(function (x) { x.classList.remove('on'); });
+      b.classList.add('on');
+    };
+  });
+
+  document.getElementById('wr-save').onclick = function () {
+    var onBtn  = scoreEl.querySelector('button.on');
+    var review = {
+      wins:     document.getElementById('wr-wins').value.trim(),
+      friction: document.getElementById('wr-friction').value.trim(),
+      focus:    document.getElementById('wr-focus').value.trim(),
+      score:    onBtn ? parseInt(onBtn.getAttribute('data-n'), 10) : null
+    };
+    if (!review.wins && !review.friction && !review.focus && review.score == null) {
+      showToast('Escreva algo antes de salvar.'); return;
+    }
+    Store.saveWeeklyReview(wrSelectedWeek, review);
+    showToast('Revisão da semana ' + wrSelectedWeek + ' salva ✓');
+    renderWeeklyReview();
+  };
 }
 
 /* ── LOAD DAY INTO EDITOR ── */

@@ -15,7 +15,7 @@
        gravação para o Supabase em segundo plano.
 
    Espelho localStorage:  p90_cache  → { meta, currentDay, habits,
-                                         journal, achievements }
+                                         journal, weeklyReviews, achievements }
 ═══════════════════════════════════════════════ */
 
 const Store = (() => {
@@ -28,11 +28,12 @@ const Store = (() => {
   ────────────────────────────────────────── */
   function _emptyCache() {
     return {
-      meta:         { totalDays: DEFAULT_TOTAL_DAYS },
-      currentDay:   null,
-      habits:       [],
-      journal:      {},
-      achievements: {},
+      meta:          { totalDays: DEFAULT_TOTAL_DAYS },
+      currentDay:    null,
+      habits:        [],
+      journal:       {},
+      weeklyReviews: {},
+      achievements:  {},
     };
   }
 
@@ -73,6 +74,10 @@ const Store = (() => {
     if (data.journal && typeof data.journal === 'object') {
       Object.keys(cache.journal).forEach(k => delete cache.journal[k]);
       Object.assign(cache.journal, data.journal);
+    }
+    if (data.weeklyReviews && typeof data.weeklyReviews === 'object') {
+      Object.keys(cache.weeklyReviews).forEach(k => delete cache.weeklyReviews[k]);
+      Object.assign(cache.weeklyReviews, data.weeklyReviews);
     }
     if (data.achievements && typeof data.achievements === 'object') {
       Object.keys(cache.achievements).forEach(k => delete cache.achievements[k]);
@@ -482,6 +487,26 @@ const Store = (() => {
   }
 
   /* ──────────────────────────────────────────
+     REVISÃO SEMANAL
+  ────────────────────────────────────────── */
+  function getWeeklyReviews() { return cache.weeklyReviews; }
+  function getWeeklyReview(weekNum) { return cache.weeklyReviews[weekNum] || null; }
+
+  function saveWeeklyReview(weekNum, review) {
+    cache.weeklyReviews[weekNum] = review;
+    _saveMirror();
+    _push(async () => {
+      const r = review || {};
+      const { error } = await window.sb.from('weekly_reviews').upsert({
+        user_id: _uid, week_num: Number(weekNum),
+        wins: r.wins ?? null, friction: r.friction ?? null,
+        focus: r.focus ?? null, score: r.score ?? null,
+      }, { onConflict: 'user_id,week_num' });
+      if (error) throw error;
+    });
+  }
+
+  /* ──────────────────────────────────────────
      CONQUISTAS
   ────────────────────────────────────────── */
   function getAchievements() { return cache.achievements; }
@@ -589,7 +614,8 @@ const Store = (() => {
     return streak;
   }
 
-  function computeAchievementProgress(habits, journal, currentDay) {
+  function computeAchievementProgress(habits, journal, currentDay, weeklyReviews) {
+    weeklyReviews = weeklyReviews || {};
     const active = habits.filter(h => !h.paused);
 
     // As conquistas ligadas a um hábito específico agora casam pela CHAVE
@@ -652,6 +678,9 @@ const Store = (() => {
       journal7:     journalStreak,
       journal30:    journalEntries,
       diary_streak: journalStreak,
+      first_review:    Math.min(1, Object.keys(weeklyReviews).length),
+      weekly_reviewer: Object.keys(weeklyReviews).length,
+      weekly_all:      Object.keys(weeklyReviews).length,
       comeback:     hasComeback(),
       discipline:   perfStreak,
       all5:         allDoneCount,
@@ -702,6 +731,7 @@ const Store = (() => {
     // dados
     getHabits, saveHabits,
     getJournal, saveJournal, getJournalEntry, saveJournalEntry,
+    getWeeklyReviews, getWeeklyReview, saveWeeklyReview,
     getAchievements, saveAchievements, unlockAchievement, markAchievementSeen,
     // computed
     habitVal, scheduledOn, dayCompletionPct, maxStreak, countDays,
