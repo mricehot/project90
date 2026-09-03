@@ -659,6 +659,39 @@ const Store = (() => {
   }
 
   /* ──────────────────────────────────────────
+     XP / NÍVEIS POR PILAR
+     Cada hábito-dia concluído vale XP (done=10, partial=5), acumulado por
+     pilar (h.pillar). Custo do nível L = 50·L, então o XP mínimo para chegar
+     ao nível L é 25·L·(L−1). Nível geral = soma dos 4 pilares.
+  ────────────────────────────────────────── */
+  const XP_DONE = 10, XP_PARTIAL = 5;
+
+  function _wrapLevel(xp) {
+    let level = 1;
+    while (25 * (level + 1) * level <= xp) level++;
+    const floor = 25 * level * (level - 1);
+    const need  = 50 * level;                 // 25·(L+1)·L − 25·L·(L−1)
+    return { xp, level, into: xp - floor, need };
+  }
+
+  function computeLevels(habits, currentDay) {
+    const per = {};
+    habits.filter(h => !h.paused).forEach(h => {
+      const p = h.pillar || 'Outros';
+      if (per[p] == null) per[p] = 0;
+      for (let i = 0; i < currentDay; i++) {
+        const v = habitVal(h, i);
+        if (v === 1) per[p] += XP_DONE;
+        else if (v === 0.5) per[p] += XP_PARTIAL;
+      }
+    });
+    const pillars = {};
+    let totalXp = 0;
+    Object.keys(per).forEach(p => { pillars[p] = _wrapLevel(per[p]); totalXp += per[p]; });
+    return { pillars, total: _wrapLevel(totalXp) };
+  }
+
+  /* ──────────────────────────────────────────
      PUBLIC API
   ────────────────────────────────────────── */
   return {
@@ -672,7 +705,7 @@ const Store = (() => {
     getAchievements, saveAchievements, unlockAchievement, markAchievementSeen,
     // computed
     habitVal, scheduledOn, dayCompletionPct, maxStreak, countDays,
-    allHabitsDone, currentStreak, computeAchievementProgress,
+    allHabitsDone, currentStreak, computeAchievementProgress, computeLevels,
   };
 
 })();
