@@ -137,7 +137,7 @@ body {
 .ptab.active { background: var(--white); color: var(--bg); border-color: var(--white); }
 
 /* ── MAIN ── */
-.met-main { padding: 32px 36px; overflow-y: auto; display: flex; flex-direction: column; gap: 28px; }
+.met-main { padding: 32px 36px; overflow-y: auto; display: flex; flex-direction: column; gap: 28px; max-width: 1160px; margin-inline: auto; }
 
 /* ── CHART WRAPS ── */
 .chart-wrap    { position: relative; width: 100%; height: 180px; }
@@ -277,39 +277,20 @@ body {
       </div>
     </div>
 
-    <!-- HIDRATAÇÃO + CALENDÁRIO -->
-    <div class="g2">
-
-      <div class="card">
-        <div class="card-hd">
-          <span class="card-title">Hidratação</span>
-          <span class="card-action" id="wm-today-lbl">—</span>
-        </div>
-        <div style="font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--mid);margin:2px 0 12px">Últimos 7 dias — "Beber água"</div>
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap">
-          <div style="display:flex;gap:7px" id="wm-week"></div>
-          <div style="display:flex;gap:20px">
-            <div><span style="font-family:'Bebas Neue',sans-serif;font-size:20px" id="wm-hit">—</span><span style="font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--mid);margin-left:6px">/7 na meta</span></div>
-            <div><span style="font-family:'Bebas Neue',sans-serif;font-size:20px" id="wm-streak">—</span><span style="font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--mid);margin-left:6px">streak</span></div>
-          </div>
-        </div>
+    <!-- CALENDÁRIO -->
+    <div class="card">
+      <div class="card-hd">
+        <span class="card-title">Calendário — 90 dias</span>
+        <span class="card-action" id="hm-pct">—</span>
       </div>
-
-      <div class="card">
-        <div class="card-hd">
-          <span class="card-title">Calendário — 90 dias</span>
-          <span class="card-action" id="hm-pct">—</span>
-        </div>
-        <div class="hm-labels" id="hm-labels"></div>
-        <div class="hm-grid" id="hm-grid"></div>
-        <div class="hm-legend">
-          <div class="leg-item"><div class="leg-dot" style="background:var(--white)"></div>Perfeito</div>
-          <div class="leg-item"><div class="leg-dot" style="background:rgba(245,245,240,0.38)"></div>Parcial</div>
-          <div class="leg-item"><div class="leg-dot" style="background:rgba(245,245,240,0.12)"></div>Falhou</div>
-          <div class="leg-item"><div class="leg-dot" style="background:var(--surface2);border:1px solid var(--border)"></div>Futuro</div>
-        </div>
+      <div class="hm-labels" id="hm-labels"></div>
+      <div class="hm-grid" id="hm-grid"></div>
+      <div class="hm-legend">
+        <div class="leg-item"><div class="leg-dot" style="background:var(--white)"></div>Perfeito</div>
+        <div class="leg-item"><div class="leg-dot" style="background:rgba(245,245,240,0.38)"></div>Parcial</div>
+        <div class="leg-item"><div class="leg-dot" style="background:rgba(245,245,240,0.12)"></div>Falhou</div>
+        <div class="leg-item"><div class="leg-dot" style="background:var(--surface2);border:1px solid var(--border)"></div>Futuro</div>
       </div>
-
     </div>
 
     <!-- EVOLUÇÃO + PILARES -->
@@ -674,54 +655,11 @@ function renderRadials(){
   }).join('');
 }
 
-/* ══ HIDRATAÇÃO — MÉTRICAS (hábito fixo beber_agua) ══ */
-function renderHydration(){
-  var DAYS_PT = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
-  var water   = Store.getHabits().find(function(h){ return h.coreKey === 'beber_agua'; });
-  var curDay  = Store.getCurrentDay();
-
-  var last7 = [];
-  for (var k = 6; k >= 0; k--) {
-    var dayIdx = curDay - 1 - k;
-    last7.push(!!(water && dayIdx >= 0 && Store.habitVal(water, dayIdx) === 1));
-  }
-  var hitCount = last7.filter(Boolean).length;
-  var todayHit = last7[6];
-
-  var curStreak = 0;
-  if (water) for (var i = curDay - 1; i >= 0; i--) { if (Store.habitVal(water, i) === 1) curStreak++; else break; }
-
-  var lbl = document.getElementById('wm-today-lbl');
-  if (lbl) lbl.textContent = todayHit ? '✓ meta batida hoje' : 'meta pendente hoje';
-
-  var weekEl = document.getElementById('wm-week');
-  if (weekEl) {
-    var today = new Date();
-    weekEl.innerHTML = last7.map(function(hit, i){
-      var isToday = i === 6;
-      var d = new Date(today); d.setDate(d.getDate() - 6 + i);
-      var box = 'width:14px;height:14px;border:1px solid '
-        + (hit ? 'rgba(147,197,253,.5)' : 'var(--border)')
-        + ';background:' + (hit ? 'rgba(147,197,253,.85)' : 'transparent') + ';'
-        + (isToday ? 'outline:1px solid rgba(147,197,253,.55);outline-offset:1px;' : '');
-      return '<div style="display:flex;flex-direction:column;align-items:center;gap:5px">'
-        + '<div style="' + box + '"></div>'
-        + '<span style="font-size:8px;letter-spacing:.04em;color:' + (isToday ? 'var(--white,#f5f5f0)' : 'var(--mid,#555)') + '">'
-        + (isToday ? 'Hj' : DAYS_PT[d.getDay()]) + '</span></div>';
-    }).join('');
-  }
-
-  var hitEl = document.getElementById('wm-hit');   if (hitEl) hitEl.textContent = hitCount;
-  var stEl  = document.getElementById('wm-streak'); if (stEl)  stEl.textContent = curStreak + 'd';
-}
-renderHydration();
-
 window.addEventListener('p90:synced', function () {
   DAY = Store.getCurrentDay();
   DAYS = Store.getTotalDays();
   habits = getActiveHabits().map(toMetricHabit);
   init();
-  renderHydration();
 });
 init();
 </script>

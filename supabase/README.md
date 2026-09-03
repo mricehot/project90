@@ -41,12 +41,10 @@ Os scripts criam:
 | `unlock_achievement(id, day)` / `mark_achievement_seen(id)` | conquistas |
 | `app_bootstrap()` | devolve todo o estado do usuário num JSON só (usado no load) |
 
-> `0003` remove o módulo de água dedicado (`water_config`, `water_logs`,
-> `add_water`, `reset_water`). "Beber água" virou o hábito fixo `beber_agua`
-> (meta no campo objetivo, marca diária done/miss). Os achievements de
-> Hidratação viram streaks desse hábito: `daily_goal` (1º dia), `week_hydrated`
-> (7), `hydro_month` (30), `hydro_streak` (60). `first_glass` e `two_liters`
-> saíram.
+> `0003` removeu o módulo de água dedicado (`water_config`, `water_logs`,
+> `add_water`, `reset_water`). "Beber água" é apenas um hábito fixo comum
+> (`beber_agua`, pilar Corpo). Não há mais categoria/feature de "Hidratação"
+> no app.
 
 ## 3. Ativar o login com Google
 
@@ -99,9 +97,9 @@ podem ser excluídos, só pausados.
 
 ## Pendências conhecidas
 
-- **Água** virou o hábito fixo `beber_agua` (migration `0003`). O contador de
-  copos e as tabelas `water_*` foram removidos. CSS morto de `.water-overlay` /
-  `.wm-*` / `.cup` ainda está nas páginas (inofensivo) — pode limpar depois.
+- **Hidratação** foi totalmente removida do app: sem widget de copos, sem card
+  em Métricas, sem categoria de achievements. Sobrou só o hábito fixo comum
+  `beber_agua` ("Beber água", pilar Corpo).
 - **Diário** virou o hábito fixo `escrever_diario` (migration `0004`, pilar
   Mente). O histórico dele não é marcado à mão: `Store._reconcileJournalHabit()`
   deriva de `journal_entries` (dia com entrada = `'done'`) no bootstrap e a cada
