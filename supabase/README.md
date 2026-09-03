@@ -16,6 +16,7 @@ Dashboard → **SQL Editor** → **New query** → rode os arquivos **na ordem**
 2. `supabase/migrations/0002_core_habits.sql` → **Run**
 3. `supabase/migrations/0003_water_as_habit.sql` → **Run**
 4. `supabase/migrations/0004_journal_habit.sql` → **Run**
+5. `supabase/migrations/0005_reset_progress.sql` → **Run**
 
 **Opção B — CLI:**
 ```bash
@@ -39,6 +40,7 @@ Os scripts criam:
 | `challenge_day()` | dia atual do desafio (1-based, limitado ao total) |
 | `set_habit_status(habit_id, day_index, status)` | marca um dia e recalcula `streak`/`max_streak` |
 | `unlock_achievement(id, day)` / `mark_achievement_seen(id)` | conquistas |
+| `reset_progress()` | apaga hábitos + diário + conquistas do usuário, zera o `challenge_meta` e re-semeia os fixos (botão "Resetar progresso" na sidebar) |
 | `app_bootstrap()` | devolve todo o estado do usuário num JSON só (usado no load) |
 
 > `0003` removeu o módulo de água dedicado (`water_config`, `water_logs`,
