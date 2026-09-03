@@ -62,6 +62,7 @@ const Store = (() => {
     if (data.meta) {
       cache.meta.startDate = data.meta.startDate || cache.meta.startDate;
       cache.meta.totalDays = data.meta.totalDays || DEFAULT_TOTAL_DAYS;
+      cache.meta.timezone  = data.meta.timezone || cache.meta.timezone || 'UTC';
     }
     if (data.currentDay) cache.currentDay = data.currentDay;
 
@@ -238,12 +239,14 @@ const Store = (() => {
     });
   }
 
-  // Recalcula streak (corrida de 'done' terminando no último dia) e maxStreak
-  // (nunca diminui) a partir do array — mesma regra do set_habit_status no
-  // Postgres. Devolve true se mudou algo.
+  // Recalcula streak (corrida de 'done') e maxStreak (nunca diminui) a partir
+  // do array. Dias fora da frequência do hábito são ignorados — não quebram
+  // nem contam. Devolve true se mudou algo.
   function _recalcStreak(h) {
+    const base = (h.createdDay || 1) - 1;
     let cur = 0, best = 0;
     for (let i = 0; i < h.history.length; i++) {
+      if (!scheduledOn(h, base + i)) continue;
       if (h.history[i] === 'done') { cur++; if (cur > best) best = cur; }
       else cur = 0;
     }
@@ -300,6 +303,22 @@ const Store = (() => {
     });
   }
 
+  // Envia o fuso do navegador para o servidor quando ele difere do gravado.
+  // challenge_day() no Postgres passa a calcular o dia no fuso do usuário; o
+  // valor certo chega no próximo load. Enquanto isso, zeramos cache.currentDay
+  // para getCurrentDay() usar o cálculo local (que já é no fuso do navegador).
+  function _syncTimezone() {
+    let tz = '';
+    try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch (e) {}
+    if (!tz || tz === cache.meta.timezone) return;
+    cache.meta.timezone = tz;
+    cache.currentDay = null;
+    _push(async () => {
+      const { error } = await window.sb.rpc('set_timezone', { p_tz: tz });
+      if (error) throw error;
+    });
+  }
+
   function bootstrap() {
     if (_readyPromise) return _readyPromise;
 
@@ -328,6 +347,7 @@ const Store = (() => {
       }
 
       _applyServerData(data);
+      _syncTimezone();
       const dirty = _rollForward();
       const dirty2 = _reconcileJournalHabit();
       _saveMirror();
@@ -520,8 +540,19 @@ const Store = (() => {
     return s === 'done' ? 1 : s === 'partial' ? 0.5 : 0;
   }
 
+  // Um hábito só conta num dado dia se aquele dia da semana está na sua
+  // frequência. freq: 0=Seg..6=Dom; Date.getDay(): 0=Dom..6=Sáb.
+  // freq vazia ou com os 7 dias = todo dia.
+  function scheduledOn(h, dayIdx) {
+    const f = h.freq;
+    if (!Array.isArray(f) || f.length === 0 || f.length >= 7) return true;
+    const jsDay   = (getStartDate().getDay() + dayIdx) % 7;   // 0=Dom..6=Sáb
+    const freqIdx = jsDay === 0 ? 6 : jsDay - 1;              // 0=Seg..6=Dom
+    return f.includes(freqIdx);
+  }
+
   function dayCompletionPct(habits, dayIdx) {
-    const active = habits.filter(h => !h.paused && h.createdDay - 1 <= dayIdx);
+    const active = habits.filter(h => !h.paused && h.createdDay - 1 <= dayIdx && scheduledOn(h, dayIdx));
     if (!active.length) return 0;
     const sum = active.reduce((acc, h) => acc + habitVal(h, dayIdx), 0);
     return Math.round((sum / active.length) * 100);
@@ -542,8 +573,8 @@ const Store = (() => {
   }
 
   function allHabitsDone(habits, dayIdx) {
-    const active = habits.filter(h => !h.paused && h.createdDay - 1 <= dayIdx);
-    return active.length > 0 && active.every(h => habitVal(h, dayIdx) === 1);
+    const due = habits.filter(h => !h.paused && h.createdDay - 1 <= dayIdx && scheduledOn(h, dayIdx));
+    return due.length > 0 && due.every(h => habitVal(h, dayIdx) === 1);
   }
 
   function currentStreak(habits, currentDay) {
@@ -551,8 +582,9 @@ const Store = (() => {
     if (!active.length) return 0;
     let streak = 0;
     for (let i = currentDay - 1; i >= 0; i--) {
-      const anyDone = active.some(h => habitVal(h, i) > 0);
-      if (anyDone) streak++; else break;
+      const due = active.filter(h => scheduledOn(h, i));
+      if (!due.length) continue;                       // dia de descanso: não quebra a streak
+      if (due.some(h => habitVal(h, i) > 0)) streak++; else break;
     }
     return streak;
   }
@@ -566,7 +598,12 @@ const Store = (() => {
     function streakForKey(key) {
       const h = _core(key);
       if (!h) return 0;
-      return maxStreak(currentDay, i => habitVal(h, i) === 1);
+      let cur = 0, best = 0;
+      for (let i = 0; i < currentDay; i++) {
+        if (!scheduledOn(h, i)) continue;            // dia fora da frequência: ignora
+        if (habitVal(h, i) === 1) { cur++; if (cur > best) best = cur; } else cur = 0;
+      }
+      return best;
     }
     function countForKey(key) {
       const h = _core(key);
@@ -634,7 +671,7 @@ const Store = (() => {
     getJournal, saveJournal, getJournalEntry, saveJournalEntry,
     getAchievements, saveAchievements, unlockAchievement, markAchievementSeen,
     // computed
-    habitVal, dayCompletionPct, maxStreak, countDays,
+    habitVal, scheduledOn, dayCompletionPct, maxStreak, countDays,
     allHabitsDone, currentStreak, computeAchievementProgress,
   };
 
