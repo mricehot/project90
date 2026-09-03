@@ -18,6 +18,7 @@ Dashboard → **SQL Editor** → **New query** → rode os arquivos **na ordem**
 4. `supabase/migrations/0004_journal_habit.sql` → **Run**
 5. `supabase/migrations/0005_reset_progress.sql` → **Run**
 6. `supabase/migrations/0006_bible_habit.sql` → **Run**
+7. `supabase/migrations/0007_timezone.sql` → **Run**
 
 **Opção B — CLI:**
 ```bash
@@ -38,7 +39,8 @@ Os scripts criam:
 | **RLS** | ligado em tudo — cada usuário só vê as próprias linhas |
 | `handle_new_user()` | trigger em `auth.users`: cria profile + meta + hábitos fixos |
 | `seed_core_habits(user)` | semeia os hábitos fixos que faltam (idempotente) |
-| `challenge_day()` | dia atual do desafio (1-based, limitado ao total) |
+| `challenge_day()` | dia atual do desafio (1-based, limitado ao total), **no fuso do usuário** (`challenge_meta.timezone`) |
+| `set_timezone(tz)` | grava o fuso do usuário; ancora `start_date` na data local se ainda no dia 1 (o cliente envia via `js/store.js` no load) |
 | `set_habit_status(habit_id, day_index, status)` | marca um dia e recalcula `streak`/`max_streak` |
 | `unlock_achievement(id, day)` / `mark_achievement_seen(id)` | conquistas |
 | `reset_progress()` | apaga hábitos + diário + conquistas do usuário, zera o `challenge_meta` e re-semeia os fixos (botão "Resetar progresso" na sidebar) |
@@ -100,6 +102,15 @@ podem ser excluídos, só pausados.
 
 ## Pendências conhecidas
 
+- **Frequência dos hábitos** (`0007` + `js/store.js`): dias fora da `freq` de um
+  hábito (ex.: exercício só seg–sex) não contam mais contra ele — `dayCompletionPct`,
+  "dia perfeito" (`allHabitsDone`), streak do hábito (`_recalcStreak`) e streak
+  geral (`currentStreak`) ignoram esses dias. Os 8 fixos são diários (`freq` = 7),
+  então nada muda para eles; só afeta hábitos que o usuário deixou parciais.
+- **Fuso horário** (`0007`): `challenge_day()` calcula o dia no fuso do usuário
+  (`challenge_meta.timezone`, enviado pelo cliente via `set_timezone` no load).
+  Enquanto o servidor não tem o valor certo, `Store.getCurrentDay()` cai no
+  cálculo local do navegador.
 - **Hidratação** foi totalmente removida do app: sem widget de copos, sem card
   em Métricas, sem categoria de achievements. Sobrou só o hábito fixo comum
   `beber_agua` ("Beber água", pilar Corpo).

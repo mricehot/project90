@@ -553,8 +553,11 @@ function freqLabel(freq) {
 // set_habit_status / Store._rollForward): streak = corrida de 'done'
 // terminando hoje; maxStreak nunca diminui.
 function recalcStreak(h) {
+  // dias fora da frequência do hábito são ignorados (não quebram nem contam)
+  const base = (h.createdDay || 1) - 1;
   let cur = 0, best = 0;
   for (let i = 0; i < h.history.length; i++) {
+    if (!Store.scheduledOn(h, base + i)) continue;
     if (h.history[i] === 'done') { cur++; if (cur > best) best = cur; }
     else cur = 0;
   }
