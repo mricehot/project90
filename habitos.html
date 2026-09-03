@@ -114,9 +114,9 @@ body {
 }
 .section-sep::before, .section-sep::after { content: ''; flex: 1; height: 1px; background: var(--border); }
 
-/* ── PILLAR GROUPS ── */
-.pillar-group { margin-bottom: 26px; }
-.pillar-group:last-child { margin-bottom: 0; }
+/* ── PILLAR GROUPS — 2×2 quadrantes ── */
+#active-list { display: grid; grid-template-columns: 1fr 1fr; gap: 24px 24px; align-items: start; }
+.pillar-group { min-width: 0; }
 .pillar-hd { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
 .pillar-hd-name { font-family: 'Bebas Neue', sans-serif; font-size: 15px; letter-spacing: 0.12em; color: var(--white); white-space: nowrap; }
 .pillar-hd-count { font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--mid); white-space: nowrap; }
@@ -124,7 +124,7 @@ body {
 .pillar-hd-bar > span { display: block; height: 100%; background: var(--white); transition: width 0.8s cubic-bezier(0.16,1,0.3,1); }
 
 /* ── EMPTY STATE ── */
-.empty-state { text-align: center; padding: 64px 32px; border: 1px dashed rgba(245,245,240,0.12); background: var(--surface); }
+.empty-state { grid-column: 1 / -1; text-align: center; padding: 64px 32px; border: 1px dashed rgba(245,245,240,0.12); background: var(--surface); }
 .empty-icon { font-size: 32px; margin-bottom: 16px; opacity: 0.4; }
 .empty-title { font-family: 'DM Serif Display', serif; font-size: 20px; font-weight: 400; margin-bottom: 8px; opacity: 0.6; }
 .empty-sub { font-size: 12px; color: var(--mid); margin-bottom: 24px; line-height: 1.8; }
@@ -181,6 +181,9 @@ body {
 .modal-btn.ghost:hover { color: var(--white); }
 
 /* ── RESPONSIVE ── */
+@media (max-width: 1100px) {
+  #active-list { grid-template-columns: 1fr; }
+}
 @media (max-width: 900px) {
   body { overflow: auto; }
   .app { grid-template-columns: 1fr; }
