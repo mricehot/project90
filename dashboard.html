@@ -112,6 +112,19 @@ body { overflow: hidden; }
 
 .chart-wrap { position: relative; width: 100%; height: 180px; }
 
+/* ── FRASE DE EFEITO (fora de qualquer box) ── */
+.dash-quote {
+  font-family: 'DM Serif Display', serif;
+  font-style: italic;
+  font-size: clamp(15px, 1.7vw, 21px);
+  line-height: 1.5;
+  color: var(--white);
+  opacity: 0.92;
+  padding: 2px 0 2px 18px;
+  border-left: 2px solid var(--border2);
+  margin: 4px 0;
+}
+
 /* ── RESPONSIVE ── */
 @media (max-width: 900px) {
   body { overflow: auto; }
@@ -194,6 +207,9 @@ body { overflow: hidden; }
       <div class="stat-card"><div class="stat-lbl">Hábitos hoje</div><div class="stat-val" id="sc-today">3/5</div><div class="stat-delta dn" id="sc-today-msg">↓ 2 pendentes</div></div>
     </div>
 
+    <!-- FRASE DO DIA -->
+    <div class="dash-quote" id="dash-quote"></div>
+
     <!-- HEATMAP + HÁBITOS HOJE -->
     <div class="g21">
 
@@ -252,6 +268,7 @@ body { overflow: hidden; }
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/supabase.js"></script>
 <script src="js/store.js"></script>
+<script src="js/quotes.js"></script>
 <script>
 const DAY  = Store.getCurrentDay();
 const DAYS = Store.getTotalDays();
@@ -614,6 +631,14 @@ document.addEventListener('mousemove',e=>{ if(tipOn){tip.style.left=(e.clientX+1
 
 window.addEventListener('p90:synced', function () { refreshFromRealHabits(); init(); });
 init();
+
+/* ── FRASE DE EFEITO: sorteia uma a cada load ── */
+(function () {
+  const el = document.getElementById('dash-quote');
+  const list = window.P90_QUOTES;
+  if (!el || !Array.isArray(list) || !list.length) return;
+  el.textContent = list[Math.floor(Math.random() * list.length)];
+})();
 </script>
 <script src="js/ui.js"></script>
 </body>
