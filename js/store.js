@@ -150,6 +150,94 @@ const Store = (() => {
     });
   }
 
+  // Apaga todo o progresso e recomeça do zero (chama a RPC reset_progress).
+  async function resetProgress() {
+    try { await _readyPromise; } catch (e) {}
+    if (!window.sb || !_uid) throw new Error('sem sessão');
+    const { error } = await window.sb.rpc('reset_progress');
+    if (error) throw error;
+    try { localStorage.removeItem(MIRROR_KEY); } catch (e) {}
+    location.reload();
+  }
+
+  // Injeta o botão "Resetar progresso" na sidebar e o modal de confirmação
+  // (estilo da página, via CSS vars). Não precisa mexer no HTML das páginas.
+  function _wireReset() {
+    const bottom = document.querySelector('.sb-bottom');
+    if (!bottom || bottom.querySelector('.sb-reset')) return;
+
+    const btn = document.createElement('a');
+    btn.className = 'sb-reset';
+    btn.textContent = '↺ Resetar progresso';
+    btn.style.cssText =
+      'display:flex;align-items:center;gap:8px;cursor:pointer;margin-top:10px;' +
+      'font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--mid);' +
+      'transition:color .2s;text-decoration:none;';
+    btn.addEventListener('mouseover', () => { btn.style.color = 'var(--red)'; });
+    btn.addEventListener('mouseout',  () => { btn.style.color = 'var(--mid)'; });
+    btn.addEventListener('click', _openResetModal);
+    bottom.appendChild(btn);
+  }
+
+  function _openResetModal() {
+    if (document.getElementById('p90-reset-modal')) return;
+
+    const ov = document.createElement('div');
+    ov.id = 'p90-reset-modal';
+    ov.style.cssText =
+      'position:fixed;inset:0;z-index:2147483000;background:rgba(8,8,8,.85);' +
+      'display:flex;align-items:center;justify-content:center;padding:24px;' +
+      'font-family:\'DM Mono\',monospace;';
+    ov.innerHTML =
+      '<div style="background:var(--surface,#111);border:1px solid var(--border2,rgba(245,245,240,.16));' +
+      'max-width:440px;width:100%;padding:36px 40px;">' +
+        '<div style="font-family:\'DM Serif Display\',serif;font-size:24px;color:var(--white,#f5f5f0);margin-bottom:16px;">' +
+          'Resetar tudo?' +
+        '</div>' +
+        '<p style="font-size:12px;line-height:1.9;color:var(--mid,#999);margin-bottom:8px;">' +
+          'Isso apaga <b style="color:var(--white,#f5f5f0)">todo o seu progresso</b> — hábitos, ' +
+          'histórico, entradas do diário e conquistas — e reinicia o desafio no dia 1. ' +
+          'Os hábitos fixos voltam ao estado inicial.' +
+        '</p>' +
+        '<p style="font-size:11px;letter-spacing:.06em;color:var(--red,#fca5a5);margin-bottom:24px;">' +
+          'Esta ação não pode ser desfeita.' +
+        '</p>' +
+        '<div id="p90-reset-err" style="font-size:11px;color:var(--red,#fca5a5);margin-bottom:14px;display:none;"></div>' +
+        '<div style="display:flex;gap:10px;">' +
+          '<button id="p90-reset-cancel" style="flex:1;padding:12px;font-family:inherit;font-size:11px;' +
+            'letter-spacing:.14em;text-transform:uppercase;cursor:pointer;background:none;' +
+            'border:1px solid var(--border2,rgba(245,245,240,.16));color:var(--mid,#999);">Cancelar</button>' +
+          '<button id="p90-reset-confirm" style="flex:1;padding:12px;font-family:inherit;font-size:11px;' +
+            'letter-spacing:.14em;text-transform:uppercase;cursor:pointer;border:none;' +
+            'background:var(--red,#fca5a5);color:#080808;">Sim, apagar tudo</button>' +
+        '</div>' +
+      '</div>';
+
+    function close() { ov.remove(); document.removeEventListener('keydown', onKey); }
+    function onKey(e) { if (e.key === 'Escape') close(); }
+
+    ov.addEventListener('click', (e) => { if (e.target === ov) close(); });
+    document.addEventListener('keydown', onKey);
+    document.body.appendChild(ov);
+
+    ov.querySelector('#p90-reset-cancel').addEventListener('click', close);
+    const confirm = ov.querySelector('#p90-reset-confirm');
+    confirm.addEventListener('click', async () => {
+      confirm.disabled = true;
+      confirm.textContent = 'Apagando…';
+      try {
+        await resetProgress();
+      } catch (err) {
+        console.error('[Project 90] reset_progress falhou:', err);
+        confirm.disabled = false;
+        confirm.textContent = 'Sim, apagar tudo';
+        const el = ov.querySelector('#p90-reset-err');
+        el.textContent = 'Não foi possível resetar agora. Tente de novo.';
+        el.style.display = 'block';
+      }
+    });
+  }
+
   // Recalcula streak (corrida de 'done' terminando no último dia) e maxStreak
   // (nunca diminui) a partir do array — mesma regra do set_habit_status no
   // Postgres. Devolve true se mudou algo.
@@ -225,10 +313,11 @@ const Store = (() => {
       if (!session) { _redirectToLogin(); return; }
       _uid = session.user.id;
 
+      const wireSidebar = () => { _wireLogout(); _wireReset(); };
       if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', _wireLogout, { once: true });
+        document.addEventListener('DOMContentLoaded', wireSidebar, { once: true });
       } else {
-        _wireLogout();
+        wireSidebar();
       }
 
       const { data, error } = await window.sb.rpc('app_bootstrap');
@@ -536,7 +625,7 @@ const Store = (() => {
   ────────────────────────────────────────── */
   return {
     // ciclo de vida
-    bootstrap, isReady,
+    bootstrap, isReady, resetProgress,
     // meta
     getMeta, saveMeta, getTotalDays, getStartDate, getCurrentDay,
     // dados
