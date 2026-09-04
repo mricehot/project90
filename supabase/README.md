@@ -20,6 +20,7 @@ Dashboard → **SQL Editor** → **New query** → rode os arquivos **na ordem**
 6. `supabase/migrations/0006_bible_habit.sql` → **Run**
 7. `supabase/migrations/0007_timezone.sql` → **Run**
 8. `supabase/migrations/0008_weekly_review.sql` → **Run**
+9. `supabase/migrations/0009_vocabulary.sql` → **Run**
 
 **Opção B — CLI:**
 ```bash
@@ -38,6 +39,8 @@ Os scripts criam:
 | `journal_entries` | 1 entrada por dia do desafio |
 | `weekly_reviews` | 1 revisão por semana do desafio (`0008`): o que funcionou, o que ajustar, foco da semana seguinte, nota 1–5. Editável no `diario.html`. |
 | `achievements` | estado de desbloqueio por conquista |
+| `vocab_words` | palavras do vocabulário pessoal (`0009`): palavra, significado, exemplo, data. Id gerado pelo cliente, mesmo padrão de `habits.id`. Gerenciado em `vocabulario.html`. |
+| `vocab_quiz_stats` | placar acumulado do jogo "Testar meu vocabulário" (`0009`): rodadas jogadas, respostas certas/totais, maior sequência de acertos. 1 linha por usuário. |
 | **RLS** | ligado em tudo — cada usuário só vê as próprias linhas |
 | `handle_new_user()` | trigger em `auth.users`: cria profile + meta + hábitos fixos |
 | `seed_core_habits(user)` | semeia os hábitos fixos que faltam (idempotente) |
@@ -45,7 +48,7 @@ Os scripts criam:
 | `set_timezone(tz)` | grava o fuso do usuário; ancora `start_date` na data local se ainda no dia 1 (o cliente envia via `js/store.js` no load) |
 | `set_habit_status(habit_id, day_index, status)` | marca um dia e recalcula `streak`/`max_streak` |
 | `unlock_achievement(id, day)` / `mark_achievement_seen(id)` | conquistas |
-| `reset_progress()` | apaga hábitos + diário + conquistas do usuário, zera o `challenge_meta` e re-semeia os fixos (botão "Resetar progresso" na sidebar) |
+| `reset_progress()` | apaga hábitos + diário + revisões semanais + conquistas + vocabulário do usuário, zera o `challenge_meta` e re-semeia os fixos (botão "Resetar progresso" na sidebar) |
 | `app_bootstrap()` | devolve todo o estado do usuário num JSON só (usado no load) |
 
 > `0003` removeu o módulo de água dedicado (`water_config`, `water_logs`,
@@ -122,6 +125,12 @@ podem ser excluídos, só pausados.
   `saveJournal`/`saveJournalEntry`. Em `habitos.html` o check do hábito abre
   `diario.html`. Conquista nova: **Escritor diário** (`diary_streak`, 21 dias
   seguidos — `journalStreak` no cliente).
+- **Vocabulário** (`0009` + `vocabulario.html`): seção nova e independente do desafio de
+  90 dias — lista de palavras (palavra/significado/exemplo/data) com CRUD completo e o
+  jogo "Testar meu vocabulário" (3 alternativas, 2 erradas geradas a partir dos
+  significados das outras palavras cadastradas, com um banco de significados-fallback
+  genéricos para quando houver poucas palavras). Alimenta 7 conquistas novas na categoria
+  "Vocabulário". O botão "Resetar progresso" também apaga o vocabulário e o placar do jogo.
 - `Store.js` (raiz, com S maiúsculo) é a versão **antiga** só-localStorage e
   não é usada por nenhuma página (todas carregam `js/store.js`). Pode apagar.
 - **Rollover de dia** (resolvido no cliente): no bootstrap, `Store._rollForward()`

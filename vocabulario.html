@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Project 90 — Vocabulário</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/components.css">
+<script src="js/supabase-config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase.js"></script>
+<script src="js/store.js"></script>
+<style>
+
+/* ── MAIN ── */
+.voc-main { padding: 32px 36px; overflow-y: auto; display: flex; flex-direction: column; gap: 28px; }
+
+.topbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+.page-title { font-family: 'DM Serif Display', serif; font-size: 26px; font-weight: 400; display: flex; align-items: baseline; gap: 10px; }
+.page-title em { font-style: italic; opacity: 0.45; font-size: 22px; }
+
+/* ── STAT CARDS ── */
+.g4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+.stat-card { background: var(--surface); border: 1px solid var(--border); padding: 20px 22px; }
+.stat-lbl { font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--mid); margin-bottom: 8px; }
+.stat-val { font-family: 'Bebas Neue', sans-serif; font-size: 40px; line-height: 1; }
+.stat-sub { font-size: 10px; letter-spacing: 0.1em; color: var(--mid); margin-top: 6px; }
+
+/* ── QUIZ CTA BANNER ── */
+.quiz-cta {
+  background: var(--surface); border: 1px solid var(--border2);
+  padding: 24px 28px; display: flex; align-items: center; gap: 22px; flex-wrap: wrap;
+}
+.qc-icon { font-size: 30px; flex-shrink: 0; }
+.qc-body { flex: 1; min-width: 200px; }
+.qc-title { font-family: 'DM Serif Display', serif; font-size: 18px; font-weight: 400; margin-bottom: 4px; }
+.qc-title em { font-style: italic; opacity: 0.4; }
+.qc-sub { font-size: 11px; letter-spacing: 0.04em; color: var(--mid); line-height: 1.6; }
+.qc-btn {
+  padding: 14px 28px; background: var(--white); color: var(--bg); border: none;
+  font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase;
+  cursor: pointer; transition: opacity 0.2s, transform 0.15s; flex-shrink: 0;
+}
+.qc-btn:hover:not(:disabled) { opacity: 0.85; transform: translateY(-1px); }
+.qc-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+/* ── TOOLBAR ── */
+.voc-toolbar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.voc-search {
+  flex: 1; min-width: 200px; background: var(--surface2); border: 1px solid var(--border); color: var(--white);
+  font-family: 'DM Mono', monospace; font-weight: 300; font-size: 12px; letter-spacing: 0.03em;
+  padding: 11px 14px; outline: none; transition: border-color 0.2s;
+}
+.voc-search:focus { border-color: rgba(245,245,240,0.35); }
+.voc-search::placeholder { color: var(--mid); }
+.voc-sort {
+  background: var(--surface2); border: 1px solid var(--border); color: var(--white);
+  font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.03em;
+  padding: 11px 14px; outline: none; cursor: pointer; appearance: none;
+}
+.voc-count { font-size: 10px; letter-spacing: 0.1em; color: var(--mid); white-space: nowrap; }
+.voc-count span { color: var(--white); }
+
+/* ── WORD LIST ── */
+.word-list { display: flex; flex-direction: column; gap: 10px; }
+.word-card {
+  background: var(--surface); border: 1px solid var(--border);
+  padding: 18px 20px; display: flex; gap: 18px; align-items: flex-start;
+  transition: border-color 0.2s;
+}
+.word-card:hover { border-color: var(--border2); }
+.word-main { flex: 1; min-width: 0; }
+.word-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 7px; }
+.word-term { font-family: 'DM Serif Display', serif; font-size: 19px; font-weight: 400; word-break: break-word; }
+.word-date { font-size: 9px; letter-spacing: 0.1em; color: var(--mid); white-space: nowrap; }
+.word-meaning { font-size: 12px; letter-spacing: 0.02em; color: var(--white); line-height: 1.7; margin-bottom: 5px; }
+.word-example { font-size: 11px; letter-spacing: 0.02em; color: var(--mid); font-style: italic; line-height: 1.7; }
+.word-example::before { content: '"'; }
+.word-example::after { content: '"'; }
+.word-actions { display: flex; gap: 8px; flex-shrink: 0; }
+.word-btn {
+  width: 32px; height: 32px; border: 1px solid var(--border); background: none; color: var(--mid);
+  cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 13px;
+  transition: color 0.2s, border-color 0.2s;
+}
+.word-btn:hover { color: var(--white); border-color: var(--border2); }
+.word-btn.danger:hover { color: #fca5a5; border-color: rgba(252,165,165,0.4); }
+
+/* ── EMPTY STATE ── */
+.empty-state { text-align: center; padding: 64px 32px; border: 1px dashed rgba(245,245,240,0.12); background: var(--surface); }
+.empty-icon { font-size: 32px; margin-bottom: 16px; opacity: 0.4; }
+.empty-title { font-family: 'DM Serif Display', serif; font-size: 20px; font-weight: 400; margin-bottom: 8px; opacity: 0.6; }
+.empty-sub { font-size: 12px; color: var(--mid); margin-bottom: 24px; line-height: 1.8; }
+.btn-sm {
+  padding: 10px 20px; background: none; border: 1px solid var(--border2); color: var(--mid);
+  font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+  cursor: pointer; transition: color 0.2s, border-color 0.2s, background 0.2s;
+}
+.btn-sm:hover { border-color: rgba(245,245,240,0.3); color: var(--white); }
+.btn-sm.primary { background: var(--white); color: var(--bg); border-color: var(--white); }
+.btn-sm.primary:hover { background: rgba(245,245,240,0.88); color: var(--bg); }
+
+textarea.modal-input { resize: vertical; min-height: 60px; line-height: 1.6; }
+
+/* ── QUIZ OVERLAY ── */
+.quiz-overlay {
+  position: fixed; inset: 0; z-index: 500; background: rgba(8,8,8,0.94);
+  display: flex; align-items: center; justify-content: center; padding: 24px;
+  opacity: 0; pointer-events: none; transition: opacity 0.3s;
+}
+.quiz-overlay.show { opacity: 1; pointer-events: all; }
+.quiz-box {
+  max-width: 520px; width: 100%; background: var(--surface); border: 1px solid rgba(245,245,240,0.2);
+  padding: 40px 44px; transform: scale(0.95); transition: transform 0.35s cubic-bezier(0.16,1,0.3,1);
+}
+.quiz-overlay.show .quiz-box { transform: scale(1); }
+.quiz-topline { display: flex; justify-content: space-between; align-items: center; margin-bottom: 26px; }
+.quiz-eyebrow { font-size: 9px; letter-spacing: 0.24em; text-transform: uppercase; color: var(--mid); }
+.quiz-close { cursor: pointer; color: var(--mid); font-size: 16px; line-height: 1; transition: color 0.2s; }
+.quiz-close:hover { color: var(--white); }
+.quiz-word { font-family: 'DM Serif Display', serif; font-size: 32px; text-align: center; margin-bottom: 8px; word-break: break-word; }
+.quiz-prompt { text-align: center; font-size: 11px; letter-spacing: 0.08em; color: var(--mid); margin-bottom: 28px; }
+.quiz-opts { display: flex; flex-direction: column; gap: 10px; margin-bottom: 18px; }
+.quiz-opt {
+  text-align: left; padding: 14px 18px; background: var(--surface2); border: 1px solid var(--border);
+  color: var(--white); font-family: 'DM Mono', monospace; font-weight: 300; font-size: 12px; line-height: 1.6;
+  letter-spacing: 0.02em; cursor: pointer; transition: border-color 0.2s, background 0.2s, color 0.2s;
+}
+.quiz-opt:hover:not(.disabled) { border-color: rgba(245,245,240,0.35); }
+.quiz-opt.correct { border-color: #86efac; background: rgba(134,239,172,0.09); color: #86efac; }
+.quiz-opt.wrong { border-color: #fca5a5; background: rgba(252,165,165,0.09); color: #fca5a5; }
+.quiz-opt.disabled { cursor: default; }
+.quiz-feedback { text-align: center; font-size: 12px; letter-spacing: 0.04em; min-height: 18px; margin-bottom: 4px; }
+.quiz-feedback.ok { color: #86efac; }
+.quiz-feedback.no { color: #fca5a5; }
+.quiz-stats-row {
+  display: flex; justify-content: space-between; padding-top: 18px; margin-top: 14px;
+  border-top: 1px solid var(--border); font-size: 10px; letter-spacing: 0.1em; color: var(--mid);
+}
+.quiz-stats-row span { color: var(--white); }
+.quiz-next-btn {
+  width: 100%; margin-top: 20px; padding: 13px; background: var(--white); color: var(--bg); border: none;
+  font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase;
+  cursor: pointer; opacity: 0; pointer-events: none; transition: opacity 0.2s;
+}
+.quiz-next-btn.show { opacity: 1; pointer-events: all; }
+
+/* summary screen */
+.quiz-summary { text-align: center; }
+.qs-icon { font-size: 40px; margin-bottom: 18px; }
+.qs-title { font-family: 'DM Serif Display', serif; font-size: 24px; margin-bottom: 4px; }
+.qs-title em { font-style: italic; opacity: 0.45; }
+.qs-score { font-family: 'Bebas Neue', sans-serif; font-size: 56px; line-height: 1; margin: 14px 0 6px; }
+.qs-pct { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--mid); margin-bottom: 26px; }
+.qs-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 28px; }
+.qs-cell { border: 1px solid var(--border); padding: 12px 8px; }
+.qs-cell-val { font-family: 'Bebas Neue', sans-serif; font-size: 22px; }
+.qs-cell-lbl { font-size: 8px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--mid); margin-top: 3px; }
+.qs-actions { display: flex; gap: 10px; }
+.qs-actions .modal-btn { flex: 1; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 900px) {
+  body { overflow: auto; }
+  .app { grid-template-columns: 1fr; }
+  .sidebar { display: none; }
+  .voc-main { padding: 20px; }
+  .g4 { grid-template-columns: 1fr 1fr; }
+  .word-card { flex-direction: column; }
+  .word-actions { align-self: flex-end; }
+  .quiz-box { padding: 30px 24px; }
+}
+@media (max-width: 520px) {
+  .g4 { grid-template-columns: 1fr; }
+  .qs-grid { grid-template-columns: 1fr; }
+}
+
+.app,.voc-main{position:relative;z-index:1;}
+</style>
+</head>
+<body>
+
+<div id="cur"></div>
+<div id="cur-ring"></div>
+<div id="tip" class="tip"></div>
+<div class="toast" id="toast"></div>
+
+<div class="app">
+
+  <!-- ══ SIDEBAR ══ -->
+  <aside class="sidebar">
+    <div class="sb-logo">
+      <a href="index.html" class="sb-logomark">Project 90</a>
+      <div class="sb-logosub">Transformação pessoal</div>
+    </div>
+
+    <div class="sb-day">
+      <div class="sb-daynum" id="sb-daynum">34</div>
+      <div class="sb-daylbl">de 90 dias</div>
+      <div style="display:flex;justify-content:space-between;font-size:10px;letter-spacing:0.1em;color:var(--mid);margin-top:10px">
+        <span>Progresso</span><span id="sb-pct">38%</span>
+      </div>
+      <div class="sb-prog-bar-bg"><div class="sb-prog-bar-fill" id="sb-fill" style="width:0%"></div></div>
+      <div class="sb-prog-meta"><span id="sb-days-left">56 restantes</span><span id="sb-pct2">38%</span></div>
+    </div>
+
+    <nav class="sb-nav">
+      <a class="sb-item" href="dashboard.html"><span class="sb-item-icon">◈</span> Dashboard</a>
+      <a class="sb-item" href="habitos.html"><span class="sb-item-icon">◉</span> Hábitos</a>
+      <a class="sb-item" href="metricas.html"><span class="sb-item-icon">△</span> Métricas</a>
+      <a class="sb-item" href="diario.html"><span class="sb-item-icon">◻</span> Diário</a>
+      <a class="sb-item" href="conquistas.html"><span class="sb-item-icon">◆</span> Conquistas</a>
+      <a class="sb-item active" href="vocabulario.html"><span class="sb-item-icon">📚</span> Vocabulário</a>
+    </nav>
+
+    <div class="sb-bottom">
+      <div class="sb-streak">
+        <span class="sb-streak-icon">🔥</span>
+        <div>
+          <div class="sb-streak-val" id="sb-streak-val">12</div>
+          <div class="sb-streak-lbl">Dias seguidos</div>
+        </div>
+      </div>
+      <a href="login.html" class="sb-logout">← Sair</a>
+    </div>
+  </aside>
+
+  <!-- ══ MAIN ══ -->
+  <main class="voc-main">
+
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <div class="page-title">Vocabulário <em>pessoal.</em></div>
+      <button class="btn-sm primary" id="btn-new-word">+ Adicionar palavra</button>
+    </div>
+
+    <!-- STAT CARDS -->
+    <div class="g4">
+      <div class="stat-card">
+        <div class="stat-lbl">Palavras</div>
+        <div class="stat-val" id="sc-total">0</div>
+        <div class="stat-sub">cadastradas</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-lbl">Testes</div>
+        <div class="stat-val" id="sc-rounds">0</div>
+        <div class="stat-sub">rodadas jogadas</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-lbl">Aproveitamento</div>
+        <div class="stat-val" id="sc-pct">—</div>
+        <div class="stat-sub" id="sc-pct-sub">0 acertos / 0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-lbl">Maior sequência</div>
+        <div class="stat-val" id="sc-streak">0</div>
+        <div class="stat-sub">acertos seguidos</div>
+      </div>
+    </div>
+
+    <!-- QUIZ CTA -->
+    <div class="quiz-cta">
+      <div class="qc-icon">🎮</div>
+      <div class="qc-body">
+        <div class="qc-title">Testar meu <em>vocabulário.</em></div>
+        <div class="qc-sub" id="qc-sub">Cadastre ao menos 1 palavra para começar a jogar.</div>
+      </div>
+      <button class="qc-btn" id="btn-start-quiz" disabled>Testar meu vocabulário</button>
+    </div>
+
+    <!-- TOOLBAR -->
+    <div class="voc-toolbar">
+      <input class="voc-search" id="voc-search" placeholder="Pesquisar palavra ou significado…" />
+      <select class="voc-sort" id="voc-sort">
+        <option value="recent">Mais recentes</option>
+        <option value="az">A → Z</option>
+        <option value="za">Z → A</option>
+      </select>
+      <span class="voc-count" id="voc-count"><span>0</span> palavras</span>
+    </div>
+
+    <!-- WORD LIST -->
+    <div class="word-list" id="word-list"></div>
+
+  </main>
+</div>
+
+<!-- ADD/EDIT MODAL -->
+<div class="modal-overlay" id="word-modal-overlay">
+  <div class="modal">
+    <div class="modal-title" id="word-modal-title">Nova <em>palavra.</em></div>
+    <div class="modal-field">
+      <label class="modal-lbl">Palavra</label>
+      <input class="modal-input" id="w-word" placeholder="Ex: Perspicaz" maxlength="60" />
+    </div>
+    <div class="modal-field">
+      <label class="modal-lbl">Significado</label>
+      <textarea class="modal-input" id="w-meaning" rows="2" placeholder="Ex: Que tem grande capacidade de observação e análise." maxlength="240"></textarea>
+    </div>
+    <div class="modal-field">
+      <label class="modal-lbl">Exemplo de uso</label>
+      <textarea class="modal-input" id="w-example" rows="2" placeholder="Ex: Ela fez uma observação perspicaz sobre o problema." maxlength="240"></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-btn ghost" id="word-modal-cancel">Cancelar</button>
+      <button class="modal-btn primary" id="word-modal-save">Salvar palavra</button>
+    </div>
+  </div>
+</div>
+
+<!-- QUIZ OVERLAY -->
+<div class="quiz-overlay" id="quiz-overlay">
+  <div class="quiz-box" id="quiz-box"></div>
+</div>
+
+<script>
+/* ════════════════════════════════════
+   CURSOR
+════════════════════════════════════ */
+(function() {
+  const cur  = document.getElementById('cur');
+  const ring = document.getElementById('cur-ring');
+  let mx=0,my=0,rx=0,ry=0;
+  document.addEventListener('mousemove', e => {
+    mx=e.clientX; my=e.clientY;
+    cur.style.transform=`translate(${mx-3}px,${my-3}px)`;
+  });
+  (function tick(){
+    rx+=(mx-rx-15)*0.1; ry+=(my-ry-15)*0.1;
+    ring.style.transform=`translate(${rx}px,${ry}px)`;
+    requestAnimationFrame(tick);
+  })();
+})();
+
+/* ════════════════════════════════════
+   TOAST
+════════════════════════════════════ */
+let toastTimer;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
+}
+
+/* ════════════════════════════════════
+   CONSTANTS
+════════════════════════════════════ */
+const DAY  = Store.getCurrentDay();
+const DAYS = Store.getTotalDays();
+const ROUND_LEN = 10;
+
+// Significados-fallback genéricos, usados como alternativas erradas quando o
+// usuário ainda não tem palavras suficientes cadastradas para gerar 3 opções
+// plausíveis a partir do próprio vocabulário.
+const FALLBACK_MEANINGS = [
+  'Estado de espírito calmo e ponderado diante de situações difíceis.',
+  'Capacidade de se adaptar rapidamente a mudanças inesperadas.',
+  'Ação de adiar decisões importantes por medo do resultado.',
+  'Tendência a repetir os mesmos erros por falta de reflexão.',
+  'Sensação de conforto ao evitar desafios necessários.',
+  'Qualidade de quem age com cautela excessiva diante do novo.',
+  'Disposição para ajudar os outros mesmo sem ganho pessoal.',
+  'Habilidade de convencer pessoas através de argumentos bem construídos.',
+  'Falta de interesse ou entusiasmo por atividades cotidianas.',
+  'Capacidade de perceber detalhes que passam despercebidos aos demais.',
+  'Comportamento marcado pela repetição de hábitos antigos.',
+  'Reação exagerada diante de um problema de pequena importância.',
+  'Processo de amadurecer ideias antes de colocá-las em prática.',
+  'Inclinação para julgar situações antes de compreendê-las por completo.',
+  'Estado de estar totalmente absorvido por uma tarefa ou pensamento.',
+  'Capacidade de manter o equilíbrio emocional sob pressão.',
+  'Tendência a valorizar mais o passado do que o momento presente.',
+  'Disposição para recomeçar após um fracasso, sem desanimar.',
+  'Forma de comunicação que evita conflitos diretos.',
+  'Sensação de estranhamento diante de algo familiar.',
+  'Capacidade de organizar pensamentos de forma lógica e clara.',
+  'Tendência a buscar aprovação constante de outras pessoas.',
+  'Estado de estagnação apesar dos esforços contínuos para mudar.',
+  'Habilidade de enxergar oportunidades onde outros veem apenas obstáculos.',
+];
+
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+/* ════════════════════════════════════
+   INIT / SIDEBAR
+════════════════════════════════════ */
+function initSidebar() {
+  const pct = Math.round(DAY / DAYS * 100);
+  document.getElementById('sb-daynum').textContent = DAY;
+  document.getElementById('sb-pct').textContent = pct + '%';
+  document.getElementById('sb-pct2').textContent = pct + '%';
+  document.getElementById('sb-days-left').textContent = (DAYS - DAY) + ' restantes';
+  document.getElementById('sb-streak-val').textContent = Store.currentStreak(Store.getHabits(), DAY);
+  setTimeout(() => { document.getElementById('sb-fill').style.width = pct + '%'; }, 400);
+}
+
+let searchTerm = '';
+let sortMode   = 'recent';
+
+function init() {
+  initSidebar();
+  renderStats();
+  renderList();
+}
+
+/* ════════════════════════════════════
+   STATS
+════════════════════════════════════ */
+function renderStats() {
+  const words = Store.getVocabWords();
+  const quiz  = Store.getVocabQuizStats();
+
+  document.getElementById('sc-total').textContent  = words.length;
+  document.getElementById('sc-rounds').textContent = quiz.roundsPlayed || 0;
+  document.getElementById('sc-streak').textContent = quiz.bestStreak || 0;
+
+  const pct = quiz.totalAnswered > 0 ? Math.round((quiz.totalCorrect / quiz.totalAnswered) * 100) : null;
+  document.getElementById('sc-pct').textContent = pct == null ? '—' : pct + '%';
+  document.getElementById('sc-pct-sub').textContent = `${quiz.totalCorrect || 0} acertos / ${quiz.totalAnswered || 0}`;
+
+  const btn = document.getElementById('btn-start-quiz');
+  const sub = document.getElementById('qc-sub');
+  if (words.length === 0) {
+    btn.disabled = true;
+    sub.textContent = 'Cadastre ao menos 1 palavra para começar a jogar.';
+  } else {
+    btn.disabled = false;
+    sub.textContent = `${ROUND_LEN} perguntas por rodada, usando as ${words.length} palavra${words.length > 1 ? 's' : ''} do seu vocabulário.`;
+  }
+}
+
+/* ════════════════════════════════════
+   WORD LIST
+════════════════════════════════════ */
+function filteredSortedWords() {
+  const words = Store.getVocabWords();
+  const term = searchTerm.trim().toLowerCase();
+  let list = !term ? words.slice() :
+    words.filter(w => (w.word || '').toLowerCase().includes(term) || (w.meaning || '').toLowerCase().includes(term));
+
+  if (sortMode === 'az') list.sort((a, b) => a.word.localeCompare(b.word, 'pt-BR'));
+  else if (sortMode === 'za') list.sort((a, b) => b.word.localeCompare(a.word, 'pt-BR'));
+  else list.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+  return list;
+}
+
+function fmtDate(iso) {
+  const d = new Date(iso);
+  if (isNaN(d)) return '';
+  return d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
+function renderList() {
+  const all  = Store.getVocabWords();
+  const list = filteredSortedWords();
+  document.getElementById('voc-count').innerHTML = `<span>${all.length}</span> palavra${all.length !== 1 ? 's' : ''}`;
+
+  const wrap = document.getElementById('word-list');
+
+  if (all.length === 0) {
+    wrap.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">📚</div>
+        <div class="empty-title">Seu vocabulário está vazio.</div>
+        <p class="empty-sub">Cadastre palavras novas com significado e exemplo de uso<br>para incorporá-las de verdade ao seu vocabulário.</p>
+        <button class="btn-sm primary" onclick="openWordModal()">+ Adicionar primeira palavra</button>
+      </div>`;
+    return;
+  }
+
+  if (list.length === 0) {
+    wrap.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">🔍</div>
+        <div class="empty-title">Nenhuma palavra encontrada.</div>
+        <p class="empty-sub">Tente pesquisar por outro termo.</p>
+      </div>`;
+    return;
+  }
+
+  wrap.innerHTML = list.map(w => `
+    <div class="word-card">
+      <div class="word-main">
+        <div class="word-head">
+          <span class="word-term">${escapeHtml(w.word)}</span>
+          <span class="word-date">adicionada em ${fmtDate(w.createdAt)}</span>
+        </div>
+        <div class="word-meaning">${escapeHtml(w.meaning)}</div>
+        ${w.example ? `<div class="word-example">${escapeHtml(w.example)}</div>` : ''}
+      </div>
+      <div class="word-actions">
+        <button class="word-btn" title="Editar" onclick="openWordModal(${w.id})">✎</button>
+        <button class="word-btn danger" title="Excluir" onclick="removeWord(${w.id})">✕</button>
+      </div>
+    </div>`).join('');
+}
+
+function escapeHtml(s) {
+  return String(s || '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+}
+
+function removeWord(id) {
+  const w = Store.getVocabWords().find(x => x.id === id);
+  if (!w) return;
+  if (!confirm(`Excluir "${w.word}"? Esta ação não pode ser desfeita.`)) return;
+  Store.deleteVocabWord(id);
+  toast('Palavra excluída');
+  renderStats(); renderList();
+}
+
+/* ════════════════════════════════════
+   ADD/EDIT MODAL
+════════════════════════════════════ */
+let editingWordId = null;
+
+function openWordModal(id = null) {
+  editingWordId = id;
+  const overlay = document.getElementById('word-modal-overlay');
+  if (id) {
+    const w = Store.getVocabWords().find(x => x.id === id);
+    if (!w) return;
+    document.getElementById('word-modal-title').innerHTML = 'Editar <em>palavra.</em>';
+    document.getElementById('w-word').value    = w.word;
+    document.getElementById('w-meaning').value = w.meaning;
+    document.getElementById('w-example').value = w.example || '';
+  } else {
+    document.getElementById('word-modal-title').innerHTML = 'Nova <em>palavra.</em>';
+    document.getElementById('w-word').value    = '';
+    document.getElementById('w-meaning').value = '';
+    document.getElementById('w-example').value = '';
+  }
+  overlay.classList.add('open');
+  document.getElementById('w-word').focus();
+}
+
+function closeWordModal() {
+  document.getElementById('word-modal-overlay').classList.remove('open');
+  editingWordId = null;
+}
+
+function saveWordModal() {
+  const word    = document.getElementById('w-word').value.trim();
+  const meaning = document.getElementById('w-meaning').value.trim();
+  const example = document.getElementById('w-example').value.trim();
+
+  if (!word) { document.getElementById('w-word').style.borderColor = 'rgba(252,165,165,0.6)'; document.getElementById('w-word').focus(); return; }
+  if (!meaning) { document.getElementById('w-meaning').style.borderColor = 'rgba(252,165,165,0.6)'; document.getElementById('w-meaning').focus(); return; }
+
+  if (editingWordId) {
+    Store.updateVocabWord(editingWordId, { word, meaning, example });
+    toast('Palavra atualizada ✓');
+  } else {
+    Store.addVocabWord({ word, meaning, example });
+    toast('Palavra adicionada ✓');
+  }
+  closeWordModal();
+  renderStats(); renderList();
+}
+
+document.getElementById('btn-new-word').addEventListener('click', () => openWordModal());
+document.getElementById('word-modal-cancel').addEventListener('click', closeWordModal);
+document.getElementById('word-modal-save').addEventListener('click', saveWordModal);
+document.getElementById('word-modal-overlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('word-modal-overlay')) closeWordModal();
+});
+['w-word', 'w-meaning'].forEach(id => {
+  document.getElementById(id).addEventListener('input', function() { this.style.borderColor = ''; });
+});
+
+document.getElementById('voc-search').addEventListener('input', function() { searchTerm = this.value; renderList(); });
+document.getElementById('voc-sort').addEventListener('change', function() { sortMode = this.value; renderList(); });
+
+/* ════════════════════════════════════
+   QUIZ — "Testar meu vocabulário"
+════════════════════════════════════ */
+let quizIdx = 0;
+let quizAnswered = false;
+let quizLastWordId = null;
+let quizScore = { correct: 0, total: 0, streak: 0, bestStreak: 0 };
+let quizCurrentWord = null;
+
+function buildQuizOptions(correctWord, allWords) {
+  const correct = correctWord.meaning;
+  const otherMeanings = shuffle(
+    allWords.filter(w => w.id !== correctWord.id && w.meaning && w.meaning.trim() !== correct.trim())
+            .map(w => w.meaning)
+  );
+  const distractors = [];
+  otherMeanings.forEach(m => { if (distractors.length < 2 && !distractors.includes(m)) distractors.push(m); });
+
+  if (distractors.length < 2) {
+    const pool = shuffle(FALLBACK_MEANINGS.filter(m => m !== correct && !distractors.includes(m)));
+    while (distractors.length < 2 && pool.length) distractors.push(pool.pop());
+  }
+
+  return shuffle([{ text: correct, correct: true }, ...distractors.map(t => ({ text: t, correct: false }))]);
+}
+
+function pickQuizWord(words) {
+  if (words.length === 1) return words[0];
+  let w;
+  do { w = words[Math.floor(Math.random() * words.length)]; } while (w.id === quizLastWordId);
+  return w;
+}
+
+function startQuiz() {
+  const words = Store.getVocabWords();
+  if (!words.length) return;
+  quizIdx = 0;
+  quizAnswered = false;
+  quizLastWordId = null;
+  quizScore = { correct: 0, total: 0, streak: 0, bestStreak: 0 };
+  document.getElementById('quiz-overlay').classList.add('show');
+  renderQuizQuestion();
+}
+
+function closeQuiz() {
+  document.getElementById('quiz-overlay').classList.remove('show');
+}
+
+function renderQuizQuestion() {
+  const words = Store.getVocabWords();
+  if (quizIdx >= ROUND_LEN || !words.length) { renderQuizSummary(); return; }
+
+  quizAnswered = false;
+  const w = pickQuizWord(words);
+  quizCurrentWord = w;
+  quizLastWordId = w.id;
+  const opts = buildQuizOptions(w, words);
+
+  document.getElementById('quiz-box').innerHTML = `
+    <div class="quiz-topline">
+      <span class="quiz-eyebrow">Pergunta ${quizIdx + 1} / ${ROUND_LEN}</span>
+      <span class="quiz-close" onclick="closeQuiz()">✕</span>
+    </div>
+    <div class="quiz-word">${escapeHtml(w.word)}</div>
+    <div class="quiz-prompt">Qual é o significado desta palavra?</div>
+    <div class="quiz-opts" id="quiz-opts">
+      ${opts.map((o, i) => `<button class="quiz-opt" data-correct="${o.correct}" onclick="answerQuiz(this)">${escapeHtml(o.text)}</button>`).join('')}
+    </div>
+    <div class="quiz-feedback" id="quiz-feedback"></div>
+    <div class="quiz-stats-row">
+      <span>Pontuação: <span>${quizScore.correct}/${quizScore.total}</span></span>
+      <span>Acertos: <span>${quizScore.correct}</span></span>
+      <span>Erros: <span>${quizScore.total - quizScore.correct}</span></span>
+    </div>
+    <button class="quiz-next-btn" id="quiz-next-btn" onclick="nextQuizQuestion()">Próxima palavra →</button>`;
+}
+
+function answerQuiz(btn) {
+  if (quizAnswered) return;
+  quizAnswered = true;
+
+  const isCorrect = btn.dataset.correct === 'true';
+  quizScore.total++;
+  if (isCorrect) {
+    quizScore.correct++;
+    quizScore.streak++;
+    quizScore.bestStreak = Math.max(quizScore.bestStreak, quizScore.streak);
+  } else {
+    quizScore.streak = 0;
+  }
+
+  document.querySelectorAll('#quiz-opts .quiz-opt').forEach(opt => {
+    opt.classList.add('disabled');
+    if (opt.dataset.correct === 'true') opt.classList.add('correct');
+    else if (opt === btn) opt.classList.add('wrong');
+  });
+
+  const fb = document.getElementById('quiz-feedback');
+  fb.textContent = isCorrect ? 'Certo! ✓' : `Errado. O significado correto está em verde.`;
+  fb.className = 'quiz-feedback ' + (isCorrect ? 'ok' : 'no');
+
+  document.querySelector('.quiz-stats-row').innerHTML = `
+    <span>Pontuação: <span>${quizScore.correct}/${quizScore.total}</span></span>
+    <span>Acertos: <span>${quizScore.correct}</span></span>
+    <span>Erros: <span>${quizScore.total - quizScore.correct}</span></span>`;
+
+  document.getElementById('quiz-next-btn').classList.add('show');
+}
+
+function nextQuizQuestion() {
+  quizIdx++;
+  renderQuizQuestion();
+}
+
+function renderQuizSummary() {
+  const pct = quizScore.total > 0 ? Math.round((quizScore.correct / quizScore.total) * 100) : 0;
+  Store.recordVocabQuizRound({ correct: quizScore.correct, total: quizScore.total, bestStreak: quizScore.bestStreak });
+  renderStats();
+
+  document.getElementById('quiz-box').innerHTML = `
+    <div class="quiz-summary">
+      <div class="qs-icon">${pct >= 80 ? '🏆' : pct >= 50 ? '👏' : '🌱'}</div>
+      <div class="qs-title">Rodada <em>concluída.</em></div>
+      <div class="qs-score">${quizScore.correct}/${quizScore.total}</div>
+      <div class="qs-pct">${pct}% de aproveitamento</div>
+      <div class="qs-grid">
+        <div class="qs-cell"><div class="qs-cell-val">${quizScore.correct}</div><div class="qs-cell-lbl">Acertos</div></div>
+        <div class="qs-cell"><div class="qs-cell-val">${quizScore.total - quizScore.correct}</div><div class="qs-cell-lbl">Erros</div></div>
+        <div class="qs-cell"><div class="qs-cell-val">${quizScore.bestStreak}</div><div class="qs-cell-lbl">Sequência</div></div>
+      </div>
+      <div class="qs-actions">
+        <button class="modal-btn ghost" onclick="closeQuiz()">Fechar</button>
+        <button class="modal-btn primary" onclick="startQuiz()">Novo teste</button>
+      </div>
+    </div>`;
+}
+
+document.getElementById('btn-start-quiz').addEventListener('click', startQuiz);
+document.getElementById('quiz-overlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('quiz-overlay')) closeQuiz();
+});
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return;
+  if (document.getElementById('quiz-overlay').classList.contains('show')) closeQuiz();
+  else if (document.getElementById('word-modal-overlay').classList.contains('open')) closeWordModal();
+});
+
+window.addEventListener('p90:synced', init);
+init();
+
+(function(){
+  const canvas=document.createElement('canvas');
+  canvas.style.cssText='position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;';
+  document.body.insertBefore(canvas,document.body.firstChild);
+  const ctx=canvas.getContext('2d'),SIZE=80;
+  let W,H,cols,rows,nodes,t=0;
+  function resize(){W=canvas.width=window.innerWidth;H=canvas.height=window.innerHeight;cols=Math.ceil(W/SIZE)+2;rows=Math.ceil(H/SIZE)+2;nodes=[];for(let r=0;r<rows;r++)for(let c=0;c<cols;c++)nodes.push({phase:Math.random()*Math.PI*2});}
+  function draw(){ctx.clearRect(0,0,W,H);ctx.lineWidth=.4;const offX=(t*6)%SIZE,offY=(t*3)%SIZE;for(let c=0;c<cols;c++){const x=c*SIZE-offX,w=.5+.5*Math.sin(t*.4+c*.35);ctx.strokeStyle='rgba(245,245,240,'+(0.006+w*0.012)+')';ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}for(let r=0;r<rows;r++){const y=r*SIZE-offY,w=.5+.5*Math.sin(t*.35+r*.4+1.2);ctx.strokeStyle='rgba(245,245,240,'+(0.006+w*0.012)+')';ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){const nd=nodes[r*cols+c],x=c*SIZE-offX,y=r*SIZE-offY,p=.5+.5*Math.sin(t*.7+nd.phase);ctx.beginPath();ctx.arc(x,y,.5+p*.9,0,Math.PI*2);ctx.fillStyle='rgba(245,245,240,'+(p*0.07)+')';ctx.fill();}const grd=ctx.createRadialGradient(W*.65,H*.5,0,W*.65,H*.5,Math.max(W,H)*.75);grd.addColorStop(0,'rgba(8,8,8,0)');grd.addColorStop(.6,'rgba(8,8,8,0)');grd.addColorStop(1,'rgba(8,8,8,.7)');ctx.fillStyle=grd;ctx.fillRect(0,0,W,H);t+=.006;requestAnimationFrame(draw);}
+  window.addEventListener('resize',resize);resize();draw();
+})();
+(function(){
+  document.querySelectorAll('.stat-card,.word-card,.quiz-cta').forEach(function(card){
+    card.addEventListener('mousemove',function(e){var r=card.getBoundingClientRect();var x=((e.clientX-r.left)/r.width*100).toFixed(1);var y=((e.clientY-r.top)/r.height*100).toFixed(1);card.style.background='radial-gradient(circle at '+x+'% '+y+'%, rgba(245,245,240,.04) 0%, var(--surface,#111) 60%)';});
+    card.addEventListener('mouseleave',function(){card.style.background='';});
+  });
+})();
+</script>
+</body>
+</html>

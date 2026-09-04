@@ -269,6 +269,7 @@
       <a class="sb-item" href="metricas.html"><span class="sb-item-icon">△</span> Métricas</a>
       <a class="sb-item" href="diario.html"><span class="sb-item-icon">◻</span> Diário</a>
       <a class="sb-item active" href="conquistas.html"><span class="sb-item-icon">◆</span> Conquistas</a>
+      <a class="sb-item" href="vocabulario.html"><span class="sb-item-icon">📚</span> Vocabulário</a>
     </nav>
 
     <div class="sb-bottom">
@@ -422,6 +423,18 @@ const categories = [
     ],
   },
   {
+    id: 'vocabulario', name: 'Vocabulário', icon: '📚',
+    achievements: [
+      { id:'vocab_first',      icon:'🔤', name:'Primeira palavra',     points:50,  target:1,   req:'1 palavra cadastrada',   desc:'Cadastrou a primeira palavra no seu vocabulário.' },
+      { id:'vocab_10',         icon:'📗', name:'Colecionador',         points:120, target:10,  req:'10 palavras cadastradas', desc:'Já são 10 palavras novas para incorporar ao seu vocabulário.' },
+      { id:'vocab_50',         icon:'📘', name:'Vocabulário rico',     points:280, target:50,  req:'50 palavras cadastradas', desc:'50 palavras cadastradas. Seu repertório está crescendo de verdade.' },
+      { id:'vocab_100',        icon:'📙', name:'Léxico vivo',          points:450, target:100, req:'100 palavras cadastradas', desc:'100 palavras. Um vocabulário assim não se constrói por acaso.' },
+      { id:'vocab_quiz1',      icon:'🎮', name:'Primeiro teste',       points:60,  target:1,   req:'1 rodada do jogo',       desc:'Testou o vocabulário pela primeira vez no modo jogo.' },
+      { id:'vocab_correct25',  icon:'🧠', name:'Memória afiada',       points:200, target:25,  req:'25 acertos no jogo',     desc:'25 respostas certas somadas no "Testar meu vocabulário".' },
+      { id:'vocab_correct100', icon:'🏅', name:'Sabedoria acumulada',  points:400, target:100, req:'100 acertos no jogo',    desc:'100 acertos. O vocabulário virou conhecimento de verdade.' },
+    ],
+  },
+  {
     id: 'especial', name: 'Especial', icon: '◆',
     achievements: [
       { id:'comeback',   icon:'🔄', name:'Volta por cima',       points:100, target:1,  req:'Retomar após uma falha',  desc:'Falhou um dia e voltou no seguinte sem desistir.' },
@@ -445,7 +458,8 @@ function saveAchievementsState(state) { Store.saveAchievements(state); }
    COMPUTE PROGRESS — tudo vem de Store.computeAchievementProgress (js/store.js)
 ════════════════════════════════════ */
 function computeProgress(habits, journal) {
-  return Store.computeAchievementProgress(habits, journal, DAY, Store.getWeeklyReviews());
+  return Store.computeAchievementProgress(habits, journal, DAY, Store.getWeeklyReviews(),
+    Store.getVocabWords(), Store.getVocabQuizStats());
 }
 
 /* ════════════════════════════════════
