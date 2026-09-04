@@ -15,7 +15,8 @@
        gravação para o Supabase em segundo plano.
 
    Espelho localStorage:  p90_cache  → { meta, currentDay, habits,
-                                         journal, weeklyReviews, achievements }
+                                         journal, weeklyReviews, achievements,
+                                         vocabWords, vocabQuiz }
 ═══════════════════════════════════════════════ */
 
 const Store = (() => {
@@ -34,6 +35,8 @@ const Store = (() => {
       journal:       {},
       weeklyReviews: {},
       achievements:  {},
+      vocabWords:    [],
+      vocabQuiz:     { roundsPlayed: 0, totalAnswered: 0, totalCorrect: 0, bestStreak: 0 },
     };
   }
 
@@ -83,6 +86,26 @@ const Store = (() => {
       Object.keys(cache.achievements).forEach(k => delete cache.achievements[k]);
       Object.assign(cache.achievements, data.achievements);
     }
+    if (Array.isArray(data.vocabWords)) {
+      cache.vocabWords.length = 0;
+      data.vocabWords.map(_rowToVocabWord).forEach(w => cache.vocabWords.push(w));
+    }
+    if (data.vocabQuiz && typeof data.vocabQuiz === 'object') {
+      cache.vocabQuiz.roundsPlayed  = data.vocabQuiz.roundsPlayed  || 0;
+      cache.vocabQuiz.totalAnswered = data.vocabQuiz.totalAnswered || 0;
+      cache.vocabQuiz.totalCorrect  = data.vocabQuiz.totalCorrect  || 0;
+      cache.vocabQuiz.bestStreak    = data.vocabQuiz.bestStreak    || 0;
+    }
+  }
+
+  function _rowToVocabWord(w) {
+    return {
+      id:        w.id,
+      word:      w.word,
+      meaning:   w.meaning,
+      example:   w.example || '',
+      createdAt: w.createdAt || w.created_at || new Date().toISOString(),
+    };
   }
 
   function _rowToHabit(h) {
@@ -202,8 +225,8 @@ const Store = (() => {
         '</div>' +
         '<p style="font-size:12px;line-height:1.9;color:var(--mid,#999);margin-bottom:8px;">' +
           'Isso apaga <b style="color:var(--white,#f5f5f0)">todo o seu progresso</b> — hábitos, ' +
-          'histórico, entradas do diário e conquistas — e reinicia o desafio no dia 1. ' +
-          'Os hábitos fixos voltam ao estado inicial.' +
+          'histórico, entradas do diário, revisões semanais, vocabulário e conquistas — e reinicia ' +
+          'o desafio no dia 1. Os hábitos fixos voltam ao estado inicial.' +
         '</p>' +
         '<p style="font-size:11px;letter-spacing:.06em;color:var(--red,#fca5a5);margin-bottom:24px;">' +
           'Esta ação não pode ser desfeita.' +
@@ -552,6 +575,78 @@ const Store = (() => {
   }
 
   /* ──────────────────────────────────────────
+     VOCABULÁRIO
+  ────────────────────────────────────────── */
+  function getVocabWords() { return cache.vocabWords; }
+
+  function addVocabWord(word) {
+    const id = (cache.vocabWords.reduce((m, w) => Math.max(m, w.id), 0) || 0) + 1;
+    const row = {
+      id,
+      word:      (word.word || '').trim(),
+      meaning:   (word.meaning || '').trim(),
+      example:   (word.example || '').trim(),
+      createdAt: new Date().toISOString(),
+    };
+    cache.vocabWords.unshift(row);
+    _saveMirror();
+    _push(async () => {
+      const { error } = await window.sb.from('vocab_words').upsert({
+        id: row.id, user_id: _uid, word: row.word, meaning: row.meaning,
+        example: row.example || null, created_at: row.createdAt,
+      }, { onConflict: 'user_id,id' });
+      if (error) throw error;
+    });
+    return row;
+  }
+
+  function updateVocabWord(id, patch) {
+    const w = cache.vocabWords.find(x => x.id === id);
+    if (!w) return;
+    if (patch.word    != null) w.word    = String(patch.word).trim();
+    if (patch.meaning != null) w.meaning = String(patch.meaning).trim();
+    if (patch.example != null) w.example = String(patch.example).trim();
+    _saveMirror();
+    _push(async () => {
+      const { error } = await window.sb.from('vocab_words').update({
+        word: w.word, meaning: w.meaning, example: w.example || null,
+      }).eq('user_id', _uid).eq('id', id);
+      if (error) throw error;
+    });
+  }
+
+  function deleteVocabWord(id) {
+    const idx = cache.vocabWords.findIndex(w => w.id === id);
+    if (idx !== -1) cache.vocabWords.splice(idx, 1);
+    _saveMirror();
+    _push(async () => {
+      const { error } = await window.sb.from('vocab_words').delete().eq('user_id', _uid).eq('id', id);
+      if (error) throw error;
+    });
+  }
+
+  function getVocabQuizStats() { return cache.vocabQuiz; }
+
+  // Registra o resultado de uma rodada do jogo (soma ao placar acumulado).
+  function recordVocabQuizRound(result) {
+    const correct = Math.max(0, result.correct || 0);
+    const total   = Math.max(0, result.total || 0);
+    cache.vocabQuiz.roundsPlayed++;
+    cache.vocabQuiz.totalAnswered += total;
+    cache.vocabQuiz.totalCorrect  += correct;
+    if (result.bestStreak > cache.vocabQuiz.bestStreak) cache.vocabQuiz.bestStreak = result.bestStreak;
+    _saveMirror();
+    _push(async () => {
+      const q = cache.vocabQuiz;
+      const { error } = await window.sb.from('vocab_quiz_stats').upsert({
+        user_id: _uid, rounds_played: q.roundsPlayed, total_answered: q.totalAnswered,
+        total_correct: q.totalCorrect, best_streak: q.bestStreak,
+      }, { onConflict: 'user_id' });
+      if (error) throw error;
+    });
+  }
+
+  /* ──────────────────────────────────────────
      COMPUTED HELPERS
   ────────────────────────────────────────── */
 
@@ -614,8 +709,10 @@ const Store = (() => {
     return streak;
   }
 
-  function computeAchievementProgress(habits, journal, currentDay, weeklyReviews) {
+  function computeAchievementProgress(habits, journal, currentDay, weeklyReviews, vocabWords, vocabQuiz) {
     weeklyReviews = weeklyReviews || {};
+    vocabWords = vocabWords || [];
+    vocabQuiz  = vocabQuiz || { roundsPlayed: 0, totalCorrect: 0 };
     const active = habits.filter(h => !h.paused);
 
     // As conquistas ligadas a um hábito específico agora casam pela CHAVE
@@ -684,6 +781,13 @@ const Store = (() => {
       comeback:     hasComeback(),
       discipline:   perfStreak,
       all5:         allDoneCount,
+      vocab_first:      Math.min(1, vocabWords.length),
+      vocab_10:         vocabWords.length,
+      vocab_50:         vocabWords.length,
+      vocab_100:        vocabWords.length,
+      vocab_quiz1:      Math.min(1, vocabQuiz.roundsPlayed || 0),
+      vocab_correct25:  vocabQuiz.totalCorrect || 0,
+      vocab_correct100: vocabQuiz.totalCorrect || 0,
     };
   }
 
@@ -733,6 +837,8 @@ const Store = (() => {
     getJournal, saveJournal, getJournalEntry, saveJournalEntry,
     getWeeklyReviews, getWeeklyReview, saveWeeklyReview,
     getAchievements, saveAchievements, unlockAchievement, markAchievementSeen,
+    getVocabWords, addVocabWord, updateVocabWord, deleteVocabWord,
+    getVocabQuizStats, recordVocabQuizRound,
     // computed
     habitVal, scheduledOn, dayCompletionPct, maxStreak, countDays,
     allHabitsDone, currentStreak, computeAchievementProgress, computeLevels,
