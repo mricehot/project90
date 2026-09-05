@@ -319,6 +319,7 @@ body { overflow: hidden; }
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/supabase.js"></script>
 <script src="js/store.js"></script>
+<script src="js/achievements.js"></script>
 <script src="js/quotes.js"></script>
 <script>
 const DAY  = Store.getCurrentDay();
@@ -857,6 +858,7 @@ document.addEventListener('mousemove',e=>{ if(tipOn){tip.style.left=(e.clientX+1
 })();
 
 window.addEventListener('p90:synced', function () { refreshFromRealHabits(); init(); _maybeNotify(); });
+window.addEventListener('p90:synced', notifyNewAchievements);
 init();
 _maybeNotify();
 

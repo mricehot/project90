@@ -12,6 +12,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/supabase.js"></script>
 <script src="js/store.js"></script>
+<script src="js/achievements.js"></script>
 <style>
 
 /* ── MAIN ── */
@@ -729,6 +730,7 @@ document.addEventListener('keydown', e => {
 });
 
 window.addEventListener('p90:synced', init);
+window.addEventListener('p90:synced', notifyNewAchievements);
 init();
 
 (function(){

@@ -133,6 +133,14 @@ podem ser excluídos, só pausados.
   significados das outras palavras cadastradas, com um banco de significados-fallback
   genéricos para quando houver poucas palavras). Alimenta 7 conquistas novas na categoria
   "Vocabulário". O botão "Resetar progresso" também apaga o vocabulário e o placar do jogo.
+- **Toast global de conquista** (`js/achievements.js`): o catálogo de conquistas
+  (nome/ícone/pontos/alvo/descrição) mora só ali agora, em `window.P90_ACHIEVEMENTS`
+  — `conquistas.html` usa esse catálogo para o progresso completo e seu próprio
+  modal de desbloqueio (sem mudança de comportamento). As outras 5 páginas
+  carregam o mesmo arquivo e chamam `notifyNewAchievements()` a cada
+  `p90:synced`: ele compara o progresso atual com o estado salvo, persiste o
+  que for novo e mostra um toast clicável no canto da tela (sem duplicar o
+  modal — `conquistas.html` não chama esse checador).
 - **Dia de folga** (`0010` + `js/store.js`): cada desafio dá 2 folgas
   (`challenge_meta.freezes_left`, RPC `use_freeze()`). Usar uma protege o dia
   atual — `Store.currentStreak()` e o `dayStreak` interno de
