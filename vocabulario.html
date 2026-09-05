@@ -212,7 +212,7 @@ textarea.modal-input { resize: vertical; min-height: 60px; line-height: 1.6; }
       <a class="sb-item" href="metricas.html"><span class="sb-item-icon">△</span> Métricas</a>
       <a class="sb-item" href="diario.html"><span class="sb-item-icon">◻</span> Diário</a>
       <a class="sb-item" href="conquistas.html"><span class="sb-item-icon">◆</span> Conquistas</a>
-      <a class="sb-item active" href="vocabulario.html"><span class="sb-item-icon">📚</span> Vocabulário</a>
+      <a class="sb-item active" href="vocabulario.html"><span class="sb-item-icon">▤</span> Vocabulário</a>
     </nav>
 
     <div class="sb-bottom">
@@ -262,7 +262,7 @@ textarea.modal-input { resize: vertical; min-height: 60px; line-height: 1.6; }
 
     <!-- QUIZ CTA -->
     <div class="quiz-cta">
-      <div class="qc-icon">🎮</div>
+      <div class="qc-icon">▤</div>
       <div class="qc-body">
         <div class="qc-title">Testar meu <em>vocabulário.</em></div>
         <div class="qc-sub" id="qc-sub">Cadastre ao menos 1 palavra para começar a jogar.</div>
@@ -471,7 +471,7 @@ function renderList() {
   if (all.length === 0) {
     wrap.innerHTML = `
       <div class="empty-state">
-        <div class="empty-icon">📚</div>
+        <div class="empty-icon">▤</div>
         <div class="empty-title">Seu vocabulário está vazio.</div>
         <p class="empty-sub">Cadastre palavras novas com significado e exemplo de uso<br>para incorporá-las de verdade ao seu vocabulário.</p>
         <button class="btn-sm primary" onclick="openWordModal()">+ Adicionar primeira palavra</button>
@@ -482,7 +482,7 @@ function renderList() {
   if (list.length === 0) {
     wrap.innerHTML = `
       <div class="empty-state">
-        <div class="empty-icon">🔍</div>
+        <div class="empty-icon">◌</div>
         <div class="empty-title">Nenhuma palavra encontrada.</div>
         <p class="empty-sub">Tente pesquisar por outro termo.</p>
       </div>`;
@@ -702,7 +702,7 @@ function renderQuizSummary() {
 
   document.getElementById('quiz-box').innerHTML = `
     <div class="quiz-summary">
-      <div class="qs-icon">${pct >= 80 ? '🏆' : pct >= 50 ? '👏' : '🌱'}</div>
+      <div class="qs-icon">${pct >= 80 ? '✓' : pct >= 50 ? '◉' : '○'}</div>
       <div class="qs-title">Rodada <em>concluída.</em></div>
       <div class="qs-score">${quizScore.correct}/${quizScore.total}</div>
       <div class="qs-pct">${pct}% de aproveitamento</div>
