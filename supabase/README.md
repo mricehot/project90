@@ -21,6 +21,7 @@ Dashboard → **SQL Editor** → **New query** → rode os arquivos **na ordem**
 7. `supabase/migrations/0007_timezone.sql` → **Run**
 8. `supabase/migrations/0008_weekly_review.sql` → **Run**
 9. `supabase/migrations/0009_vocabulary.sql` → **Run**
+10. `supabase/migrations/0010_streak_freeze.sql` → **Run**
 
 **Opção B — CLI:**
 ```bash
@@ -33,7 +34,7 @@ Os scripts criam:
 | Objeto | O quê |
 | --- | --- |
 | `profiles` | 1 linha por usuário (nome, avatar, email) |
-| `challenge_meta` | data de início + duração (dia atual é calculado) |
+| `challenge_meta` | data de início + duração (dia atual é calculado); `freezes_left`/`frozen_days` (`0010`) guardam os dias de folga |
 | `habits` | hábitos; `freq` e `history` como `jsonb`; `core_key` marca os fixos |
 | **hábitos fixos** | os 8 ligados a achievements (`acordar_cedo`, `exercitar`, `ler`, `meditar`, `sem_redes`, `beber_agua`, `escrever_diario`, `ler_biblia`), semeados via `seed_core_habits()`; não podem ser excluídos (só pausados). O resto da rotina é livre. |
 | `journal_entries` | 1 entrada por dia do desafio |
@@ -47,8 +48,9 @@ Os scripts criam:
 | `challenge_day()` | dia atual do desafio (1-based, limitado ao total), **no fuso do usuário** (`challenge_meta.timezone`) |
 | `set_timezone(tz)` | grava o fuso do usuário; ancora `start_date` na data local se ainda no dia 1 (o cliente envia via `js/store.js` no load) |
 | `set_habit_status(habit_id, day_index, status)` | marca um dia e recalcula `streak`/`max_streak` |
+| `use_freeze()` | consome 1 dia de folga (de 2 por desafio) e protege a sequência do dia atual, sem exigir nenhum hábito marcado (`0010`) |
 | `unlock_achievement(id, day)` / `mark_achievement_seen(id)` | conquistas |
-| `reset_progress()` | apaga hábitos + diário + revisões semanais + conquistas + vocabulário do usuário, zera o `challenge_meta` e re-semeia os fixos (botão "Resetar progresso" na sidebar) |
+| `reset_progress()` | apaga hábitos + diário + revisões semanais + conquistas + vocabulário do usuário, zera o `challenge_meta` (inclusive `freezes_left`/`frozen_days`) e re-semeia os fixos (botão "Resetar progresso" na sidebar) |
 | `app_bootstrap()` | devolve todo o estado do usuário num JSON só (usado no load) |
 
 > `0003` removeu o módulo de água dedicado (`water_config`, `water_logs`,
@@ -131,6 +133,12 @@ podem ser excluídos, só pausados.
   significados das outras palavras cadastradas, com um banco de significados-fallback
   genéricos para quando houver poucas palavras). Alimenta 7 conquistas novas na categoria
   "Vocabulário". O botão "Resetar progresso" também apaga o vocabulário e o placar do jogo.
+- **Dia de folga** (`0010` + `js/store.js`): cada desafio dá 2 folgas
+  (`challenge_meta.freezes_left`, RPC `use_freeze()`). Usar uma protege o dia
+  atual — `Store.currentStreak()` e o `dayStreak` interno de
+  `computeAchievementProgress()` tratam dias em `frozen_days` como mantidos em
+  vez de quebra, mas não contam como "dia perfeito" nem alimentam contadores
+  de hábito específico. Oferecido no alerta de streak em risco do dashboard.
 - `Store.js` (raiz, com S maiúsculo) é a versão **antiga** só-localStorage e
   não é usada por nenhuma página (todas carregam `js/store.js`). Pode apagar.
 - **Rollover de dia** (resolvido no cliente): no bootstrap, `Store._rollForward()`

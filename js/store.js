@@ -29,7 +29,7 @@ const Store = (() => {
   ────────────────────────────────────────── */
   function _emptyCache() {
     return {
-      meta:          { totalDays: DEFAULT_TOTAL_DAYS },
+      meta:          { totalDays: DEFAULT_TOTAL_DAYS, freezesLeft: 2, frozenDays: [] },
       currentDay:    null,
       habits:        [],
       journal:       {},
@@ -64,9 +64,11 @@ const Store = (() => {
     if (!data) return;
 
     if (data.meta) {
-      cache.meta.startDate = data.meta.startDate || cache.meta.startDate;
-      cache.meta.totalDays = data.meta.totalDays || DEFAULT_TOTAL_DAYS;
-      cache.meta.timezone  = data.meta.timezone || cache.meta.timezone || 'UTC';
+      cache.meta.startDate    = data.meta.startDate || cache.meta.startDate;
+      cache.meta.totalDays    = data.meta.totalDays || DEFAULT_TOTAL_DAYS;
+      cache.meta.timezone     = data.meta.timezone || cache.meta.timezone || 'UTC';
+      cache.meta.freezesLeft  = data.meta.freezesLeft != null ? data.meta.freezesLeft : 2;
+      cache.meta.frozenDays   = Array.isArray(data.meta.frozenDays) ? data.meta.frozenDays : [];
     }
     if (data.currentDay) cache.currentDay = data.currentDay;
 
@@ -397,10 +399,26 @@ const Store = (() => {
   ────────────────────────────────────────── */
   function getMeta() {
     return {
-      startDate: cache.meta.startDate,
-      totalDays: cache.meta.totalDays || DEFAULT_TOTAL_DAYS,
-      currentDay: getCurrentDay(),
+      startDate:   cache.meta.startDate,
+      totalDays:   cache.meta.totalDays || DEFAULT_TOTAL_DAYS,
+      currentDay:  getCurrentDay(),
+      freezesLeft: cache.meta.freezesLeft != null ? cache.meta.freezesLeft : 2,
+      frozenDays:  cache.meta.frozenDays || [],
     };
+  }
+
+  // Consome 1 dia de folga: protege a sequência de hoje sem exigir que
+  // nenhum hábito seja marcado. currentStreak()/computeAchievementProgress
+  // tratam dias em frozenDays como "mantidos" em vez de quebra.
+  async function useFreeze() {
+    try { await _readyPromise; } catch (e) {}
+    if (!window.sb || !_uid) throw new Error('sem sessão');
+    const { data, error } = await window.sb.rpc('use_freeze');
+    if (error) throw error;
+    cache.meta.freezesLeft = data.freezesLeft;
+    if (!cache.meta.frozenDays.includes(data.day)) cache.meta.frozenDays.push(data.day);
+    _saveMirror();
+    return data;
   }
 
   function saveMeta(meta) {
@@ -700,10 +718,12 @@ const Store = (() => {
   function currentStreak(habits, currentDay) {
     const active = habits.filter(h => !h.paused);
     if (!active.length) return 0;
+    const frozen = cache.meta.frozenDays || [];
     let streak = 0;
     for (let i = currentDay - 1; i >= 0; i--) {
       const due = active.filter(h => scheduledOn(h, i));
       if (!due.length) continue;                       // dia de descanso: não quebra a streak
+      if (frozen.includes(i + 1)) { streak++; continue; } // dia de folga: mantém a streak
       if (due.some(h => habitVal(h, i) > 0)) streak++; else break;
     }
     return streak;
@@ -742,7 +762,8 @@ const Store = (() => {
       return 0;
     }
 
-    const dayStreak    = maxStreak(currentDay, i => active.some(h => habitVal(h, i) > 0));
+    const frozenSet    = new Set(cache.meta.frozenDays || []);
+    const dayStreak    = maxStreak(currentDay, i => frozenSet.has(i + 1) || active.some(h => habitVal(h, i) > 0));
     const daysActive   = countDays(currentDay, i => active.some(h => habitVal(h, i) > 0));
     const allDoneCount = countDays(currentDay, i => allHabitsDone(habits, i));
     const perfStreak   = maxStreak(currentDay, i => allHabitsDone(habits, i));
@@ -831,7 +852,7 @@ const Store = (() => {
     // ciclo de vida
     bootstrap, isReady, resetProgress,
     // meta
-    getMeta, saveMeta, getTotalDays, getStartDate, getCurrentDay,
+    getMeta, saveMeta, getTotalDays, getStartDate, getCurrentDay, useFreeze,
     // dados
     getHabits, saveHabits,
     getJournal, saveJournal, getJournalEntry, saveJournalEntry,
