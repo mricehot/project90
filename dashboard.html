@@ -251,7 +251,7 @@ body { overflow: hidden; }
     <div class="g4">
       <div class="stat-card"><div class="stat-lbl">Disciplina geral</div><div class="stat-val" id="sc-disc">87%</div><div class="stat-delta up">↑ +3% esta semana</div></div>
       <div class="stat-card"><div class="stat-lbl">Dias completos</div><div class="stat-val" id="sc-comp">28</div><div class="stat-sub">de <span id="sc-days">34</span> dias</div></div>
-      <div class="stat-card"><div class="stat-lbl">Streak atual</div><div class="stat-val" id="sc-streak">12</div><div class="stat-sub">Máximo: <span id="sc-max">18</span> dias</div></div>
+      <div class="stat-card"><div class="stat-lbl">Streak atual</div><div class="stat-val" id="sc-streak">12</div><div class="stat-sub">Máximo: <span id="sc-max">18</span> dias · <span id="sc-freezes">2</span> folgas</div></div>
       <div class="stat-card"><div class="stat-lbl">Hábitos hoje</div><div class="stat-val" id="sc-today">3/5</div><div class="stat-delta dn" id="sc-today-msg">↓ 2 pendentes</div></div>
     </div>
 
@@ -430,15 +430,23 @@ function renderNudge() {
   // dispensado hoje? só o alerta some; se o dia ficou completo, mostramos o positivo.
   const dismissed = (function(){ try { return localStorage.getItem('p90_nudge_x_' + _todayKey()) === '1'; } catch(e){ return false; } })();
 
-  let tone = '', icon = '', msg = '';
+  const meta        = Store.getMeta();
+  const freezesLeft = meta.freezesLeft || 0;
+  const todayFrozen = (meta.frozenDays || []).includes(day);
+
+  let tone = '', icon = '', msg = '', showFreeze = false;
   if (total > 0 && done === total) {
     tone = 'done'; icon = '✓';
     msg = `<b>Dia ${day} fechado.</b> Todos os hábitos de hoje marcados. Volte amanhã.`;
+  } else if (todayFrozen) {
+    tone = 'done'; icon = '❄';
+    msg = `<b>Dia ${day} protegido.</b> Você usou um dia de folga — sua sequência de <b>${streak}</b> segue de pé.`;
   } else if (dismissed) {
     box.hidden = true; return;
   } else if (streak >= 2 && done === 0 && hour >= 17) {
     tone = 'warn'; icon = '🔥';
     msg = `Sua sequência de <b>${streak} ${streak === 1 ? 'dia' : 'dias'}</b> acaba hoje se você não marcar nada. Faltam ~${24 - hour}h.`;
+    showFreeze = freezesLeft > 0;
   } else if (done === 0 && hour >= 12 && total > 0) {
     tone = 'warn'; icon = '◉';
     msg = `Você ainda não marcou nenhum hábito hoje. <b>Dia ${day} / ${days}.</b>`;
@@ -458,9 +466,28 @@ function renderNudge() {
     `<span class="nudge-icon">${icon}</span>` +
     `<span class="nudge-msg">${msg}</span>` +
     `<span class="nudge-actions">` +
+      (showFreeze ? `<button class="nudge-btn" id="nudge-freeze" title="${freezesLeft} restante${freezesLeft === 1 ? '' : 's'}">❄ Usar dia de folga</button>` : '') +
       `<button class="nudge-btn" id="nudge-remind">${remLbl}</button>` +
       `<button class="nudge-x" id="nudge-close" title="Dispensar por hoje">×</button>` +
     `</span>`;
+
+  if (showFreeze) {
+    document.getElementById('nudge-freeze').onclick = async (e) => {
+      const btn = e.currentTarget;
+      btn.disabled = true;
+      try {
+        const res = await Store.useFreeze();
+        toast(`Dia protegido ✓ — ${res.freezesLeft} folga${res.freezesLeft === 1 ? '' : 's'} restante${res.freezesLeft === 1 ? '' : 's'}.`);
+        renderNudge();
+        renderStats();
+        initSidebar();
+      } catch (err) {
+        console.error('[Project 90] use_freeze falhou:', err);
+        toast('Não foi possível usar a folga agora. Tente de novo.');
+        btn.disabled = false;
+      }
+    };
+  }
 
   document.getElementById('nudge-close').onclick = () => {
     try { localStorage.setItem('p90_nudge_x_' + _todayKey(), '1'); } catch (e) {}
@@ -588,6 +615,7 @@ function renderStats() {
   countUp(complete,  800, v => document.getElementById('sc-comp').textContent   = v,       350);
   countUp(streakNow, 800, v => document.getElementById('sc-streak').textContent = v,       500);
   countUp(streakMax, 600, v => document.getElementById('sc-max').textContent    = v,       500);
+  document.getElementById('sc-freezes').textContent = Store.getMeta().freezesLeft;
   countUp(DAY,       500, v => document.getElementById('sc-days').textContent   = v,       350);
 
   setTimeout(() => {
