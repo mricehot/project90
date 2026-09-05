@@ -48,7 +48,7 @@ window.P90_ACHIEVEMENTS = [
     ],
   },
   {
-    id: 'vocabulario', name: 'Vocabulário', icon: '📚',
+    id: 'vocabulario', name: 'Vocabulário', icon: '▤',
     achievements: [
       { id:'vocab_first',      icon:'🔤', name:'Primeira palavra',     points:50,  target:1,   req:'1 palavra cadastrada',   desc:'Cadastrou a primeira palavra no seu vocabulário.' },
       { id:'vocab_10',         icon:'📗', name:'Colecionador',         points:120, target:10,  req:'10 palavras cadastradas', desc:'Já são 10 palavras novas para incorporar ao seu vocabulário.' },
