@@ -181,6 +181,52 @@ const Store = (() => {
     });
   }
 
+  // Injeta a barra superior mobile (logo + hambúrguer) e transforma a sidebar
+  // num drawer lateral abaixo de 900px. Sem tocar no HTML das páginas — o CSS
+  // do drawer mora em css/components.css e só vale no breakpoint mobile.
+  function _wireMobileNav() {
+    const sidebar = document.querySelector('.sidebar');
+    if (!sidebar || document.querySelector('.mobile-topbar')) return;
+
+    if (!sidebar.id) sidebar.id = 'p90-sidebar';
+
+    const bar = document.createElement('div');
+    bar.className = 'mobile-topbar';
+    bar.innerHTML =
+      '<button class="hamburger" type="button" aria-label="Abrir menu" ' +
+        'aria-expanded="false" aria-controls="' + sidebar.id + '">☰</button>' +
+      '<a class="mt-logo" href="index.html">Project 90</a>';
+
+    const backdrop = document.createElement('div');
+    backdrop.className = 'sidebar-backdrop';
+
+    document.body.insertBefore(bar, document.body.firstChild);
+    document.body.appendChild(backdrop);
+
+    const btn = bar.querySelector('.hamburger');
+    const open = () => {
+      document.body.classList.add('nav-open');
+      sidebar.classList.add('open');
+      backdrop.classList.add('show');
+      btn.setAttribute('aria-expanded', 'true');
+      btn.textContent = '✕';
+    };
+    const close = () => {
+      document.body.classList.remove('nav-open');
+      sidebar.classList.remove('open');
+      backdrop.classList.remove('show');
+      btn.setAttribute('aria-expanded', 'false');
+      btn.textContent = '☰';
+    };
+
+    btn.addEventListener('click', () => sidebar.classList.contains('open') ? close() : open());
+    backdrop.addEventListener('click', close);
+    sidebar.querySelectorAll('.sb-item').forEach(a => a.addEventListener('click', close));
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && sidebar.classList.contains('open')) close();
+    });
+  }
+
   // Apaga todo o progresso e recomeça do zero (chama a RPC reset_progress).
   async function resetProgress() {
     try { await _readyPromise; } catch (e) {}
@@ -362,7 +408,7 @@ const Store = (() => {
       if (!session) { _redirectToLogin(); return; }
       _uid = session.user.id;
 
-      const wireSidebar = () => { _wireLogout(); _wireReset(); };
+      const wireSidebar = () => { _wireLogout(); _wireReset(); _wireMobileNav(); };
       if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', wireSidebar, { once: true });
       } else {
