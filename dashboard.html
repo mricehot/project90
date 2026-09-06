@@ -247,6 +247,9 @@ body { overflow: hidden; }
     <!-- ALERTA DE CHECK-IN / STREAK EM RISCO -->
     <div class="nudge" id="nudge" hidden></div>
 
+    <!-- REVISÃO SEMANAL PENDENTE -->
+    <div class="nudge" id="weekly-nudge" hidden></div>
+
     <!-- STAT CARDS -->
     <div class="g4">
       <div class="stat-card"><div class="stat-lbl">Disciplina geral</div><div class="stat-val" id="sc-disc">87%</div><div class="stat-delta up">↑ +3% esta semana</div></div>
@@ -383,6 +386,7 @@ function init() {
   renderWeeklyChart();
   renderProgressChart();
   renderNudge();
+  renderWeeklyNudge();
   renderLevels();
 }
 
@@ -413,6 +417,43 @@ function renderLevels() {
 function _todayKey() { return 'p90_' + new Date().toDateString(); }
 function _readReminder() {
   try { const r = localStorage.getItem('p90_reminder'); return r ? JSON.parse(r) : null; } catch (e) { return null; }
+}
+
+// Lembrete de revisão semanal pendente — semana N fica disponível quando
+// currentDay >= N*7 (mesma regra do diario.html).
+function renderWeeklyNudge() {
+  const box = document.getElementById('weekly-nudge');
+  if (!box) return;
+
+  const weeks   = Math.floor(Store.getCurrentDay() / 7);
+  const reviews = Store.getWeeklyReviews();
+  let pending = 0, firstPending = null;
+  for (let w = 1; w <= weeks; w++) {
+    if (!reviews[w]) { pending++; if (firstPending == null) firstPending = w; }
+  }
+
+  const dismissed = (function(){ try { return localStorage.getItem('p90_wnudge_x_' + _todayKey()) === '1'; } catch(e){ return false; } })();
+  if (pending === 0 || dismissed) { box.hidden = true; return; }
+
+  const msg = pending === 1
+    ? `A <b>revisão da semana ${firstPending}</b> está disponível e ainda não foi feita.`
+    : `Você tem <b>${pending} revisões semanais</b> pendentes — comece pela semana ${firstPending}.`;
+
+  box.className = 'nudge';
+  box.hidden = false;
+  box.innerHTML =
+    `<span class="nudge-icon">◻</span>` +
+    `<span class="nudge-msg">${msg}</span>` +
+    `<span class="nudge-actions">` +
+      `<button class="nudge-btn" id="wnudge-go">Fazer revisão</button>` +
+      `<button class="nudge-x" id="wnudge-close" title="Dispensar por hoje">×</button>` +
+    `</span>`;
+
+  document.getElementById('wnudge-go').onclick = () => { location.href = 'diario.html#revisao'; };
+  document.getElementById('wnudge-close').onclick = () => {
+    try { localStorage.setItem('p90_wnudge_x_' + _todayKey(), '1'); } catch (e) {}
+    renderWeeklyNudge();
+  };
 }
 
 function renderNudge() {
