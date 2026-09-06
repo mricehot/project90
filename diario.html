@@ -111,7 +111,7 @@ body {
 }
 .page-title    { font-family: 'DM Serif Display', serif; font-size: 26px; font-weight: 400; display: flex; align-items: baseline; gap: 10px; }
 .page-title em { font-style: italic; opacity: 0.45; font-size: 22px; }
-.topbar-right  { display: flex; align-items: center; gap: 12px; }
+.topbar-right  { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 
 /* ── DAY NAV ── */
 .day-nav { display: flex; align-items: center; gap: 6px; }
@@ -172,6 +172,48 @@ body {
 }
 .wr-score button:hover { color: var(--white); border-color: rgba(245,245,240,0.35); }
 .wr-score button.on { background: var(--white); color: var(--bg); border-color: var(--white); }
+
+/* ── MODAL: HISTÓRICO DO DIÁRIO (leitura) ── */
+.jm-overlay {
+  position: fixed; inset: 0; z-index: 400; background: rgba(8,8,8,0.85);
+  display: flex; align-items: center; justify-content: center; padding: 24px;
+  opacity: 0; pointer-events: none; transition: opacity 0.25s;
+}
+.jm-overlay.open { opacity: 1; pointer-events: all; }
+.jm-box {
+  background: var(--surface); border: 1px solid var(--border2);
+  width: 100%; max-width: 560px; max-height: 88vh; display: flex; flex-direction: column;
+  transform: translateY(14px); transition: transform 0.3s cubic-bezier(0.16,1,0.3,1);
+}
+.jm-overlay.open .jm-box { transform: translateY(0); }
+.jm-head { padding: 28px 32px 18px; border-bottom: 1px solid var(--border); }
+.jm-title { font-family: 'DM Serif Display', serif; font-size: 22px; color: var(--white); margin-bottom: 14px; }
+.jm-title em { font-style: italic; opacity: 0.4; }
+.jm-select {
+  width: 100%; background: var(--surface2); border: 1px solid var(--border2); color: var(--white);
+  font-family: 'DM Mono', monospace; font-size: 12px; padding: 10px 12px; outline: none; cursor: pointer;
+}
+.jm-body { padding: 24px 32px; overflow-y: auto; }
+.jm-meta { font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--mid); margin-bottom: 18px; }
+.jm-mood { font-size: 20px; margin-right: 8px; vertical-align: middle; }
+.jm-mood-lbl { font-size: 11px; letter-spacing: 0.06em; color: var(--white); }
+.jm-section { margin-bottom: 20px; }
+.jm-section:last-child { margin-bottom: 0; }
+.jm-lbl { font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--mid); margin-bottom: 8px; }
+.jm-text {
+  font-family: 'DM Mono', monospace; font-weight: 300; font-size: 12.5px; line-height: 1.9;
+  color: var(--white); letter-spacing: 0.03em; white-space: pre-wrap; word-break: break-word;
+}
+.jm-empty { text-align: center; color: var(--mid); font-size: 12px; padding: 32px 0; }
+.jm-footer { padding: 16px 32px 22px; border-top: 1px solid var(--border); display: flex; gap: 10px; }
+.jm-btn {
+  flex: 1; padding: 12px; font-family: 'DM Mono', monospace; font-size: 11px;
+  letter-spacing: 0.14em; text-transform: uppercase; cursor: pointer; border: none; transition: opacity 0.2s;
+}
+.jm-btn:hover { opacity: 0.85; }
+.jm-btn.primary { background: var(--white); color: var(--bg); }
+.jm-btn.ghost { background: none; border: 1px solid var(--border2); color: var(--mid); }
+.jm-btn.ghost:hover { color: var(--white); opacity: 1; }
 
 /* ── ENTRY HEADER ── */
 .entry-header {
@@ -372,6 +414,7 @@ body {
           <button class="day-nav-btn" id="nav-next" disabled>›</button>
         </div>
         <div class="unsaved-dot" id="unsaved-dot"></div>
+        <button class="btn-sm" id="btn-history">◻ Entradas</button>
         <button class="btn-sm primary" id="btn-save">Salvar entrada</button>
       </div>
     </div>
@@ -480,6 +523,21 @@ body {
       <div class="entries-list" id="entries-list"></div>
     </div>
 
+  </div>
+</div>
+
+<!-- MODAL: HISTÓRICO DO DIÁRIO (leitura) -->
+<div class="jm-overlay" id="jm-overlay">
+  <div class="jm-box">
+    <div class="jm-head">
+      <div class="jm-title">Entradas do <em>diário.</em></div>
+      <select class="jm-select" id="jm-select"></select>
+    </div>
+    <div class="jm-body" id="jm-body"></div>
+    <div class="jm-footer">
+      <button class="jm-btn ghost" id="jm-close">Fechar</button>
+      <button class="jm-btn primary" id="jm-open">Abrir no editor</button>
+    </div>
   </div>
 </div>
 
@@ -782,6 +840,66 @@ function renderEntriesList() {
   }).join('');
 }
 
+/* ── MODAL: HISTÓRICO DO DIÁRIO (só leitura) ── */
+var MOOD_LABELS = { '🔥':'Em chamas', '💪':'Forte', '😐':'Neutro', '😓':'Difícil', '💀':'Horrível' };
+var jmDay = null;
+
+function _jmEsc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
+    return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c];
+  });
+}
+
+function openHistoryModal() {
+  var days = Object.keys(entries).map(Number).sort(function(a,b){ return b - a; });
+  var sel  = document.getElementById('jm-select');
+  if (!days.length) {
+    sel.innerHTML = '<option>—</option>';
+    document.getElementById('jm-body').innerHTML = '<div class="jm-empty">Você ainda não escreveu nenhuma entrada.</div>';
+    document.getElementById('jm-open').disabled = true;
+  } else {
+    sel.innerHTML = days.map(function(n){
+      var d = dayToDate(n);
+      return '<option value="'+n+'">Dia '+n+' · '+fmtDateShort(d)+' · '+DAYS_PT[d.getDay()]+'</option>';
+    }).join('');
+    document.getElementById('jm-open').disabled = false;
+    jmDay = entries[currentDay] ? currentDay : days[0];
+    sel.value = jmDay;
+    renderHistoryEntry(jmDay);
+  }
+  document.getElementById('jm-overlay').classList.add('open');
+}
+
+function closeHistoryModal() {
+  document.getElementById('jm-overlay').classList.remove('open');
+}
+
+function renderHistoryEntry(n) {
+  jmDay = n;
+  var data = entries[n] || {};
+  var d = dayToDate(n);
+  var moodHtml = data.mood
+    ? '<span class="jm-mood">'+data.mood+'</span><span class="jm-mood-lbl">'+(MOOD_LABELS[data.mood] || '')+'</span>'
+    : '<span class="jm-mood-lbl" style="color:var(--mid)">Sem humor registrado</span>';
+  var sections = [
+    ['O que fiz bem hoje',       data.good],
+    ['O que melhorar amanhã',    data.improve],
+    ['Reflexão livre',           data.free],
+    ['Gratidão — 3 coisas',      data.gratitude],
+  ].filter(function(s){ return s[1] && String(s[1]).trim(); });
+
+  var body = '<div class="jm-meta">Dia '+n+' &nbsp;·&nbsp; '+fmtDateFull(d)+'</div>'
+           + '<div class="jm-section">'+moodHtml+'</div>';
+  body += sections.length
+    ? sections.map(function(s){
+        return '<div class="jm-section"><div class="jm-lbl">'+s[0]+'</div>'
+             + '<div class="jm-text">'+_jmEsc(String(s[1]).trim())+'</div></div>';
+      }).join('')
+    : '<div class="jm-empty">Esta entrada não tem texto — só humor / hábitos.</div>';
+
+  document.getElementById('jm-body').innerHTML = body;
+}
+
 /* ── SETUP LISTENERS ── */
 function setupListeners() {
   document.getElementById('btn-save').addEventListener('click', saveCurrentDay);
@@ -814,8 +932,19 @@ function setupListeners() {
     el.addEventListener('blur',  function(){ if(isDirty) saveCurrentDay(); });
   });
 
+  document.getElementById('btn-history').addEventListener('click', openHistoryModal);
+  document.getElementById('jm-close').addEventListener('click', closeHistoryModal);
+  document.getElementById('jm-open').addEventListener('click', function(){
+    if (jmDay != null) { loadDayIntoEditor(jmDay); closeHistoryModal(); }
+  });
+  document.getElementById('jm-select').addEventListener('change', function(){ renderHistoryEntry(+this.value); });
+  document.getElementById('jm-overlay').addEventListener('click', function(e){
+    if (e.target === this) closeHistoryModal();
+  });
+
   document.addEventListener('keydown', function(e){
     if ((e.metaKey||e.ctrlKey) && e.key==='s') { e.preventDefault(); saveCurrentDay(); }
+    if (e.key === 'Escape' && document.getElementById('jm-overlay').classList.contains('open')) closeHistoryModal();
   });
 }
 
