@@ -22,6 +22,7 @@ Dashboard → **SQL Editor** → **New query** → rode os arquivos **na ordem**
 8. `supabase/migrations/0008_weekly_review.sql` → **Run**
 9. `supabase/migrations/0009_vocabulary.sql` → **Run**
 10. `supabase/migrations/0010_streak_freeze.sql` → **Run**
+11. `supabase/migrations/0011_speech.sql` → **Run**
 
 **Opção B — CLI:**
 ```bash
@@ -42,6 +43,8 @@ Os scripts criam:
 | `achievements` | estado de desbloqueio por conquista |
 | `vocab_words` | palavras do vocabulário pessoal (`0009`): palavra, significado, exemplo, data. Id gerado pelo cliente, mesmo padrão de `habits.id`. Gerenciado em `vocabulario.html`. |
 | `vocab_quiz_stats` | placar acumulado do jogo "Testar meu vocabulário" (`0009`): rodadas jogadas, respostas certas/totais, maior sequência de acertos. 1 linha por usuário. |
+| `speech_exercises` | biblioteca de exercícios de fala/dicção (`0011`): título, texto, tipo (trava-língua/articulação/respiração/projeção/ritmo), foco. Id gerado pelo cliente. Gerenciado em `diccao.html`. |
+| `speech_practice_stats` | placar acumulado das sessões de "Praticar dicção" (`0011`): sessões, repetições, soma/contagem das auto-avaliações 1–5, maior sequência de notas boas. 1 linha por usuário. |
 | **RLS** | ligado em tudo — cada usuário só vê as próprias linhas |
 | `handle_new_user()` | trigger em `auth.users`: cria profile + meta + hábitos fixos |
 | `seed_core_habits(user)` | semeia os hábitos fixos que faltam (idempotente) |
@@ -50,7 +53,7 @@ Os scripts criam:
 | `set_habit_status(habit_id, day_index, status)` | marca um dia e recalcula `streak`/`max_streak` |
 | `use_freeze()` | consome 1 dia de folga (de 2 por desafio) e protege a sequência do dia atual, sem exigir nenhum hábito marcado (`0010`) |
 | `unlock_achievement(id, day)` / `mark_achievement_seen(id)` | conquistas |
-| `reset_progress()` | apaga hábitos + diário + revisões semanais + conquistas + vocabulário do usuário, zera o `challenge_meta` (inclusive `freezes_left`/`frozen_days`) e re-semeia os fixos (botão "Resetar progresso" na sidebar) |
+| `reset_progress()` | apaga hábitos + diário + revisões semanais + conquistas + vocabulário + dicção do usuário, zera o `challenge_meta` (inclusive `freezes_left`/`frozen_days`) e re-semeia os fixos (botão "Resetar progresso" na sidebar) |
 | `app_bootstrap()` | devolve todo o estado do usuário num JSON só (usado no load) |
 
 > `0003` removeu o módulo de água dedicado (`water_config`, `water_logs`,
@@ -137,6 +140,14 @@ podem ser excluídos, só pausados.
   significados das outras palavras cadastradas, com um banco de significados-fallback
   genéricos para quando houver poucas palavras). Alimenta 7 conquistas novas na categoria
   "Vocabulário". O botão "Resetar progresso" também apaga o vocabulário e o placar do jogo.
+- **Dicção** (`0011` + `diccao.html`): seção nova e independente do desafio —
+  biblioteca de exercícios de fala (CRUD + busca + filtro por tipo, com um
+  botão "carregar biblioteca inicial" de ~20 trava-línguas/exercícios
+  clássicos) e o modo "Praticar dicção" (sessão de 5 exercícios sorteados,
+  gravador de áudio opcional **só em memória** via `MediaRecorder` — nada é
+  enviado, some se o navegador não suportar/permitir — e auto-avaliação 1–5).
+  Alimenta 7 conquistas novas na categoria "Dicção". "Resetar progresso"
+  também apaga a biblioteca e o placar.
 - **Toast global de conquista** (`js/achievements.js`): o catálogo de conquistas
   (nome/ícone/pontos/alvo/descrição) mora só ali agora, em `window.P90_ACHIEVEMENTS`
   — `conquistas.html` usa esse catálogo para o progresso completo e seu próprio

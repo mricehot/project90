@@ -270,6 +270,7 @@
       <a class="sb-item" href="diario.html"><span class="sb-item-icon">◻</span> Diário</a>
       <a class="sb-item active" href="conquistas.html"><span class="sb-item-icon">◆</span> Conquistas</a>
       <a class="sb-item" href="vocabulario.html"><span class="sb-item-icon">▤</span> Vocabulário</a>
+      <a class="sb-item" href="diccao.html"><span class="sb-item-icon">◗</span> Dicção</a>
     </nav>
 
     <div class="sb-bottom">
@@ -404,7 +405,8 @@ function saveAchievementsState(state) { Store.saveAchievements(state); }
 ════════════════════════════════════ */
 function computeProgress(habits, journal) {
   return Store.computeAchievementProgress(habits, journal, DAY, Store.getWeeklyReviews(),
-    Store.getVocabWords(), Store.getVocabQuizStats());
+    Store.getVocabWords(), Store.getVocabQuizStats(),
+    Store.getSpeechExercises(), Store.getSpeechStats());
 }
 
 /* ════════════════════════════════════

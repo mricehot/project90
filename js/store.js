@@ -37,6 +37,8 @@ const Store = (() => {
       achievements:  {},
       vocabWords:    [],
       vocabQuiz:     { roundsPlayed: 0, totalAnswered: 0, totalCorrect: 0, bestStreak: 0 },
+      speechExercises: [],
+      speechStats:   { sessionsPlayed: 0, repsTotal: 0, ratingSum: 0, ratingCount: 0, bestStreak: 0 },
     };
   }
 
@@ -98,6 +100,17 @@ const Store = (() => {
       cache.vocabQuiz.totalCorrect  = data.vocabQuiz.totalCorrect  || 0;
       cache.vocabQuiz.bestStreak    = data.vocabQuiz.bestStreak    || 0;
     }
+    if (Array.isArray(data.speechExercises)) {
+      cache.speechExercises.length = 0;
+      data.speechExercises.map(_rowToSpeechExercise).forEach(s => cache.speechExercises.push(s));
+    }
+    if (data.speechStats && typeof data.speechStats === 'object') {
+      cache.speechStats.sessionsPlayed = data.speechStats.sessionsPlayed || 0;
+      cache.speechStats.repsTotal      = data.speechStats.repsTotal      || 0;
+      cache.speechStats.ratingSum      = data.speechStats.ratingSum      || 0;
+      cache.speechStats.ratingCount    = data.speechStats.ratingCount    || 0;
+      cache.speechStats.bestStreak     = data.speechStats.bestStreak     || 0;
+    }
   }
 
   function _rowToVocabWord(w) {
@@ -107,6 +120,17 @@ const Store = (() => {
       meaning:   w.meaning,
       example:   w.example || '',
       createdAt: w.createdAt || w.created_at || new Date().toISOString(),
+    };
+  }
+
+  function _rowToSpeechExercise(s) {
+    return {
+      id:        s.id,
+      title:     s.title,
+      body:      s.body,
+      kind:      s.kind || 'trava-lingua',
+      focus:     s.focus || '',
+      createdAt: s.createdAt || s.created_at || new Date().toISOString(),
     };
   }
 
@@ -273,7 +297,7 @@ const Store = (() => {
         '</div>' +
         '<p style="font-size:12px;line-height:1.9;color:var(--mid,#999);margin-bottom:8px;">' +
           'Isso apaga <b style="color:var(--white,#f5f5f0)">todo o seu progresso</b> — hábitos, ' +
-          'histórico, entradas do diário, revisões semanais, vocabulário e conquistas — e reinicia ' +
+          'histórico, entradas do diário, revisões semanais, vocabulário, dicção e conquistas — e reinicia ' +
           'o desafio no dia 1. Os hábitos fixos voltam ao estado inicial.' +
         '</p>' +
         '<p style="font-size:11px;letter-spacing:.06em;color:var(--red,#fca5a5);margin-bottom:24px;">' +
@@ -711,6 +735,109 @@ const Store = (() => {
   }
 
   /* ──────────────────────────────────────────
+     DICÇÃO (exercícios de fala)
+  ────────────────────────────────────────── */
+  function getSpeechExercises() { return cache.speechExercises; }
+
+  function _nextSpeechId() {
+    return (cache.speechExercises.reduce((m, s) => Math.max(m, s.id), 0) || 0) + 1;
+  }
+
+  function _speechRow(s) {
+    return {
+      id: s.id, user_id: _uid, title: s.title, body: s.body,
+      kind: s.kind || 'trava-lingua', focus: s.focus || null, created_at: s.createdAt,
+    };
+  }
+
+  function addSpeechExercise(ex) {
+    const row = {
+      id:        _nextSpeechId(),
+      title:     (ex.title || '').trim(),
+      body:      (ex.body || '').trim(),
+      kind:      (ex.kind || 'trava-lingua').trim(),
+      focus:     (ex.focus || '').trim(),
+      createdAt: new Date().toISOString(),
+    };
+    cache.speechExercises.unshift(row);
+    _saveMirror();
+    _push(async () => {
+      const { error } = await window.sb.from('speech_exercises').upsert(_speechRow(row), { onConflict: 'user_id,id' });
+      if (error) throw error;
+    });
+    return row;
+  }
+
+  // Adiciona vários de uma vez (usado para carregar a biblioteca inicial).
+  function addSpeechExercises(list) {
+    if (!Array.isArray(list) || !list.length) return [];
+    let id = _nextSpeechId();
+    const now = Date.now();
+    const rows = list.map((ex, i) => ({
+      id:        id++,
+      title:     (ex.title || '').trim(),
+      body:      (ex.body || '').trim(),
+      kind:      (ex.kind || 'trava-lingua').trim(),
+      focus:     (ex.focus || '').trim(),
+      createdAt: new Date(now + i).toISOString(),
+    }));
+    rows.forEach(r => cache.speechExercises.unshift(r));
+    _saveMirror();
+    _push(async () => {
+      const { error } = await window.sb.from('speech_exercises').upsert(rows.map(_speechRow), { onConflict: 'user_id,id' });
+      if (error) throw error;
+    });
+    return rows;
+  }
+
+  function updateSpeechExercise(id, patch) {
+    const s = cache.speechExercises.find(x => x.id === id);
+    if (!s) return;
+    if (patch.title != null) s.title = String(patch.title).trim();
+    if (patch.body  != null) s.body  = String(patch.body).trim();
+    if (patch.kind  != null) s.kind  = String(patch.kind).trim();
+    if (patch.focus != null) s.focus = String(patch.focus).trim();
+    _saveMirror();
+    _push(async () => {
+      const { error } = await window.sb.from('speech_exercises').update({
+        title: s.title, body: s.body, kind: s.kind, focus: s.focus || null,
+      }).eq('user_id', _uid).eq('id', id);
+      if (error) throw error;
+    });
+  }
+
+  function deleteSpeechExercise(id) {
+    const idx = cache.speechExercises.findIndex(s => s.id === id);
+    if (idx !== -1) cache.speechExercises.splice(idx, 1);
+    _saveMirror();
+    _push(async () => {
+      const { error } = await window.sb.from('speech_exercises').delete().eq('user_id', _uid).eq('id', id);
+      if (error) throw error;
+    });
+  }
+
+  function getSpeechStats() { return cache.speechStats; }
+
+  // Registra o resultado de uma sessão de prática (soma ao placar acumulado).
+  // result: { reps, ratingSum, ratingCount, bestStreak }
+  function recordSpeechSession(result) {
+    const st = cache.speechStats;
+    st.sessionsPlayed++;
+    st.repsTotal   += Math.max(0, result.reps || 0);
+    st.ratingSum   += Math.max(0, result.ratingSum || 0);
+    st.ratingCount += Math.max(0, result.ratingCount || 0);
+    if ((result.bestStreak || 0) > st.bestStreak) st.bestStreak = result.bestStreak;
+    _saveMirror();
+    _push(async () => {
+      const { error } = await window.sb.from('speech_practice_stats').upsert({
+        user_id: _uid, sessions_played: st.sessionsPlayed, reps_total: st.repsTotal,
+        rating_sum: st.ratingSum, rating_count: st.ratingCount, best_streak: st.bestStreak,
+      }, { onConflict: 'user_id' });
+      if (error) throw error;
+    });
+  }
+
+  /* ──────────────────────────────────────────
      COMPUTED HELPERS
   ────────────────────────────────────────── */
 
@@ -775,10 +902,12 @@ const Store = (() => {
     return streak;
   }
 
-  function computeAchievementProgress(habits, journal, currentDay, weeklyReviews, vocabWords, vocabQuiz) {
+  function computeAchievementProgress(habits, journal, currentDay, weeklyReviews, vocabWords, vocabQuiz, speechExercises, speechStats) {
     weeklyReviews = weeklyReviews || {};
     vocabWords = vocabWords || [];
     vocabQuiz  = vocabQuiz || { roundsPlayed: 0, totalCorrect: 0 };
+    speechExercises = speechExercises || [];
+    speechStats = speechStats || { sessionsPlayed: 0, repsTotal: 0 };
     const active = habits.filter(h => !h.paused);
 
     // As conquistas ligadas a um hábito específico agora casam pela CHAVE
@@ -855,6 +984,13 @@ const Store = (() => {
       vocab_quiz1:      Math.min(1, vocabQuiz.roundsPlayed || 0),
       vocab_correct25:  vocabQuiz.totalCorrect || 0,
       vocab_correct100: vocabQuiz.totalCorrect || 0,
+      speech_first:     Math.min(1, speechExercises.length),
+      speech_10:        speechExercises.length,
+      speech_25:        speechExercises.length,
+      speech_session1:  Math.min(1, speechStats.sessionsPlayed || 0),
+      speech_sessions10: speechStats.sessionsPlayed || 0,
+      speech_reps50:    speechStats.repsTotal || 0,
+      speech_reps200:   speechStats.repsTotal || 0,
     };
   }
 
@@ -906,6 +1042,8 @@ const Store = (() => {
     getAchievements, saveAchievements, unlockAchievement, markAchievementSeen,
     getVocabWords, addVocabWord, updateVocabWord, deleteVocabWord,
     getVocabQuizStats, recordVocabQuizRound,
+    getSpeechExercises, addSpeechExercise, addSpeechExercises, updateSpeechExercise, deleteSpeechExercise,
+    getSpeechStats, recordSpeechSession,
     // computed
     habitVal, scheduledOn, dayCompletionPct, maxStreak, countDays,
     allHabitsDone, currentStreak, computeAchievementProgress, computeLevels,

@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Project 90 — Dicção</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/components.css">
+<script src="js/supabase-config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase.js"></script>
+<script src="js/store.js"></script>
+<script src="js/achievements.js"></script>
+<style>
+
+/* ── MAIN ── */
+.dcc-main { padding: 32px 36px; overflow-y: auto; display: flex; flex-direction: column; gap: 28px; }
+
+.topbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+.page-title { font-family: 'DM Serif Display', serif; font-size: 26px; font-weight: 400; display: flex; align-items: baseline; gap: 10px; }
+.page-title em { font-style: italic; opacity: 0.45; font-size: 22px; }
+.topbar-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+/* ── STAT CARDS ── */
+.g4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+.stat-card { background: var(--surface); border: 1px solid var(--border); padding: 20px 22px; }
+.stat-lbl { font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--mid); margin-bottom: 8px; }
+.stat-val { font-family: 'Bebas Neue', sans-serif; font-size: 40px; line-height: 1; }
+.stat-sub { font-size: 10px; letter-spacing: 0.1em; color: var(--mid); margin-top: 6px; }
+
+/* ── PRACTICE CTA BANNER ── */
+.prac-cta {
+  background: var(--surface); border: 1px solid var(--border2);
+  padding: 24px 28px; display: flex; align-items: center; gap: 22px; flex-wrap: wrap;
+}
+.pc-icon { font-size: 30px; flex-shrink: 0; }
+.pc-body { flex: 1; min-width: 200px; }
+.pc-title { font-family: 'DM Serif Display', serif; font-size: 18px; font-weight: 400; margin-bottom: 4px; }
+.pc-title em { font-style: italic; opacity: 0.4; }
+.pc-sub { font-size: 11px; letter-spacing: 0.04em; color: var(--mid); line-height: 1.6; }
+.pc-controls { display: flex; gap: 10px; align-items: center; flex-shrink: 0; flex-wrap: wrap; }
+.pc-kind {
+  background: var(--surface2); border: 1px solid var(--border); color: var(--white);
+  font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.03em;
+  padding: 12px 14px; outline: none; cursor: pointer; appearance: none;
+}
+.pc-btn {
+  padding: 14px 28px; background: var(--white); color: var(--bg); border: none;
+  font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase;
+  cursor: pointer; transition: opacity 0.2s, transform 0.15s;
+}
+.pc-btn:hover:not(:disabled) { opacity: 0.85; transform: translateY(-1px); }
+.pc-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+/* ── TOOLBAR ── */
+.dcc-toolbar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.dcc-search {
+  flex: 1; min-width: 200px; background: var(--surface2); border: 1px solid var(--border); color: var(--white);
+  font-family: 'DM Mono', monospace; font-weight: 300; font-size: 12px; letter-spacing: 0.03em;
+  padding: 11px 14px; outline: none; transition: border-color 0.2s;
+}
+.dcc-search:focus { border-color: rgba(245,245,240,0.35); }
+.dcc-search::placeholder { color: var(--mid); }
+.dcc-sort, .dcc-filter {
+  background: var(--surface2); border: 1px solid var(--border); color: var(--white);
+  font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.03em;
+  padding: 11px 14px; outline: none; cursor: pointer; appearance: none;
+}
+.dcc-count { font-size: 10px; letter-spacing: 0.1em; color: var(--mid); white-space: nowrap; }
+.dcc-count span { color: var(--white); }
+
+/* ── EXERCISE LIST ── */
+.ex-list { display: flex; flex-direction: column; gap: 10px; }
+.ex-card {
+  background: var(--surface); border: 1px solid var(--border);
+  padding: 18px 20px; display: flex; gap: 18px; align-items: flex-start;
+  transition: border-color 0.2s;
+}
+.ex-card:hover { border-color: var(--border2); }
+.ex-main { flex: 1; min-width: 0; }
+.ex-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 7px; }
+.ex-title { font-family: 'DM Serif Display', serif; font-size: 18px; font-weight: 400; word-break: break-word; }
+.ex-kind {
+  font-size: 8px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--mid);
+  border: 1px solid var(--border); padding: 3px 7px; white-space: nowrap;
+}
+.ex-body { font-size: 12px; letter-spacing: 0.02em; color: var(--white); line-height: 1.8; margin-bottom: 5px; }
+.ex-focus { font-size: 10px; letter-spacing: 0.06em; color: var(--mid); }
+.ex-focus::before { content: 'foco: '; }
+.ex-actions { display: flex; gap: 8px; flex-shrink: 0; }
+.ex-btn {
+  width: 32px; height: 32px; border: 1px solid var(--border); background: none; color: var(--mid);
+  cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 13px;
+  transition: color 0.2s, border-color 0.2s;
+}
+.ex-btn:hover { color: var(--white); border-color: var(--border2); }
+.ex-btn.danger:hover { color: #fca5a5; border-color: rgba(252,165,165,0.4); }
+
+/* ── EMPTY STATE ── */
+.empty-state { text-align: center; padding: 56px 32px; border: 1px dashed rgba(245,245,240,0.12); background: var(--surface); }
+.empty-icon { font-size: 32px; margin-bottom: 16px; opacity: 0.4; }
+.empty-title { font-family: 'DM Serif Display', serif; font-size: 20px; font-weight: 400; margin-bottom: 8px; opacity: 0.6; }
+.empty-sub { font-size: 12px; color: var(--mid); margin-bottom: 24px; line-height: 1.8; }
+.btn-sm {
+  padding: 10px 20px; background: none; border: 1px solid var(--border2); color: var(--mid);
+  font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+  cursor: pointer; transition: color 0.2s, border-color 0.2s, background 0.2s;
+}
+.btn-sm:hover { border-color: rgba(245,245,240,0.3); color: var(--white); }
+.btn-sm.primary { background: var(--white); color: var(--bg); border-color: var(--white); }
+.btn-sm.primary:hover { background: rgba(245,245,240,0.88); color: var(--bg); }
+
+textarea.modal-input { resize: vertical; min-height: 72px; line-height: 1.7; }
+
+/* ── PRACTICE OVERLAY ── */
+.prac-overlay {
+  position: fixed; inset: 0; z-index: 500; background: rgba(8,8,8,0.94);
+  display: flex; align-items: center; justify-content: center; padding: 24px;
+  opacity: 0; pointer-events: none; transition: opacity 0.3s;
+}
+.prac-overlay.show { opacity: 1; pointer-events: all; }
+.prac-box {
+  max-width: 560px; width: 100%; background: var(--surface); border: 1px solid rgba(245,245,240,0.2);
+  padding: 38px 42px; transform: scale(0.95); transition: transform 0.35s cubic-bezier(0.16,1,0.3,1);
+  max-height: 90vh; overflow-y: auto;
+}
+.prac-overlay.show .prac-box { transform: scale(1); }
+.prac-topline { display: flex; justify-content: space-between; align-items: center; margin-bottom: 22px; }
+.prac-eyebrow { font-size: 9px; letter-spacing: 0.24em; text-transform: uppercase; color: var(--mid); }
+.prac-close { cursor: pointer; color: var(--mid); font-size: 16px; line-height: 1; transition: color 0.2s; }
+.prac-close:hover { color: var(--white); }
+.prac-kindrow { display: flex; gap: 8px; align-items: center; margin-bottom: 12px; flex-wrap: wrap; }
+.prac-kind-badge { font-size: 8px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--mid); border: 1px solid var(--border); padding: 3px 8px; }
+.prac-focus { font-size: 10px; letter-spacing: 0.06em; color: var(--mid); }
+.prac-text {
+  font-family: 'DM Serif Display', serif; font-size: 22px; line-height: 1.7;
+  color: var(--white); margin-bottom: 22px; word-break: break-word;
+}
+.prac-rec { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; min-height: 40px; }
+.prac-rec audio { height: 34px; max-width: 100%; }
+.prac-rec-btn {
+  padding: 10px 18px; background: none; border: 1px solid var(--border2); color: var(--white);
+  font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
+  cursor: pointer; transition: border-color 0.2s, color 0.2s;
+}
+.prac-rec-btn:hover { border-color: rgba(245,245,240,0.35); }
+.prac-rec-btn[data-rec="1"] { border-color: #fca5a5; color: #fca5a5; }
+.prac-rec-hint { font-size: 10px; letter-spacing: 0.04em; color: var(--mid); line-height: 1.6; margin-bottom: 20px; }
+
+.prac-rate-lbl { font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--mid); margin-bottom: 10px; }
+.prac-rate { display: flex; gap: 8px; margin-bottom: 22px; flex-wrap: wrap; }
+.prac-rate button {
+  flex: 1; min-width: 84px; padding: 12px 6px; background: var(--surface2); border: 1px solid var(--border);
+  color: var(--white); font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.04em;
+  cursor: pointer; transition: border-color 0.2s, background 0.2s;
+}
+.prac-rate button:hover { border-color: rgba(245,245,240,0.35); }
+.prac-rate button.on { border-color: #86efac; background: rgba(134,239,172,0.1); color: #86efac; }
+
+.prac-stats-row {
+  display: flex; justify-content: space-between; padding-top: 16px;
+  border-top: 1px solid var(--border); font-size: 10px; letter-spacing: 0.1em; color: var(--mid);
+}
+.prac-stats-row span { color: var(--white); }
+.prac-next-btn {
+  width: 100%; margin-top: 18px; padding: 13px; background: var(--white); color: var(--bg); border: none;
+  font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase;
+  cursor: pointer; opacity: 0; pointer-events: none; transition: opacity 0.2s;
+}
+.prac-next-btn.show { opacity: 1; pointer-events: all; }
+
+/* summary */
+.prac-summary { text-align: center; }
+.ps-icon { font-size: 40px; margin-bottom: 18px; }
+.ps-title { font-family: 'DM Serif Display', serif; font-size: 24px; margin-bottom: 4px; }
+.ps-title em { font-style: italic; opacity: 0.45; }
+.ps-score { font-family: 'Bebas Neue', sans-serif; font-size: 52px; line-height: 1; margin: 14px 0 6px; }
+.ps-sub { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--mid); margin-bottom: 26px; }
+.ps-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 26px; }
+.ps-cell { border: 1px solid var(--border); padding: 12px 8px; }
+.ps-cell-val { font-family: 'Bebas Neue', sans-serif; font-size: 22px; }
+.ps-cell-lbl { font-size: 8px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--mid); margin-top: 3px; }
+.ps-actions { display: flex; gap: 10px; }
+.ps-actions .modal-btn { flex: 1; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 900px) {
+  body { overflow: auto; }
+  .app { grid-template-columns: 1fr; }
+  .dcc-main { padding: 20px; }
+  .g4 { grid-template-columns: 1fr 1fr; }
+  .ex-card { flex-direction: column; }
+  .ex-actions { align-self: flex-end; }
+  .prac-box { padding: 28px 22px; }
+}
+@media (max-width: 520px) {
+  .g4 { grid-template-columns: 1fr; }
+  .ps-grid { grid-template-columns: 1fr; }
+}
+
+.app,.dcc-main{position:relative;z-index:1;}
+</style>
+</head>
+<body>
+
+<div id="cur"></div>
+<div id="cur-ring"></div>
+<div id="tip" class="tip"></div>
+<div class="toast" id="toast"></div>
+
+<div class="app">
+
+  <!-- ══ SIDEBAR ══ -->
+  <aside class="sidebar">
+    <div class="sb-logo">
+      <a href="index.html" class="sb-logomark">Project 90</a>
+      <div class="sb-logosub">Transformação pessoal</div>
+    </div>
+
+    <div class="sb-day">
+      <div class="sb-daynum" id="sb-daynum">34</div>
+      <div class="sb-daylbl">de 90 dias</div>
+      <div style="display:flex;justify-content:space-between;font-size:10px;letter-spacing:0.1em;color:var(--mid);margin-top:10px">
+        <span>Progresso</span><span id="sb-pct">38%</span>
+      </div>
+      <div class="sb-prog-bar-bg"><div class="sb-prog-bar-fill" id="sb-fill" style="width:0%"></div></div>
+      <div class="sb-prog-meta"><span id="sb-days-left">56 restantes</span><span id="sb-pct2">38%</span></div>
+    </div>
+
+    <nav class="sb-nav">
+      <a class="sb-item" href="dashboard.html"><span class="sb-item-icon">◈</span> Dashboard</a>
+      <a class="sb-item" href="habitos.html"><span class="sb-item-icon">◉</span> Hábitos</a>
+      <a class="sb-item" href="metricas.html"><span class="sb-item-icon">△</span> Métricas</a>
+      <a class="sb-item" href="diario.html"><span class="sb-item-icon">◻</span> Diário</a>
+      <a class="sb-item" href="conquistas.html"><span class="sb-item-icon">◆</span> Conquistas</a>
+      <a class="sb-item" href="vocabulario.html"><span class="sb-item-icon">▤</span> Vocabulário</a>
+      <a class="sb-item active" href="diccao.html"><span class="sb-item-icon">◗</span> Dicção</a>
+    </nav>
+
+    <div class="sb-bottom">
+      <div class="sb-streak">
+        <span class="sb-streak-icon">🔥</span>
+        <div>
+          <div class="sb-streak-val" id="sb-streak-val">12</div>
+          <div class="sb-streak-lbl">Dias seguidos</div>
+        </div>
+      </div>
+      <a href="login.html" class="sb-logout">← Sair</a>
+    </div>
+  </aside>
+
+  <!-- ══ MAIN ══ -->
+  <main class="dcc-main">
+
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <div class="page-title">Dicção <em>&amp; fala.</em></div>
+      <div class="topbar-actions">
+        <button class="btn-sm" id="btn-load-lib">+ Carregar biblioteca</button>
+        <button class="btn-sm primary" id="btn-new-ex">+ Adicionar exercício</button>
+      </div>
+    </div>
+
+    <!-- STAT CARDS -->
+    <div class="g4">
+      <div class="stat-card">
+        <div class="stat-lbl">Exercícios</div>
+        <div class="stat-val" id="sc-total">0</div>
+        <div class="stat-sub">na biblioteca</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-lbl">Sessões</div>
+        <div class="stat-val" id="sc-sessions">0</div>
+        <div class="stat-sub">de prática</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-lbl">Aproveitamento</div>
+        <div class="stat-val" id="sc-pct">—</div>
+        <div class="stat-sub" id="sc-pct-sub">média das notas</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-lbl">Maior sequência</div>
+        <div class="stat-val" id="sc-streak">0</div>
+        <div class="stat-sub">notas boas seguidas</div>
+      </div>
+    </div>
+
+    <!-- PRACTICE CTA -->
+    <div class="prac-cta">
+      <div class="pc-icon">◗</div>
+      <div class="pc-body">
+        <div class="pc-title">Praticar <em>dicção.</em></div>
+        <div class="pc-sub" id="pc-sub">Adicione ou carregue exercícios para começar a praticar.</div>
+      </div>
+      <div class="pc-controls">
+        <select class="pc-kind" id="pc-kind"><option value="">Todos os tipos</option></select>
+        <button class="pc-btn" id="btn-start-prac" disabled>Praticar dicção</button>
+      </div>
+    </div>
+
+    <!-- TOOLBAR -->
+    <div class="dcc-toolbar">
+      <input class="dcc-search" id="dcc-search" placeholder="Pesquisar exercício…" />
+      <select class="dcc-filter" id="dcc-filter"><option value="">Todos os tipos</option></select>
+      <select class="dcc-sort" id="dcc-sort">
+        <option value="recent">Mais recentes</option>
+        <option value="az">A → Z</option>
+        <option value="za">Z → A</option>
+      </select>
+      <span class="dcc-count" id="dcc-count"><span>0</span> exercícios</span>
+    </div>
+
+    <!-- EXERCISE LIST -->
+    <div class="ex-list" id="ex-list"></div>
+
+  </main>
+</div>
+
+<!-- ADD/EDIT MODAL -->
+<div class="modal-overlay" id="ex-modal-overlay">
+  <div class="modal">
+    <div class="modal-title" id="ex-modal-title">Novo <em>exercício.</em></div>
+    <div class="modal-field">
+      <label class="modal-lbl">Título</label>
+      <input class="modal-input" id="e-title" placeholder="Ex: Trava-língua do rato" maxlength="80" />
+    </div>
+    <div class="modal-field">
+      <label class="modal-lbl">Texto para falar em voz alta</label>
+      <textarea class="modal-input" id="e-body" rows="3" placeholder="Ex: O rato roeu a roupa do rei de Roma." maxlength="400"></textarea>
+    </div>
+    <div class="modal-field">
+      <label class="modal-lbl">Tipo</label>
+      <select class="modal-select" id="e-kind"></select>
+    </div>
+    <div class="modal-field">
+      <label class="modal-lbl">Foco (opcional)</label>
+      <input class="modal-input" id="e-focus" placeholder="Ex: som do R, pausas, projeção…" maxlength="80" />
+    </div>
+    <div class="modal-footer">
+      <button class="modal-btn ghost" id="ex-modal-cancel">Cancelar</button>
+      <button class="modal-btn primary" id="ex-modal-save">Salvar exercício</button>
+    </div>
+  </div>
+</div>
+
+<!-- PRACTICE OVERLAY -->
+<div class="prac-overlay" id="prac-overlay">
+  <div class="prac-box" id="prac-box"></div>
+</div>
+
+<script>
+/* ════════════════════════════════════
+   CURSOR
+════════════════════════════════════ */
+(function() {
+  const cur  = document.getElementById('cur');
+  const ring = document.getElementById('cur-ring');
+  let mx=0,my=0,rx=0,ry=0;
+  document.addEventListener('mousemove', e => {
+    mx=e.clientX; my=e.clientY;
+    cur.style.transform=`translate(${mx-3}px,${my-3}px)`;
+  });
+  (function tick(){
+    rx+=(mx-rx-15)*0.1; ry+=(my-ry-15)*0.1;
+    ring.style.transform=`translate(${rx}px,${ry}px)`;
+    requestAnimationFrame(tick);
+  })();
+})();
+
+/* ════════════════════════════════════
+   TOAST
+════════════════════════════════════ */
+let toastTimer;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
+}
+
+/* ════════════════════════════════════
+   CONSTANTS
+════════════════════════════════════ */
+const DAY  = Store.getCurrentDay();
+const DAYS = Store.getTotalDays();
+const SESSION_LEN = 5;
+
+const KINDS = {
+  'trava-lingua': 'Trava-língua',
+  'articulacao':  'Articulação',
+  'respiracao':   'Respiração',
+  'projecao':     'Projeção',
+  'ritmo':        'Ritmo',
+};
+function kindLabel(k) { return KINDS[k] || 'Exercício'; }
+
+const CAN_RECORD = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder);
+
+// Biblioteca inicial de exercícios de dicção (trava-línguas tradicionais +
+// exercícios clássicos de articulação/respiração/projeção/ritmo).
+const DEFAULT_EXERCISES = [
+  { title:'O rato de Roma',        kind:'trava-lingua', focus:'som do R',        body:'O rato roeu a roupa do rei de Roma.' },
+  { title:'Três tigres tristes',   kind:'trava-lingua', focus:'encontro TR',    body:'Três pratos de trigo para três tigres tristes.' },
+  { title:'A aranha e a rã',       kind:'trava-lingua', focus:'RANH / R',       body:'A aranha arranha a rã. A rã arranha a aranha.' },
+  { title:'O pé de Pedro',         kind:'trava-lingua', focus:'som do P',       body:'O peito do pé de Pedro é preto.' },
+  { title:'Os mafagafos',          kind:'trava-lingua', focus:'sílabas longas', body:'Um ninho de mafagafos, com sete mafagafinhos; quem os desmafagafizar bom desmafagafizador será.' },
+  { title:'Bagre branco',          kind:'trava-lingua', focus:'encontro BR',    body:'Bagre branco, branco bagre.' },
+  { title:'A vaca malhada',        kind:'trava-lingua', focus:'som LH',         body:'A vaca malhada foi molhada por outra vaca malhada e molhada.' },
+  { title:'O tempo e o tempo',     kind:'trava-lingua', focus:'som do T / ritmo', body:'O tempo perguntou ao tempo quanto tempo o tempo tem.' },
+  { title:'O sabiá',               kind:'trava-lingua', focus:'som do S / vogais', body:'Sabia que o sabiá sabia assobiar?' },
+  { title:'Casa suja',             kind:'trava-lingua', focus:'S x CH',         body:'Casa suja, chão sujo; larga o bujão, some com a sujeira.' },
+  { title:'Trinta e três',         kind:'trava-lingua', focus:'encontro TR',   body:'Trinta e três traidores traíram trinta e três tribunais.' },
+  { title:'A larva e a lavra',     kind:'trava-lingua', focus:'L x R',          body:'Larga a larva, lava a larva, e a lavra larga a larva.' },
+  { title:'Oclusivas em escada',   kind:'articulacao',  focus:'P/T/K bem marcados', body:'Repita devagar, exagerando cada sílaba: pa-ta-ca, pe-te-que, pi-ti-qui, po-to-co, pu-tu-cu.' },
+  { title:'Lápis entre os dentes', kind:'articulacao',  focus:'precisão articulatória', body:'Leia este parágrafo segurando levemente um lápis entre os dentes, mantendo cada palavra compreensível. Depois leia de novo sem o lápis.' },
+  { title:'Lábios em u-i',         kind:'articulacao',  focus:'mobilidade labial', body:'Alterne bem os lábios: "u-i-u-i-u-i" bem marcado, dez vezes, sem pressa.' },
+  { title:'Ponta da língua',       kind:'articulacao',  focus:'ápice da língua', body:'Ponta da língua atrás dos dentes: "la-le-li-lo-lu", "na-ne-ni-no-nu", "da-de-di-do-du".' },
+  { title:'Sopro contado',         kind:'respiracao',   focus:'apoio respiratório', body:'Inspire em 4 tempos, segure por 4, e solte contando em voz alta o máximo que conseguir num único sopro, sem forçar a garganta.' },
+  { title:'Pausas nas vírgulas',   kind:'respiracao',   focus:'fôlego e pausa', body:'Leia um parágrafo inteiro respirando somente nas vírgulas e nos pontos, mantendo o volume estável até o fim de cada frase.' },
+  { title:'Três volumes',          kind:'projecao',     focus:'projeção sem gritar', body:'Diga a mesma frase três vezes: sussurrando, em voz normal e projetando para o fundo da sala — apoiando no diafragma, sem gritar.' },
+  { title:'Uma sílaba por batida', kind:'ritmo',        focus:'cadência constante', body:'Leia este trecho batendo o dedo na mesa uma vez por sílaba, mantendo o ritmo igual do começo ao fim.' },
+];
+
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+function escapeHtml(s) {
+  return String(s || '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+}
+function fmtDate(iso) {
+  const d = new Date(iso);
+  if (isNaN(d)) return '';
+  return d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
+/* ════════════════════════════════════
+   INIT / SIDEBAR
+════════════════════════════════════ */
+function initSidebar() {
+  const pct = Math.round(DAY / DAYS * 100);
+  document.getElementById('sb-daynum').textContent = DAY;
+  document.getElementById('sb-pct').textContent = pct + '%';
+  document.getElementById('sb-pct2').textContent = pct + '%';
+  document.getElementById('sb-days-left').textContent = (DAYS - DAY) + ' restantes';
+  document.getElementById('sb-streak-val').textContent = Store.currentStreak(Store.getHabits(), DAY);
+  setTimeout(() => { document.getElementById('sb-fill').style.width = pct + '%'; }, 400);
+}
+
+let searchTerm = '';
+let sortMode   = 'recent';
+let filterKind = '';
+
+function fillKindSelects() {
+  const opts = '<option value="">Todos os tipos</option>' +
+    Object.keys(KINDS).map(k => `<option value="${k}">${KINDS[k]}</option>`).join('');
+  document.getElementById('pc-kind').innerHTML  = opts;
+  document.getElementById('dcc-filter').innerHTML = opts;
+  document.getElementById('e-kind').innerHTML = Object.keys(KINDS).map(k => `<option value="${k}">${KINDS[k]}</option>`).join('');
+}
+
+function init() {
+  initSidebar();
+  renderStats();
+  renderList();
+}
+
+/* ════════════════════════════════════
+   STATS
+════════════════════════════════════ */
+function renderStats() {
+  const list  = Store.getSpeechExercises();
+  const stats = Store.getSpeechStats();
+
+  document.getElementById('sc-total').textContent    = list.length;
+  document.getElementById('sc-sessions').textContent = stats.sessionsPlayed || 0;
+  document.getElementById('sc-streak').textContent   = stats.bestStreak || 0;
+
+  const avg = stats.ratingCount > 0 ? stats.ratingSum / stats.ratingCount : null;
+  document.getElementById('sc-pct').textContent = avg == null ? '—' : Math.round(avg / 5 * 100) + '%';
+  document.getElementById('sc-pct-sub').textContent = avg == null
+    ? 'média das notas' : `média ${avg.toFixed(1)} / 5`;
+
+  const btn = document.getElementById('btn-start-prac');
+  const sub = document.getElementById('pc-sub');
+  if (list.length === 0) {
+    btn.disabled = true;
+    sub.textContent = 'Adicione ou carregue exercícios para começar a praticar.';
+  } else {
+    btn.disabled = false;
+    sub.textContent = `${SESSION_LEN} exercícios por sessão, sorteados da sua biblioteca de ${list.length}. Fale em voz alta e (se quiser) grave para se ouvir.`;
+  }
+}
+
+/* ════════════════════════════════════
+   EXERCISE LIST
+════════════════════════════════════ */
+function filteredSorted() {
+  const all  = Store.getSpeechExercises();
+  const term = searchTerm.trim().toLowerCase();
+  let list = all.filter(e => {
+    if (filterKind && e.kind !== filterKind) return false;
+    if (!term) return true;
+    return (e.title || '').toLowerCase().includes(term)
+        || (e.body || '').toLowerCase().includes(term)
+        || (e.focus || '').toLowerCase().includes(term);
+  });
+
+  if (sortMode === 'az') list.sort((a, b) => a.title.localeCompare(b.title, 'pt-BR'));
+  else if (sortMode === 'za') list.sort((a, b) => b.title.localeCompare(a.title, 'pt-BR'));
+  else list.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+  return list;
+}
+
+function renderList() {
+  const all  = Store.getSpeechExercises();
+  const list = filteredSorted();
+  document.getElementById('dcc-count').innerHTML = `<span>${all.length}</span> exercício${all.length !== 1 ? 's' : ''}`;
+
+  const wrap = document.getElementById('ex-list');
+
+  if (all.length === 0) {
+    wrap.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">◗</div>
+        <div class="empty-title">Nenhum exercício ainda.</div>
+        <p class="empty-sub">Carregue a biblioteca inicial de trava-línguas e exercícios<br>ou adicione os seus para começar a treinar a fala.</p>
+        <button class="btn-sm primary" onclick="loadLibrary()">+ Carregar biblioteca inicial</button>
+      </div>`;
+    return;
+  }
+
+  if (list.length === 0) {
+    wrap.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">◌</div>
+        <div class="empty-title">Nenhum exercício encontrado.</div>
+        <p class="empty-sub">Ajuste a busca ou o filtro de tipo.</p>
+      </div>`;
+    return;
+  }
+
+  wrap.innerHTML = list.map(e => `
+    <div class="ex-card">
+      <div class="ex-main">
+        <div class="ex-head">
+          <span class="ex-title">${escapeHtml(e.title)}</span>
+          <span class="ex-kind">${escapeHtml(kindLabel(e.kind))}</span>
+          <span class="ex-date" style="font-size:9px;letter-spacing:0.1em;color:var(--mid)">${fmtDate(e.createdAt)}</span>
+        </div>
+        <div class="ex-body">${escapeHtml(e.body)}</div>
+        ${e.focus ? `<div class="ex-focus">${escapeHtml(e.focus)}</div>` : ''}
+      </div>
+      <div class="ex-actions">
+        <button class="ex-btn" title="Editar" onclick="openExModal(${e.id})">✎</button>
+        <button class="ex-btn danger" title="Excluir" onclick="removeEx(${e.id})">✕</button>
+      </div>
+    </div>`).join('');
+}
+
+function loadLibrary() {
+  const have = new Set(Store.getSpeechExercises().map(e => (e.title || '').trim().toLowerCase()));
+  const fresh = DEFAULT_EXERCISES.filter(e => !have.has(e.title.trim().toLowerCase()));
+  if (!fresh.length) { toast('A biblioteca inicial já está toda cadastrada.'); return; }
+  const added = Store.addSpeechExercises(fresh);
+  toast(`${added.length} exercício${added.length > 1 ? 's' : ''} adicionado${added.length > 1 ? 's' : ''} à biblioteca ✓`);
+  renderStats(); renderList();
+}
+
+function removeEx(id) {
+  const e = Store.getSpeechExercises().find(x => x.id === id);
+  if (!e) return;
+  if (!confirm(`Excluir "${e.title}"? Esta ação não pode ser desfeita.`)) return;
+  Store.deleteSpeechExercise(id);
+  toast('Exercício excluído');
+  renderStats(); renderList();
+}
+
+/* ════════════════════════════════════
+   ADD/EDIT MODAL
+════════════════════════════════════ */
+let editingExId = null;
+
+function openExModal(id = null) {
+  editingExId = id;
+  const overlay = document.getElementById('ex-modal-overlay');
+  if (id) {
+    const e = Store.getSpeechExercises().find(x => x.id === id);
+    if (!e) return;
+    document.getElementById('ex-modal-title').innerHTML = 'Editar <em>exercício.</em>';
+    document.getElementById('e-title').value = e.title;
+    document.getElementById('e-body').value  = e.body;
+    document.getElementById('e-kind').value  = e.kind || 'trava-lingua';
+    document.getElementById('e-focus').value = e.focus || '';
+  } else {
+    document.getElementById('ex-modal-title').innerHTML = 'Novo <em>exercício.</em>';
+    document.getElementById('e-title').value = '';
+    document.getElementById('e-body').value  = '';
+    document.getElementById('e-kind').value  = 'trava-lingua';
+    document.getElementById('e-focus').value = '';
+  }
+  overlay.classList.add('open');
+  document.getElementById('e-title').focus();
+}
+
+function closeExModal() {
+  document.getElementById('ex-modal-overlay').classList.remove('open');
+  editingExId = null;
+}
+
+function saveExModal() {
+  const title = document.getElementById('e-title').value.trim();
+  const body  = document.getElementById('e-body').value.trim();
+  const kind  = document.getElementById('e-kind').value;
+  const focus = document.getElementById('e-focus').value.trim();
+
+  if (!title) { document.getElementById('e-title').style.borderColor = 'rgba(252,165,165,0.6)'; document.getElementById('e-title').focus(); return; }
+  if (!body)  { document.getElementById('e-body').style.borderColor  = 'rgba(252,165,165,0.6)'; document.getElementById('e-body').focus(); return; }
+
+  if (editingExId) {
+    Store.updateSpeechExercise(editingExId, { title, body, kind, focus });
+    toast('Exercício atualizado ✓');
+  } else {
+    Store.addSpeechExercise({ title, body, kind, focus });
+    toast('Exercício adicionado ✓');
+  }
+  closeExModal();
+  renderStats(); renderList();
+}
+
+document.getElementById('btn-new-ex').addEventListener('click', () => openExModal());
+document.getElementById('btn-load-lib').addEventListener('click', loadLibrary);
+document.getElementById('ex-modal-cancel').addEventListener('click', closeExModal);
+document.getElementById('ex-modal-save').addEventListener('click', saveExModal);
+document.getElementById('ex-modal-overlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('ex-modal-overlay')) closeExModal();
+});
+['e-title', 'e-body'].forEach(id => {
+  document.getElementById(id).addEventListener('input', function() { this.style.borderColor = ''; });
+});
+
+document.getElementById('dcc-search').addEventListener('input', function() { searchTerm = this.value; renderList(); });
+document.getElementById('dcc-sort').addEventListener('change', function() { sortMode = this.value; renderList(); });
+document.getElementById('dcc-filter').addEventListener('change', function() {
+  filterKind = this.value;
+  document.getElementById('pc-kind').value = this.value;
+  renderList();
+});
+
+/* ════════════════════════════════════
+   PRÁTICA — "Praticar dicção"
+════════════════════════════════════ */
+let pracIdx = 0;
+let pracLastId = null;
+let pracRated = false;
+let pracScore = { done: 0, ratingSum: 0, ratingCount: 0, streak: 0, bestStreak: 0 };
+
+/* — gravador (opcional, só em memória, nada é enviado) — */
+let mediaRecorder = null, recChunks = [], recStream = null, recUrl = null;
+
+function _stopStream() {
+  if (recStream) { recStream.getTracks().forEach(t => t.stop()); recStream = null; }
+}
+function cleanupRec() {
+  try { if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop(); } catch (e) {}
+  _stopStream();
+  if (recUrl) { URL.revokeObjectURL(recUrl); recUrl = null; }
+  mediaRecorder = null; recChunks = [];
+}
+async function toggleRec(btn) {
+  if (btn.dataset.rec === '1') {
+    try { if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop(); } catch (e) {}
+    btn.dataset.rec = '';
+    btn.textContent = '● Gravar';
+    return;
+  }
+  try {
+    recStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  } catch (e) {
+    toast('Não foi possível acessar o microfone.');
+    return;
+  }
+  recChunks = [];
+  try {
+    mediaRecorder = new MediaRecorder(recStream);
+  } catch (e) {
+    toast('Gravação não suportada neste navegador.');
+    _stopStream();
+    return;
+  }
+  mediaRecorder.ondataavailable = e => { if (e.data && e.data.size) recChunks.push(e.data); };
+  mediaRecorder.onstop = () => {
+    _stopStream();
+    if (!recChunks.length) return;
+    if (recUrl) URL.revokeObjectURL(recUrl);
+    const blob = new Blob(recChunks, { type: mediaRecorder.mimeType || 'audio/webm' });
+    recUrl = URL.createObjectURL(blob);
+    const holder = document.getElementById('prac-rec');
+    if (holder) {
+      holder.innerHTML =
+        `<audio controls src="${recUrl}"></audio>` +
+        `<button class="prac-rec-btn" onclick="toggleRec(this)">● Regravar</button>`;
+    }
+  };
+  mediaRecorder.start();
+  btn.dataset.rec = '1';
+  btn.textContent = '■ Parar';
+}
+
+function eligibleForPractice() {
+  const all = Store.getSpeechExercises();
+  return filterKind ? all.filter(e => e.kind === filterKind) : all;
+}
+
+function pickPracExercise(pool) {
+  if (pool.length === 1) return pool[0];
+  let e;
+  do { e = pool[Math.floor(Math.random() * pool.length)]; } while (e.id === pracLastId);
+  return e;
+}
+
+function startPractice() {
+  const pool = eligibleForPractice();
+  if (!pool.length) { toast('Sem exercícios para esse tipo.'); return; }
+  pracIdx = 0;
+  pracLastId = null;
+  pracRated = false;
+  pracScore = { done: 0, ratingSum: 0, ratingCount: 0, streak: 0, bestStreak: 0 };
+  cleanupRec();
+  document.getElementById('prac-overlay').classList.add('show');
+  renderPracExercise();
+}
+
+function closePractice() {
+  cleanupRec();
+  document.getElementById('prac-overlay').classList.remove('show');
+}
+
+function renderPracExercise() {
+  const pool = eligibleForPractice();
+  if (pracIdx >= SESSION_LEN || !pool.length) { renderPracSummary(); return; }
+
+  cleanupRec();
+  pracRated = false;
+  const e = pickPracExercise(pool);
+  pracLastId = e.id;
+
+  const recBlock = CAN_RECORD
+    ? `<div class="prac-rec" id="prac-rec"><button class="prac-rec-btn" onclick="toggleRec(this)">● Gravar</button>
+         <span class="prac-rec-hint" style="margin:0">grave-se e ouça — nada é salvo</span></div>`
+    : `<div class="prac-rec-hint">Leia em voz alta 3 vezes, devagar, exagerando a articulação.</div>`;
+
+  document.getElementById('prac-box').innerHTML = `
+    <div class="prac-topline">
+      <span class="prac-eyebrow">Exercício ${pracIdx + 1} / ${SESSION_LEN}</span>
+      <span class="prac-close" onclick="closePractice()">✕</span>
+    </div>
+    <div class="prac-kindrow">
+      <span class="prac-kind-badge">${escapeHtml(kindLabel(e.kind))}</span>
+      ${e.focus ? `<span class="prac-focus">foco: ${escapeHtml(e.focus)}</span>` : ''}
+    </div>
+    <div class="prac-text">${escapeHtml(e.body)}</div>
+    ${recBlock}
+    <div class="prac-rate-lbl">Como foi?</div>
+    <div class="prac-rate" id="prac-rate">
+      <button onclick="ratePrac(1,this)">Travei</button>
+      <button onclick="ratePrac(2,this)">Difícil</button>
+      <button onclick="ratePrac(3,this)">Ok</button>
+      <button onclick="ratePrac(4,this)">Bom</button>
+      <button onclick="ratePrac(5,this)">Mandei bem</button>
+    </div>
+    <div class="prac-stats-row">
+      <span>Feitos: <span>${pracScore.done}/${SESSION_LEN}</span></span>
+      <span>Média: <span>${pracScore.ratingCount ? (pracScore.ratingSum / pracScore.ratingCount).toFixed(1) : '—'}</span></span>
+      <span>Sequência: <span>${pracScore.streak}</span></span>
+    </div>
+    <button class="prac-next-btn" id="prac-next-btn" onclick="nextPracExercise()">
+      ${pracIdx + 1 >= SESSION_LEN ? 'Ver resumo →' : 'Próximo exercício →'}
+    </button>`;
+}
+
+function ratePrac(rating, btn) {
+  if (pracRated) return;
+  pracRated = true;
+
+  pracScore.done++;
+  pracScore.ratingSum += rating;
+  pracScore.ratingCount++;
+  if (rating >= 4) { pracScore.streak++; pracScore.bestStreak = Math.max(pracScore.bestStreak, pracScore.streak); }
+  else pracScore.streak = 0;
+
+  document.querySelectorAll('#prac-rate button').forEach(b => { b.disabled = true; });
+  btn.classList.add('on');
+
+  document.querySelector('.prac-stats-row').innerHTML = `
+    <span>Feitos: <span>${pracScore.done}/${SESSION_LEN}</span></span>
+    <span>Média: <span>${(pracScore.ratingSum / pracScore.ratingCount).toFixed(1)}</span></span>
+    <span>Sequência: <span>${pracScore.streak}</span></span>`;
+
+  document.getElementById('prac-next-btn').classList.add('show');
+}
+
+function nextPracExercise() {
+  pracIdx++;
+  renderPracExercise();
+}
+
+function renderPracSummary() {
+  cleanupRec();
+  const avg = pracScore.ratingCount ? pracScore.ratingSum / pracScore.ratingCount : 0;
+  const pct = Math.round(avg / 5 * 100);
+  Store.recordSpeechSession({
+    reps: pracScore.done, ratingSum: pracScore.ratingSum,
+    ratingCount: pracScore.ratingCount, bestStreak: pracScore.bestStreak,
+  });
+  renderStats();
+
+  document.getElementById('prac-box').innerHTML = `
+    <div class="prac-summary">
+      <div class="ps-icon">${pct >= 80 ? '✓' : pct >= 50 ? '◉' : '○'}</div>
+      <div class="ps-title">Sessão <em>concluída.</em></div>
+      <div class="ps-score">${avg ? avg.toFixed(1) : '0'} / 5</div>
+      <div class="ps-sub">${pct}% de aproveitamento</div>
+      <div class="ps-grid">
+        <div class="ps-cell"><div class="ps-cell-val">${pracScore.done}</div><div class="ps-cell-lbl">Exercícios</div></div>
+        <div class="ps-cell"><div class="ps-cell-val">${pct}%</div><div class="ps-cell-lbl">Aproveitamento</div></div>
+        <div class="ps-cell"><div class="ps-cell-val">${pracScore.bestStreak}</div><div class="ps-cell-lbl">Sequência</div></div>
+      </div>
+      <div class="ps-actions">
+        <button class="modal-btn ghost" onclick="closePractice()">Fechar</button>
+        <button class="modal-btn primary" onclick="startPractice()">Nova sessão</button>
+      </div>
+    </div>`;
+}
+
+document.getElementById('btn-start-prac').addEventListener('click', startPractice);
+document.getElementById('pc-kind').addEventListener('change', function() {
+  filterKind = this.value;
+  document.getElementById('dcc-filter').value = this.value;
+  renderList();
+});
+document.getElementById('prac-overlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('prac-overlay')) closePractice();
+});
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return;
+  if (document.getElementById('prac-overlay').classList.contains('show')) closePractice();
+  else if (document.getElementById('ex-modal-overlay').classList.contains('open')) closeExModal();
+});
+
+fillKindSelects();
+window.addEventListener('p90:synced', init);
+window.addEventListener('p90:synced', notifyNewAchievements);
+init();
+
+(function(){
+  const canvas=document.createElement('canvas');
+  canvas.style.cssText='position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;';
+  document.body.insertBefore(canvas,document.body.firstChild);
+  const ctx=canvas.getContext('2d'),SIZE=80;
+  let W,H,cols,rows,nodes,t=0;
+  function resize(){W=canvas.width=window.innerWidth;H=canvas.height=window.innerHeight;cols=Math.ceil(W/SIZE)+2;rows=Math.ceil(H/SIZE)+2;nodes=[];for(let r=0;r<rows;r++)for(let c=0;c<cols;c++)nodes.push({phase:Math.random()*Math.PI*2});}
+  function draw(){ctx.clearRect(0,0,W,H);ctx.lineWidth=.4;const offX=(t*6)%SIZE,offY=(t*3)%SIZE;for(let c=0;c<cols;c++){const x=c*SIZE-offX,w=.5+.5*Math.sin(t*.4+c*.35);ctx.strokeStyle='rgba(245,245,240,'+(0.006+w*0.012)+')';ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}for(let r=0;r<rows;r++){const y=r*SIZE-offY,w=.5+.5*Math.sin(t*.35+r*.4+1.2);ctx.strokeStyle='rgba(245,245,240,'+(0.006+w*0.012)+')';ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){const nd=nodes[r*cols+c],x=c*SIZE-offX,y=r*SIZE-offY,p=.5+.5*Math.sin(t*.7+nd.phase);ctx.beginPath();ctx.arc(x,y,.5+p*.9,0,Math.PI*2);ctx.fillStyle='rgba(245,245,240,'+(p*0.07)+')';ctx.fill();}const grd=ctx.createRadialGradient(W*.65,H*.5,0,W*.65,H*.5,Math.max(W,H)*.75);grd.addColorStop(0,'rgba(8,8,8,0)');grd.addColorStop(.6,'rgba(8,8,8,0)');grd.addColorStop(1,'rgba(8,8,8,.7)');ctx.fillStyle=grd;ctx.fillRect(0,0,W,H);t+=.006;requestAnimationFrame(draw);}
+  window.addEventListener('resize',resize);resize();draw();
+})();
+(function(){
+  document.querySelectorAll('.stat-card,.ex-card,.prac-cta').forEach(function(card){
+    card.addEventListener('mousemove',function(e){var r=card.getBoundingClientRect();var x=((e.clientX-r.left)/r.width*100).toFixed(1);var y=((e.clientY-r.top)/r.height*100).toFixed(1);card.style.background='radial-gradient(circle at '+x+'% '+y+'%, rgba(245,245,240,.04) 0%, var(--surface,#111) 60%)';});
+    card.addEventListener('mouseleave',function(){card.style.background='';});
+  });
+})();
+</script>
+</body>
+</html>
