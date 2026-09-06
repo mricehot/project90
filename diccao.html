@@ -42,11 +42,6 @@
 .pc-title em { font-style: italic; opacity: 0.4; }
 .pc-sub { font-size: 11px; letter-spacing: 0.04em; color: var(--mid); line-height: 1.6; }
 .pc-controls { display: flex; gap: 10px; align-items: center; flex-shrink: 0; flex-wrap: wrap; }
-.pc-kind {
-  background: var(--surface2); border: 1px solid var(--border); color: var(--white);
-  font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.03em;
-  padding: 12px 14px; outline: none; cursor: pointer; appearance: none;
-}
 .pc-btn {
   padding: 14px 28px; background: var(--white); color: var(--bg); border: none;
   font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase;
@@ -54,6 +49,11 @@
 }
 .pc-btn:hover:not(:disabled) { opacity: 0.85; transform: translateY(-1px); }
 .pc-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.pc-btn.done { background: rgba(134,239,172,0.12); color: #86efac; opacity: 1; cursor: default; }
+.plan-bar-bg { height: 3px; background: var(--muted); margin-top: 12px; }
+.plan-bar-fill { height: 100%; background: var(--white); transition: width 0.8s cubic-bezier(0.16,1,0.3,1); }
+.plan-meta { display: flex; justify-content: space-between; font-size: 9px; letter-spacing: 0.1em; color: var(--mid); margin-top: 5px; }
+.pc-controls .btn-sm:disabled { opacity: 0.3; cursor: not-allowed; }
 
 /* ── TOOLBAR ── */
 .dcc-toolbar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
@@ -272,32 +272,34 @@ textarea.modal-input { resize: vertical; min-height: 72px; line-height: 1.7; }
         <div class="stat-sub">na biblioteca</div>
       </div>
       <div class="stat-card">
-        <div class="stat-lbl">Sessões</div>
-        <div class="stat-val" id="sc-sessions">0</div>
-        <div class="stat-sub">de prática</div>
+        <div class="stat-lbl">Plano de hoje</div>
+        <div class="stat-val" id="sc-today">0/0</div>
+        <div class="stat-sub" id="sc-today-sub">exercícios feitos</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-lbl">Dias seguidos</div>
+        <div class="stat-val" id="sc-streak">0</div>
+        <div class="stat-sub">de dicção</div>
       </div>
       <div class="stat-card">
         <div class="stat-lbl">Aproveitamento</div>
         <div class="stat-val" id="sc-pct">—</div>
         <div class="stat-sub" id="sc-pct-sub">média das notas</div>
       </div>
-      <div class="stat-card">
-        <div class="stat-lbl">Maior sequência</div>
-        <div class="stat-val" id="sc-streak">0</div>
-        <div class="stat-sub">notas boas seguidas</div>
-      </div>
     </div>
 
-    <!-- PRACTICE CTA -->
+    <!-- PLANO DE HOJE -->
     <div class="prac-cta">
       <div class="pc-icon">◗</div>
       <div class="pc-body">
-        <div class="pc-title">Praticar <em>dicção.</em></div>
-        <div class="pc-sub" id="pc-sub">Adicione ou carregue exercícios para começar a praticar.</div>
+        <div class="pc-title">Plano de <em>hoje.</em></div>
+        <div class="pc-sub" id="pc-sub">Adicione ou carregue exercícios para o sistema montar seu plano diário.</div>
+        <div class="plan-bar-bg"><div class="plan-bar-fill" id="plan-bar" style="width:0%"></div></div>
+        <div class="plan-meta"><span id="plan-days">0 dias concluídos</span><span id="plan-total">de 90</span></div>
       </div>
       <div class="pc-controls">
-        <select class="pc-kind" id="pc-kind"><option value="">Todos os tipos</option></select>
-        <button class="pc-btn" id="btn-start-prac" disabled>Praticar dicção</button>
+        <button class="pc-btn" id="btn-start-plan" disabled>Fazer plano de hoje</button>
+        <button class="btn-sm" id="btn-free-prac" disabled>Treino livre</button>
       </div>
     </div>
 
@@ -447,7 +449,6 @@ let filterKind = '';
 function fillKindSelects() {
   const opts = '<option value="">Todos os tipos</option>' +
     Object.keys(KINDS).map(k => `<option value="${k}">${KINDS[k]}</option>`).join('');
-  document.getElementById('pc-kind').innerHTML  = opts;
   document.getElementById('dcc-filter').innerHTML = opts;
   document.getElementById('e-kind').innerHTML = Object.keys(KINDS).map(k => `<option value="${k}">${KINDS[k]}</option>`).join('');
 }
@@ -455,6 +456,7 @@ function fillKindSelects() {
 function init() {
   initSidebar();
   renderStats();
+  renderPlan();
   renderList();
 }
 
@@ -465,23 +467,61 @@ function renderStats() {
   const list  = Store.getSpeechExercises();
   const stats = Store.getSpeechStats();
 
-  document.getElementById('sc-total').textContent    = list.length;
-  document.getElementById('sc-sessions').textContent = stats.sessionsPlayed || 0;
-  document.getElementById('sc-streak').textContent   = stats.bestStreak || 0;
+  document.getElementById('sc-total').textContent  = list.length;
+  document.getElementById('sc-streak').textContent = Store.speechDayStreak();
+
+  const perDay = Store.speechPerDay();
+  const today  = Store.getSpeechDay(DAY) || { reps: 0 };
+  const planN  = list.length ? Math.min(perDay, list.length) : 0;
+  document.getElementById('sc-today').textContent = `${Math.min(today.reps, planN)}/${planN}`;
+  document.getElementById('sc-today-sub').textContent =
+    (today.done ? 'plano concluído ✓' : 'exercícios feitos');
 
   const avg = stats.ratingCount > 0 ? stats.ratingSum / stats.ratingCount : null;
   document.getElementById('sc-pct').textContent = avg == null ? '—' : Math.round(avg / 5 * 100) + '%';
   document.getElementById('sc-pct-sub').textContent = avg == null
     ? 'média das notas' : `média ${avg.toFixed(1)} / 5`;
+}
 
-  const btn = document.getElementById('btn-start-prac');
-  const sub = document.getElementById('pc-sub');
+/* ════════════════════════════════════
+   PLANO DE HOJE
+════════════════════════════════════ */
+function renderPlan() {
+  const list   = Store.getSpeechExercises();
+  const perDay = Store.speechPerDay();
+  const planN  = Math.min(perDay, list.length);
+  const today  = Store.getSpeechDay(DAY) || { reps: 0, done: false };
+  const doneDays = Store.speechDaysDone();
+
+  const startBtn = document.getElementById('btn-start-plan');
+  const freeBtn  = document.getElementById('btn-free-prac');
+  const sub      = document.getElementById('pc-sub');
+
+  document.getElementById('plan-days').textContent  = `${doneDays} dia${doneDays === 1 ? '' : 's'} concluído${doneDays === 1 ? '' : 's'}`;
+  document.getElementById('plan-total').textContent = `de ${DAYS}`;
+  setTimeout(() => { document.getElementById('plan-bar').style.width = (doneDays / DAYS * 100).toFixed(1) + '%'; }, 200);
+
   if (list.length === 0) {
-    btn.disabled = true;
-    sub.textContent = 'Adicione ou carregue exercícios para começar a praticar.';
+    startBtn.disabled = true; startBtn.classList.remove('done');
+    startBtn.textContent = 'Fazer plano de hoje';
+    freeBtn.disabled = true;
+    sub.textContent = 'Adicione ou carregue exercícios para o sistema montar seu plano diário.';
+    return;
+  }
+
+  freeBtn.disabled = false;
+
+  if (today.done) {
+    startBtn.disabled = true;
+    startBtn.classList.add('done');
+    startBtn.textContent = '✓ Plano de hoje concluído';
+    sub.textContent = `Dia ${DAY}: ${planN} exercícios feitos. Volte amanhã — ou faça um treino livre.`;
   } else {
-    btn.disabled = false;
-    sub.textContent = `${SESSION_LEN} exercícios por sessão, sorteados da sua biblioteca de ${list.length}. Fale em voz alta e (se quiser) grave para se ouvir.`;
+    startBtn.disabled = false;
+    startBtn.classList.remove('done');
+    const reps = Math.min(today.reps || 0, planN);
+    startBtn.textContent = reps > 0 ? `Continuar plano (${reps}/${planN})` : 'Fazer plano de hoje';
+    sub.textContent = `O sistema montou ${planN} exercícios para o dia ${DAY}. Fale cada um em voz alta e avalie como foi.`;
   }
 }
 
@@ -643,17 +683,15 @@ document.getElementById('dcc-search').addEventListener('input', function() { sea
 document.getElementById('dcc-sort').addEventListener('change', function() { sortMode = this.value; renderList(); });
 document.getElementById('dcc-filter').addEventListener('change', function() {
   filterKind = this.value;
-  document.getElementById('pc-kind').value = this.value;
   renderList();
 });
 
 /* ════════════════════════════════════
-   PRÁTICA — "Praticar dicção"
+   PRÁTICA — plano do dia + treino livre
+   sess: { mode:'plan'|'free', exercises:[], idx, ratingSum, ratingCount,
+           streak, bestStreak, rated }
 ════════════════════════════════════ */
-let pracIdx = 0;
-let pracLastId = null;
-let pracRated = false;
-let pracScore = { done: 0, ratingSum: 0, ratingCount: 0, streak: 0, bestStreak: 0 };
+let sess = null;
 
 /* — gravador (opcional, só em memória, nada é enviado) — */
 let mediaRecorder = null, recChunks = [], recStream = null, recUrl = null;
@@ -707,43 +745,50 @@ async function toggleRec(btn) {
   btn.textContent = '■ Parar';
 }
 
-function eligibleForPractice() {
-  const all = Store.getSpeechExercises();
-  return filterKind ? all.filter(e => e.kind === filterKind) : all;
-}
-
-function pickPracExercise(pool) {
-  if (pool.length === 1) return pool[0];
-  let e;
-  do { e = pool[Math.floor(Math.random() * pool.length)]; } while (e.id === pracLastId);
-  return e;
-}
-
-function startPractice() {
-  const pool = eligibleForPractice();
-  if (!pool.length) { toast('Sem exercícios para esse tipo.'); return; }
-  pracIdx = 0;
-  pracLastId = null;
-  pracRated = false;
-  pracScore = { done: 0, ratingSum: 0, ratingCount: 0, streak: 0, bestStreak: 0 };
+function startDayPlan() {
+  const plan = Store.speechPlanForDay(DAY);
+  if (!plan.length) { toast('Carregue exercícios primeiro.'); return; }
+  const saved = Store.getSpeechDay(DAY) || { reps: 0, ratingSum: 0, ratingCount: 0 };
+  const startIdx = Math.min(saved.reps || 0, plan.length);
+  if (startIdx >= plan.length) { toast('O plano de hoje já está concluído.'); return; }
+  sess = {
+    mode: 'plan', exercises: plan, idx: startIdx,
+    ratingSum: saved.ratingSum || 0, ratingCount: saved.ratingCount || 0,
+    streak: 0, bestStreak: 0, rated: false,
+  };
   cleanupRec();
   document.getElementById('prac-overlay').classList.add('show');
-  renderPracExercise();
+  renderSessExercise();
+}
+
+function startFreePractice() {
+  const pool = Store.getSpeechExercises();
+  if (!pool.length) { toast('Carregue exercícios primeiro.'); return; }
+  const picked = shuffle(pool).slice(0, Math.min(SESSION_LEN, pool.length));
+  sess = { mode: 'free', exercises: picked, idx: 0, ratingSum: 0, ratingCount: 0, streak: 0, bestStreak: 0, rated: false };
+  cleanupRec();
+  document.getElementById('prac-overlay').classList.add('show');
+  renderSessExercise();
 }
 
 function closePractice() {
   cleanupRec();
   document.getElementById('prac-overlay').classList.remove('show');
+  sess = null;
+  renderStats(); renderPlan();
 }
 
-function renderPracExercise() {
-  const pool = eligibleForPractice();
-  if (pracIdx >= SESSION_LEN || !pool.length) { renderPracSummary(); return; }
+function renderSessExercise() {
+  if (!sess) return;
+  const total = sess.exercises.length;
+  if (sess.idx >= total) { renderSessSummary(); return; }
 
   cleanupRec();
-  pracRated = false;
-  const e = pickPracExercise(pool);
-  pracLastId = e.id;
+  sess.rated = false;
+  const e = sess.exercises[sess.idx];
+  const eyebrow = sess.mode === 'plan'
+    ? `Plano do dia ${DAY} — ${sess.idx + 1} / ${total}`
+    : `Treino livre — ${sess.idx + 1} / ${total}`;
 
   const recBlock = CAN_RECORD
     ? `<div class="prac-rec" id="prac-rec"><button class="prac-rec-btn" onclick="toggleRec(this)">● Gravar</button>
@@ -752,7 +797,7 @@ function renderPracExercise() {
 
   document.getElementById('prac-box').innerHTML = `
     <div class="prac-topline">
-      <span class="prac-eyebrow">Exercício ${pracIdx + 1} / ${SESSION_LEN}</span>
+      <span class="prac-eyebrow">${eyebrow}</span>
       <span class="prac-close" onclick="closePractice()">✕</span>
     </div>
     <div class="prac-kindrow">
@@ -763,82 +808,96 @@ function renderPracExercise() {
     ${recBlock}
     <div class="prac-rate-lbl">Como foi?</div>
     <div class="prac-rate" id="prac-rate">
-      <button onclick="ratePrac(1,this)">Travei</button>
-      <button onclick="ratePrac(2,this)">Difícil</button>
-      <button onclick="ratePrac(3,this)">Ok</button>
-      <button onclick="ratePrac(4,this)">Bom</button>
-      <button onclick="ratePrac(5,this)">Mandei bem</button>
+      <button onclick="rateSess(1,this)">Travei</button>
+      <button onclick="rateSess(2,this)">Difícil</button>
+      <button onclick="rateSess(3,this)">Ok</button>
+      <button onclick="rateSess(4,this)">Bom</button>
+      <button onclick="rateSess(5,this)">Mandei bem</button>
     </div>
-    <div class="prac-stats-row">
-      <span>Feitos: <span>${pracScore.done}/${SESSION_LEN}</span></span>
-      <span>Média: <span>${pracScore.ratingCount ? (pracScore.ratingSum / pracScore.ratingCount).toFixed(1) : '—'}</span></span>
-      <span>Sequência: <span>${pracScore.streak}</span></span>
-    </div>
-    <button class="prac-next-btn" id="prac-next-btn" onclick="nextPracExercise()">
-      ${pracIdx + 1 >= SESSION_LEN ? 'Ver resumo →' : 'Próximo exercício →'}
+    <div class="prac-stats-row" id="prac-stats-row">${_sessStatsRow(total)}</div>
+    <button class="prac-next-btn" id="prac-next-btn" onclick="nextSessExercise()">
+      ${sess.idx + 1 >= total ? 'Ver resumo →' : 'Próximo exercício →'}
     </button>`;
 }
 
-function ratePrac(rating, btn) {
-  if (pracRated) return;
-  pracRated = true;
+function _sessStatsRow(total) {
+  const media = sess.ratingCount ? (sess.ratingSum / sess.ratingCount).toFixed(1) : '—';
+  return `<span>Feitos: <span>${sess.idx}/${total}</span></span>`
+       + `<span>Média: <span>${media}</span></span>`
+       + `<span>Sequência: <span>${sess.streak}</span></span>`;
+}
 
-  pracScore.done++;
-  pracScore.ratingSum += rating;
-  pracScore.ratingCount++;
-  if (rating >= 4) { pracScore.streak++; pracScore.bestStreak = Math.max(pracScore.bestStreak, pracScore.streak); }
-  else pracScore.streak = 0;
+function rateSess(rating, btn) {
+  if (!sess || sess.rated) return;
+  sess.rated = true;
+
+  sess.idx++;
+  sess.ratingSum += rating;
+  sess.ratingCount++;
+  if (rating >= 4) { sess.streak++; sess.bestStreak = Math.max(sess.bestStreak, sess.streak); }
+  else sess.streak = 0;
+
+  if (sess.mode === 'plan') {
+    const total = sess.exercises.length;
+    Store.saveSpeechDay(DAY, {
+      reps: sess.idx, ratingSum: sess.ratingSum, ratingCount: sess.ratingCount,
+      done: sess.idx >= total,
+    });
+  }
 
   document.querySelectorAll('#prac-rate button').forEach(b => { b.disabled = true; });
   btn.classList.add('on');
-
-  document.querySelector('.prac-stats-row').innerHTML = `
-    <span>Feitos: <span>${pracScore.done}/${SESSION_LEN}</span></span>
-    <span>Média: <span>${(pracScore.ratingSum / pracScore.ratingCount).toFixed(1)}</span></span>
-    <span>Sequência: <span>${pracScore.streak}</span></span>`;
-
+  document.getElementById('prac-stats-row').innerHTML = _sessStatsRow(sess.exercises.length);
   document.getElementById('prac-next-btn').classList.add('show');
 }
 
-function nextPracExercise() {
-  pracIdx++;
-  renderPracExercise();
+function nextSessExercise() {
+  renderSessExercise();   // sess.idx já foi incrementado ao avaliar
 }
 
-function renderPracSummary() {
+function renderSessSummary() {
   cleanupRec();
-  const avg = pracScore.ratingCount ? pracScore.ratingSum / pracScore.ratingCount : 0;
-  const pct = Math.round(avg / 5 * 100);
+  const isPlan = sess.mode === 'plan';
+  const total  = sess.exercises.length;
+  const avg    = sess.ratingCount ? sess.ratingSum / sess.ratingCount : 0;
+  const pct    = Math.round(avg / 5 * 100);
+
   Store.recordSpeechSession({
-    reps: pracScore.done, ratingSum: pracScore.ratingSum,
-    ratingCount: pracScore.ratingCount, bestStreak: pracScore.bestStreak,
+    reps: total, ratingSum: sess.ratingSum,
+    ratingCount: sess.ratingCount, bestStreak: sess.bestStreak,
   });
-  renderStats();
+  if (isPlan) {
+    Store.saveSpeechDay(DAY, {
+      reps: total, ratingSum: sess.ratingSum, ratingCount: sess.ratingCount, done: true,
+    });
+  }
+  renderStats(); renderPlan();
+
+  const streakLine = isPlan
+    ? `<div class="ps-sub" style="margin-bottom:20px">🔥 ${Store.speechDayStreak()} dia${Store.speechDayStreak() === 1 ? '' : 's'} de dicção seguidos</div>`
+    : '';
 
   document.getElementById('prac-box').innerHTML = `
     <div class="prac-summary">
       <div class="ps-icon">${pct >= 80 ? '✓' : pct >= 50 ? '◉' : '○'}</div>
-      <div class="ps-title">Sessão <em>concluída.</em></div>
+      <div class="ps-title">${isPlan ? 'Plano do dia' : 'Treino'} <em>concluído.</em></div>
       <div class="ps-score">${avg ? avg.toFixed(1) : '0'} / 5</div>
       <div class="ps-sub">${pct}% de aproveitamento</div>
+      ${streakLine}
       <div class="ps-grid">
-        <div class="ps-cell"><div class="ps-cell-val">${pracScore.done}</div><div class="ps-cell-lbl">Exercícios</div></div>
+        <div class="ps-cell"><div class="ps-cell-val">${total}</div><div class="ps-cell-lbl">Exercícios</div></div>
         <div class="ps-cell"><div class="ps-cell-val">${pct}%</div><div class="ps-cell-lbl">Aproveitamento</div></div>
-        <div class="ps-cell"><div class="ps-cell-val">${pracScore.bestStreak}</div><div class="ps-cell-lbl">Sequência</div></div>
+        <div class="ps-cell"><div class="ps-cell-val">${sess.bestStreak}</div><div class="ps-cell-lbl">Melhor sequência</div></div>
       </div>
       <div class="ps-actions">
         <button class="modal-btn ghost" onclick="closePractice()">Fechar</button>
-        <button class="modal-btn primary" onclick="startPractice()">Nova sessão</button>
+        <button class="modal-btn primary" onclick="startFreePractice()">Treino livre</button>
       </div>
     </div>`;
 }
 
-document.getElementById('btn-start-prac').addEventListener('click', startPractice);
-document.getElementById('pc-kind').addEventListener('change', function() {
-  filterKind = this.value;
-  document.getElementById('dcc-filter').value = this.value;
-  renderList();
-});
+document.getElementById('btn-start-plan').addEventListener('click', startDayPlan);
+document.getElementById('btn-free-prac').addEventListener('click', startFreePractice);
 document.getElementById('prac-overlay').addEventListener('click', e => {
   if (e.target === document.getElementById('prac-overlay')) closePractice();
 });

@@ -23,6 +23,7 @@ Dashboard → **SQL Editor** → **New query** → rode os arquivos **na ordem**
 9. `supabase/migrations/0009_vocabulary.sql` → **Run**
 10. `supabase/migrations/0010_streak_freeze.sql` → **Run**
 11. `supabase/migrations/0011_speech.sql` → **Run**
+12. `supabase/migrations/0012_speech_daily.sql` → **Run**
 
 **Opção B — CLI:**
 ```bash
@@ -37,14 +38,15 @@ Os scripts criam:
 | `profiles` | 1 linha por usuário (nome, avatar, email) |
 | `challenge_meta` | data de início + duração (dia atual é calculado); `freezes_left`/`frozen_days` (`0010`) guardam os dias de folga |
 | `habits` | hábitos; `freq` e `history` como `jsonb`; `core_key` marca os fixos |
-| **hábitos fixos** | os 8 ligados a achievements (`acordar_cedo`, `exercitar`, `ler`, `meditar`, `sem_redes`, `beber_agua`, `escrever_diario`, `ler_biblia`), semeados via `seed_core_habits()`; não podem ser excluídos (só pausados). O resto da rotina é livre. |
+| **hábitos fixos** | os 9 ligados a achievements (`acordar_cedo`, `exercitar`, `ler`, `meditar`, `sem_redes`, `beber_agua`, `escrever_diario`, `ler_biblia`, `praticar_diccao`), semeados via `seed_core_habits()`; não podem ser excluídos (só pausados). `escrever_diario` e `praticar_diccao` têm o histórico **derivado** (diário / plano de dicção). O resto da rotina é livre. |
 | `journal_entries` | 1 entrada por dia do desafio |
 | `weekly_reviews` | 1 revisão por semana do desafio (`0008`): o que funcionou, o que ajustar, foco da semana seguinte, nota 1–5. Editável no `diario.html`. |
 | `achievements` | estado de desbloqueio por conquista |
 | `vocab_words` | palavras do vocabulário pessoal (`0009`): palavra, significado, exemplo, data. Id gerado pelo cliente, mesmo padrão de `habits.id`. Gerenciado em `vocabulario.html`. |
 | `vocab_quiz_stats` | placar acumulado do jogo "Testar meu vocabulário" (`0009`): rodadas jogadas, respostas certas/totais, maior sequência de acertos. 1 linha por usuário. |
 | `speech_exercises` | biblioteca de exercícios de fala/dicção (`0011`): título, texto, tipo (trava-língua/articulação/respiração/projeção/ritmo), foco. Id gerado pelo cliente. Gerenciado em `diccao.html`. |
-| `speech_practice_stats` | placar acumulado das sessões de "Praticar dicção" (`0011`): sessões, repetições, soma/contagem das auto-avaliações 1–5, maior sequência de notas boas. 1 linha por usuário. |
+| `speech_practice_stats` | placar acumulado das sessões de dicção (`0011`): sessões, repetições, soma/contagem das auto-avaliações 1–5, maior sequência de notas boas. 1 linha por usuário. |
+| `speech_days` | progresso do **plano diário** de dicção (`0012`): 1 linha por dia do desafio com `reps`/`rating_sum`/`rating_count`/`done`. `done` marca o hábito fixo `praticar_diccao` naquele dia (histórico derivado). |
 | **RLS** | ligado em tudo — cada usuário só vê as próprias linhas |
 | `handle_new_user()` | trigger em `auth.users`: cria profile + meta + hábitos fixos |
 | `seed_core_habits(user)` | semeia os hábitos fixos que faltam (idempotente) |
@@ -53,7 +55,7 @@ Os scripts criam:
 | `set_habit_status(habit_id, day_index, status)` | marca um dia e recalcula `streak`/`max_streak` |
 | `use_freeze()` | consome 1 dia de folga (de 2 por desafio) e protege a sequência do dia atual, sem exigir nenhum hábito marcado (`0010`) |
 | `unlock_achievement(id, day)` / `mark_achievement_seen(id)` | conquistas |
-| `reset_progress()` | apaga hábitos + diário + revisões semanais + conquistas + vocabulário + dicção do usuário, zera o `challenge_meta` (inclusive `freezes_left`/`frozen_days`) e re-semeia os fixos (botão "Resetar progresso" na sidebar) |
+| `reset_progress()` | apaga hábitos + diário + revisões semanais + conquistas + vocabulário + dicção (biblioteca, placar e plano diário) do usuário, zera o `challenge_meta` (inclusive `freezes_left`/`frozen_days`) e re-semeia os fixos (botão "Resetar progresso" na sidebar) |
 | `app_bootstrap()` | devolve todo o estado do usuário num JSON só (usado no load) |
 
 > `0003` removeu o módulo de água dedicado (`water_config`, `water_logs`,
@@ -134,6 +136,10 @@ podem ser excluídos, só pausados.
   `saveJournal`/`saveJournalEntry`. Em `habitos.html` o check do hábito abre
   `diario.html`. Conquista nova: **Escritor diário** (`diary_streak`, 21 dias
   seguidos — `journalStreak` no cliente).
+- **Praticar dicção** virou o hábito fixo `praticar_diccao` (`0012`, pilar
+  Mente), no mesmo esquema: `Store._reconcileSpeechHabit()` deriva de
+  `speechDays` (dia com `done` = `'done'`) e o check em `habitos.html` abre
+  `diccao.html` (ambos via `DERIVED_HABITS`).
 - **Vocabulário** (`0009` + `vocabulario.html`): seção nova e independente do desafio de
   90 dias — lista de palavras (palavra/significado/exemplo/data) com CRUD completo e o
   jogo "Testar meu vocabulário" (3 alternativas, 2 erradas geradas a partir dos
@@ -147,11 +153,16 @@ podem ser excluídos, só pausados.
   **se/ce** — som /s/ no ataque; 1/3 em outros sons: R/RR, encontros
   consonantais, LH/NH, pares mínimos, CH/J, respiração/projeção/ritmo); a
   inserção é chunked (250/lote) e a lista renderiza no máximo 150 por vez.
-  O modo "Praticar dicção" sorteia 5 exercícios por sessão, com um gravador
-  de áudio opcional **só em memória** via `MediaRecorder` (nada é enviado,
-  some se o navegador não suportar/permitir) e auto-avaliação 1–5. Alimenta
-  7 conquistas na categoria "Dicção". "Resetar progresso" também apaga a
-  biblioteca e o placar.
+  A prática é um **hábito diário** (`0012`): o sistema atribui automaticamente
+  uma cota fixa de exercícios por dia — `Store.speechPerDay()` =
+  `clamp(ceil(biblioteca / 90), 10, 20)`, o usuário não escolhe — e o "Plano
+  de hoje" é uma fatia estável (permutação com semente) da biblioteca. Concluir
+  o plano marca o hábito fixo `praticar_diccao` naquele dia. Cada exercício tem
+  gravador de áudio opcional **só em memória** via `MediaRecorder` (nada é
+  enviado, some se o navegador não suportar/permitir) e auto-avaliação 1–5.
+  "Treino livre" continua existindo (5 exercícios aleatórios, não conta pro
+  plano). Alimenta 9 conquistas na categoria "Dicção" (inclui planos concluídos).
+  "Resetar progresso" também apaga a biblioteca, o placar e o progresso diário.
 - **Toast global de conquista** (`js/achievements.js`): o catálogo de conquistas
   (nome/ícone/pontos/alvo/descrição) mora só ali agora, em `window.P90_ACHIEVEMENTS`
   — `conquistas.html` usa esse catálogo para o progresso completo e seu próprio

@@ -406,7 +406,7 @@ function saveAchievementsState(state) { Store.saveAchievements(state); }
 function computeProgress(habits, journal) {
   return Store.computeAchievementProgress(habits, journal, DAY, Store.getWeeklyReviews(),
     Store.getVocabWords(), Store.getVocabQuizStats(),
-    Store.getSpeechExercises(), Store.getSpeechStats());
+    Store.getSpeechExercises(), Store.getSpeechStats(), Store.getSpeechDays());
 }
 
 /* ════════════════════════════════════

@@ -39,6 +39,7 @@ const Store = (() => {
       vocabQuiz:     { roundsPlayed: 0, totalAnswered: 0, totalCorrect: 0, bestStreak: 0 },
       speechExercises: [],
       speechStats:   { sessionsPlayed: 0, repsTotal: 0, ratingSum: 0, ratingCount: 0, bestStreak: 0 },
+      speechDays:    {},
     };
   }
 
@@ -110,6 +111,10 @@ const Store = (() => {
       cache.speechStats.ratingSum      = data.speechStats.ratingSum      || 0;
       cache.speechStats.ratingCount    = data.speechStats.ratingCount    || 0;
       cache.speechStats.bestStreak     = data.speechStats.bestStreak     || 0;
+    }
+    if (data.speechDays && typeof data.speechDays === 'object') {
+      Object.keys(cache.speechDays).forEach(k => delete cache.speechDays[k]);
+      Object.assign(cache.speechDays, data.speechDays);
     }
   }
 
@@ -392,6 +397,27 @@ const Store = (() => {
     return changed;
   }
 
+  // "Praticar dicção" (core_key = praticar_diccao) também não é marcado à mão:
+  // o histórico dele é derivado de speechDays — todo dia com o plano concluído
+  // (done) vira 'done'. Só adiciona; nunca remove. Devolve true se mudou algo.
+  function _reconcileSpeechHabit() {
+    const h = cache.habits.find(x => x.coreKey === 'praticar_diccao');
+    if (!h) return false;
+    if (!Array.isArray(h.history)) h.history = [];
+    const start = (h.createdDay || 1) - 1;
+    let changed = false;
+    Object.keys(cache.speechDays).forEach(k => {
+      const dayNum = Number(k);
+      if (!dayNum || !cache.speechDays[k] || !cache.speechDays[k].done) return;
+      const idx = (dayNum - 1) - start;
+      if (idx < 0) return;
+      while (h.history.length <= idx) h.history.push('miss');
+      if (h.history[idx] !== 'done') { h.history[idx] = 'done'; changed = true; }
+    });
+    if (changed) _recalcStreak(h);
+    return changed;
+  }
+
   // Upsert de todos os hábitos no Supabase (usado quando roll-forward /
   // reconcile mexeram no cache fora de um saveHabits explícito).
   function _persistHabits() {
@@ -450,10 +476,11 @@ const Store = (() => {
       _syncTimezone();
       const dirty = _rollForward();
       const dirty2 = _reconcileJournalHabit();
+      const dirty3 = _reconcileSpeechHabit();
       _saveMirror();
       _ready = true;
       window.dispatchEvent(new Event('p90:synced'));
-      if (dirty || dirty2) _persistHabits();
+      if (dirty || dirty2 || dirty3) _persistHabits();
     })();
 
     return _readyPromise;
@@ -843,6 +870,93 @@ const Store = (() => {
   }
 
   /* ──────────────────────────────────────────
+     DICÇÃO — PLANO DIÁRIO (hábito fixo praticar_diccao)
+  ────────────────────────────────────────── */
+  const SPEECH_PER_DAY_MIN = 10, SPEECH_PER_DAY_MAX = 20;
+
+  // Quantos exercícios o sistema atribui por dia — derivado do tamanho da
+  // biblioteca e do total de dias, entre 10 e 20. O usuário não escolhe.
+  function speechPerDay() {
+    const lib = cache.speechExercises.length;
+    if (!lib) return SPEECH_PER_DAY_MIN;
+    const raw = Math.ceil(lib / (cache.meta.totalDays || DEFAULT_TOTAL_DAYS));
+    return Math.min(SPEECH_PER_DAY_MAX, Math.max(SPEECH_PER_DAY_MIN, raw));
+  }
+
+  // Permutação estável dos exercícios da biblioteca (Fisher-Yates + LCG com
+  // semente fixa). Assim o "plano de hoje" é o mesmo a cada recarga do dia.
+  function _speechPerm() {
+    const ids = cache.speechExercises.map(e => e.id).sort((a, b) => a - b);
+    let s = 987654321 >>> 0;
+    for (let i = ids.length - 1; i > 0; i--) {
+      s = (s * 1664525 + 1013904223) >>> 0;
+      const j = s % (i + 1);
+      const tmp = ids[i]; ids[i] = ids[j]; ids[j] = tmp;
+    }
+    return ids;
+  }
+
+  // Exercícios do plano de um dia do desafio (array de objetos exercício).
+  // Se a biblioteca for menor que a cota do dia, o plano é a biblioteca toda.
+  function speechPlanForDay(dayNum) {
+    const perm = _speechPerm();
+    if (!perm.length) return [];
+    const per = Math.min(speechPerDay(), perm.length);
+    const byId = {};
+    cache.speechExercises.forEach(e => { byId[e.id] = e; });
+    const out = [];
+    const startBase = ((dayNum - 1) * per) % perm.length;
+    for (let k = 0; k < per; k++) {
+      const id = perm[(startBase + k) % perm.length];
+      if (byId[id]) out.push(byId[id]);
+    }
+    return out;
+  }
+
+  function getSpeechDays() { return cache.speechDays; }
+  function getSpeechDay(dayNum) { return cache.speechDays[dayNum] || null; }
+
+  // Grava o progresso do plano de um dia. patch: { reps, ratingSum, ratingCount, done }
+  // (valores absolutos, não incrementos). Marca o hábito fixo praticar_diccao.
+  function saveSpeechDay(dayNum, patch) {
+    const cur = cache.speechDays[dayNum] || { reps: 0, ratingSum: 0, ratingCount: 0, done: false };
+    const next = {
+      reps:        patch.reps        != null ? patch.reps        : cur.reps,
+      ratingSum:   patch.ratingSum   != null ? patch.ratingSum   : cur.ratingSum,
+      ratingCount: patch.ratingCount != null ? patch.ratingCount : cur.ratingCount,
+      done:        patch.done        != null ? !!patch.done       : cur.done,
+    };
+    cache.speechDays[dayNum] = next;
+    if (_reconcileSpeechHabit()) _persistHabits();
+    _saveMirror();
+    _push(async () => {
+      const { error } = await window.sb.from('speech_days').upsert({
+        user_id: _uid, day_num: Number(dayNum),
+        reps: next.reps, rating_sum: next.ratingSum, rating_count: next.ratingCount, done: next.done,
+      }, { onConflict: 'user_id,day_num' });
+      if (error) throw error;
+    });
+    return next;
+  }
+
+  // Dias de plano concluídos (total) e sequência atual (dias seguidos com o
+  // plano feito, terminando em hoje ou ontem — não quebra por "ainda é hoje").
+  function speechDaysDone() {
+    return Object.keys(cache.speechDays).filter(k => cache.speechDays[k] && cache.speechDays[k].done).length;
+  }
+  function speechDayStreak() {
+    const today = getCurrentDay();
+    let streak = 0;
+    for (let d = today; d >= 1; d--) {
+      const rec = cache.speechDays[d];
+      if (rec && rec.done) streak++;
+      else if (d === today) continue;   // hoje ainda não feito não quebra
+      else break;
+    }
+    return streak;
+  }
+
+  /* ──────────────────────────────────────────
      COMPUTED HELPERS
   ────────────────────────────────────────── */
 
@@ -907,12 +1021,14 @@ const Store = (() => {
     return streak;
   }
 
-  function computeAchievementProgress(habits, journal, currentDay, weeklyReviews, vocabWords, vocabQuiz, speechExercises, speechStats) {
+  function computeAchievementProgress(habits, journal, currentDay, weeklyReviews, vocabWords, vocabQuiz, speechExercises, speechStats, speechDays) {
     weeklyReviews = weeklyReviews || {};
     vocabWords = vocabWords || [];
     vocabQuiz  = vocabQuiz || { roundsPlayed: 0, totalCorrect: 0 };
     speechExercises = speechExercises || [];
     speechStats = speechStats || { sessionsPlayed: 0, repsTotal: 0 };
+    speechDays = speechDays || {};
+    const speechPlanDone = Object.keys(speechDays).filter(k => speechDays[k] && speechDays[k].done).length;
     const active = habits.filter(h => !h.paused);
 
     // As conquistas ligadas a um hábito específico agora casam pela CHAVE
@@ -996,6 +1112,8 @@ const Store = (() => {
       speech_sessions10: speechStats.sessionsPlayed || 0,
       speech_reps50:    speechStats.repsTotal || 0,
       speech_reps200:   speechStats.repsTotal || 0,
+      speech_plan7:    speechPlanDone,
+      speech_plan30:   speechPlanDone,
     };
   }
 
@@ -1049,6 +1167,8 @@ const Store = (() => {
     getVocabQuizStats, recordVocabQuizRound,
     getSpeechExercises, addSpeechExercise, addSpeechExercises, updateSpeechExercise, deleteSpeechExercise,
     getSpeechStats, recordSpeechSession,
+    speechPerDay, speechPlanForDay, getSpeechDays, getSpeechDay, saveSpeechDay,
+    speechDaysDone, speechDayStreak,
     // computed
     habitVal, scheduledOn, dayCompletionPct, maxStreak, countDays,
     allHabitsDone, currentStreak, computeAchievementProgress, computeLevels,
