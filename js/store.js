@@ -781,11 +781,16 @@ const Store = (() => {
       focus:     (ex.focus || '').trim(),
       createdAt: new Date(now + i).toISOString(),
     }));
-    rows.forEach(r => cache.speechExercises.unshift(r));
+    cache.speechExercises.unshift(...rows);
     _saveMirror();
     _push(async () => {
-      const { error } = await window.sb.from('speech_exercises').upsert(rows.map(_speechRow), { onConflict: 'user_id,id' });
-      if (error) throw error;
+      const payload = rows.map(_speechRow);
+      const CHUNK = 250;
+      for (let i = 0; i < payload.length; i += CHUNK) {
+        const { error } = await window.sb.from('speech_exercises')
+          .upsert(payload.slice(i, i + CHUNK), { onConflict: 'user_id,id' });
+        if (error) throw error;
+      }
     });
     return rows;
   }

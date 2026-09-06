@@ -140,14 +140,18 @@ podem ser excluídos, só pausados.
   significados das outras palavras cadastradas, com um banco de significados-fallback
   genéricos para quando houver poucas palavras). Alimenta 7 conquistas novas na categoria
   "Vocabulário". O botão "Resetar progresso" também apaga o vocabulário e o placar do jogo.
-- **Dicção** (`0011` + `diccao.html`): seção nova e independente do desafio —
-  biblioteca de exercícios de fala (CRUD + busca + filtro por tipo, com um
-  botão "carregar biblioteca inicial" de ~20 trava-línguas/exercícios
-  clássicos) e o modo "Praticar dicção" (sessão de 5 exercícios sorteados,
-  gravador de áudio opcional **só em memória** via `MediaRecorder` — nada é
-  enviado, some se o navegador não suportar/permitir — e auto-avaliação 1–5).
-  Alimenta 7 conquistas novas na categoria "Dicção". "Resetar progresso"
-  também apaga a biblioteca e o placar.
+- **Dicção** (`0011` + `diccao.html` + `js/speech-library.js`): seção nova e
+  independente do desafio — biblioteca de exercícios de fala (CRUD + busca +
+  filtro por tipo). O botão "carregar biblioteca" adiciona **~1000 exercícios**
+  gerados por `window.buildSpeechLibrary()` (2/3 focados em palavras com
+  **se/ce** — som /s/ no ataque; 1/3 em outros sons: R/RR, encontros
+  consonantais, LH/NH, pares mínimos, CH/J, respiração/projeção/ritmo); a
+  inserção é chunked (250/lote) e a lista renderiza no máximo 150 por vez.
+  O modo "Praticar dicção" sorteia 5 exercícios por sessão, com um gravador
+  de áudio opcional **só em memória** via `MediaRecorder` (nada é enviado,
+  some se o navegador não suportar/permitir) e auto-avaliação 1–5. Alimenta
+  7 conquistas na categoria "Dicção". "Resetar progresso" também apaga a
+  biblioteca e o placar.
 - **Toast global de conquista** (`js/achievements.js`): o catálogo de conquistas
   (nome/ícone/pontos/alvo/descrição) mora só ali agora, em `window.P90_ACHIEVEMENTS`
   — `conquistas.html` usa esse catálogo para o progresso completo e seu próprio
