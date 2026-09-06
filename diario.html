@@ -255,6 +255,16 @@ body {
 .char-count   { font-size: 9px; letter-spacing: 0.1em; color: var(--muted); transition: color 0.2s; }
 .char-count.warn { color: rgba(252,165,165,0.6); }
 
+/* ── GRATIDÃO — 3 campos fixos ── */
+.grat-list { display: flex; flex-direction: column; gap: 8px; }
+.grat-row  { display: flex; align-items: stretch; gap: 10px; }
+.grat-num  {
+  flex-shrink: 0; width: 30px; display: flex; align-items: center; justify-content: center;
+  font-family: 'Bebas Neue', sans-serif; font-size: 16px; color: var(--mid);
+  border: 1px solid var(--border); background: var(--surface2);
+}
+.grat-field { flex: 1; min-height: 0; padding: 11px 14px; line-height: 1.5; }
+
 /* ── HABITS CHECK-IN ── */
 .habits-checkin { margin-bottom: 8px; }
 .hci-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border); }
@@ -498,8 +508,11 @@ body {
 
       <div class="prompt-block">
         <div class="prompt-lbl">Gratidão — 3 coisas</div>
-        <textarea class="j-field" id="f-gratitude" rows="3" maxlength="400" placeholder="1. Acordei bem disposto&#10;2. Conversa produtiva com o time&#10;3. Consegui tempo para leitura"></textarea>
-        <div class="field-footer"><span class="char-count" id="cc-gratitude">0 / 400</span></div>
+        <div class="grat-list">
+          <div class="grat-row"><span class="grat-num">1</span><input class="j-field grat-field" id="f-grat-1" maxlength="160" placeholder="Acordei bem disposto" /></div>
+          <div class="grat-row"><span class="grat-num">2</span><input class="j-field grat-field" id="f-grat-2" maxlength="160" placeholder="Conversa produtiva com o time" /></div>
+          <div class="grat-row"><span class="grat-num">3</span><input class="j-field grat-field" id="f-grat-3" maxlength="160" placeholder="Consegui tempo para leitura" /></div>
+        </div>
       </div>
 
       <div class="save-bar">
@@ -705,7 +718,7 @@ function loadDayIntoEditor(n) {
   setField('f-good',      data.good      || '', 'cc-good',      500);
   setField('f-improve',   data.improve   || '', 'cc-improve',   500);
   setField('f-free',      data.free      || '', 'cc-free',      1200);
-  setField('f-gratitude', data.gratitude || '', 'cc-gratitude', 400);
+  fillGratitude(data.gratitude);
 
   renderHabitsCheckin(n);
   setDirty(false);
@@ -726,6 +739,19 @@ function setField(id, val, ccId, max) {
   updateCharCount(ccId, val.length, max);
 }
 
+/* ── GRATIDÃO — 3 campos fixos, guardados como 3 linhas numa string só ── */
+function fillGratitude(str) {
+  var parts = String(str || '').split('\n');
+  for (var i = 0; i < 3; i++) {
+    var v = (parts[i] || '').replace(/^\s*\d+\s*[.)\-–:]\s*/, '').trim();  // limpa "1." de entradas antigas
+    document.getElementById('f-grat-' + (i + 1)).value = v;
+  }
+}
+function readGratitude() {
+  var v = [1, 2, 3].map(function(i){ return document.getElementById('f-grat-' + i).value.trim(); });
+  return v.some(Boolean) ? v.join('\n') : '';
+}
+
 /* ── SAVE ── */
 function saveCurrentDay() {
   var data = {
@@ -733,7 +759,7 @@ function saveCurrentDay() {
     good:      document.getElementById('f-good').value.trim(),
     improve:   document.getElementById('f-improve').value.trim(),
     free:      document.getElementById('f-free').value.trim(),
-    gratitude: document.getElementById('f-gratitude').value.trim(),
+    gratitude: readGratitude(),
   };
   var hasContent = data.good || data.improve || data.free || data.gratitude || data.mood;
   if (!hasContent) { showToast('Nada para salvar ainda'); return; }
@@ -892,8 +918,15 @@ function renderHistoryEntry(n) {
            + '<div class="jm-section">'+moodHtml+'</div>';
   body += sections.length
     ? sections.map(function(s){
+        var txt;
+        if (s[0].indexOf('Gratidão') === 0) {
+          txt = String(s[1]).split('\n').map(function(x){ return x.trim(); }).filter(Boolean)
+                  .map(function(x, i){ return (i + 1) + '. ' + _jmEsc(x); }).join('\n');
+        } else {
+          txt = _jmEsc(String(s[1]).trim());
+        }
         return '<div class="jm-section"><div class="jm-lbl">'+s[0]+'</div>'
-             + '<div class="jm-text">'+_jmEsc(String(s[1]).trim())+'</div></div>';
+             + '<div class="jm-text">'+txt+'</div></div>';
       }).join('')
     : '<div class="jm-empty">Esta entrada não tem texto — só humor / hábitos.</div>';
 
@@ -924,11 +957,15 @@ function setupListeners() {
     {id:'f-good',cc:'cc-good',max:500},
     {id:'f-improve',cc:'cc-improve',max:500},
     {id:'f-free',cc:'cc-free',max:1200},
-    {id:'f-gratitude',cc:'cc-gratitude',max:400},
   ];
   fields.forEach(function(f){
     var el = document.getElementById(f.id);
     el.addEventListener('input', function(){ updateCharCount(f.cc, el.value.length, f.max); setDirty(true); });
+    el.addEventListener('blur',  function(){ if(isDirty) saveCurrentDay(); });
+  });
+  ['f-grat-1','f-grat-2','f-grat-3'].forEach(function(id){
+    var el = document.getElementById(id);
+    el.addEventListener('input', function(){ setDirty(true); });
     el.addEventListener('blur',  function(){ if(isDirty) saveCurrentDay(); });
   });
 
