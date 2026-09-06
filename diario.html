@@ -111,7 +111,7 @@ body {
 }
 .page-title    { font-family: 'DM Serif Display', serif; font-size: 26px; font-weight: 400; display: flex; align-items: baseline; gap: 10px; }
 .page-title em { font-style: italic; opacity: 0.45; font-size: 22px; }
-.topbar-right  { display: flex; align-items: center; gap: 12px; }
+.topbar-right  { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 
 /* ── DAY NAV ── */
 .day-nav { display: flex; align-items: center; gap: 6px; }
@@ -173,6 +173,48 @@ body {
 .wr-score button:hover { color: var(--white); border-color: rgba(245,245,240,0.35); }
 .wr-score button.on { background: var(--white); color: var(--bg); border-color: var(--white); }
 
+/* ── MODAL: HISTÓRICO DO DIÁRIO (leitura) ── */
+.jm-overlay {
+  position: fixed; inset: 0; z-index: 400; background: rgba(8,8,8,0.85);
+  display: flex; align-items: center; justify-content: center; padding: 24px;
+  opacity: 0; pointer-events: none; transition: opacity 0.25s;
+}
+.jm-overlay.open { opacity: 1; pointer-events: all; }
+.jm-box {
+  background: var(--surface); border: 1px solid var(--border2);
+  width: 100%; max-width: 560px; max-height: 88vh; display: flex; flex-direction: column;
+  transform: translateY(14px); transition: transform 0.3s cubic-bezier(0.16,1,0.3,1);
+}
+.jm-overlay.open .jm-box { transform: translateY(0); }
+.jm-head { padding: 28px 32px 18px; border-bottom: 1px solid var(--border); }
+.jm-title { font-family: 'DM Serif Display', serif; font-size: 22px; color: var(--white); margin-bottom: 14px; }
+.jm-title em { font-style: italic; opacity: 0.4; }
+.jm-select {
+  width: 100%; background: var(--surface2); border: 1px solid var(--border2); color: var(--white);
+  font-family: 'DM Mono', monospace; font-size: 12px; padding: 10px 12px; outline: none; cursor: pointer;
+}
+.jm-body { padding: 24px 32px; overflow-y: auto; }
+.jm-meta { font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--mid); margin-bottom: 18px; }
+.jm-mood { font-size: 20px; margin-right: 8px; vertical-align: middle; }
+.jm-mood-lbl { font-size: 11px; letter-spacing: 0.06em; color: var(--white); }
+.jm-section { margin-bottom: 20px; }
+.jm-section:last-child { margin-bottom: 0; }
+.jm-lbl { font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--mid); margin-bottom: 8px; }
+.jm-text {
+  font-family: 'DM Mono', monospace; font-weight: 300; font-size: 12.5px; line-height: 1.9;
+  color: var(--white); letter-spacing: 0.03em; white-space: pre-wrap; word-break: break-word;
+}
+.jm-empty { text-align: center; color: var(--mid); font-size: 12px; padding: 32px 0; }
+.jm-footer { padding: 16px 32px 22px; border-top: 1px solid var(--border); display: flex; gap: 10px; }
+.jm-btn {
+  flex: 1; padding: 12px; font-family: 'DM Mono', monospace; font-size: 11px;
+  letter-spacing: 0.14em; text-transform: uppercase; cursor: pointer; border: none; transition: opacity 0.2s;
+}
+.jm-btn:hover { opacity: 0.85; }
+.jm-btn.primary { background: var(--white); color: var(--bg); }
+.jm-btn.ghost { background: none; border: 1px solid var(--border2); color: var(--mid); }
+.jm-btn.ghost:hover { color: var(--white); opacity: 1; }
+
 /* ── ENTRY HEADER ── */
 .entry-header {
   display: flex; align-items: baseline; justify-content: space-between;
@@ -212,6 +254,16 @@ body {
 .field-footer { display: flex; justify-content: flex-end; margin-top: 4px; }
 .char-count   { font-size: 9px; letter-spacing: 0.1em; color: var(--muted); transition: color 0.2s; }
 .char-count.warn { color: rgba(252,165,165,0.6); }
+
+/* ── GRATIDÃO — 3 campos fixos ── */
+.grat-list { display: flex; flex-direction: column; gap: 8px; }
+.grat-row  { display: flex; align-items: stretch; gap: 10px; }
+.grat-num  {
+  flex-shrink: 0; width: 30px; display: flex; align-items: center; justify-content: center;
+  font-family: 'Bebas Neue', sans-serif; font-size: 16px; color: var(--mid);
+  border: 1px solid var(--border); background: var(--surface2);
+}
+.grat-field { flex: 1; min-height: 0; padding: 11px 14px; line-height: 1.5; }
 
 /* ── HABITS CHECK-IN ── */
 .habits-checkin { margin-bottom: 8px; }
@@ -372,6 +424,7 @@ body {
           <button class="day-nav-btn" id="nav-next" disabled>›</button>
         </div>
         <div class="unsaved-dot" id="unsaved-dot"></div>
+        <button class="btn-sm" id="btn-history">◻ Entradas</button>
         <button class="btn-sm primary" id="btn-save">Salvar entrada</button>
       </div>
     </div>
@@ -455,8 +508,11 @@ body {
 
       <div class="prompt-block">
         <div class="prompt-lbl">Gratidão — 3 coisas</div>
-        <textarea class="j-field" id="f-gratitude" rows="3" maxlength="400" placeholder="1. Acordei bem disposto&#10;2. Conversa produtiva com o time&#10;3. Consegui tempo para leitura"></textarea>
-        <div class="field-footer"><span class="char-count" id="cc-gratitude">0 / 400</span></div>
+        <div class="grat-list">
+          <div class="grat-row"><span class="grat-num">1</span><input class="j-field grat-field" id="f-grat-1" maxlength="160" placeholder="Acordei bem disposto" /></div>
+          <div class="grat-row"><span class="grat-num">2</span><input class="j-field grat-field" id="f-grat-2" maxlength="160" placeholder="Conversa produtiva com o time" /></div>
+          <div class="grat-row"><span class="grat-num">3</span><input class="j-field grat-field" id="f-grat-3" maxlength="160" placeholder="Consegui tempo para leitura" /></div>
+        </div>
       </div>
 
       <div class="save-bar">
@@ -480,6 +536,21 @@ body {
       <div class="entries-list" id="entries-list"></div>
     </div>
 
+  </div>
+</div>
+
+<!-- MODAL: HISTÓRICO DO DIÁRIO (leitura) -->
+<div class="jm-overlay" id="jm-overlay">
+  <div class="jm-box">
+    <div class="jm-head">
+      <div class="jm-title">Entradas do <em>diário.</em></div>
+      <select class="jm-select" id="jm-select"></select>
+    </div>
+    <div class="jm-body" id="jm-body"></div>
+    <div class="jm-footer">
+      <button class="jm-btn ghost" id="jm-close">Fechar</button>
+      <button class="jm-btn primary" id="jm-open">Abrir no editor</button>
+    </div>
   </div>
 </div>
 
@@ -647,7 +718,7 @@ function loadDayIntoEditor(n) {
   setField('f-good',      data.good      || '', 'cc-good',      500);
   setField('f-improve',   data.improve   || '', 'cc-improve',   500);
   setField('f-free',      data.free      || '', 'cc-free',      1200);
-  setField('f-gratitude', data.gratitude || '', 'cc-gratitude', 400);
+  fillGratitude(data.gratitude);
 
   renderHabitsCheckin(n);
   setDirty(false);
@@ -668,6 +739,19 @@ function setField(id, val, ccId, max) {
   updateCharCount(ccId, val.length, max);
 }
 
+/* ── GRATIDÃO — 3 campos fixos, guardados como 3 linhas numa string só ── */
+function fillGratitude(str) {
+  var parts = String(str || '').split('\n');
+  for (var i = 0; i < 3; i++) {
+    var v = (parts[i] || '').replace(/^\s*\d+\s*[.)\-–:]\s*/, '').trim();  // limpa "1." de entradas antigas
+    document.getElementById('f-grat-' + (i + 1)).value = v;
+  }
+}
+function readGratitude() {
+  var v = [1, 2, 3].map(function(i){ return document.getElementById('f-grat-' + i).value.trim(); });
+  return v.some(Boolean) ? v.join('\n') : '';
+}
+
 /* ── SAVE ── */
 function saveCurrentDay() {
   var data = {
@@ -675,7 +759,7 @@ function saveCurrentDay() {
     good:      document.getElementById('f-good').value.trim(),
     improve:   document.getElementById('f-improve').value.trim(),
     free:      document.getElementById('f-free').value.trim(),
-    gratitude: document.getElementById('f-gratitude').value.trim(),
+    gratitude: readGratitude(),
   };
   var hasContent = data.good || data.improve || data.free || data.gratitude || data.mood;
   if (!hasContent) { showToast('Nada para salvar ainda'); return; }
@@ -782,6 +866,73 @@ function renderEntriesList() {
   }).join('');
 }
 
+/* ── MODAL: HISTÓRICO DO DIÁRIO (só leitura) ── */
+var MOOD_LABELS = { '🔥':'Em chamas', '💪':'Forte', '😐':'Neutro', '😓':'Difícil', '💀':'Horrível' };
+var jmDay = null;
+
+function _jmEsc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
+    return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c];
+  });
+}
+
+function openHistoryModal() {
+  var days = Object.keys(entries).map(Number).sort(function(a,b){ return b - a; });
+  var sel  = document.getElementById('jm-select');
+  if (!days.length) {
+    sel.innerHTML = '<option>—</option>';
+    document.getElementById('jm-body').innerHTML = '<div class="jm-empty">Você ainda não escreveu nenhuma entrada.</div>';
+    document.getElementById('jm-open').disabled = true;
+  } else {
+    sel.innerHTML = days.map(function(n){
+      var d = dayToDate(n);
+      return '<option value="'+n+'">Dia '+n+' · '+fmtDateShort(d)+' · '+DAYS_PT[d.getDay()]+'</option>';
+    }).join('');
+    document.getElementById('jm-open').disabled = false;
+    jmDay = entries[currentDay] ? currentDay : days[0];
+    sel.value = jmDay;
+    renderHistoryEntry(jmDay);
+  }
+  document.getElementById('jm-overlay').classList.add('open');
+}
+
+function closeHistoryModal() {
+  document.getElementById('jm-overlay').classList.remove('open');
+}
+
+function renderHistoryEntry(n) {
+  jmDay = n;
+  var data = entries[n] || {};
+  var d = dayToDate(n);
+  var moodHtml = data.mood
+    ? '<span class="jm-mood">'+data.mood+'</span><span class="jm-mood-lbl">'+(MOOD_LABELS[data.mood] || '')+'</span>'
+    : '<span class="jm-mood-lbl" style="color:var(--mid)">Sem humor registrado</span>';
+  var sections = [
+    ['O que fiz bem hoje',       data.good],
+    ['O que melhorar amanhã',    data.improve],
+    ['Reflexão livre',           data.free],
+    ['Gratidão — 3 coisas',      data.gratitude],
+  ].filter(function(s){ return s[1] && String(s[1]).trim(); });
+
+  var body = '<div class="jm-meta">Dia '+n+' &nbsp;·&nbsp; '+fmtDateFull(d)+'</div>'
+           + '<div class="jm-section">'+moodHtml+'</div>';
+  body += sections.length
+    ? sections.map(function(s){
+        var txt;
+        if (s[0].indexOf('Gratidão') === 0) {
+          txt = String(s[1]).split('\n').map(function(x){ return x.trim(); }).filter(Boolean)
+                  .map(function(x, i){ return (i + 1) + '. ' + _jmEsc(x); }).join('\n');
+        } else {
+          txt = _jmEsc(String(s[1]).trim());
+        }
+        return '<div class="jm-section"><div class="jm-lbl">'+s[0]+'</div>'
+             + '<div class="jm-text">'+txt+'</div></div>';
+      }).join('')
+    : '<div class="jm-empty">Esta entrada não tem texto — só humor / hábitos.</div>';
+
+  document.getElementById('jm-body').innerHTML = body;
+}
+
 /* ── SETUP LISTENERS ── */
 function setupListeners() {
   document.getElementById('btn-save').addEventListener('click', saveCurrentDay);
@@ -806,16 +957,31 @@ function setupListeners() {
     {id:'f-good',cc:'cc-good',max:500},
     {id:'f-improve',cc:'cc-improve',max:500},
     {id:'f-free',cc:'cc-free',max:1200},
-    {id:'f-gratitude',cc:'cc-gratitude',max:400},
   ];
   fields.forEach(function(f){
     var el = document.getElementById(f.id);
     el.addEventListener('input', function(){ updateCharCount(f.cc, el.value.length, f.max); setDirty(true); });
     el.addEventListener('blur',  function(){ if(isDirty) saveCurrentDay(); });
   });
+  ['f-grat-1','f-grat-2','f-grat-3'].forEach(function(id){
+    var el = document.getElementById(id);
+    el.addEventListener('input', function(){ setDirty(true); });
+    el.addEventListener('blur',  function(){ if(isDirty) saveCurrentDay(); });
+  });
+
+  document.getElementById('btn-history').addEventListener('click', openHistoryModal);
+  document.getElementById('jm-close').addEventListener('click', closeHistoryModal);
+  document.getElementById('jm-open').addEventListener('click', function(){
+    if (jmDay != null) { loadDayIntoEditor(jmDay); closeHistoryModal(); }
+  });
+  document.getElementById('jm-select').addEventListener('change', function(){ renderHistoryEntry(+this.value); });
+  document.getElementById('jm-overlay').addEventListener('click', function(e){
+    if (e.target === this) closeHistoryModal();
+  });
 
   document.addEventListener('keydown', function(e){
     if ((e.metaKey||e.ctrlKey) && e.key==='s') { e.preventDefault(); saveCurrentDay(); }
+    if (e.key === 'Escape' && document.getElementById('jm-overlay').classList.contains('open')) closeHistoryModal();
   });
 }
 
