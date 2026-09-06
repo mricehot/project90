@@ -106,6 +106,10 @@ podem ser excluídos, só pausados.
   - ao terminar, emite `window` `'p90:synced'` e cada página re-renderiza;
   - todo `save*` grava no cache na hora e envia pro Supabase em segundo plano (fila serializada, com espelho offline).
 - O link **“← Sair”** (`.sb-logout`) agora faz `signOut()` de verdade.
+- **Navegação mobile** (`js/store.js` `_wireMobileNav` + `css/components.css`):
+  abaixo de 900px o `js/store.js` injeta uma barra superior com logo +
+  hambúrguer em toda página (sem tocar no HTML) e a `.sidebar` vira um drawer
+  lateral com backdrop; fecha ao tocar num item, no backdrop ou em `Esc`.
 
 ## Pendências conhecidas
 
