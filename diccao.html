@@ -13,6 +13,7 @@
 <script src="js/supabase.js"></script>
 <script src="js/store.js"></script>
 <script src="js/achievements.js"></script>
+<script src="js/speech-library.js"></script>
 <style>
 
 /* ── MAIN ── */
@@ -398,30 +399,16 @@ function kindLabel(k) { return KINDS[k] || 'Exercício'; }
 
 const CAN_RECORD = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder);
 
-// Biblioteca inicial de exercícios de dicção (trava-línguas tradicionais +
-// exercícios clássicos de articulação/respiração/projeção/ritmo).
-const DEFAULT_EXERCISES = [
-  { title:'O rato de Roma',        kind:'trava-lingua', focus:'som do R',        body:'O rato roeu a roupa do rei de Roma.' },
-  { title:'Três tigres tristes',   kind:'trava-lingua', focus:'encontro TR',    body:'Três pratos de trigo para três tigres tristes.' },
-  { title:'A aranha e a rã',       kind:'trava-lingua', focus:'RANH / R',       body:'A aranha arranha a rã. A rã arranha a aranha.' },
-  { title:'O pé de Pedro',         kind:'trava-lingua', focus:'som do P',       body:'O peito do pé de Pedro é preto.' },
-  { title:'Os mafagafos',          kind:'trava-lingua', focus:'sílabas longas', body:'Um ninho de mafagafos, com sete mafagafinhos; quem os desmafagafizar bom desmafagafizador será.' },
-  { title:'Bagre branco',          kind:'trava-lingua', focus:'encontro BR',    body:'Bagre branco, branco bagre.' },
-  { title:'A vaca malhada',        kind:'trava-lingua', focus:'som LH',         body:'A vaca malhada foi molhada por outra vaca malhada e molhada.' },
-  { title:'O tempo e o tempo',     kind:'trava-lingua', focus:'som do T / ritmo', body:'O tempo perguntou ao tempo quanto tempo o tempo tem.' },
-  { title:'O sabiá',               kind:'trava-lingua', focus:'som do S / vogais', body:'Sabia que o sabiá sabia assobiar?' },
-  { title:'Casa suja',             kind:'trava-lingua', focus:'S x CH',         body:'Casa suja, chão sujo; larga o bujão, some com a sujeira.' },
-  { title:'Trinta e três',         kind:'trava-lingua', focus:'encontro TR',   body:'Trinta e três traidores traíram trinta e três tribunais.' },
-  { title:'A larva e a lavra',     kind:'trava-lingua', focus:'L x R',          body:'Larga a larva, lava a larva, e a lavra larga a larva.' },
-  { title:'Oclusivas em escada',   kind:'articulacao',  focus:'P/T/K bem marcados', body:'Repita devagar, exagerando cada sílaba: pa-ta-ca, pe-te-que, pi-ti-qui, po-to-co, pu-tu-cu.' },
-  { title:'Lápis entre os dentes', kind:'articulacao',  focus:'precisão articulatória', body:'Leia este parágrafo segurando levemente um lápis entre os dentes, mantendo cada palavra compreensível. Depois leia de novo sem o lápis.' },
-  { title:'Lábios em u-i',         kind:'articulacao',  focus:'mobilidade labial', body:'Alterne bem os lábios: "u-i-u-i-u-i" bem marcado, dez vezes, sem pressa.' },
-  { title:'Ponta da língua',       kind:'articulacao',  focus:'ápice da língua', body:'Ponta da língua atrás dos dentes: "la-le-li-lo-lu", "na-ne-ni-no-nu", "da-de-di-do-du".' },
-  { title:'Sopro contado',         kind:'respiracao',   focus:'apoio respiratório', body:'Inspire em 4 tempos, segure por 4, e solte contando em voz alta o máximo que conseguir num único sopro, sem forçar a garganta.' },
-  { title:'Pausas nas vírgulas',   kind:'respiracao',   focus:'fôlego e pausa', body:'Leia um parágrafo inteiro respirando somente nas vírgulas e nos pontos, mantendo o volume estável até o fim de cada frase.' },
-  { title:'Três volumes',          kind:'projecao',     focus:'projeção sem gritar', body:'Diga a mesma frase três vezes: sussurrando, em voz normal e projetando para o fundo da sala — apoiando no diafragma, sem gritar.' },
-  { title:'Uma sílaba por batida', kind:'ritmo',        focus:'cadência constante', body:'Leia este trecho batendo o dedo na mesa uma vez por sílaba, mantendo o ritmo igual do começo ao fim.' },
+// Biblioteca inicial de ~1000 exercícios, gerada em js/speech-library.js
+// (2/3 focados em palavras com se/ce, 1/3 em outros sons). Fallback mínimo
+// caso o arquivo não carregue.
+const DEFAULT_EXERCISES = (typeof buildSpeechLibrary === 'function') ? buildSpeechLibrary() : [
+  { title:'O rato de Roma',      kind:'trava-lingua', focus:'som do R',        body:'O rato roeu a roupa do rei de Roma.' },
+  { title:'A cerca certa',       kind:'articulacao',  focus:'se/ce',           body:'A cerca cerca o cerco certo sem cessar.' },
+  { title:'Seis cestos secos',   kind:'ritmo',        focus:'se/ce',           body:'Seis cestos secos, sete selos certos, sessenta sementes serenas.' },
+  { title:'Sopro contado',       kind:'respiracao',   focus:'apoio respiratório', body:'Inspire em 4 tempos, segure por 4, e leia esta frase inteira num sopro só.' },
 ];
+const LIST_RENDER_CAP = 150;
 
 function shuffle(arr) {
   const a = arr.slice();
@@ -547,7 +534,12 @@ function renderList() {
     return;
   }
 
-  wrap.innerHTML = list.map(e => `
+  const shown = list.slice(0, LIST_RENDER_CAP);
+  const note = list.length > shown.length
+    ? `<div class="empty-sub" style="text-align:center;margin:6px 0 0">Mostrando ${shown.length} de ${list.length}. Use a busca ou o filtro de tipo para refinar.</div>`
+    : '';
+
+  wrap.innerHTML = shown.map(e => `
     <div class="ex-card">
       <div class="ex-main">
         <div class="ex-head">
@@ -562,13 +554,14 @@ function renderList() {
         <button class="ex-btn" title="Editar" onclick="openExModal(${e.id})">✎</button>
         <button class="ex-btn danger" title="Excluir" onclick="removeEx(${e.id})">✕</button>
       </div>
-    </div>`).join('');
+    </div>`).join('') + note;
 }
 
 function loadLibrary() {
   const have = new Set(Store.getSpeechExercises().map(e => (e.title || '').trim().toLowerCase()));
   const fresh = DEFAULT_EXERCISES.filter(e => !have.has(e.title.trim().toLowerCase()));
   if (!fresh.length) { toast('A biblioteca inicial já está toda cadastrada.'); return; }
+  if (fresh.length > 50 && !confirm(`Adicionar ${fresh.length} exercícios de dicção à sua biblioteca?`)) return;
   const added = Store.addSpeechExercises(fresh);
   toast(`${added.length} exercício${added.length > 1 ? 's' : ''} adicionado${added.length > 1 ? 's' : ''} à biblioteca ✓`);
   renderStats(); renderList();
