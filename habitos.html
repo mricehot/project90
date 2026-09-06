@@ -361,6 +361,13 @@ const DAY  = Store.getCurrentDay();
 const DAYS = Store.getTotalDays();
 const DAYS_LABELS = ['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];
 
+// Hábitos fixos cujo histórico é derivado de outra tela — o check abre a tela,
+// não alterna à mão.
+const DERIVED_HABITS = {
+  escrever_diario: { href: 'diario.html',  title: 'Abrir o diário para escrever' },
+  praticar_diccao: { href: 'diccao.html',  title: 'Abrir a dicção para o plano de hoje' },
+};
+
 function saveHabits() { Store.saveHabits(habits); }
 
 let habits = Store.getHabits();
@@ -502,19 +509,19 @@ function habitCardHTML(h) {
         }
       }
     }
-    // "Escrever no diário" é derivado das entradas — não se edita pela tirinha.
-    const editable = clickIdx >= 0 && h.coreKey !== 'escrever_diario';
+    // Hábitos derivados (diário / plano de dicção) não se editam pela tirinha.
+    const editable = clickIdx >= 0 && !DERIVED_HABITS[h.coreKey];
     return `<div class="wd"><div class="wd-day">${lbl}</div>`
       + `<div class="wd-dot ${dotCls}${editable ? ' wd-edit' : ''}"`
       + (editable ? ` onclick="toggleDay(${h.id}, ${clickIdx})" title="Marcar/desmarcar este dia"` : '')
       + ` style="${!inFreq ? 'opacity:0.15' : ''}"></div></div>`;
   }).join('');
-  const isJournal = h.coreKey === 'escrever_diario';
-  const checkClick = isJournal ? `location.href='diario.html'` : `toggleToday(${h.id})`;
+  const derivedTo = DERIVED_HABITS[h.coreKey];
+  const checkClick = derivedTo ? `location.href='${derivedTo.href}'` : `toggleToday(${h.id})`;
   return `
     <div class="habit-card ${isDone ? 'done-today' : ''} ${h.paused ? 'paused' : ''}" id="hcard-${h.id}">
       <div class="habit-card-top">
-        <div class="habit-check ${isDone ? 'done' : ''}" onclick="${checkClick}" title="${isJournal ? 'Abrir o diário para escrever' : ''}">${isDone ? '✓' : ''}</div>
+        <div class="habit-check ${isDone ? 'done' : ''}" onclick="${checkClick}" title="${derivedTo ? derivedTo.title : ''}">${isDone ? '✓' : ''}</div>
         <div class="habit-info">
           <div class="habit-name ${isDone ? 'crossed' : ''}">${h.name}</div>
           <div class="habit-meta-row">
@@ -590,8 +597,9 @@ function toggleDay(id, idx) {
 }
 
 function checkAll() {
-  // pula "Escrever no diário" — só conta como feito quando há entrada de fato.
-  habits.filter(h => !h.paused && h.coreKey !== 'escrever_diario').forEach(h => {
+  // pula hábitos derivados (diário / plano de dicção) — só contam quando a
+  // ação de fato acontece na tela deles.
+  habits.filter(h => !h.paused && !DERIVED_HABITS[h.coreKey]).forEach(h => {
     if (h.history.length && h.history[h.history.length - 1] !== 'done') {
       h.history[h.history.length - 1] = 'done';
       recalcStreak(h);

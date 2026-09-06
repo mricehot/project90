@@ -69,6 +69,8 @@ window.P90_ACHIEVEMENTS = [
       { id:'speech_sessions10', icon:'🔁', name:'Prática constante',     points:220, target:10,  req:'10 sessões de prática',      desc:'10 sessões de prática de fala concluídas.' },
       { id:'speech_reps50',     icon:'💬', name:'Boca treinada',        points:200, target:50,  req:'50 exercícios praticados',   desc:'50 repetições de exercícios de fala somadas nas sessões.' },
       { id:'speech_reps200',    icon:'🏆', name:'Dicção afiada',        points:450, target:200, req:'200 exercícios praticados',  desc:'200 repetições. Sua fala não é mais a mesma.' },
+      { id:'speech_plan7',      icon:'📅', name:'Semana de dicção',     points:180, target:7,   req:'7 planos do dia concluídos', desc:'Concluiu o plano de dicção do dia 7 vezes.' },
+      { id:'speech_plan30',     icon:'🗓️', name:'Um mês falando bem',   points:500, target:30,  req:'30 planos do dia concluídos', desc:'Concluiu o plano de dicção do dia 30 vezes — virou rotina.' },
     ],
   },
   {
@@ -95,7 +97,7 @@ function checkAchievementUnlocks() {
   const progress   = Store.computeAchievementProgress(
     Store.getHabits(), Store.getJournal(), day, Store.getWeeklyReviews(),
     Store.getVocabWords(), Store.getVocabQuizStats(),
-    Store.getSpeechExercises(), Store.getSpeechStats()
+    Store.getSpeechExercises(), Store.getSpeechStats(), Store.getSpeechDays()
   );
   const savedState = Store.getAchievements();
   const all        = window.P90_ACHIEVEMENTS.flatMap(c => c.achievements);
