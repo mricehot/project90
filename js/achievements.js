@@ -60,6 +60,18 @@ window.P90_ACHIEVEMENTS = [
     ],
   },
   {
+    id: 'diccao', name: 'Dicção', icon: '◗',
+    achievements: [
+      { id:'speech_first',      icon:'🗣️', name:'Primeiro exercício',   points:50,  target:1,   req:'1 exercício na biblioteca',  desc:'Adicionou o primeiro exercício de fala.' },
+      { id:'speech_10',         icon:'👄', name:'Repertório de fala',    points:120, target:10,  req:'10 exercícios na biblioteca', desc:'10 exercícios de dicção prontos para praticar.' },
+      { id:'speech_25',         icon:'📢', name:'Fonoaudiólogo amador',  points:280, target:25,  req:'25 exercícios na biblioteca', desc:'Uma biblioteca de dicção de verdade — 25 exercícios.' },
+      { id:'speech_session1',   icon:'🎙️', name:'Primeira sessão',      points:60,  target:1,   req:'1 sessão de prática',        desc:'Fez a primeira sessão de "Praticar dicção".' },
+      { id:'speech_sessions10', icon:'🔁', name:'Prática constante',     points:220, target:10,  req:'10 sessões de prática',      desc:'10 sessões de prática de fala concluídas.' },
+      { id:'speech_reps50',     icon:'💬', name:'Boca treinada',        points:200, target:50,  req:'50 exercícios praticados',   desc:'50 repetições de exercícios de fala somadas nas sessões.' },
+      { id:'speech_reps200',    icon:'🏆', name:'Dicção afiada',        points:450, target:200, req:'200 exercícios praticados',  desc:'200 repetições. Sua fala não é mais a mesma.' },
+    ],
+  },
+  {
     id: 'especial', name: 'Especial', icon: '◆',
     achievements: [
       { id:'comeback',   icon:'🔄', name:'Volta por cima',       points:100, target:1,  req:'Retomar após uma falha',  desc:'Falhou um dia e voltou no seguinte sem desistir.' },
@@ -82,7 +94,8 @@ function checkAchievementUnlocks() {
   const day        = Store.getCurrentDay();
   const progress   = Store.computeAchievementProgress(
     Store.getHabits(), Store.getJournal(), day, Store.getWeeklyReviews(),
-    Store.getVocabWords(), Store.getVocabQuizStats()
+    Store.getVocabWords(), Store.getVocabQuizStats(),
+    Store.getSpeechExercises(), Store.getSpeechStats()
   );
   const savedState = Store.getAchievements();
   const all        = window.P90_ACHIEVEMENTS.flatMap(c => c.achievements);
