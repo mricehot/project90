@@ -140,7 +140,7 @@ textarea.modal-input { resize: vertical; min-height: 72px; line-height: 1.7; }
   color: var(--white); margin-bottom: 22px; word-break: break-word;
 }
 .prac-rec { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; min-height: 40px; }
-.prac-rec audio { height: 34px; max-width: 100%; }
+.prac-rec audio { height: 40px; flex: 1 1 220px; min-width: 200px; max-width: 100%; cursor: auto; }
 .prac-rec-btn {
   padding: 10px 18px; background: none; border: 1px solid var(--border2); color: var(--white);
   font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
@@ -693,56 +693,95 @@ document.getElementById('dcc-filter').addEventListener('change', function() {
 ════════════════════════════════════ */
 let sess = null;
 
-/* — gravador (opcional, só em memória, nada é enviado) — */
-let mediaRecorder = null, recChunks = [], recStream = null, recUrl = null;
+/* — gravador (opcional, só em memória, nada é enviado) —
+   recActive: { rec, stream, chunks, url } da gravação em andamento. */
+let recActive = null;
+const REC_IDLE_HTML =
+  `<button class="prac-rec-btn" onclick="toggleRec(this)">● Gravar</button>` +
+  `<span class="prac-rec-hint" style="margin:0">grave, pare e ouça sua leitura — nada é salvo</span>`;
 
-function _stopStream() {
-  if (recStream) { recStream.getTracks().forEach(t => t.stop()); recStream = null; }
+function _pickRecMime() {
+  const cand = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg;codecs=opus'];
+  const sup = window.MediaRecorder && MediaRecorder.isTypeSupported;
+  for (const t of cand) if (sup && MediaRecorder.isTypeSupported(t)) return t;
+  return '';
+}
+function _stopActiveRec() {
+  if (recActive && recActive.rec && recActive.rec.state === 'recording') {
+    try { recActive.rec.stop(); } catch (e) {}
+  }
 }
 function cleanupRec() {
-  try { if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop(); } catch (e) {}
-  _stopStream();
-  if (recUrl) { URL.revokeObjectURL(recUrl); recUrl = null; }
-  mediaRecorder = null; recChunks = [];
+  _stopActiveRec();
+  if (recActive) {
+    if (recActive.stream) { try { recActive.stream.getTracks().forEach(t => t.stop()); } catch (e) {} }
+    if (recActive.url) { try { URL.revokeObjectURL(recActive.url); } catch (e) {} }
+  }
+  recActive = null;
 }
+
 async function toggleRec(btn) {
+  // parar a gravação em andamento
   if (btn.dataset.rec === '1') {
-    try { if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop(); } catch (e) {}
-    btn.dataset.rec = '';
-    btn.textContent = '● Gravar';
+    btn.disabled = true;
+    btn.textContent = 'processando…';
+    _stopActiveRec();
     return;
   }
+  // iniciar
+  let stream;
   try {
-    recStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    stream = await navigator.mediaDevices.getUserMedia({ audio: true });
   } catch (e) {
-    toast('Não foi possível acessar o microfone.');
+    toast('Microfone bloqueado. Libere o acesso ao microfone para este site nas permissões do navegador.');
     return;
   }
-  recChunks = [];
+  let rec;
+  const mime = _pickRecMime();
   try {
-    mediaRecorder = new MediaRecorder(recStream);
+    rec = mime ? new MediaRecorder(stream, { mimeType: mime }) : new MediaRecorder(stream);
   } catch (e) {
-    toast('Gravação não suportada neste navegador.');
-    _stopStream();
-    return;
-  }
-  mediaRecorder.ondataavailable = e => { if (e.data && e.data.size) recChunks.push(e.data); };
-  mediaRecorder.onstop = () => {
-    _stopStream();
-    if (!recChunks.length) return;
-    if (recUrl) URL.revokeObjectURL(recUrl);
-    const blob = new Blob(recChunks, { type: mediaRecorder.mimeType || 'audio/webm' });
-    recUrl = URL.createObjectURL(blob);
-    const holder = document.getElementById('prac-rec');
-    if (holder) {
-      holder.innerHTML =
-        `<audio controls src="${recUrl}"></audio>` +
-        `<button class="prac-rec-btn" onclick="toggleRec(this)">● Regravar</button>`;
+    try { rec = new MediaRecorder(stream); }
+    catch (e2) {
+      toast('Este navegador não grava áudio — tente pelo Chrome no computador.');
+      stream.getTracks().forEach(t => t.stop());
+      return;
     }
+  }
+
+  const chunks = [];
+  const ctx = { rec, stream, chunks, url: null };
+  recActive = ctx;
+
+  rec.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
+  rec.onstop = () => {
+    try { stream.getTracks().forEach(t => t.stop()); } catch (e) {}
+    if (recActive !== ctx) return;                 // já trocou de exercício
+    const holder = document.getElementById('prac-rec');
+    if (!holder) return;
+    if (!chunks.length) {
+      toast('A gravação saiu vazia — fale por alguns segundos antes de parar.');
+      holder.innerHTML = REC_IDLE_HTML;
+      return;
+    }
+    const blob = new Blob(chunks, { type: rec.mimeType || mime || 'audio/webm' });
+    ctx.url = URL.createObjectURL(blob);
+    holder.innerHTML =
+      `<audio id="prac-audio" controls autoplay src="${ctx.url}"></audio>` +
+      `<button class="prac-rec-btn" onclick="toggleRec(this)">● Regravar</button>`;
+    const a = document.getElementById('prac-audio');
+    if (a) a.play().catch(() => {});
   };
-  mediaRecorder.start();
+
+  try {
+    rec.start(1000);                               // timeslice: coleta dados durante a gravação
+  } catch (e) {
+    toast('Não foi possível iniciar a gravação.');
+    cleanupRec();
+    return;
+  }
   btn.dataset.rec = '1';
-  btn.textContent = '■ Parar';
+  btn.textContent = '■ Parar e ouvir';
 }
 
 function startDayPlan() {
@@ -791,8 +830,7 @@ function renderSessExercise() {
     : `Treino livre — ${sess.idx + 1} / ${total}`;
 
   const recBlock = CAN_RECORD
-    ? `<div class="prac-rec" id="prac-rec"><button class="prac-rec-btn" onclick="toggleRec(this)">● Gravar</button>
-         <span class="prac-rec-hint" style="margin:0">grave-se e ouça — nada é salvo</span></div>`
+    ? `<div class="prac-rec" id="prac-rec">${REC_IDLE_HTML}</div>`
     : `<div class="prac-rec-hint">Leia em voz alta 3 vezes, devagar, exagerando a articulação.</div>`;
 
   document.getElementById('prac-box').innerHTML = `
