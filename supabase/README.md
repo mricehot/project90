@@ -228,10 +228,12 @@ podem ser excluídos, só pausados.
   só a resposta já conta como entrada (marca `escrever_diario`).
 - **Banco de provas** (`0017` + card no `dashboard.html`): lista corrida de vitórias
   registradas à mão (`wins`), pensada como antídoto pro viés de negatividade.
-  `Store.getWins/addWin/deleteWin`. O card mostra as provas manuais (mais recentes
-  primeiro) e, **sempre depois delas**, as conquistas já desbloqueadas — derivadas
-  de `js/achievements.js` + `Store.getAchievements()`, sem criar linha em `wins`.
-  Não há página própria; item **Conquistas** foi movido para o fim da barra lateral.
+  `Store.getWins/addWin/deleteWin`. O card mostra as **5 provas mais recentes** e,
+  **sempre depois delas**, as conquistas já desbloqueadas — derivadas de
+  `js/achievements.js` + `Store.getAchievements()`, sem criar linha em `wins`.
+  Quando há mais de 5, o contador "N provas · ver todas" abre um modal só-leitura
+  com a lista completa + busca (`renderWinsModalList`). Não há página própria;
+  item **Conquistas** foi movido para o fim da barra lateral.
 - **Contadores "dias desde"** (`0018` + card no `dashboard.html`): marcadores tipo
   "sem rede social até tarde". Cada um mostra os dias limpos desde `last_slip`
   (ou `start_date` se nunca deslizou) e o recorde. Botão **deslize** fecha o ciclo

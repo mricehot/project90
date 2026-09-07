@@ -117,6 +117,48 @@ body { overflow: hidden; }
 .bp-chip { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--border); padding: 4px 9px; font-size: 10px; letter-spacing: 0.04em; color: var(--mid); }
 .bp-chip .i { filter: grayscale(1); opacity: 0.85; }
 .bp-empty { font-size: 12px; color: var(--mid); line-height: 1.8; padding: 8px 0 4px; }
+#bp-count { cursor: pointer; }
+#bp-count:hover { color: var(--white); }
+
+/* ── MODAL: BANCO DE PROVAS (lista completa) ── */
+.bpm-overlay {
+  position: fixed; inset: 0; z-index: 500; background: rgba(8,8,8,0.88);
+  display: flex; align-items: center; justify-content: center; padding: 24px;
+  opacity: 0; pointer-events: none; transition: opacity 0.25s;
+}
+.bpm-overlay.open { opacity: 1; pointer-events: all; }
+.bpm-box {
+  background: var(--surface); border: 1px solid var(--border2);
+  width: 100%; max-width: 560px; max-height: 86vh; display: flex; flex-direction: column;
+  transform: translateY(12px); transition: transform 0.3s cubic-bezier(0.16,1,0.3,1);
+}
+.bpm-overlay.open .bpm-box { transform: translateY(0); }
+.bpm-head { padding: 26px 30px 16px; border-bottom: 1px solid var(--border); }
+.bpm-title { font-family: 'DM Serif Display', serif; font-size: 21px; color: var(--white); margin-bottom: 14px; }
+.bpm-title em { font-style: italic; opacity: 0.4; }
+.bpm-search {
+  width: 100%; background: var(--surface2); border: 1px solid var(--border2); color: var(--white);
+  font-family: 'DM Mono', monospace; font-size: 12px; padding: 10px 12px; outline: none;
+}
+.bpm-search::placeholder { color: var(--mid); }
+.bpm-search:focus { border-color: rgba(245,245,240,0.3); }
+.bpm-body { padding: 12px 30px; overflow-y: auto; }
+.bpm-item { display: flex; align-items: flex-start; gap: 10px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+.bpm-item:last-child { border-bottom: none; }
+.bpm-mark { color: var(--mid); line-height: 1.6; flex-shrink: 0; }
+.bpm-text { flex: 1; font-size: 12.5px; line-height: 1.65; letter-spacing: 0.02em; word-break: break-word; }
+.bpm-day { font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--mid); white-space: nowrap; flex-shrink: 0; margin-top: 3px; }
+.bpm-del { background: none; border: none; color: var(--mid); font-size: 13px; cursor: pointer; line-height: 1; padding: 2px 4px; opacity: 0; transition: opacity 0.15s, color 0.15s; }
+.bpm-item:hover .bpm-del { opacity: 1; }
+.bpm-del:hover { color: #fca5a5; }
+.bpm-empty { text-align: center; color: var(--mid); font-size: 12px; padding: 36px 0; line-height: 1.8; }
+.bpm-footer { padding: 14px 30px 20px; border-top: 1px solid var(--border); }
+.bpm-btn {
+  width: 100%; padding: 12px; background: none; border: 1px solid var(--border2); color: var(--mid);
+  font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+  cursor: pointer; transition: color 0.2s, border-color 0.2s;
+}
+.bpm-btn:hover { color: var(--white); border-color: rgba(245,245,240,0.3); }
 
 /* ── CONTADORES "DIAS DESDE" (DASH) ── */
 .dc-row { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); }
@@ -425,6 +467,20 @@ body { overflow: hidden; }
     </div>
 
   </main>
+</div>
+
+<!-- MODAL: BANCO DE PROVAS (lista completa) -->
+<div class="bpm-overlay" id="bpm-overlay">
+  <div class="bpm-box">
+    <div class="bpm-head">
+      <div class="bpm-title">Banco de <em>provas.</em></div>
+      <input class="bpm-search" id="bpm-search" type="text" placeholder="Buscar nas provas…" autocomplete="off" />
+    </div>
+    <div class="bpm-body" id="bpm-body"></div>
+    <div class="bpm-footer">
+      <button class="bpm-btn" id="bpm-close">Fechar</button>
+    </div>
+  </div>
 </div>
 
 
@@ -987,6 +1043,8 @@ function _unlockedAchievements() {
   return out;
 }
 
+const WINS_CARD_LIMIT = 5;
+
 function renderWinsCard() {
   const el = document.getElementById('bp-list');
   if (!el || typeof Store.getWins !== 'function') return;
@@ -994,13 +1052,15 @@ function renderWinsCard() {
   const wins = Store.getWins();
   const ach  = _unlockedAchievements();
 
-  document.getElementById('bp-count').textContent =
-    wins.length ? `${wins.length} prova${wins.length > 1 ? 's' : ''}` : '';
+  const countEl = document.getElementById('bp-count');
+  countEl.textContent = wins.length
+    ? `${wins.length} prova${wins.length > 1 ? 's' : ''}${wins.length > WINS_CARD_LIMIT ? ' · ver todas' : ''}`
+    : '';
 
   let html = '';
 
   if (wins.length) {
-    html += wins.map(w => `
+    html += wins.slice(0, WINS_CARD_LIMIT).map(w => `
       <div class="bp-row">
         <span class="bp-mark">▸</span>
         <span class="bp-text">${_esc(w.text)}</span>
@@ -1027,7 +1087,58 @@ function removeWin(id) {
   if (!confirm('Remover esta prova?')) return;
   Store.deleteWin(id);
   renderWinsCard();
+  if (document.getElementById('bpm-overlay').classList.contains('open')) renderWinsModalList();
 }
+
+/* ─ MODAL: lista completa do banco de provas (só leitura + busca) ─ */
+let bpmQuery = '';
+
+function openWinsModal() {
+  if (!Store.getWins().length) return;
+  bpmQuery = '';
+  document.getElementById('bpm-search').value = '';
+  renderWinsModalList();
+  document.getElementById('bpm-overlay').classList.add('open');
+  document.getElementById('bpm-search').focus();
+}
+function closeWinsModal() {
+  document.getElementById('bpm-overlay').classList.remove('open');
+}
+
+function renderWinsModalList() {
+  const body = document.getElementById('bpm-body');
+  const q = bpmQuery.trim().toLowerCase();
+  let wins = Store.getWins();
+  if (q) wins = wins.filter(w => (w.text || '').toLowerCase().includes(q));
+
+  if (!wins.length) {
+    body.innerHTML = q
+      ? `<div class="bpm-empty">Nada encontrado para “${_esc(bpmQuery)}”.</div>`
+      : `<div class="bpm-empty">Nenhuma prova registrada ainda.</div>`;
+    return;
+  }
+  body.innerHTML = wins.map(w => `
+    <div class="bpm-item">
+      <span class="bpm-mark">▸</span>
+      <span class="bpm-text">${_esc(w.text)}</span>
+      ${w.dayNum ? `<span class="bpm-day">Dia ${w.dayNum}</span>` : ''}
+      <button class="bpm-del" title="Remover" onclick="removeWin(${w.id})">✕</button>
+    </div>`).join('');
+}
+
+(function wireWinsModal() {
+  const ov = document.getElementById('bpm-overlay');
+  if (!ov) return;
+  document.getElementById('bp-count').addEventListener('click', openWinsModal);
+  document.getElementById('bpm-close').addEventListener('click', closeWinsModal);
+  ov.addEventListener('click', e => { if (e.target === ov) closeWinsModal(); });
+  document.getElementById('bpm-search').addEventListener('input', function () {
+    bpmQuery = this.value; renderWinsModalList();
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && ov.classList.contains('open')) closeWinsModal();
+  });
+})();
 
 (function wireWinsForm() {
   const form = document.getElementById('bp-form');
