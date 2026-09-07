@@ -29,19 +29,26 @@ body {
   background: var(--bg); color: var(--white);
   font-family: 'DM Mono', monospace; font-weight: 300;
   -webkit-font-smoothing: antialiased;
-  overflow: hidden; min-height: 100vh; cursor: none;
+  overflow: hidden; min-height: 100vh;
 }
+input, textarea { cursor: text; }
 
-/* ── CURSOR ── */
-#cur {
-  width: 6px; height: 6px; background: var(--white); border-radius: 50%;
-  position: fixed; top: 0; left: 0; pointer-events: none; z-index: 9999;
-  mix-blend-mode: difference; will-change: transform;
-}
-#cur-ring {
-  width: 30px; height: 30px; border: 1px solid rgba(245,245,240,0.3); border-radius: 50%;
-  position: fixed; top: 0; left: 0; pointer-events: none; z-index: 9998;
-  mix-blend-mode: difference; will-change: transform;
+/* ── CURSOR CUSTOMIZADO — só em ponteiro fino (mouse/trackpad) ── */
+#cur, #cur-ring { display: none; }
+@media (hover: hover) and (pointer: fine) {
+  body { cursor: none; }
+  #cur {
+    display: block;
+    width: 6px; height: 6px; background: var(--white); border-radius: 50%;
+    position: fixed; top: 0; left: 0; pointer-events: none; z-index: 9999;
+    mix-blend-mode: difference; will-change: transform;
+  }
+  #cur-ring {
+    display: block;
+    width: 30px; height: 30px; border: 1px solid rgba(245,245,240,0.3); border-radius: 50%;
+    position: fixed; top: 0; left: 0; pointer-events: none; z-index: 9998;
+    mix-blend-mode: difference; will-change: transform;
+  }
 }
 
 /* ── KEYFRAMES ── */

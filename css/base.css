@@ -33,23 +33,35 @@ body {
   font-weight: 300;
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
-  cursor: none;
 }
 
-/* ── CURSOR ── */
-#cur {
-  width: 6px; height: 6px;
-  background: var(--white); border-radius: 50%;
-  position: fixed; top: 0; left: 0;
-  pointer-events: none; z-index: 9999;
-  mix-blend-mode: difference; will-change: transform;
-}
-#cur-ring {
-  width: 30px; height: 30px;
-  border: 1px solid rgba(245,245,240,0.3); border-radius: 50%;
-  position: fixed; top: 0; left: 0;
-  pointer-events: none; z-index: 9998;
-  mix-blend-mode: difference; will-change: transform;
+/* Campos de texto sempre mostram o cursor de texto, mesmo com o cursor
+   customizado ativo. */
+input, textarea { cursor: text; }
+
+/* ── CURSOR CUSTOMIZADO ──
+   Só em dispositivos com ponteiro fino (mouse/trackpad). No touch/coarse
+   o cursor do sistema fica normal e os campos ganham I-beam de volta. */
+#cur, #cur-ring { display: none; }
+
+@media (hover: hover) and (pointer: fine) {
+  body { cursor: none; }
+  #cur {
+    display: block;
+    width: 6px; height: 6px;
+    background: var(--white); border-radius: 50%;
+    position: fixed; top: 0; left: 0;
+    pointer-events: none; z-index: 9999;
+    mix-blend-mode: difference; will-change: transform;
+  }
+  #cur-ring {
+    display: block;
+    width: 30px; height: 30px;
+    border: 1px solid rgba(245,245,240,0.3); border-radius: 50%;
+    position: fixed; top: 0; left: 0;
+    pointer-events: none; z-index: 9998;
+    mix-blend-mode: difference; will-change: transform;
+  }
 }
 
 /* ── KEYFRAMES ── */

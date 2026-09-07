@@ -28,20 +28,11 @@ html { scroll-behavior: smooth; }
 body {
   background: var(--bg); color: var(--white);
   font-family: 'DM Mono', monospace; font-weight: 300;
-  -webkit-font-smoothing: antialiased; overflow: hidden; cursor: none;
+  -webkit-font-smoothing: antialiased; overflow: hidden;
 }
-
-/* ── CURSOR ── */
-#cur {
-  width: 6px; height: 6px; background: var(--white); border-radius: 50%;
-  position: fixed; top: 0; left: 0; pointer-events: none; z-index: 9999;
-  mix-blend-mode: difference; will-change: transform;
-}
-#cur-ring {
-  width: 30px; height: 30px; border: 1px solid rgba(245,245,240,0.3); border-radius: 50%;
-  position: fixed; top: 0; left: 0; pointer-events: none; z-index: 9998;
-  mix-blend-mode: difference; will-change: transform;
-}
+/* cursor customizado + I-beam nos campos vêm de css/base.css (com media-query
+   pra ponteiro fino) */
+input, textarea { cursor: text; }
 
 /* ── TOAST ── */
 .toast {
