@@ -96,6 +96,28 @@ body { overflow: hidden; }
 .dr-words { font-size: 11px; letter-spacing: 0.04em; color: var(--mid); line-height: 1.9; word-break: break-word; }
 .dr-words .more { opacity: 0.55; }
 
+/* ── BANCO DE PROVAS (DASH) ── */
+.bp-input {
+  width: 100%; background: var(--surface2); border: 1px solid var(--border); color: var(--white);
+  font-family: 'DM Mono', monospace; font-weight: 300; font-size: 12px; letter-spacing: 0.03em;
+  padding: 11px 13px; outline: none; margin: 4px 0 14px; transition: border-color 0.2s;
+}
+.bp-input:focus { border-color: rgba(245,245,240,0.3); }
+.bp-input::placeholder { color: var(--mid); }
+.bp-row { display: flex; align-items: flex-start; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--border); }
+.bp-row:last-child { border-bottom: none; }
+.bp-mark { color: var(--mid); flex-shrink: 0; line-height: 1.6; }
+.bp-text { flex: 1; font-size: 12.5px; letter-spacing: 0.02em; line-height: 1.6; word-break: break-word; }
+.bp-day { font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--mid); white-space: nowrap; flex-shrink: 0; margin-top: 2px; }
+.bp-del { background: none; border: none; color: var(--mid); font-size: 13px; cursor: pointer; line-height: 1; padding: 2px 4px; opacity: 0; transition: opacity 0.15s, color 0.15s; }
+.bp-row:hover .bp-del { opacity: 1; }
+.bp-del:hover { color: #fca5a5; }
+.bp-sub { font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--mid); margin: 16px 0 8px; }
+.bp-ach { display: flex; flex-wrap: wrap; gap: 6px; }
+.bp-chip { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--border); padding: 4px 9px; font-size: 10px; letter-spacing: 0.04em; color: var(--mid); }
+.bp-chip .i { filter: grayscale(1); opacity: 0.85; }
+.bp-empty { font-size: 12px; color: var(--mid); line-height: 1.8; padding: 8px 0 4px; }
+
 /* ── CONSISTENCY ── */
 .co-row { display: flex; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--border); }
 .co-row:last-child { border-bottom: none; }
@@ -239,11 +261,11 @@ body { overflow: hidden; }
       <a class="sb-item" href="habitos.html"><span class="sb-item-icon">◉</span> Hábitos</a>
       <a class="sb-item" href="metricas.html"><span class="sb-item-icon">△</span> Métricas</a>
       <a class="sb-item" href="diario.html"><span class="sb-item-icon">◻</span> Diário</a>
-      <a class="sb-item" href="conquistas.html"><span class="sb-item-icon">◆</span> Conquistas</a>
       <a class="sb-item" href="vocabulario.html"><span class="sb-item-icon">▤</span> Vocabulário</a>
       <a class="sb-item" href="diccao.html"><span class="sb-item-icon">◗</span> Dicção</a>
       <a class="sb-item" href="biblia.html"><span class="sb-item-icon">✝</span> Bíblia</a>
       <a class="sb-item" href="tarefas.html"><span class="sb-item-icon">✓</span> Tarefas</a>
+      <a class="sb-item" href="conquistas.html"><span class="sb-item-icon">◆</span> Conquistas</a>
     </nav>
 
     <div class="sb-bottom">
@@ -347,6 +369,19 @@ body { overflow: hidden; }
       <div id="dash-review"></div>
     </div>
 
+    <!-- BANCO DE PROVAS -->
+    <div class="card" id="wins-card">
+      <div class="card-hd">
+        <span class="card-title">Banco de provas</span>
+        <span class="card-action" id="bp-count">—</span>
+      </div>
+      <form id="bp-form" autocomplete="off">
+        <input class="bp-input" id="bp-input" maxlength="240"
+               placeholder="Registre uma prova de que você é capaz…" />
+      </form>
+      <div id="bp-list"></div>
+    </div>
+
     <!-- CHARTS -->
     <div class="g2">
       <div class="card">
@@ -435,6 +470,7 @@ function init() {
   renderLevels();
   renderDashTasks();
   renderDashReview();
+  renderWinsCard();
 }
 
 /* ═══════════════════════════════
@@ -904,6 +940,78 @@ function renderDashReview() {
     `<div class="dr-count">${due.length} palavra${due.length > 1 ? 's' : ''} para revisar hoje</div>` +
     `<div class="dr-words">${shown}${more}</div>`;
 }
+
+/* ─ BANCO DE PROVAS ─ */
+// Conquistas desbloqueadas, mais recentes primeiro — derivadas do catálogo
+// (js/achievements.js) + estado salvo. Vão SEMPRE depois das provas manuais.
+function _unlockedAchievements() {
+  const cats  = window.P90_ACHIEVEMENTS || [];
+  const state = (typeof Store.getAchievements === 'function' && Store.getAchievements()) || {};
+  const out = [];
+  cats.forEach(c => (c.achievements || []).forEach(a => {
+    const s = state[a.id];
+    if (s) out.push({ icon: a.icon || '◆', name: a.name || a.id, day: s.unlockedDay || 0 });
+  }));
+  out.sort((x, y) => y.day - x.day);
+  return out;
+}
+
+function renderWinsCard() {
+  const el = document.getElementById('bp-list');
+  if (!el || typeof Store.getWins !== 'function') return;
+
+  const wins = Store.getWins();
+  const ach  = _unlockedAchievements();
+
+  document.getElementById('bp-count').textContent =
+    wins.length ? `${wins.length} prova${wins.length > 1 ? 's' : ''}` : '';
+
+  let html = '';
+
+  if (wins.length) {
+    html += wins.map(w => `
+      <div class="bp-row">
+        <span class="bp-mark">▸</span>
+        <span class="bp-text">${_esc(w.text)}</span>
+        ${w.dayNum ? `<span class="bp-day">Dia ${w.dayNum}</span>` : ''}
+        <button class="bp-del" title="Remover" onclick="removeWin(${w.id})">✕</button>
+      </div>`).join('');
+  } else if (!ach.length) {
+    html += `<div class="bp-empty">Nada registrado ainda.<br>Anote a primeira quando algo der certo — nos dias ruins isso conta.</div>`;
+  }
+
+  if (ach.length) {
+    const shown = ach.slice(0, 10);
+    html += `<div class="bp-sub">Conquistas desbloqueadas</div>` +
+      `<div class="bp-ach">` +
+      shown.map(a => `<span class="bp-chip"><span class="i">${a.icon}</span>${_esc(a.name)}</span>`).join('') +
+      (ach.length > shown.length ? `<span class="bp-chip">+${ach.length - shown.length}</span>` : '') +
+      `</div>`;
+  }
+
+  el.innerHTML = html;
+}
+
+function removeWin(id) {
+  if (!confirm('Remover esta prova?')) return;
+  Store.deleteWin(id);
+  renderWinsCard();
+}
+
+(function wireWinsForm() {
+  const form = document.getElementById('bp-form');
+  if (!form) return;
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+    const input = document.getElementById('bp-input');
+    const v = input.value.trim();
+    if (!v) return;
+    Store.addWin(v);
+    input.value = '';
+    toast('Registrado no banco de provas ✓');
+    renderWinsCard();
+  });
+})();
 
 function quickToggleTask(id) {
   const t = Store.getTasks().find(x => x.id === id);

@@ -28,6 +28,7 @@ Dashboard → **SQL Editor** → **New query** → rode os arquivos **na ordem**
 14. `supabase/migrations/0014_tasks.sql` → **Run**
 15. `supabase/migrations/0015_vocab_srs.sql` → **Run**
 16. `supabase/migrations/0016_journal_prompt.sql` → **Run**
+17. `supabase/migrations/0017_wins.sql` → **Run**
 
 **Opção B — CLI:**
 ```bash
@@ -54,6 +55,7 @@ Os scripts criam:
 | `bible_days` | plano de leitura da Bíblia em 1 ano (`0013`): 1 linha por dia do plano marcado como lido (`day_num` 1–365, `done`, `done_date`). A lista dia→referência mora no cliente (`js/bible-plan.js`); só o que foi lido fica no banco. Começa vazio. |
 | `tasks` | sistema de tarefas (`0014`): título, notas, `sched` (`once`/`everyN`/`weekdays`), `interval_days`, `weekdays` jsonb (0=Seg..6=Dom), `overdue` (`accumulate`/`skip`), `anchor` (data de vencimento p/ `once` ou data-base), `archived`. Id gerado pelo cliente. |
 | `task_completions` | 1 linha por `(tarefa, data concluída)`. Sem FK para `tasks` — `deleteTask` apaga as duas. O agendamento/atraso é calculado no cliente (`Store.taskNextDue`/`taskStatus`). |
+| `wins` | banco de provas (`0017`): 1 linha por vitória registrada à mão (`text`, `day_num`). Id gerado pelo cliente. Card no dashboard (`renderWinsCard`); as conquistas desbloqueadas aparecem no mesmo card, derivadas de `achievements` — não viram linha aqui. |
 | **RLS** | ligado em tudo — cada usuário só vê as próprias linhas |
 | `handle_new_user()` | trigger em `auth.users`: cria profile + meta + hábitos fixos |
 | `seed_core_habits(user)` | semeia os hábitos fixos que faltam (idempotente) |
@@ -222,6 +224,12 @@ podem ser excluídos, só pausados.
   reordenar muda a pergunta de dias já escritos). Aparece no editor, no modal de
   Entradas (com a pergunta acima da resposta) e entra na busca do diário. Escrever
   só a resposta já conta como entrada (marca `escrever_diario`).
+- **Banco de provas** (`0017` + card no `dashboard.html`): lista corrida de vitórias
+  registradas à mão (`wins`), pensada como antídoto pro viés de negatividade.
+  `Store.getWins/addWin/deleteWin`. O card mostra as provas manuais (mais recentes
+  primeiro) e, **sempre depois delas**, as conquistas já desbloqueadas — derivadas
+  de `js/achievements.js` + `Store.getAchievements()`, sem criar linha em `wins`.
+  Não há página própria; item **Conquistas** foi movido para o fim da barra lateral.
 - `Store.js` (raiz, com S maiúsculo) é a versão **antiga** só-localStorage e
   não é usada por nenhuma página (todas carregam `js/store.js`). Pode apagar.
 - **Rollover de dia** (resolvido no cliente): no bootstrap, `Store._rollForward()`
