@@ -896,7 +896,7 @@ function renderEntriesList() {
     var date    = dayToDate(n);
     var preview = data.good || data.free || data.improve || data.promptReply || '';
     var isActive = n === currentDay;
-    return '<div class="entry-item'+(isActive?' active':'')+'" data-day="'+n+'" onclick="loadDayIntoEditor('+n+')">'+
+    return '<div class="entry-item'+(isActive?' active':'')+'" data-day="'+n+'" onclick="openHistoryModal('+n+')">'+
       '<div class="ei-top">'+
         '<div class="ei-left">'+
           '<div class="ei-day">Dia '+n+'</div>'+
@@ -923,7 +923,10 @@ function _jmEsc(s) {
   });
 }
 
-function openHistoryModal() {
+function openHistoryModal(preselectDay) {
+  // chamado tanto pelo botão "Entradas" (recebe o evento) quanto pela lista
+  // lateral (recebe o nº do dia) — só aceita número.
+  if (typeof preselectDay !== 'number') preselectDay = null;
   jmDays = Object.keys(entries).map(Number).sort(function(a,b){ return b - a; });
   jmQuery = '';
   var srch = document.getElementById('jm-search');
@@ -942,7 +945,8 @@ function openHistoryModal() {
       return '<option value="'+n+'">Dia '+n+' · '+fmtDateShort(d)+' · '+DAYS_PT[d.getDay()]+'</option>';
     }).join('');
     document.getElementById('jm-open').disabled = false;
-    jmDay = entries[currentDay] ? currentDay : jmDays[0];
+    jmDay = (preselectDay != null && entries[preselectDay]) ? preselectDay
+          : (entries[currentDay] ? currentDay : jmDays[0]);
     sel.value = jmDay;
     renderHistoryEntry(jmDay);
   }
