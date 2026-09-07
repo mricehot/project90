@@ -29,6 +29,7 @@ Dashboard → **SQL Editor** → **New query** → rode os arquivos **na ordem**
 15. `supabase/migrations/0015_vocab_srs.sql` → **Run**
 16. `supabase/migrations/0016_journal_prompt.sql` → **Run**
 17. `supabase/migrations/0017_wins.sql` → **Run**
+18. `supabase/migrations/0018_streak_counters.sql` → **Run**
 
 **Opção B — CLI:**
 ```bash
@@ -56,6 +57,7 @@ Os scripts criam:
 | `tasks` | sistema de tarefas (`0014`): título, notas, `sched` (`once`/`everyN`/`weekdays`), `interval_days`, `weekdays` jsonb (0=Seg..6=Dom), `overdue` (`accumulate`/`skip`), `anchor` (data de vencimento p/ `once` ou data-base), `archived`. Id gerado pelo cliente. |
 | `task_completions` | 1 linha por `(tarefa, data concluída)`. Sem FK para `tasks` — `deleteTask` apaga as duas. O agendamento/atraso é calculado no cliente (`Store.taskNextDue`/`taskStatus`). |
 | `wins` | banco de provas (`0017`): 1 linha por vitória registrada à mão (`text`, `day_num`). Id gerado pelo cliente. Card no dashboard (`renderWinsCard`); as conquistas desbloqueadas aparecem no mesmo card, derivadas de `achievements` — não viram linha aqui. |
+| `streak_counters` | contadores "dias desde" (`0018`): `label`, `last_slip` (data do último deslize, nula = nunca), `start_date` (base enquanto `last_slip` for nula), `best_run` (recorde em dias). Id gerado pelo cliente. Card no dashboard (`renderCountersCard`). Independente de hábitos/streak/conquistas. |
 | **RLS** | ligado em tudo — cada usuário só vê as próprias linhas |
 | `handle_new_user()` | trigger em `auth.users`: cria profile + meta + hábitos fixos |
 | `seed_core_habits(user)` | semeia os hábitos fixos que faltam (idempotente) |
@@ -230,6 +232,13 @@ podem ser excluídos, só pausados.
   primeiro) e, **sempre depois delas**, as conquistas já desbloqueadas — derivadas
   de `js/achievements.js` + `Store.getAchievements()`, sem criar linha em `wins`.
   Não há página própria; item **Conquistas** foi movido para o fim da barra lateral.
+- **Contadores "dias desde"** (`0018` + card no `dashboard.html`): marcadores tipo
+  "sem rede social até tarde". Cada um mostra os dias limpos desde `last_slip`
+  (ou `start_date` se nunca deslizou) e o recorde. Botão **deslize** fecha o ciclo
+  (atualiza `best_run`) e zera; **desfazer** aparece só no dia do deslize.
+  `Store.getStreakCounters/counterDaysSince/addStreakCounter/registerCounterSlip/
+  undoCounterSlip/deleteStreakCounter`. Cálculo de datas 100% no cliente; nada
+  ligado a hábitos, streak geral ou conquistas.
 - `Store.js` (raiz, com S maiúsculo) é a versão **antiga** só-localStorage e
   não é usada por nenhuma página (todas carregam `js/store.js`). Pode apagar.
 - **Rollover de dia** (resolvido no cliente): no bootstrap, `Store._rollForward()`
