@@ -118,6 +118,8 @@ body { overflow: hidden; }
   padding: 14px 18px; border: 1px solid var(--border2); background: var(--surface);
   font-size: 12px; letter-spacing: 0.03em; color: var(--white);
 }
+/* o atributo `hidden` precisa vencer o `display: flex` acima */
+.nudge[hidden] { display: none; }
 .nudge.warn   { border-color: rgba(252,165,165,0.45); background: rgba(252,165,165,0.06); }
 .nudge.done   { border-color: rgba(134,239,172,0.4);  background: rgba(134,239,172,0.06); }
 .nudge-icon   { font-size: 16px; flex-shrink: 0; }
