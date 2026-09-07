@@ -24,6 +24,7 @@ Dashboard → **SQL Editor** → **New query** → rode os arquivos **na ordem**
 10. `supabase/migrations/0010_streak_freeze.sql` → **Run**
 11. `supabase/migrations/0011_speech.sql` → **Run**
 12. `supabase/migrations/0012_speech_daily.sql` → **Run**
+13. `supabase/migrations/0013_bible_plan.sql` → **Run**
 
 **Opção B — CLI:**
 ```bash
@@ -47,6 +48,7 @@ Os scripts criam:
 | `speech_exercises` | biblioteca de exercícios de fala/dicção (`0011`): título, texto, tipo (trava-língua/articulação/respiração/projeção/ritmo), foco. Id gerado pelo cliente. Gerenciado em `diccao.html`. |
 | `speech_practice_stats` | placar acumulado das sessões de dicção (`0011`): sessões, repetições, soma/contagem das auto-avaliações 1–5, maior sequência de notas boas. 1 linha por usuário. |
 | `speech_days` | progresso do **plano diário** de dicção (`0012`): 1 linha por dia do desafio com `reps`/`rating_sum`/`rating_count`/`done`. `done` marca o hábito fixo `praticar_diccao` naquele dia (histórico derivado). |
+| `bible_days` | plano de leitura da Bíblia em 1 ano (`0013`): 1 linha por dia do plano marcado como lido (`day_num` 1–365, `done`, `done_date`). A lista dia→referência mora no cliente (`js/bible-plan.js`); só o que foi lido fica no banco. Começa vazio. |
 | **RLS** | ligado em tudo — cada usuário só vê as próprias linhas |
 | `handle_new_user()` | trigger em `auth.users`: cria profile + meta + hábitos fixos |
 | `seed_core_habits(user)` | semeia os hábitos fixos que faltam (idempotente) |
@@ -55,7 +57,7 @@ Os scripts criam:
 | `set_habit_status(habit_id, day_index, status)` | marca um dia e recalcula `streak`/`max_streak` |
 | `use_freeze()` | consome 1 dia de folga (de 2 por desafio) e protege a sequência do dia atual, sem exigir nenhum hábito marcado (`0010`) |
 | `unlock_achievement(id, day)` / `mark_achievement_seen(id)` | conquistas |
-| `reset_progress()` | apaga hábitos + diário + revisões semanais + conquistas + vocabulário + dicção (biblioteca, placar e plano diário) do usuário, zera o `challenge_meta` (inclusive `freezes_left`/`frozen_days`) e re-semeia os fixos (botão "Resetar progresso" na sidebar) |
+| `reset_progress()` | apaga hábitos + diário + revisões semanais + conquistas + vocabulário + dicção + plano da Bíblia do usuário, zera o `challenge_meta` (inclusive `freezes_left`/`frozen_days`) e re-semeia os fixos (botão "Resetar progresso" na sidebar) |
 | `app_bootstrap()` | devolve todo o estado do usuário num JSON só (usado no load) |
 
 > `0003` removeu o módulo de água dedicado (`water_config`, `water_logs`,
@@ -177,6 +179,16 @@ podem ser excluídos, só pausados.
   `computeAchievementProgress()` tratam dias em `frozen_days` como mantidos em
   vez de quebra, mas não contam como "dia perfeito" nem alimentam contadores
   de hábito específico. Oferecido no alerta de streak em risco do dashboard.
+- **Plano da Bíblia** (`0013` + `biblia.html` + `js/bible-plan.js`): seção nova,
+  independente do desafio de 90 dias. `js/bible-plan.js` tem a lista `dia →
+  referência` (365 dias, transcrita das fotos do plano da Bíblia "Permaneça" da
+  JesusCopy — ordem canônica, ~3 caps/dia); a `bible_days` guarda só o que já
+  foi lido. `biblia.html` mostra a próxima leitura + um checklist dos 365 dias,
+  progresso e sequência de dias-calendário com leitura. Não mexe no hábito fixo
+  `ler_biblia` (continua marcado à mão em `habitos.html`). Começa tudo
+  desmarcado. **Conferir contra o livro físico:** o dia 331 começa em
+  "2Coríntios 4" (pode haver "2Co 1–3" no dia 330) e os dias 361–365
+  (Apocalipse 7–22) foram acrescentados para fechar o livro.
 - `Store.js` (raiz, com S maiúsculo) é a versão **antiga** só-localStorage e
   não é usada por nenhuma página (todas carregam `js/store.js`). Pode apagar.
 - **Rollover de dia** (resolvido no cliente): no bootstrap, `Store._rollForward()`

@@ -40,6 +40,7 @@ const Store = (() => {
       speechExercises: [],
       speechStats:   { sessionsPlayed: 0, repsTotal: 0, ratingSum: 0, ratingCount: 0, bestStreak: 0 },
       speechDays:    {},
+      bibleDays:     {},
     };
   }
 
@@ -115,6 +116,10 @@ const Store = (() => {
     if (data.speechDays && typeof data.speechDays === 'object') {
       Object.keys(cache.speechDays).forEach(k => delete cache.speechDays[k]);
       Object.assign(cache.speechDays, data.speechDays);
+    }
+    if (data.bibleDays && typeof data.bibleDays === 'object') {
+      Object.keys(cache.bibleDays).forEach(k => delete cache.bibleDays[k]);
+      Object.assign(cache.bibleDays, data.bibleDays);
     }
   }
 
@@ -302,7 +307,7 @@ const Store = (() => {
         '</div>' +
         '<p style="font-size:12px;line-height:1.9;color:var(--mid,#999);margin-bottom:8px;">' +
           'Isso apaga <b style="color:var(--white,#f5f5f0)">todo o seu progresso</b> — hábitos, ' +
-          'histórico, entradas do diário, revisões semanais, vocabulário, dicção e conquistas — e reinicia ' +
+          'histórico, entradas do diário, revisões semanais, vocabulário, dicção, plano da Bíblia e conquistas — e reinicia ' +
           'o desafio no dia 1. Os hábitos fixos voltam ao estado inicial.' +
         '</p>' +
         '<p style="font-size:11px;letter-spacing:.06em;color:var(--red,#fca5a5);margin-bottom:24px;">' +
@@ -957,6 +962,67 @@ const Store = (() => {
   }
 
   /* ──────────────────────────────────────────
+     PLANO DE LEITURA DA BÍBLIA (js/bible-plan.js)
+  ────────────────────────────────────────── */
+  function _localDate(offsetDays) {
+    const d = new Date();
+    if (offsetDays) d.setDate(d.getDate() + offsetDays);
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+
+  function getBiblePlan() { return (typeof window !== 'undefined' && window.P90_BIBLE_PLAN) || []; }
+  function getBibleDays() { return cache.bibleDays; }
+  function bibleReadCount() { return Object.keys(cache.bibleDays).length; }
+
+  // Primeiro dia do plano ainda não lido (1..N). N+1 se já leu tudo.
+  function bibleNextDay() {
+    const total = getBiblePlan().length || 365;
+    for (let d = 1; d <= total; d++) if (!cache.bibleDays[d]) return d;
+    return total + 1;
+  }
+
+  // Sequência de dias-calendário seguidos com pelo menos uma leitura marcada,
+  // terminando hoje ou ontem.
+  function bibleStreak() {
+    const dates = new Set();
+    Object.keys(cache.bibleDays).forEach(k => {
+      const dd = cache.bibleDays[k] && cache.bibleDays[k].doneDate;
+      if (dd) dates.add(String(dd).slice(0, 10));
+    });
+    if (!dates.size) return 0;
+    let streak = 0, cur = 0;
+    if (dates.has(_localDate(0))) { streak = 1; cur = -1; }
+    else if (dates.has(_localDate(-1))) { streak = 1; cur = -2; }
+    else return 0;
+    while (dates.has(_localDate(cur))) { streak++; cur--; }
+    return streak;
+  }
+
+  // Marca (done=true) ou desmarca (done=false) um dia do plano.
+  function setBibleReading(dayNum, done) {
+    dayNum = Number(dayNum);
+    if (!dayNum) return;
+    if (done) {
+      const prev = cache.bibleDays[dayNum];
+      cache.bibleDays[dayNum] = { done: true, doneDate: (prev && prev.doneDate) || _localDate(0) };
+    } else {
+      delete cache.bibleDays[dayNum];
+    }
+    _saveMirror();
+    _push(async () => {
+      if (done) {
+        const { error } = await window.sb.from('bible_days').upsert({
+          user_id: _uid, day_num: dayNum, done: true, done_date: cache.bibleDays[dayNum].doneDate,
+        }, { onConflict: 'user_id,day_num' });
+        if (error) throw error;
+      } else {
+        const { error } = await window.sb.from('bible_days').delete().eq('user_id', _uid).eq('day_num', dayNum);
+        if (error) throw error;
+      }
+    });
+  }
+
+  /* ──────────────────────────────────────────
      COMPUTED HELPERS
   ────────────────────────────────────────── */
 
@@ -1169,6 +1235,7 @@ const Store = (() => {
     getSpeechStats, recordSpeechSession,
     speechPerDay, speechPlanForDay, getSpeechDays, getSpeechDay, saveSpeechDay,
     speechDaysDone, speechDayStreak,
+    getBiblePlan, getBibleDays, setBibleReading, bibleReadCount, bibleNextDay, bibleStreak,
     // computed
     habitVal, scheduledOn, dayCompletionPct, maxStreak, countDays,
     allHabitsDone, currentStreak, computeAchievementProgress, computeLevels,
