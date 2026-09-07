@@ -193,7 +193,26 @@ body {
   width: 100%; background: var(--surface2); border: 1px solid var(--border2); color: var(--white);
   font-family: 'DM Mono', monospace; font-size: 12px; padding: 10px 12px; outline: none; cursor: pointer;
 }
+.jm-search {
+  width: 100%; background: var(--surface2); border: 1px solid var(--border2); color: var(--white);
+  font-family: 'DM Mono', monospace; font-size: 12px; padding: 10px 12px; outline: none; margin-bottom: 10px;
+}
+.jm-search::placeholder { color: var(--mid); }
+.jm-search:focus { border-color: rgba(245,245,240,0.3); }
 .jm-body { padding: 24px 32px; overflow-y: auto; }
+.jm-results-count { font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--mid); margin-bottom: 14px; }
+.jm-results { display: flex; flex-direction: column; gap: 8px; }
+.jm-result {
+  display: block; width: 100%; text-align: left; background: var(--surface2);
+  border: 1px solid var(--border); padding: 12px 14px; cursor: pointer; transition: border-color 0.2s;
+}
+.jm-result:hover { border-color: var(--border2); }
+.jm-result-meta { display: block; font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--mid); margin-bottom: 6px; }
+.jm-result-snip {
+  display: block; font-family: 'DM Mono', monospace; font-weight: 300; font-size: 12px; line-height: 1.7;
+  color: var(--white); letter-spacing: 0.02em; word-break: break-word;
+}
+.jm-hit { background: rgba(245,245,240,0.22); color: var(--white); padding: 0 2px; border-radius: 2px; }
 .jm-meta { font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--mid); margin-bottom: 18px; }
 .jm-mood { font-size: 20px; margin-right: 8px; vertical-align: middle; }
 .jm-mood-lbl { font-size: 11px; letter-spacing: 0.06em; color: var(--white); }
@@ -546,6 +565,7 @@ body {
   <div class="jm-box">
     <div class="jm-head">
       <div class="jm-title">Entradas do <em>diário.</em></div>
+      <input class="jm-search" id="jm-search" type="text" placeholder="Buscar em todas as entradas…" autocomplete="off" />
       <select class="jm-select" id="jm-select"></select>
     </div>
     <div class="jm-body" id="jm-body"></div>
@@ -871,6 +891,8 @@ function renderEntriesList() {
 /* ── MODAL: HISTÓRICO DO DIÁRIO (só leitura) ── */
 var MOOD_LABELS = { '🔥':'Em chamas', '💪':'Forte', '😐':'Neutro', '😓':'Difícil', '💀':'Horrível' };
 var jmDay = null;
+var jmDays = [];
+var jmQuery = '';
 
 function _jmEsc(s) {
   return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
@@ -879,19 +901,25 @@ function _jmEsc(s) {
 }
 
 function openHistoryModal() {
-  var days = Object.keys(entries).map(Number).sort(function(a,b){ return b - a; });
+  jmDays = Object.keys(entries).map(Number).sort(function(a,b){ return b - a; });
+  jmQuery = '';
+  var srch = document.getElementById('jm-search');
   var sel  = document.getElementById('jm-select');
-  if (!days.length) {
+  srch.value = '';
+  sel.hidden = false;
+  if (!jmDays.length) {
     sel.innerHTML = '<option>—</option>';
+    srch.disabled = true;
     document.getElementById('jm-body').innerHTML = '<div class="jm-empty">Você ainda não escreveu nenhuma entrada.</div>';
     document.getElementById('jm-open').disabled = true;
   } else {
-    sel.innerHTML = days.map(function(n){
+    srch.disabled = false;
+    sel.innerHTML = jmDays.map(function(n){
       var d = dayToDate(n);
       return '<option value="'+n+'">Dia '+n+' · '+fmtDateShort(d)+' · '+DAYS_PT[d.getDay()]+'</option>';
     }).join('');
     document.getElementById('jm-open').disabled = false;
-    jmDay = entries[currentDay] ? currentDay : days[0];
+    jmDay = entries[currentDay] ? currentDay : jmDays[0];
     sel.value = jmDay;
     renderHistoryEntry(jmDay);
   }
@@ -900,6 +928,81 @@ function openHistoryModal() {
 
 function closeHistoryModal() {
   document.getElementById('jm-overlay').classList.remove('open');
+}
+
+/* Alterna entre a lista de resultados de busca e a entrada única. */
+function renderHistoryView() {
+  var sel = document.getElementById('jm-select');
+  if (jmQuery.length >= 2) {
+    sel.hidden = true;
+    renderSearchResults();
+  } else {
+    sel.hidden = false;
+    if (jmQuery.length === 1) {
+      document.getElementById('jm-body').innerHTML = '<div class="jm-empty">Digite ao menos 2 letras.</div>';
+    } else {
+      renderHistoryEntry(jmDay != null ? jmDay : (jmDays[0] || null));
+    }
+  }
+}
+
+function _jmSearchFields(data) {
+  return [
+    ['Humor',                 data.mood ? (MOOD_LABELS[data.mood] || '') : ''],
+    ['O que fiz bem hoje',    data.good || ''],
+    ['O que melhorar amanhã', data.improve || ''],
+    ['Reflexão livre',        data.free || ''],
+    ['Gratidão',              data.gratitude || ''],
+  ];
+}
+
+function renderSearchResults() {
+  var q = jmQuery.toLowerCase();
+  var hits = [];
+  jmDays.forEach(function(n){
+    var fields = _jmSearchFields(entries[n] || {});
+    for (var i = 0; i < fields.length; i++) {
+      var val = String(fields[i][1] || '').replace(/\s+/g, ' ').trim();
+      var idx = val.toLowerCase().indexOf(q);
+      if (idx !== -1) { hits.push({ day: n, field: fields[i][0], val: val, idx: idx }); break; }
+    }
+  });
+
+  var body = document.getElementById('jm-body');
+  if (!hits.length) {
+    body.innerHTML = '<div class="jm-empty">Nada encontrado para “' + _jmEsc(jmQuery) + '”.</div>';
+    return;
+  }
+  body.innerHTML =
+    '<div class="jm-results-count">' + hits.length + ' entrada' + (hits.length > 1 ? 's' : '') + '</div>' +
+    '<div class="jm-results">' + hits.map(function(h){
+      var d = dayToDate(h.day);
+      return '<button class="jm-result" onclick="openSearchHit(' + h.day + ')">' +
+        '<span class="jm-result-meta">Dia ' + h.day + ' · ' + fmtDateShort(d) + ' · ' + DAYS_PT[d.getDay()] + ' · ' + h.field + '</span>' +
+        '<span class="jm-result-snip">' + _jmSnippet(h.val, h.idx, jmQuery) + '</span>' +
+      '</button>';
+    }).join('') + '</div>';
+}
+
+function _jmSnippet(text, idx, q) {
+  var start = Math.max(0, idx - 40);
+  var end   = Math.min(text.length, idx + q.length + 90);
+  var seg   = text.slice(start, end);
+  var rel   = idx - start;
+  return (start > 0 ? '…' : '')
+       + _jmEsc(seg.slice(0, rel))
+       + '<mark class="jm-hit">' + _jmEsc(seg.slice(rel, rel + q.length)) + '</mark>'
+       + _jmEsc(seg.slice(rel + q.length))
+       + (end < text.length ? '…' : '');
+}
+
+function openSearchHit(n) {
+  document.getElementById('jm-search').value = '';
+  jmQuery = '';
+  var sel = document.getElementById('jm-select');
+  sel.hidden = false;
+  sel.value = n;
+  renderHistoryEntry(n);
 }
 
 function renderHistoryEntry(n) {
@@ -976,7 +1079,8 @@ function setupListeners() {
   document.getElementById('jm-open').addEventListener('click', function(){
     if (jmDay != null) { loadDayIntoEditor(jmDay); closeHistoryModal(); }
   });
-  document.getElementById('jm-select').addEventListener('change', function(){ renderHistoryEntry(+this.value); });
+  document.getElementById('jm-select').addEventListener('change', function(){ jmDay = +this.value; renderHistoryEntry(jmDay); });
+  document.getElementById('jm-search').addEventListener('input', function(){ jmQuery = this.value.trim(); renderHistoryView(); });
   document.getElementById('jm-overlay').addEventListener('click', function(e){
     if (e.target === this) closeHistoryModal();
   });
