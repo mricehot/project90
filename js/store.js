@@ -637,6 +637,7 @@ const Store = (() => {
           user_id: _uid, day_num: Number(k),
           mood: e.mood ?? null, good: e.good ?? null, improve: e.improve ?? null,
           free: e.free ?? null, gratitude: e.gratitude ?? null,
+          prompt_reply: e.promptReply ?? null,
         };
       });
       if (rows.length) {
@@ -658,6 +659,7 @@ const Store = (() => {
         user_id: _uid, day_num: Number(dayNum),
         mood: e.mood ?? null, good: e.good ?? null, improve: e.improve ?? null,
         free: e.free ?? null, gratitude: e.gratitude ?? null,
+        prompt_reply: e.promptReply ?? null,
       }, { onConflict: 'user_id,day_num' });
       if (error) throw error;
     });
