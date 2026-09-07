@@ -845,9 +845,11 @@ const Store = (() => {
 
   function vocabSrsStats() {
     const today = _localDate(0);
+    const boxes = [0, 0, 0, 0, 0];   // contagem por caixa (índice 0 = caixa 1)
     let due = 0, mastered = 0, learning = 0, fresh = 0, reviews = 0, lapses = 0;
     cache.vocabWords.forEach(w => {
-      const box = w.srsBox || 1;
+      const box = Math.max(1, Math.min(5, w.srsBox || 1));
+      boxes[box - 1]++;
       reviews += w.srsReviews || 0;
       lapses  += w.srsLapses  || 0;
       if ((w.srsDue || today) <= today) due++;
@@ -855,7 +857,8 @@ const Store = (() => {
       else if ((w.srsReviews || 0)) learning++;
       else                          fresh++;
     });
-    return { due, mastered, learning, fresh, reviews, lapses, total: cache.vocabWords.length };
+    const retention = reviews > 0 ? Math.round((reviews - lapses) / reviews * 100) : null;
+    return { due, mastered, learning, fresh, reviews, lapses, retention, boxes, total: cache.vocabWords.length };
   }
 
   /* ──────────────────────────────────────────

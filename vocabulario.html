@@ -77,6 +77,26 @@
 .rv-grade.good:hover { border-color: #86efac; background: rgba(134,239,172,0.09); color: #86efac; }
 .rv-progress { text-align: center; font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--mid); margin-top: 20px; }
 
+/* ── EVOLUÇÃO DO VOCABULÁRIO (distribuição por caixa) ── */
+.vp-seg { display: flex; height: 8px; border: 1px solid var(--border); background: var(--surface2); overflow: hidden; margin: 4px 0 20px; }
+.vp-seg > span { display: block; height: 100%; }
+.vp-seg .s0 { background: rgba(245,245,240,0.16); }
+.vp-seg .s1 { background: rgba(245,245,240,0.32); }
+.vp-seg .s2 { background: rgba(245,245,240,0.48); }
+.vp-seg .s3 { background: rgba(245,245,240,0.64); }
+.vp-seg .s4 { background: rgba(245,245,240,0.82); }
+.vp-seg .s5 { background: #86efac; }
+.vp-rows { display: flex; flex-direction: column; gap: 9px; }
+.vp-row  { display: flex; align-items: center; gap: 12px; }
+.vp-name { width: 82px; flex-shrink: 0; font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--mid); }
+.vp-track { flex: 1; height: 4px; background: var(--surface2); }
+.vp-fill  { height: 100%; background: var(--white); transition: width 0.6s cubic-bezier(0.16,1,0.3,1); }
+.vp-row.mastered .vp-fill { background: #86efac; }
+.vp-row.mastered .vp-name { color: #86efac; }
+.vp-n { width: 30px; text-align: right; font-family: 'Bebas Neue', sans-serif; font-size: 15px; letter-spacing: 0.06em; }
+.vp-foot { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border); font-size: 10px; letter-spacing: 0.08em; color: var(--mid); }
+.vp-foot span { color: var(--white); }
+
 /* ── TOOLBAR ── */
 .voc-toolbar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .voc-search {
@@ -313,6 +333,17 @@ textarea.modal-input { resize: vertical; min-height: 60px; line-height: 1.6; }
       <button class="qc-btn" id="btn-start-quiz" disabled>Testar meu vocabulário</button>
     </div>
 
+    <!-- PROGRESSO / DISTRIBUIÇÃO POR CAIXA -->
+    <div class="card" id="vp-card" hidden>
+      <div class="card-hd">
+        <span class="card-title">Evolução do vocabulário</span>
+        <span class="card-action" id="vp-total">—</span>
+      </div>
+      <div class="vp-seg" id="vp-seg"></div>
+      <div class="vp-rows" id="vp-rows"></div>
+      <div class="vp-foot" id="vp-foot"></div>
+    </div>
+
     <!-- TOOLBAR -->
     <div class="voc-toolbar">
       <input class="voc-search" id="voc-search" placeholder="Pesquisar palavra ou significado…" />
@@ -512,6 +543,49 @@ function renderStats() {
     const mins = Math.max(1, Math.round(srs.due * 0.2));
     rSub.textContent = `${srs.due} palavra${srs.due > 1 ? 's prontas' : ' pronta'} para revisar — cerca de ${mins} min.`;
   }
+
+  renderProgress(srs);
+}
+
+/* ════════════════════════════════════
+   EVOLUÇÃO DO VOCABULÁRIO — distribuição por caixa Leitner
+════════════════════════════════════ */
+function renderProgress(srs) {
+  srs = srs || Store.vocabSrsStats();
+  const card = document.getElementById('vp-card');
+  if (!srs.total) { card.hidden = true; return; }
+  card.hidden = false;
+
+  const reviewedBox1 = Math.max(0, srs.boxes[0] - srs.fresh);   // voltaram à caixa 1
+  const buckets = [
+    { name: 'Novas',     n: srs.fresh,      cls: 's0' },
+    { name: 'Caixa 1',   n: reviewedBox1,   cls: 's1' },
+    { name: 'Caixa 2',   n: srs.boxes[1],   cls: 's2' },
+    { name: 'Caixa 3',   n: srs.boxes[2],   cls: 's3' },
+    { name: 'Caixa 4',   n: srs.boxes[3],   cls: 's4' },
+    { name: 'Dominadas', n: srs.boxes[4],   cls: 's5', mastered: true },
+  ];
+  const max = Math.max(1, ...buckets.map(b => b.n));
+
+  document.getElementById('vp-total').textContent = `${srs.total} palavra${srs.total > 1 ? 's' : ''}`;
+
+  document.getElementById('vp-seg').innerHTML = buckets
+    .filter(b => b.n > 0)
+    .map(b => `<span class="${b.cls}" style="width:${(b.n / srs.total * 100).toFixed(2)}%" title="${b.name}: ${b.n}"></span>`)
+    .join('');
+
+  document.getElementById('vp-rows').innerHTML = buckets.map(b => `
+    <div class="vp-row ${b.mastered ? 'mastered' : ''}">
+      <span class="vp-name">${b.name}</span>
+      <span class="vp-track"><span class="vp-fill" style="width:${(b.n / max * 100).toFixed(1)}%"></span></span>
+      <span class="vp-n">${b.n}</span>
+    </div>`).join('');
+
+  const ret = srs.retention == null ? '—' : srs.retention + '%';
+  document.getElementById('vp-foot').innerHTML =
+    `<span>${srs.reviews}</span> revis${srs.reviews === 1 ? 'ão' : 'ões'} · ` +
+    `<span>${ret}</span> de retenção · ` +
+    `<span>${srs.mastered}</span> dominada${srs.mastered === 1 ? '' : 's'}`;
 }
 
 /* ════════════════════════════════════
