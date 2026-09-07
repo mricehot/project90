@@ -280,6 +280,7 @@ input, textarea { cursor: text; }
   border: 1px solid var(--border); background: var(--surface2);
 }
 .grat-field { flex: 1; min-height: 0; padding: 11px 14px; line-height: 1.5; }
+.grat-count { flex-shrink: 0; align-self: center; white-space: nowrap; }
 
 /* ── HABITS CHECK-IN ── */
 .habits-checkin { margin-bottom: 8px; }
@@ -534,9 +535,9 @@ input, textarea { cursor: text; }
       <div class="prompt-block">
         <div class="prompt-lbl">Gratidão — 3 coisas</div>
         <div class="grat-list">
-          <div class="grat-row"><span class="grat-num">1</span><input class="j-field grat-field" id="f-grat-1" maxlength="160" placeholder="Acordei bem disposto" /></div>
-          <div class="grat-row"><span class="grat-num">2</span><input class="j-field grat-field" id="f-grat-2" maxlength="160" placeholder="Conversa produtiva com o time" /></div>
-          <div class="grat-row"><span class="grat-num">3</span><input class="j-field grat-field" id="f-grat-3" maxlength="160" placeholder="Consegui tempo para leitura" /></div>
+          <div class="grat-row"><span class="grat-num">1</span><input class="j-field grat-field" id="f-grat-1" maxlength="160" placeholder="Acordei bem disposto" /><span class="char-count grat-count" id="cc-grat-1" hidden></span></div>
+          <div class="grat-row"><span class="grat-num">2</span><input class="j-field grat-field" id="f-grat-2" maxlength="160" placeholder="Conversa produtiva com o time" /><span class="char-count grat-count" id="cc-grat-2" hidden></span></div>
+          <div class="grat-row"><span class="grat-num">3</span><input class="j-field grat-field" id="f-grat-3" maxlength="160" placeholder="Consegui tempo para leitura" /><span class="char-count grat-count" id="cc-grat-3" hidden></span></div>
         </div>
       </div>
 
@@ -781,7 +782,16 @@ function fillGratitude(str) {
   for (var i = 0; i < 3; i++) {
     var v = (parts[i] || '').replace(/^\s*\d+\s*[.)\-–:]\s*/, '').trim();  // limpa "1." de entradas antigas
     document.getElementById('f-grat-' + (i + 1)).value = v;
+    updateGratCount(i + 1, v.length);
   }
+}
+// Contador só aparece perto do limite (>= 130 de 160), pra não poluir.
+function updateGratCount(n, len) {
+  var c = document.getElementById('cc-grat-' + n);
+  if (!c) return;
+  c.textContent = len + ' / 160';
+  c.hidden = len < 130;
+  c.classList.toggle('warn', len > 144);
 }
 function readGratitude() {
   var v = [1, 2, 3].map(function(i){ return document.getElementById('f-grat-' + i).value.trim(); });
@@ -1095,7 +1105,7 @@ function setupListeners() {
   });
   ['f-grat-1','f-grat-2','f-grat-3'].forEach(function(id){
     var el = document.getElementById(id);
-    el.addEventListener('input', function(){ setDirty(true); });
+    el.addEventListener('input', function(){ setDirty(true); updateGratCount(+id.slice(-1), el.value.length); });
     el.addEventListener('blur',  function(){ if(isDirty) saveCurrentDay(); });
   });
 

@@ -6,6 +6,24 @@
    Incluído em TODAS as páginas de app.
 ═══════════════════════════════════════════════ */
 
+/* ── FOCO DE TECLADO ──
+   Antes não havia realce nenhum: navegar por Tab era invisível. */
+:focus-visible {
+  outline: 2px solid var(--white);
+  outline-offset: 2px;
+}
+/* em elementos de fundo claro o contorno branco sumiria — contorno interno escuro */
+.btn-sm.primary:focus-visible,
+.modal-btn.primary:focus-visible,
+.btn-primary:focus-visible,
+.nav-cta:focus-visible,
+.ptab.active:focus-visible {
+  outline-color: var(--bg);
+  outline-offset: -4px;
+}
+/* itens da sidebar: contorno interno pra não ser cortado pela borda esquerda */
+.sb-item:focus-visible { outline-offset: -2px; }
+
 /* ── LAYOUT ── */
 .wrap         { max-width: var(--max); margin: 0 auto; padding: 0 var(--gut); }
 .divider      { height: 1px; background: var(--border); }
