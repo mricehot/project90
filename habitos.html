@@ -19,17 +19,10 @@ body {
   font-weight: 300;
   -webkit-font-smoothing: antialiased;
   overflow: hidden;
-  cursor: none;
 }
-
-
-#cur-ring {
-  width: 30px; height: 30px;
-  border: 1px solid rgba(245,245,240,0.3); border-radius: 50%;
-  position: fixed; top: 0; left: 0;
-  pointer-events: none; z-index: 9998;
-  mix-blend-mode: difference; will-change: transform;
-}
+/* cursor customizado + I-beam nos campos vêm de css/base.css (com media-query
+   pra ponteiro fino) */
+input, textarea { cursor: text; }
 
 /* ── GRID HELPERS ── */
 .g4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
