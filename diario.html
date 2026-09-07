@@ -259,6 +259,11 @@ body {
   margin-bottom: 8px; display: flex; align-items: center; gap: 10px;
 }
 .prompt-lbl::before { content: ''; display: inline-block; width: 14px; height: 1px; background: var(--mid); }
+.prompt-question {
+  font-family: 'DM Serif Display', serif; font-style: italic;
+  font-size: 15px; line-height: 1.55; color: var(--white); opacity: 0.92;
+  padding: 2px 0 0 16px; border-left: 2px solid var(--border2); margin-bottom: 12px;
+}
 .j-field {
   width: 100%; background: var(--surface2); border: 1px solid var(--border);
   color: var(--white); font-family: 'DM Mono', monospace; font-weight: 300;
@@ -521,6 +526,13 @@ body {
         <div class="field-footer"><span class="char-count" id="cc-improve">0 / 500</span></div>
       </div>
 
+      <div class="prompt-block" id="prompt-day-block">
+        <div class="prompt-lbl">Pergunta do dia</div>
+        <div class="prompt-question" id="prompt-question">—</div>
+        <textarea class="j-field" id="f-prompt" rows="3" maxlength="600" placeholder="Responda com o que vier à cabeça — não precisa ficar bonito."></textarea>
+        <div class="field-footer"><span class="char-count" id="cc-prompt">0 / 600</span></div>
+      </div>
+
       <div class="prompt-block">
         <div class="prompt-lbl">Reflexão livre</div>
         <textarea class="j-field" id="f-free" rows="5" maxlength="1200" placeholder="Espaço livre para escrever o que quiser sobre o dia..."></textarea>
@@ -581,6 +593,7 @@ body {
 <script src="js/supabase.js"></script>
 <script src="js/store.js"></script>
 <script src="js/achievements.js"></script>
+<script src="js/journal-prompts.js"></script>
 <script>
 /* ── CURSOR ── */
 (function(){
@@ -714,6 +727,13 @@ function renderWeeklyReview() {
 }
 
 /* ── LOAD DAY INTO EDITOR ── */
+/* Pergunta do dia: escolhida de forma determinística pelo nº do dia. */
+function promptForDay(n) {
+  var bank = window.P90_JOURNAL_PROMPTS || [];
+  if (!bank.length) return 'O que você quer registrar sobre hoje?';
+  return bank[(Math.max(1, n) - 1) % bank.length];
+}
+
 function loadDayIntoEditor(n) {
   currentDay  = n;
   currentMood = null;
@@ -737,6 +757,8 @@ function loadDayIntoEditor(n) {
     });
   }
 
+  document.getElementById('prompt-question').textContent = promptForDay(n);
+  setField('f-prompt',    data.promptReply || '', 'cc-prompt',   600);
   setField('f-good',      data.good      || '', 'cc-good',      500);
   setField('f-improve',   data.improve   || '', 'cc-improve',   500);
   setField('f-free',      data.free      || '', 'cc-free',      1200);
@@ -777,13 +799,14 @@ function readGratitude() {
 /* ── SAVE ── */
 function saveCurrentDay() {
   var data = {
-    mood:      currentMood,
-    good:      document.getElementById('f-good').value.trim(),
-    improve:   document.getElementById('f-improve').value.trim(),
-    free:      document.getElementById('f-free').value.trim(),
-    gratitude: readGratitude(),
+    mood:        currentMood,
+    promptReply: document.getElementById('f-prompt').value.trim(),
+    good:        document.getElementById('f-good').value.trim(),
+    improve:     document.getElementById('f-improve').value.trim(),
+    free:        document.getElementById('f-free').value.trim(),
+    gratitude:   readGratitude(),
   };
-  var hasContent = data.good || data.improve || data.free || data.gratitude || data.mood;
+  var hasContent = data.good || data.improve || data.free || data.gratitude || data.mood || data.promptReply;
   if (!hasContent) { showToast('Nada para salvar ainda'); return; }
   entries[currentDay] = data;
   persistEntries();
@@ -871,7 +894,7 @@ function renderEntriesList() {
   el.innerHTML = days.map(function(n){
     var data    = entries[n];
     var date    = dayToDate(n);
-    var preview = data.good || data.free || data.improve || '';
+    var preview = data.good || data.free || data.improve || data.promptReply || '';
     var isActive = n === currentDay;
     return '<div class="entry-item'+(isActive?' active':'')+'" data-day="'+n+'" onclick="loadDayIntoEditor('+n+')">'+
       '<div class="ei-top">'+
@@ -949,6 +972,7 @@ function renderHistoryView() {
 function _jmSearchFields(data) {
   return [
     ['Humor',                 data.mood ? (MOOD_LABELS[data.mood] || '') : ''],
+    ['Pergunta do dia',       data.promptReply || ''],
     ['O que fiz bem hoje',    data.good || ''],
     ['O que melhorar amanhã', data.improve || ''],
     ['Reflexão livre',        data.free || ''],
@@ -1013,6 +1037,7 @@ function renderHistoryEntry(n) {
     ? '<span class="jm-mood">'+data.mood+'</span><span class="jm-mood-lbl">'+(MOOD_LABELS[data.mood] || '')+'</span>'
     : '<span class="jm-mood-lbl" style="color:var(--mid)">Sem humor registrado</span>';
   var sections = [
+    ['Pergunta do dia',          data.promptReply],
     ['O que fiz bem hoje',       data.good],
     ['O que melhorar amanhã',    data.improve],
     ['Reflexão livre',           data.free],
@@ -1027,6 +1052,9 @@ function renderHistoryEntry(n) {
         if (s[0].indexOf('Gratidão') === 0) {
           txt = String(s[1]).split('\n').map(function(x){ return x.trim(); }).filter(Boolean)
                   .map(function(x, i){ return (i + 1) + '. ' + _jmEsc(x); }).join('\n');
+        } else if (s[0] === 'Pergunta do dia') {
+          txt = '<span style="font-style:italic;opacity:0.55">' + _jmEsc(promptForDay(n)) + '</span>\n\n'
+              + _jmEsc(String(s[1]).trim());
         } else {
           txt = _jmEsc(String(s[1]).trim());
         }
@@ -1059,6 +1087,7 @@ function setupListeners() {
   });
 
   var fields = [
+    {id:'f-prompt',cc:'cc-prompt',max:600},
     {id:'f-good',cc:'cc-good',max:500},
     {id:'f-improve',cc:'cc-improve',max:500},
     {id:'f-free',cc:'cc-free',max:1200},

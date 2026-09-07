@@ -27,6 +27,7 @@ Dashboard → **SQL Editor** → **New query** → rode os arquivos **na ordem**
 13. `supabase/migrations/0013_bible_plan.sql` → **Run**
 14. `supabase/migrations/0014_tasks.sql` → **Run**
 15. `supabase/migrations/0015_vocab_srs.sql` → **Run**
+16. `supabase/migrations/0016_journal_prompt.sql` → **Run**
 
 **Opção B — CLI:**
 ```bash
@@ -42,7 +43,7 @@ Os scripts criam:
 | `challenge_meta` | data de início + duração (dia atual é calculado); `freezes_left`/`frozen_days` (`0010`) guardam os dias de folga |
 | `habits` | hábitos; `freq` e `history` como `jsonb`; `core_key` marca os fixos |
 | **hábitos fixos** | os 9 ligados a achievements (`acordar_cedo`, `exercitar`, `ler`, `meditar`, `sem_redes`, `beber_agua`, `escrever_diario`, `ler_biblia`, `praticar_diccao`), semeados via `seed_core_habits()`; não podem ser excluídos (só pausados). `escrever_diario` e `praticar_diccao` têm o histórico **derivado** (diário / plano de dicção). O resto da rotina é livre. |
-| `journal_entries` | 1 entrada por dia do desafio |
+| `journal_entries` | 1 entrada por dia do desafio: humor, os 4 campos de texto, gratidão (3 linhas numa string) e `prompt_reply` (`0016`) — resposta à "Pergunta do dia". A pergunta em si é derivada no cliente pelo nº do dia (`js/journal-prompts.js`), só a resposta é guardada. |
 | `weekly_reviews` | 1 revisão por semana do desafio (`0008`): o que funcionou, o que ajustar, foco da semana seguinte, nota 1–5. Editável no `diario.html`. |
 | `achievements` | estado de desbloqueio por conquista |
 | `vocab_words` | palavras do vocabulário pessoal (`0009`): palavra, significado, exemplo, data. Id gerado pelo cliente, mesmo padrão de `habits.id`. Gerenciado em `vocabulario.html`. Colunas de **repetição espaçada** (`0015`): `srs_box` (caixa Leitner 1–5), `srs_due` (data da próxima revisão), `srs_reviews`, `srs_lapses`, `srs_last`. |
@@ -213,6 +214,14 @@ podem ser excluídos, só pausados.
   `Store.vocabSrsStats()` resume vencidas/dominadas/revisões. 3 conquistas novas na
   categoria "Vocabulário" (1ª revisão, 100 revisões, 10 dominadas). Palavras já
   cadastradas entram na caixa 1 vencendo hoje (default das colunas — sem backfill).
+- **Pergunta do dia** (`0016` + `diario.html` + `js/journal-prompts.js`): cada entrada
+  do diário tem um campo extra opcional (`journal_entries.prompt_reply`) para
+  responder a uma pergunta de reflexão. A pergunta é escolhida de forma
+  determinística pelo nº do dia — `bank[(dia-1) % bank.length]`, `promptForDay()` —
+  a partir de um banco de 92 perguntas em `js/journal-prompts.js` (**append-only**:
+  reordenar muda a pergunta de dias já escritos). Aparece no editor, no modal de
+  Entradas (com a pergunta acima da resposta) e entra na busca do diário. Escrever
+  só a resposta já conta como entrada (marca `escrever_diario`).
 - `Store.js` (raiz, com S maiúsculo) é a versão **antiga** só-localStorage e
   não é usada por nenhuma página (todas carregam `js/store.js`). Pode apagar.
 - **Rollover de dia** (resolvido no cliente): no bootstrap, `Store._rollForward()`
