@@ -44,6 +44,7 @@ const Store = (() => {
       tasks:         [],
       taskDone:      {},
       wins:          [],
+      streakCounters: [],
     };
   }
 
@@ -138,6 +139,10 @@ const Store = (() => {
       cache.wins.length = 0;
       data.wins.map(_rowToWin).forEach(w => cache.wins.push(w));
     }
+    if (Array.isArray(data.streakCounters)) {
+      cache.streakCounters.length = 0;
+      data.streakCounters.map(_rowToCounter).forEach(c => cache.streakCounters.push(c));
+    }
   }
 
   function _rowToWin(w) {
@@ -146,6 +151,19 @@ const Store = (() => {
       text:      w.text || '',
       dayNum:    w.dayNum != null ? w.dayNum : (w.day_num != null ? w.day_num : null),
       createdAt: w.createdAt || w.created_at || new Date().toISOString(),
+    };
+  }
+
+  function _rowToCounter(c) {
+    const ls = c.lastSlip  != null ? c.lastSlip  : c.last_slip;
+    const sd = c.startDate != null ? c.startDate : c.start_date;
+    return {
+      id:        c.id,
+      label:     c.label || '',
+      lastSlip:  ls ? String(ls).slice(0, 10) : null,
+      startDate: sd ? String(sd).slice(0, 10) : null,
+      bestRun:   c.bestRun != null ? c.bestRun : (c.best_run != null ? c.best_run : 0),
+      createdAt: c.createdAt || c.created_at || new Date().toISOString(),
     };
   }
 
@@ -355,7 +373,7 @@ const Store = (() => {
         '</div>' +
         '<p style="font-size:12px;line-height:1.9;color:var(--mid,#999);margin-bottom:8px;">' +
           'Isso apaga <b style="color:var(--white,#f5f5f0)">todo o seu progresso</b> — hábitos, ' +
-          'histórico, entradas do diário, revisões semanais, vocabulário, dicção, plano da Bíblia, tarefas, banco de provas e conquistas — e reinicia ' +
+          'histórico, entradas do diário, revisões semanais, vocabulário, dicção, plano da Bíblia, tarefas, banco de provas, contadores e conquistas — e reinicia ' +
           'o desafio no dia 1. Os hábitos fixos voltam ao estado inicial.' +
         '</p>' +
         '<p style="font-size:11px;letter-spacing:.06em;color:var(--red,#fca5a5);margin-bottom:24px;">' +
@@ -1367,6 +1385,86 @@ const Store = (() => {
   }
 
   /* ──────────────────────────────────────────
+     CONTADORES "DIAS DESDE"
+  ────────────────────────────────────────── */
+  function getStreakCounters() { return cache.streakCounters; }
+
+  function _counterBaseISO(c) {
+    return c.lastSlip || c.startDate || String(c.createdAt).slice(0, 10) || _localDate(0);
+  }
+
+  // Dias limpos até hoje + recorde. daysNegative nunca: mín 0.
+  function counterDaysSince(c) {
+    const base = _counterBaseISO(c);
+    const diff = Math.round((new Date(_localDate(0) + 'T00:00:00') - new Date(base + 'T00:00:00')) / 86400000);
+    const days = Math.max(0, diff);
+    return { days, best: Math.max(c.bestRun || 0, days) };
+  }
+
+  function _pushCounter(c) {
+    _push(async () => {
+      const { error } = await window.sb.from('streak_counters').upsert({
+        id: c.id, user_id: _uid, label: c.label,
+        last_slip: c.lastSlip, start_date: c.startDate,
+        best_run: c.bestRun || 0, created_at: c.createdAt,
+      }, { onConflict: 'user_id,id' });
+      if (error) throw error;
+    });
+  }
+
+  function addStreakCounter(label) {
+    const t = String(label || '').trim();
+    if (!t) return null;
+    const id  = (cache.streakCounters.reduce((m, c) => Math.max(m, c.id), 0) || 0) + 1;
+    const row = { id, label: t, lastSlip: null, startDate: _localDate(0), bestRun: 0,
+                  createdAt: new Date().toISOString() };
+    cache.streakCounters.push(row);
+    _saveMirror();
+    _pushCounter(row);
+    return row;
+  }
+
+  function renameStreakCounter(id, label) {
+    const c = cache.streakCounters.find(x => x.id === id);
+    if (!c) return;
+    c.label = String(label || '').trim() || c.label;
+    _saveMirror();
+    _pushCounter(c);
+  }
+
+  // Registra um deslize: fecha o ciclo atual (atualiza o recorde) e zera.
+  function registerCounterSlip(id, dateStr) {
+    const c = cache.streakCounters.find(x => x.id === id);
+    if (!c) return;
+    const slip = dateStr || _localDate(0);
+    const base = _counterBaseISO(c);
+    const run  = Math.max(0, Math.round((new Date(slip + 'T00:00:00') - new Date(base + 'T00:00:00')) / 86400000));
+    c.bestRun  = Math.max(c.bestRun || 0, run);
+    c.lastSlip = slip;
+    _saveMirror();
+    _pushCounter(c);
+  }
+
+  // Desfaz o deslize de hoje (misclique): volta o marcador pro estado anterior.
+  function undoCounterSlip(id) {
+    const c = cache.streakCounters.find(x => x.id === id);
+    if (!c || c.lastSlip !== _localDate(0)) return;
+    c.lastSlip = null;
+    _saveMirror();
+    _pushCounter(c);
+  }
+
+  function deleteStreakCounter(id) {
+    const idx = cache.streakCounters.findIndex(c => c.id === id);
+    if (idx !== -1) cache.streakCounters.splice(idx, 1);
+    _saveMirror();
+    _push(async () => {
+      const { error } = await window.sb.from('streak_counters').delete().eq('user_id', _uid).eq('id', id);
+      if (error) throw error;
+    });
+  }
+
+  /* ──────────────────────────────────────────
      COMPUTED HELPERS
   ────────────────────────────────────────── */
 
@@ -1603,6 +1701,8 @@ const Store = (() => {
     getTasks, getTaskDone, taskLastDone, addTask, updateTask, deleteTask, setTaskArchived,
     completeTask, uncompleteTask, taskNextDue, taskStatus, tasksForToday, taskStreak, taskDoneTotal,
     getWins, winsCount, addWin, deleteWin,
+    getStreakCounters, counterDaysSince, addStreakCounter, renameStreakCounter,
+    registerCounterSlip, undoCounterSlip, deleteStreakCounter,
     // computed
     habitVal, scheduledOn, dayCompletionPct, maxStreak, countDays,
     allHabitsDone, currentStreak, computeAchievementProgress, computeLevels,

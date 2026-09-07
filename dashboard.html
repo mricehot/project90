@@ -118,6 +118,23 @@ body { overflow: hidden; }
 .bp-chip .i { filter: grayscale(1); opacity: 0.85; }
 .bp-empty { font-size: 12px; color: var(--mid); line-height: 1.8; padding: 8px 0 4px; }
 
+/* ── CONTADORES "DIAS DESDE" (DASH) ── */
+.dc-row { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+.dc-row:last-child { border-bottom: none; }
+.dc-info { flex: 1; min-width: 0; }
+.dc-label { font-size: 12.5px; letter-spacing: 0.02em; line-height: 1.5; word-break: break-word; }
+.dc-meta { font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--mid); margin-top: 3px; }
+.dc-num { font-family: 'Bebas Neue', sans-serif; font-size: 26px; line-height: 1; white-space: nowrap; flex-shrink: 0; }
+.dc-num small { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.12em; color: var(--mid); text-transform: uppercase; }
+.dc-slip { background: none; border: 1px solid var(--border2); color: var(--mid); font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; padding: 6px 9px; cursor: pointer; flex-shrink: 0; transition: color 0.2s, border-color 0.2s; }
+.dc-slip:hover { color: #fca5a5; border-color: rgba(252,165,165,0.4); }
+.dc-undo { background: none; border: none; color: var(--mid); font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; flex-shrink: 0; }
+.dc-undo:hover { color: var(--white); }
+.dc-del { background: none; border: none; color: var(--mid); font-size: 13px; cursor: pointer; line-height: 1; padding: 2px 4px; opacity: 0; transition: opacity 0.15s, color 0.15s; flex-shrink: 0; }
+.dc-row:hover .dc-del { opacity: 1; }
+.dc-del:hover { color: #fca5a5; }
+.dc-empty { font-size: 12px; color: var(--mid); line-height: 1.8; padding: 8px 0 4px; }
+
 /* ── CONSISTENCY ── */
 .co-row { display: flex; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--border); }
 .co-row:last-child { border-bottom: none; }
@@ -382,6 +399,19 @@ body { overflow: hidden; }
       <div id="bp-list"></div>
     </div>
 
+    <!-- CONTADORES "DIAS DESDE" -->
+    <div class="card" id="counters-card">
+      <div class="card-hd">
+        <span class="card-title">Dias desde</span>
+        <span class="card-action" id="dc-add-btn">+ adicionar</span>
+      </div>
+      <form id="dc-form" autocomplete="off" hidden>
+        <input class="bp-input" id="dc-input" maxlength="80"
+               placeholder="Ex: sem rede social até tarde" />
+      </form>
+      <div id="dc-list"></div>
+    </div>
+
     <!-- CHARTS -->
     <div class="g2">
       <div class="card">
@@ -471,6 +501,7 @@ function init() {
   renderDashTasks();
   renderDashReview();
   renderWinsCard();
+  renderCountersCard();
 }
 
 /* ═══════════════════════════════
@@ -1010,6 +1041,76 @@ function removeWin(id) {
     input.value = '';
     toast('Registrado no banco de provas ✓');
     renderWinsCard();
+  });
+})();
+
+/* ─ CONTADORES "DIAS DESDE" ─ */
+function renderCountersCard() {
+  const el = document.getElementById('dc-list');
+  if (!el || typeof Store.getStreakCounters !== 'function') return;
+  const list = Store.getStreakCounters();
+  const today = (function () {
+    const d = new Date();
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  })();
+
+  if (!list.length) {
+    el.innerHTML = `<div class="dc-empty">Nenhum contador ainda.<br>Adicione um pra acompanhar um padrão que você quer quebrar.</div>`;
+    return;
+  }
+
+  el.innerHTML = list.map(c => {
+    const s = Store.counterDaysSince(c);
+    const slippedToday = c.lastSlip === today;
+    const recorde = s.best > 0 ? `<span class="dc-meta">Recorde ${s.best} dia${s.best > 1 ? 's' : ''}</span>` : '';
+    const action = slippedToday
+      ? `<button class="dc-undo" onclick="undoSlip(${c.id})">desfazer</button>`
+      : `<button class="dc-slip" onclick="registerSlip(${c.id})">deslize</button>`;
+    return `<div class="dc-row">
+      <div class="dc-info">
+        <div class="dc-label">${_esc(c.label)}</div>
+        ${recorde}
+      </div>
+      <div class="dc-num">${s.days}<small> dia${s.days === 1 ? '' : 's'}</small></div>
+      ${action}
+      <button class="dc-del" title="Excluir" onclick="removeCounter(${c.id})">✕</button>
+    </div>`;
+  }).join('');
+}
+
+function registerSlip(id) {
+  Store.registerCounterSlip(id);
+  renderCountersCard();
+}
+function undoSlip(id) {
+  Store.undoCounterSlip(id);
+  renderCountersCard();
+}
+function removeCounter(id) {
+  const c = Store.getStreakCounters().find(x => x.id === id);
+  if (!confirm(`Excluir o contador "${c ? c.label : ''}"?`)) return;
+  Store.deleteStreakCounter(id);
+  renderCountersCard();
+}
+
+(function wireCountersForm() {
+  const btn  = document.getElementById('dc-add-btn');
+  const form = document.getElementById('dc-form');
+  const input = document.getElementById('dc-input');
+  if (!btn || !form) return;
+  btn.addEventListener('click', () => {
+    form.hidden = !form.hidden;
+    if (!form.hidden) input.focus();
+  });
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+    const v = input.value.trim();
+    if (!v) return;
+    Store.addStreakCounter(v);
+    input.value = '';
+    form.hidden = true;
+    toast('Contador criado ✓');
+    renderCountersCard();
   });
 })();
 
