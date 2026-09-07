@@ -151,12 +151,19 @@ const Store = (() => {
   }
 
   function _rowToVocabWord(w) {
+    const due  = w.srsDue  != null ? w.srsDue  : w.srs_due;
+    const last = w.srsLast != null ? w.srsLast : w.srs_last;
     return {
       id:        w.id,
       word:      w.word,
       meaning:   w.meaning,
       example:   w.example || '',
       createdAt: w.createdAt || w.created_at || new Date().toISOString(),
+      srsBox:     w.srsBox     != null ? w.srsBox     : (w.srs_box     != null ? w.srs_box     : 1),
+      srsDue:     due  ? String(due).slice(0, 10)  : _localDate(0),
+      srsReviews: w.srsReviews != null ? w.srsReviews : (w.srs_reviews != null ? w.srs_reviews : 0),
+      srsLapses:  w.srsLapses  != null ? w.srsLapses  : (w.srs_lapses  != null ? w.srs_lapses  : 0),
+      srsLast:    last ? String(last).slice(0, 10) : null,
     };
   }
 
@@ -728,12 +735,14 @@ const Store = (() => {
 
   function addVocabWord(word) {
     const id = (cache.vocabWords.reduce((m, w) => Math.max(m, w.id), 0) || 0) + 1;
+    const today = _localDate(0);
     const row = {
       id,
       word:      (word.word || '').trim(),
       meaning:   (word.meaning || '').trim(),
       example:   (word.example || '').trim(),
       createdAt: new Date().toISOString(),
+      srsBox: 1, srsDue: today, srsReviews: 0, srsLapses: 0, srsLast: null,
     };
     cache.vocabWords.unshift(row);
     _saveMirror();
@@ -741,6 +750,7 @@ const Store = (() => {
       const { error } = await window.sb.from('vocab_words').upsert({
         id: row.id, user_id: _uid, word: row.word, meaning: row.meaning,
         example: row.example || null, created_at: row.createdAt,
+        srs_box: 1, srs_due: today, srs_reviews: 0, srs_lapses: 0, srs_last: null,
       }, { onConflict: 'user_id,id' });
       if (error) throw error;
     });
@@ -791,6 +801,61 @@ const Store = (() => {
       }, { onConflict: 'user_id' });
       if (error) throw error;
     });
+  }
+
+  /* ──────────────────────────────────────────
+     VOCABULÁRIO — repetição espaçada (Leitner)
+  ────────────────────────────────────────── */
+  // Dias até a próxima revisão, indexado pela caixa alvo (1..5).
+  var VOCAB_SRS_INTERVALS = [0, 1, 3, 7, 14, 30];
+  function _vocabInterval(box) {
+    return VOCAB_SRS_INTERVALS[Math.max(1, Math.min(5, box))] || 1;
+  }
+
+  // Palavras vencidas para revisão hoje (srsDue <= hoje).
+  function vocabDueToday() {
+    const today = _localDate(0);
+    return cache.vocabWords.filter(w => (w.srsDue || today) <= today);
+  }
+
+  // Registra uma revisão. grade: 'good' (lembrou) | 'again' (esqueceu).
+  function reviewVocabWord(id, grade) {
+    const w = cache.vocabWords.find(x => x.id === id);
+    if (!w) return;
+    const today = _localDate(0);
+    if (grade === 'again') {
+      w.srsBox    = 1;
+      w.srsLapses = (w.srsLapses || 0) + 1;
+      w.srsDue    = _addDaysISO(today, 1);
+    } else {
+      w.srsBox = Math.min(5, (w.srsBox || 1) + 1);
+      w.srsDue = _addDaysISO(today, _vocabInterval(w.srsBox));
+    }
+    w.srsReviews = (w.srsReviews || 0) + 1;
+    w.srsLast    = today;
+    _saveMirror();
+    _push(async () => {
+      const { error } = await window.sb.from('vocab_words').update({
+        srs_box: w.srsBox, srs_due: w.srsDue, srs_reviews: w.srsReviews,
+        srs_lapses: w.srsLapses, srs_last: w.srsLast,
+      }).eq('user_id', _uid).eq('id', id);
+      if (error) throw error;
+    });
+  }
+
+  function vocabSrsStats() {
+    const today = _localDate(0);
+    let due = 0, mastered = 0, learning = 0, fresh = 0, reviews = 0, lapses = 0;
+    cache.vocabWords.forEach(w => {
+      const box = w.srsBox || 1;
+      reviews += w.srsReviews || 0;
+      lapses  += w.srsLapses  || 0;
+      if ((w.srsDue || today) <= today) due++;
+      if (box >= 5)                 mastered++;
+      else if ((w.srsReviews || 0)) learning++;
+      else                          fresh++;
+    });
+    return { due, mastered, learning, fresh, reviews, lapses, total: cache.vocabWords.length };
   }
 
   /* ──────────────────────────────────────────
@@ -1367,6 +1432,9 @@ const Store = (() => {
     const taskTotal    = taskDoneTotal();
     const taskStk      = taskStreak();
 
+    const vocabReviews  = vocabWords.reduce((s, w) => s + (w.srsReviews || 0), 0);
+    const vocabMastered = vocabWords.filter(w => (w.srsBox || 1) >= 5).length;
+
     const journalEntries = Object.keys(journal).length;
     const journalStreak  = (() => {
       let best = 0, cur = 0;
@@ -1408,6 +1476,9 @@ const Store = (() => {
       vocab_quiz1:      Math.min(1, vocabQuiz.roundsPlayed || 0),
       vocab_correct25:  vocabQuiz.totalCorrect || 0,
       vocab_correct100: vocabQuiz.totalCorrect || 0,
+      vocab_srs_first:   Math.min(1, vocabReviews),
+      vocab_srs_100:     vocabReviews,
+      vocab_mastered_10: vocabMastered,
       speech_first:     Math.min(1, speechExercises.length),
       speech_10:        speechExercises.length,
       speech_25:        speechExercises.length,
@@ -1472,6 +1543,7 @@ const Store = (() => {
     getAchievements, saveAchievements, unlockAchievement, markAchievementSeen,
     getVocabWords, addVocabWord, updateVocabWord, deleteVocabWord,
     getVocabQuizStats, recordVocabQuizRound,
+    vocabDueToday, reviewVocabWord, vocabSrsStats,
     getSpeechExercises, addSpeechExercise, addSpeechExercises, updateSpeechExercise, deleteSpeechExercise,
     getSpeechStats, recordSpeechSession,
     speechPerDay, speechPlanForDay, getSpeechDays, getSpeechDay, saveSpeechDay,

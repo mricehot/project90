@@ -47,6 +47,36 @@
 .qc-btn:hover:not(:disabled) { opacity: 0.85; transform: translateY(-1px); }
 .qc-btn:disabled { opacity: 0.3; cursor: not-allowed; }
 
+/* ── REVIEW CTA (repetição espaçada) ── */
+.review-cta { border-color: rgba(134,239,172,0.4); }
+.review-cta.empty { border-color: var(--border); }
+
+/* ── SRS BADGE no card de palavra ── */
+.word-srs { display: inline-flex; align-items: center; gap: 8px; margin-top: 10px; font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--mid); }
+.srs-box { display: inline-flex; gap: 3px; }
+.srs-pip { width: 6px; height: 6px; border: 1px solid var(--border2); }
+.srs-pip.on { background: var(--white); border-color: var(--white); }
+.word-srs.due { color: #86efac; }
+.word-srs.due .srs-pip.on { background: #86efac; border-color: #86efac; }
+.word-srs.mastered { color: #86efac; }
+.word-srs.mastered .srs-pip.on { background: #86efac; border-color: #86efac; }
+
+/* ── FLASHCARD (revisão) ── reaproveita .quiz-overlay / .quiz-box ── */
+.rv-front { font-family: 'DM Serif Display', serif; font-size: 34px; text-align: center; margin: 6px 0 4px; word-break: break-word; }
+.rv-hint { text-align: center; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--mid); margin-bottom: 4px; }
+.rv-answer { border-top: 1px solid var(--border); padding-top: 20px; margin-top: 22px; }
+.rv-meaning { font-size: 14px; line-height: 1.7; color: var(--white); margin-bottom: 10px; }
+.rv-example { font-size: 12px; line-height: 1.7; font-style: italic; color: var(--mid); }
+.rv-example::before { content: '"'; }
+.rv-example::after { content: '"'; }
+.rv-reveal-btn { width: 100%; margin-top: 24px; padding: 14px; background: var(--white); color: var(--bg); border: none; font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; cursor: pointer; transition: opacity 0.2s; }
+.rv-reveal-btn:hover { opacity: 0.85; }
+.rv-grade-row { display: flex; gap: 10px; margin-top: 22px; }
+.rv-grade { flex: 1; padding: 14px; border: 1px solid var(--border2); background: var(--surface2); color: var(--white); font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; transition: border-color 0.2s, background 0.2s, color 0.2s; }
+.rv-grade.again:hover { border-color: #fca5a5; background: rgba(252,165,165,0.09); color: #fca5a5; }
+.rv-grade.good:hover { border-color: #86efac; background: rgba(134,239,172,0.09); color: #86efac; }
+.rv-progress { text-align: center; font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--mid); margin-top: 20px; }
+
 /* ── TOOLBAR ── */
 .voc-toolbar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .voc-search {
@@ -247,20 +277,30 @@ textarea.modal-input { resize: vertical; min-height: 60px; line-height: 1.6; }
         <div class="stat-sub">cadastradas</div>
       </div>
       <div class="stat-card">
-        <div class="stat-lbl">Testes</div>
-        <div class="stat-val" id="sc-rounds">0</div>
-        <div class="stat-sub">rodadas jogadas</div>
+        <div class="stat-lbl">Para revisar hoje</div>
+        <div class="stat-val" id="sc-due">0</div>
+        <div class="stat-sub" id="sc-due-sub">nenhuma pendente</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-lbl">Dominadas</div>
+        <div class="stat-val" id="sc-mastered">0</div>
+        <div class="stat-sub" id="sc-mastered-sub">na última caixa</div>
       </div>
       <div class="stat-card">
         <div class="stat-lbl">Aproveitamento</div>
         <div class="stat-val" id="sc-pct">—</div>
         <div class="stat-sub" id="sc-pct-sub">0 acertos / 0</div>
       </div>
-      <div class="stat-card">
-        <div class="stat-lbl">Maior sequência</div>
-        <div class="stat-val" id="sc-streak">0</div>
-        <div class="stat-sub">acertos seguidos</div>
+    </div>
+
+    <!-- REVIEW CTA (repetição espaçada) -->
+    <div class="quiz-cta review-cta empty" id="review-cta">
+      <div class="qc-icon">◷</div>
+      <div class="qc-body">
+        <div class="qc-title">Revisão <em>do dia.</em></div>
+        <div class="qc-sub" id="rc-sub">Cadastre palavras para começar a revisar com repetição espaçada.</div>
       </div>
+      <button class="qc-btn" id="btn-start-review" disabled>Revisar agora</button>
     </div>
 
     <!-- QUIZ CTA -->
@@ -278,6 +318,7 @@ textarea.modal-input { resize: vertical; min-height: 60px; line-height: 1.6; }
       <input class="voc-search" id="voc-search" placeholder="Pesquisar palavra ou significado…" />
       <select class="voc-sort" id="voc-sort">
         <option value="recent">Mais recentes</option>
+        <option value="due">Revisar primeiro</option>
         <option value="az">A → Z</option>
         <option value="za">Z → A</option>
       </select>
@@ -316,6 +357,11 @@ textarea.modal-input { resize: vertical; min-height: 60px; line-height: 1.6; }
 <!-- QUIZ OVERLAY -->
 <div class="quiz-overlay" id="quiz-overlay">
   <div class="quiz-box" id="quiz-box"></div>
+</div>
+
+<!-- REVIEW OVERLAY (flashcards de repetição espaçada) -->
+<div class="quiz-overlay" id="review-overlay">
+  <div class="quiz-box" id="review-box"></div>
 </div>
 
 <script>
@@ -422,15 +468,24 @@ function init() {
 function renderStats() {
   const words = Store.getVocabWords();
   const quiz  = Store.getVocabQuizStats();
+  const srs   = Store.vocabSrsStats();
 
-  document.getElementById('sc-total').textContent  = words.length;
-  document.getElementById('sc-rounds').textContent = quiz.roundsPlayed || 0;
-  document.getElementById('sc-streak').textContent = quiz.bestStreak || 0;
+  document.getElementById('sc-total').textContent = words.length;
+
+  document.getElementById('sc-due').textContent = srs.due;
+  document.getElementById('sc-due-sub').textContent =
+    srs.due === 0 ? 'nenhuma pendente'
+                  : (srs.due === 1 ? '1 palavra esperando' : `${srs.due} palavras esperando`);
+
+  document.getElementById('sc-mastered').textContent = srs.mastered;
+  document.getElementById('sc-mastered-sub').textContent =
+    words.length ? `${srs.mastered} de ${words.length}` : 'na última caixa';
 
   const pct = quiz.totalAnswered > 0 ? Math.round((quiz.totalCorrect / quiz.totalAnswered) * 100) : null;
   document.getElementById('sc-pct').textContent = pct == null ? '—' : pct + '%';
   document.getElementById('sc-pct-sub').textContent = `${quiz.totalCorrect || 0} acertos / ${quiz.totalAnswered || 0}`;
 
+  // Quiz CTA
   const btn = document.getElementById('btn-start-quiz');
   const sub = document.getElementById('qc-sub');
   if (words.length === 0) {
@@ -439,6 +494,23 @@ function renderStats() {
   } else {
     btn.disabled = false;
     sub.textContent = `${ROUND_LEN} perguntas por rodada, usando as ${words.length} palavra${words.length > 1 ? 's' : ''} do seu vocabulário.`;
+  }
+
+  // Review CTA (repetição espaçada)
+  const rBtn = document.getElementById('btn-start-review');
+  const rSub = document.getElementById('rc-sub');
+  const rCta = document.getElementById('review-cta');
+  if (srs.due === 0) {
+    rBtn.disabled = true;
+    rCta.classList.add('empty');
+    rSub.textContent = words.length === 0
+      ? 'Cadastre palavras para começar a revisar com repetição espaçada.'
+      : 'Tudo revisado por hoje. Cada palavra volta sozinha na data certa.';
+  } else {
+    rBtn.disabled = false;
+    rCta.classList.remove('empty');
+    const mins = Math.max(1, Math.round(srs.due * 0.2));
+    rSub.textContent = `${srs.due} palavra${srs.due > 1 ? 's prontas' : ' pronta'} para revisar — cerca de ${mins} min.`;
   }
 }
 
@@ -453,9 +525,35 @@ function filteredSortedWords() {
 
   if (sortMode === 'az') list.sort((a, b) => a.word.localeCompare(b.word, 'pt-BR'));
   else if (sortMode === 'za') list.sort((a, b) => b.word.localeCompare(a.word, 'pt-BR'));
+  else if (sortMode === 'due') list.sort((a, b) =>
+    (a.srsDue || '').localeCompare(b.srsDue || '') || (new Date(b.createdAt) - new Date(a.createdAt)));
   else list.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
   return list;
+}
+
+/* ── SRS: badge de caixa + próxima revisão no card da palavra ── */
+function todayISO() {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+function fmtShort(iso) {
+  if (!iso) return '';
+  const d = new Date(iso + 'T00:00:00');
+  if (isNaN(d)) return '';
+  return d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
+}
+function srsBadge(w) {
+  const box      = w.srsBox || 1;
+  const reviewed = (w.srsReviews || 0) > 0;
+  const due      = (w.srsDue || todayISO()) <= todayISO();
+  const pips     = [1, 2, 3, 4, 5].map(i => `<span class="srs-pip ${i <= box ? 'on' : ''}"></span>`).join('');
+  let label, cls = '';
+  if (!reviewed)       { label = 'nova'; cls = due ? 'due' : ''; }
+  else if (box >= 5)   { label = 'dominada'; cls = 'mastered'; }
+  else if (due)        { label = 'revisar hoje'; cls = 'due'; }
+  else                 { label = 'revisa ' + fmtShort(w.srsDue); }
+  return `<div class="word-srs ${cls}"><span class="srs-box">${pips}</span> ${label}</div>`;
 }
 
 function fmtDate(iso) {
@@ -501,6 +599,7 @@ function renderList() {
         </div>
         <div class="word-meaning">${escapeHtml(w.meaning)}</div>
         ${w.example ? `<div class="word-example">${escapeHtml(w.example)}</div>` : ''}
+        ${srsBadge(w)}
       </div>
       <div class="word-actions">
         <button class="word-btn" title="Editar" onclick="openWordModal(${w.id})">✎</button>
@@ -725,9 +824,109 @@ document.getElementById('btn-start-quiz').addEventListener('click', startQuiz);
 document.getElementById('quiz-overlay').addEventListener('click', e => {
   if (e.target === document.getElementById('quiz-overlay')) closeQuiz();
 });
+
+/* ════════════════════════════════════
+   REVISÃO ESPAÇADA — flashcards (Leitner)
+════════════════════════════════════ */
+let rvQueue = [], rvIdx = 0, rvRevealed = false, rvStats = { good: 0, again: 0 };
+
+function startReview() {
+  const due = Store.vocabDueToday();
+  if (!due.length) return;
+  rvQueue = shuffle(due);
+  rvIdx = 0; rvRevealed = false; rvStats = { good: 0, again: 0 };
+  document.getElementById('review-overlay').classList.add('show');
+  renderCard();
+}
+
+function closeReview() {
+  document.getElementById('review-overlay').classList.remove('show');
+  renderStats(); renderList();
+  if (typeof notifyNewAchievements === 'function') notifyNewAchievements();
+}
+
+function _rvTopline() {
+  return `<div class="quiz-topline">
+      <span class="quiz-eyebrow">Revisão ${Math.min(rvIdx + 1, rvQueue.length)} / ${rvQueue.length}</span>
+      <span class="quiz-close" onclick="closeReview()">✕</span>
+    </div>`;
+}
+function _rvProgress() {
+  return `<div class="rv-progress">Lembrei ${rvStats.good} · Esqueci ${rvStats.again}</div>`;
+}
+
+function renderCard() {
+  if (rvIdx >= rvQueue.length) { renderReviewSummary(); return; }
+  rvRevealed = false;
+  const w = rvQueue[rvIdx];
+  document.getElementById('review-box').innerHTML = `
+    ${_rvTopline()}
+    <div class="rv-front">${escapeHtml(w.word)}</div>
+    <div class="rv-hint">Lembra do significado?</div>
+    <button class="rv-reveal-btn" onclick="revealCard()">Mostrar resposta</button>
+    ${_rvProgress()}`;
+}
+
+function revealCard() {
+  if (rvRevealed) return;
+  rvRevealed = true;
+  const w = rvQueue[rvIdx];
+  document.getElementById('review-box').innerHTML = `
+    ${_rvTopline()}
+    <div class="rv-front">${escapeHtml(w.word)}</div>
+    <div class="rv-answer">
+      <div class="rv-meaning">${escapeHtml(w.meaning)}</div>
+      ${w.example ? `<div class="rv-example">${escapeHtml(w.example)}</div>` : ''}
+    </div>
+    <div class="rv-grade-row">
+      <button class="rv-grade again" onclick="gradeCard('again')">Esqueci</button>
+      <button class="rv-grade good" onclick="gradeCard('good')">Lembrei</button>
+    </div>
+    ${_rvProgress()}`;
+}
+
+function gradeCard(grade) {
+  if (!rvRevealed) return;
+  const w = rvQueue[rvIdx];
+  Store.reviewVocabWord(w.id, grade);
+  if (grade === 'good') rvStats.good++; else rvStats.again++;
+  rvIdx++;
+  renderCard();
+}
+
+function renderReviewSummary() {
+  const total = rvStats.good + rvStats.again;
+  const pct = total ? Math.round(rvStats.good / total * 100) : 0;
+  const stillDue = Store.vocabDueToday().length;
+  document.getElementById('review-box').innerHTML = `
+    <div class="quiz-summary">
+      <div class="qs-icon">${pct >= 80 ? '✓' : pct >= 50 ? '◉' : '○'}</div>
+      <div class="qs-title">Revisão <em>concluída.</em></div>
+      <div class="qs-score">${rvStats.good}/${total}</div>
+      <div class="qs-pct">${pct}% de acerto</div>
+      <div class="qs-grid">
+        <div class="qs-cell"><div class="qs-cell-val">${rvStats.good}</div><div class="qs-cell-lbl">Lembrei</div></div>
+        <div class="qs-cell"><div class="qs-cell-val">${rvStats.again}</div><div class="qs-cell-lbl">Esqueci</div></div>
+        <div class="qs-cell"><div class="qs-cell-val">${stillDue}</div><div class="qs-cell-lbl">Ainda hoje</div></div>
+      </div>
+      <div class="qs-actions">
+        <button class="modal-btn ghost" onclick="closeReview()">Fechar</button>
+        ${stillDue
+          ? `<button class="modal-btn primary" onclick="startReview()">Continuar</button>`
+          : `<button class="modal-btn primary" onclick="closeReview()">Pronto</button>`}
+      </div>
+    </div>`;
+}
+
+document.getElementById('btn-start-review').addEventListener('click', startReview);
+document.getElementById('review-overlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('review-overlay')) closeReview();
+});
+
 document.addEventListener('keydown', e => {
   if (e.key !== 'Escape') return;
-  if (document.getElementById('quiz-overlay').classList.contains('show')) closeQuiz();
+  if (document.getElementById('review-overlay').classList.contains('show')) closeReview();
+  else if (document.getElementById('quiz-overlay').classList.contains('show')) closeQuiz();
   else if (document.getElementById('word-modal-overlay').classList.contains('open')) closeWordModal();
 });
 

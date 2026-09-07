@@ -57,6 +57,9 @@ window.P90_ACHIEVEMENTS = [
       { id:'vocab_quiz1',      icon:'🎮', name:'Primeiro teste',       points:60,  target:1,   req:'1 rodada do jogo',       desc:'Testou o vocabulário pela primeira vez no modo jogo.' },
       { id:'vocab_correct25',  icon:'🧠', name:'Memória afiada',       points:200, target:25,  req:'25 acertos no jogo',     desc:'25 respostas certas somadas no "Testar meu vocabulário".' },
       { id:'vocab_correct100', icon:'🏅', name:'Sabedoria acumulada',  points:400, target:100, req:'100 acertos no jogo',    desc:'100 acertos. O vocabulário virou conhecimento de verdade.' },
+      { id:'vocab_srs_first',   icon:'🔁', name:'Primeira revisão',     points:60,  target:1,   req:'1 revisão espaçada',     desc:'Fez a primeira revisão na repetição espaçada.' },
+      { id:'vocab_srs_100',     icon:'🧩', name:'Ritmo de revisão',     points:260, target:100, req:'100 revisões espaçadas', desc:'100 revisões acumuladas. A repetição espaçada virou hábito.' },
+      { id:'vocab_mastered_10', icon:'🏆', name:'Dez dominadas',        points:320, target:10,  req:'10 palavras dominadas',  desc:'10 palavras chegaram à última caixa do Leitner.' },
     ],
   },
   {
