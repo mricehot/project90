@@ -26,6 +26,7 @@ Dashboard → **SQL Editor** → **New query** → rode os arquivos **na ordem**
 12. `supabase/migrations/0012_speech_daily.sql` → **Run**
 13. `supabase/migrations/0013_bible_plan.sql` → **Run**
 14. `supabase/migrations/0014_tasks.sql` → **Run**
+15. `supabase/migrations/0015_vocab_srs.sql` → **Run**
 
 **Opção B — CLI:**
 ```bash
@@ -44,7 +45,7 @@ Os scripts criam:
 | `journal_entries` | 1 entrada por dia do desafio |
 | `weekly_reviews` | 1 revisão por semana do desafio (`0008`): o que funcionou, o que ajustar, foco da semana seguinte, nota 1–5. Editável no `diario.html`. |
 | `achievements` | estado de desbloqueio por conquista |
-| `vocab_words` | palavras do vocabulário pessoal (`0009`): palavra, significado, exemplo, data. Id gerado pelo cliente, mesmo padrão de `habits.id`. Gerenciado em `vocabulario.html`. |
+| `vocab_words` | palavras do vocabulário pessoal (`0009`): palavra, significado, exemplo, data. Id gerado pelo cliente, mesmo padrão de `habits.id`. Gerenciado em `vocabulario.html`. Colunas de **repetição espaçada** (`0015`): `srs_box` (caixa Leitner 1–5), `srs_due` (data da próxima revisão), `srs_reviews`, `srs_lapses`, `srs_last`. |
 | `vocab_quiz_stats` | placar acumulado do jogo "Testar meu vocabulário" (`0009`): rodadas jogadas, respostas certas/totais, maior sequência de acertos. 1 linha por usuário. |
 | `speech_exercises` | biblioteca de exercícios de fala/dicção (`0011`): título, texto, tipo (trava-língua/articulação/respiração/projeção/ritmo), foco. Id gerado pelo cliente. Gerenciado em `diccao.html`. |
 | `speech_practice_stats` | placar acumulado das sessões de dicção (`0011`): sessões, repetições, soma/contagem das auto-avaliações 1–5, maior sequência de notas boas. 1 linha por usuário. |
@@ -202,6 +203,16 @@ podem ser excluídos, só pausados.
   (`Store.currentStreak`) e conta nas conquistas de dias ativos (`dayStreak` /
   `daysActive`), mas tarefa não é hábito fixo nem entra no XP por pilar.
   Categoria de conquistas "Tarefas" (1ª, 10, 50, 7 dias seguidos com tarefa).
+- **Repetição espaçada no Vocabulário** (`0015` + `vocabulario.html`): cada palavra
+  tem um estado Leitner (`srs_box` 1–5, `srs_due`). Ao acertar sobe uma caixa e a
+  próxima revisão é adiada — 1 / 3 / 7 / 14 / 30 dias (`Store` `VOCAB_SRS_INTERVALS`);
+  ao errar volta pra caixa 1 e revisa amanhã. Palavra vence quando `srs_due <= hoje`
+  (`Store.vocabDueToday`). Fluxo de estudo = flashcards com autoavaliação
+  ("Esqueci" / "Lembrei"), separado do jogo de múltipla escolha, que continua igual.
+  `Store.reviewVocabWord(id, 'good'|'again')` grava caixa/data/contadores;
+  `Store.vocabSrsStats()` resume vencidas/dominadas/revisões. 3 conquistas novas na
+  categoria "Vocabulário" (1ª revisão, 100 revisões, 10 dominadas). Palavras já
+  cadastradas entram na caixa 1 vencendo hoje (default das colunas — sem backfill).
 - `Store.js` (raiz, com S maiúsculo) é a versão **antiga** só-localStorage e
   não é usada por nenhuma página (todas carregam `js/store.js`). Pode apagar.
 - **Rollover de dia** (resolvido no cliente): no bootstrap, `Store._rollForward()`
