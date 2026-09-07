@@ -43,6 +43,7 @@ const Store = (() => {
       bibleDays:     {},
       tasks:         [],
       taskDone:      {},
+      wins:          [],
     };
   }
 
@@ -133,6 +134,19 @@ const Store = (() => {
         cache.taskDone[k] = (data.taskDone[k] || []).map(d => String(d).slice(0, 10)).sort();
       });
     }
+    if (Array.isArray(data.wins)) {
+      cache.wins.length = 0;
+      data.wins.map(_rowToWin).forEach(w => cache.wins.push(w));
+    }
+  }
+
+  function _rowToWin(w) {
+    return {
+      id:        w.id,
+      text:      w.text || '',
+      dayNum:    w.dayNum != null ? w.dayNum : (w.day_num != null ? w.day_num : null),
+      createdAt: w.createdAt || w.created_at || new Date().toISOString(),
+    };
   }
 
   function _rowToTask(t) {
@@ -341,7 +355,7 @@ const Store = (() => {
         '</div>' +
         '<p style="font-size:12px;line-height:1.9;color:var(--mid,#999);margin-bottom:8px;">' +
           'Isso apaga <b style="color:var(--white,#f5f5f0)">todo o seu progresso</b> — hábitos, ' +
-          'histórico, entradas do diário, revisões semanais, vocabulário, dicção, plano da Bíblia, tarefas e conquistas — e reinicia ' +
+          'histórico, entradas do diário, revisões semanais, vocabulário, dicção, plano da Bíblia, tarefas, banco de provas e conquistas — e reinicia ' +
           'o desafio no dia 1. Os hábitos fixos voltam ao estado inicial.' +
         '</p>' +
         '<p style="font-size:11px;letter-spacing:.06em;color:var(--red,#fca5a5);margin-bottom:24px;">' +
@@ -1321,6 +1335,38 @@ const Store = (() => {
   }
 
   /* ──────────────────────────────────────────
+     BANCO DE PROVAS (registro de vitórias)
+  ────────────────────────────────────────── */
+  function getWins() { return cache.wins; }
+  function winsCount() { return cache.wins.length; }
+
+  function addWin(text) {
+    const t = String(text || '').trim();
+    if (!t) return null;
+    const id  = (cache.wins.reduce((m, w) => Math.max(m, w.id), 0) || 0) + 1;
+    const row = { id, text: t, dayNum: getCurrentDay(), createdAt: new Date().toISOString() };
+    cache.wins.unshift(row);
+    _saveMirror();
+    _push(async () => {
+      const { error } = await window.sb.from('wins').upsert({
+        id: row.id, user_id: _uid, text: row.text, day_num: row.dayNum, created_at: row.createdAt,
+      }, { onConflict: 'user_id,id' });
+      if (error) throw error;
+    });
+    return row;
+  }
+
+  function deleteWin(id) {
+    const idx = cache.wins.findIndex(w => w.id === id);
+    if (idx !== -1) cache.wins.splice(idx, 1);
+    _saveMirror();
+    _push(async () => {
+      const { error } = await window.sb.from('wins').delete().eq('user_id', _uid).eq('id', id);
+      if (error) throw error;
+    });
+  }
+
+  /* ──────────────────────────────────────────
      COMPUTED HELPERS
   ────────────────────────────────────────── */
 
@@ -1556,6 +1602,7 @@ const Store = (() => {
     getBiblePlan, getBibleDays, setBibleReading, bibleReadCount, bibleNextDay, bibleStreak,
     getTasks, getTaskDone, taskLastDone, addTask, updateTask, deleteTask, setTaskArchived,
     completeTask, uncompleteTask, taskNextDue, taskStatus, tasksForToday, taskStreak, taskDoneTotal,
+    getWins, winsCount, addWin, deleteWin,
     // computed
     habitVal, scheduledOn, dayCompletionPct, maxStreak, countDays,
     allHabitsDone, currentStreak, computeAchievementProgress, computeLevels,
