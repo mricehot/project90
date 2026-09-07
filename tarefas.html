@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Project 90 — Tarefas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/components.css">
+<script src="js/supabase-config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase.js"></script>
+<script src="js/store.js"></script>
+<script src="js/achievements.js"></script>
+<style>
+
+.tsk-main { padding: 32px 36px; overflow-y: auto; display: flex; flex-direction: column; gap: 26px; }
+
+.topbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+.page-title { font-family: 'DM Serif Display', serif; font-size: 26px; font-weight: 400; display: flex; align-items: baseline; gap: 10px; }
+.page-title em { font-style: italic; opacity: 0.45; font-size: 22px; }
+
+.g4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+.stat-card { background: var(--surface); border: 1px solid var(--border); padding: 20px 22px; }
+.stat-lbl { font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--mid); margin-bottom: 8px; }
+.stat-val { font-family: 'Bebas Neue', sans-serif; font-size: 40px; line-height: 1; }
+.stat-val.warn { color: #fca5a5; }
+.stat-sub { font-size: 10px; letter-spacing: 0.1em; color: var(--mid); margin-top: 6px; }
+
+.section-lbl { font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--mid); margin: 6px 0 -8px; display: flex; align-items: center; gap: 12px; }
+.section-lbl::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+.tsk-list { display: flex; flex-direction: column; gap: 10px; }
+.tsk-card {
+  background: var(--surface); border: 1px solid var(--border);
+  padding: 15px 18px; display: flex; gap: 14px; align-items: flex-start;
+  transition: border-color 0.2s;
+}
+.tsk-card:hover { border-color: var(--border2); }
+.tsk-card.overdue { border-color: rgba(252,165,165,0.4); }
+.tsk-check {
+  width: 22px; height: 22px; flex-shrink: 0; border: 1px solid var(--border2);
+  display: flex; align-items: center; justify-content: center; cursor: pointer;
+  font-size: 12px; color: var(--bg); background: none; margin-top: 1px;
+  transition: background 0.15s, border-color 0.15s;
+}
+.tsk-check.done { background: #86efac; border-color: #86efac; }
+.tsk-main-col { flex: 1; min-width: 0; }
+.tsk-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.tsk-title { font-size: 13.5px; letter-spacing: 0.02em; color: var(--white); }
+.tsk-card.done-strike .tsk-title { color: var(--mid); text-decoration: line-through; }
+.tsk-badge {
+  font-size: 8px; letter-spacing: 0.14em; text-transform: uppercase;
+  border: 1px solid var(--border); padding: 2px 7px; color: var(--mid); white-space: nowrap;
+}
+.tsk-badge.due  { color: var(--white); border-color: var(--border2); }
+.tsk-badge.over { color: #fca5a5; border-color: rgba(252,165,165,0.4); }
+.tsk-badge.ok   { color: #86efac; border-color: rgba(134,239,172,0.4); }
+.tsk-sched { font-size: 10px; letter-spacing: 0.06em; color: var(--mid); margin-top: 5px; }
+.tsk-notes { font-size: 11px; letter-spacing: 0.02em; color: var(--mid); line-height: 1.6; margin-top: 5px; white-space: pre-wrap; }
+.tsk-actions { display: flex; gap: 6px; flex-shrink: 0; }
+.tsk-btn {
+  width: 30px; height: 30px; border: 1px solid var(--border); background: none; color: var(--mid);
+  cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 12px;
+  transition: color 0.2s, border-color 0.2s;
+}
+.tsk-btn:hover { color: var(--white); border-color: var(--border2); }
+.tsk-btn.danger:hover { color: #fca5a5; border-color: rgba(252,165,165,0.4); }
+
+.empty-state { text-align: center; padding: 44px 32px; border: 1px dashed rgba(245,245,240,0.12); background: var(--surface); }
+.empty-icon { font-size: 28px; margin-bottom: 14px; opacity: 0.4; }
+.empty-sub { font-size: 12px; color: var(--mid); line-height: 1.8; }
+
+.btn-sm {
+  padding: 10px 20px; background: none; border: 1px solid var(--border2); color: var(--mid);
+  font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+  cursor: pointer; transition: color 0.2s, border-color 0.2s, background 0.2s;
+}
+.btn-sm:hover { border-color: rgba(245,245,240,0.3); color: var(--white); }
+.btn-sm.primary { background: var(--white); color: var(--bg); border-color: var(--white); }
+.btn-sm.primary:hover { background: rgba(245,245,240,0.88); color: var(--bg); }
+
+.arch-toggle { display: inline-flex; align-items: center; gap: 8px; font-size: 11px; letter-spacing: 0.06em; color: var(--mid); cursor: pointer; }
+.arch-toggle input { accent-color: var(--white); width: 14px; height: 14px; cursor: pointer; }
+
+/* modal extras */
+textarea.modal-input { resize: vertical; min-height: 56px; line-height: 1.6; }
+.m-radio-row { display: flex; flex-direction: column; gap: 8px; }
+.m-radio { display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--white); cursor: pointer; }
+.m-radio input { accent-color: var(--white); }
+.m-days { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
+.m-day {
+  width: 40px; padding: 8px 0; text-align: center; border: 1px solid var(--border2); background: var(--surface2);
+  color: var(--mid); font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.06em; cursor: pointer;
+  text-transform: uppercase; transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+.m-day.on { background: var(--white); color: var(--bg); border-color: var(--white); }
+.m-cond { margin-top: 4px; }
+
+@media (max-width: 900px) {
+  body { overflow: auto; }
+  .app { grid-template-columns: 1fr; }
+  .tsk-main { padding: 20px; }
+  .g4 { grid-template-columns: 1fr 1fr; }
+  .tsk-card { flex-wrap: wrap; }
+}
+@media (max-width: 520px) { .g4 { grid-template-columns: 1fr; } }
+
+.app,.tsk-main{position:relative;z-index:1;}
+</style>
+</head>
+<body>
+
+<div id="cur"></div>
+<div id="cur-ring"></div>
+<div id="tip" class="tip"></div>
+<div class="toast" id="toast"></div>
+
+<div class="app">
+
+  <aside class="sidebar">
+    <div class="sb-logo">
+      <a href="index.html" class="sb-logomark">Project 90</a>
+      <div class="sb-logosub">Transformação pessoal</div>
+    </div>
+    <div class="sb-day">
+      <div class="sb-daynum" id="sb-daynum">34</div>
+      <div class="sb-daylbl">de 90 dias</div>
+      <div style="display:flex;justify-content:space-between;font-size:10px;letter-spacing:0.1em;color:var(--mid);margin-top:10px">
+        <span>Progresso</span><span id="sb-pct">38%</span>
+      </div>
+      <div class="sb-prog-bar-bg"><div class="sb-prog-bar-fill" id="sb-fill" style="width:0%"></div></div>
+      <div class="sb-prog-meta"><span id="sb-days-left">56 restantes</span><span id="sb-pct2">38%</span></div>
+    </div>
+    <nav class="sb-nav">
+      <a class="sb-item" href="dashboard.html"><span class="sb-item-icon">◈</span> Dashboard</a>
+      <a class="sb-item" href="habitos.html"><span class="sb-item-icon">◉</span> Hábitos</a>
+      <a class="sb-item" href="metricas.html"><span class="sb-item-icon">△</span> Métricas</a>
+      <a class="sb-item" href="diario.html"><span class="sb-item-icon">◻</span> Diário</a>
+      <a class="sb-item" href="conquistas.html"><span class="sb-item-icon">◆</span> Conquistas</a>
+      <a class="sb-item" href="vocabulario.html"><span class="sb-item-icon">▤</span> Vocabulário</a>
+      <a class="sb-item" href="diccao.html"><span class="sb-item-icon">◗</span> Dicção</a>
+      <a class="sb-item" href="biblia.html"><span class="sb-item-icon">✝</span> Bíblia</a>
+      <a class="sb-item active" href="tarefas.html"><span class="sb-item-icon">✓</span> Tarefas</a>
+    </nav>
+    <div class="sb-bottom">
+      <div class="sb-streak">
+        <span class="sb-streak-icon">🔥</span>
+        <div>
+          <div class="sb-streak-val" id="sb-streak-val">12</div>
+          <div class="sb-streak-lbl">Dias seguidos</div>
+        </div>
+      </div>
+      <a href="login.html" class="sb-logout">← Sair</a>
+    </div>
+  </aside>
+
+  <main class="tsk-main">
+
+    <div class="topbar">
+      <div class="page-title">Tarefas <em>&amp; recorrências.</em></div>
+      <button class="btn-sm primary" id="btn-new">+ Nova tarefa</button>
+    </div>
+
+    <div class="g4">
+      <div class="stat-card">
+        <div class="stat-lbl">Ativas</div>
+        <div class="stat-val" id="sc-active">0</div>
+        <div class="stat-sub">tarefas em aberto</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-lbl">Concluídas</div>
+        <div class="stat-val" id="sc-done">0</div>
+        <div class="stat-sub">no total</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-lbl">Atrasadas</div>
+        <div class="stat-val" id="sc-over">0</div>
+        <div class="stat-sub">precisam de você</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-lbl">Dias seguidos</div>
+        <div class="stat-val" id="sc-streak">0</div>
+        <div class="stat-sub">com ≥ 1 tarefa</div>
+      </div>
+    </div>
+
+    <div class="section-lbl">Hoje</div>
+    <div class="tsk-list" id="today-list"></div>
+
+    <div class="section-lbl">Todas
+      <label class="arch-toggle" style="margin-left:auto"><input type="checkbox" id="show-arch" /> ver arquivadas</label>
+    </div>
+    <div class="tsk-list" id="all-list"></div>
+
+  </main>
+</div>
+
+<!-- ADD/EDIT MODAL -->
+<div class="modal-overlay" id="tm-overlay">
+  <div class="modal">
+    <div class="modal-title" id="tm-title">Nova <em>tarefa.</em></div>
+    <div class="modal-field">
+      <label class="modal-lbl">Título</label>
+      <input class="modal-input" id="t-title" placeholder="Ex: Trocar o filtro do purificador" maxlength="120" />
+    </div>
+    <div class="modal-field">
+      <label class="modal-lbl">Notas (opcional)</label>
+      <textarea class="modal-input" id="t-notes" rows="2" placeholder="Detalhes, link, onde comprar..." maxlength="400"></textarea>
+    </div>
+    <div class="modal-field">
+      <label class="modal-lbl">Quando</label>
+      <div class="m-radio-row">
+        <label class="m-radio"><input type="radio" name="t-sched" value="once" checked /> Não repete</label>
+        <label class="m-radio"><input type="radio" name="t-sched" value="everyN" /> A cada N dias</label>
+        <label class="m-radio"><input type="radio" name="t-sched" value="weekdays" /> Dias da semana</label>
+      </div>
+    </div>
+
+    <div class="modal-field m-cond" id="cond-once">
+      <label class="modal-lbl">Data de vencimento (opcional)</label>
+      <input class="modal-input" id="t-anchor" type="date" />
+    </div>
+    <div class="modal-field m-cond" id="cond-everyN" hidden>
+      <label class="modal-lbl">Repetir a cada</label>
+      <input class="modal-input" id="t-interval" type="number" min="1" max="3650" value="7" style="max-width:120px" /> <span style="font-size:11px;color:var(--mid)">dias — conta a partir da última vez que você concluir</span>
+    </div>
+    <div class="modal-field m-cond" id="cond-weekdays" hidden>
+      <label class="modal-lbl">Dias da semana</label>
+      <div class="m-days" id="t-days">
+        <div class="m-day" data-d="0">Seg</div><div class="m-day" data-d="1">Ter</div>
+        <div class="m-day" data-d="2">Qua</div><div class="m-day" data-d="3">Qui</div>
+        <div class="m-day" data-d="4">Sex</div><div class="m-day" data-d="5">Sáb</div>
+        <div class="m-day" data-d="6">Dom</div>
+      </div>
+    </div>
+
+    <div class="modal-field" id="cond-overdue">
+      <label class="modal-lbl">Se não fizer no dia</label>
+      <select class="modal-select" id="t-overdue">
+        <option value="accumulate">Acumula — fica atrasada até eu fazer</option>
+        <option value="skip">Pula — só reaparece no próximo dia</option>
+      </select>
+    </div>
+
+    <div class="modal-footer">
+      <button class="modal-btn ghost" id="tm-cancel">Cancelar</button>
+      <button class="modal-btn primary" id="tm-save">Salvar tarefa</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ── CURSOR ── */
+(function() {
+  const cur = document.getElementById('cur'), ring = document.getElementById('cur-ring');
+  let mx=0,my=0,rx=0,ry=0;
+  document.addEventListener('mousemove', e => { mx=e.clientX; my=e.clientY; cur.style.transform=`translate(${mx-3}px,${my-3}px)`; });
+  (function tick(){ rx+=(mx-rx-15)*0.1; ry+=(my-ry-15)*0.1; ring.style.transform=`translate(${rx}px,${ry}px)`; requestAnimationFrame(tick); })();
+})();
+
+let toastTimer;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
+}
+
+const DAY  = Store.getCurrentDay();
+const DAYS = Store.getTotalDays();
+const DOW  = ['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];
+
+function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function fmtDate(iso) {
+  if (!iso) return '';
+  const d = new Date(iso + 'T00:00:00');
+  return d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
+}
+
+function initSidebar() {
+  const pct = Math.round(DAY / DAYS * 100);
+  document.getElementById('sb-daynum').textContent = DAY;
+  document.getElementById('sb-pct').textContent = pct + '%';
+  document.getElementById('sb-pct2').textContent = pct + '%';
+  document.getElementById('sb-days-left').textContent = (DAYS - DAY) + ' restantes';
+  document.getElementById('sb-streak-val').textContent = Store.currentStreak(Store.getHabits(), DAY);
+  setTimeout(() => { document.getElementById('sb-fill').style.width = pct + '%'; }, 400);
+}
+
+function schedText(t) {
+  if (t.sched === 'once') return t.anchor ? 'Vence em ' + fmtDate(t.anchor) : 'Sem prazo';
+  if (t.sched === 'everyN') return 'A cada ' + (t.intervalDays || 1) + (t.intervalDays === 1 ? ' dia' : ' dias');
+  const ds = (t.weekdays || []).slice().sort((a,b)=>a-b).map(d => DOW[d]);
+  return ds.length ? ds.join(', ') : 'Toda semana';
+}
+
+function badgeFor(t) {
+  const s = Store.taskStatus(t);
+  if (s === 'overdue')    return { cls: 'over', txt: 'atrasada' };
+  if (s === 'due')        return { cls: 'due',  txt: 'vence hoje' };
+  if (s === 'done-today') return { cls: 'ok',   txt: 'feita hoje' };
+  if (s === 'done')       return { cls: 'ok',   txt: 'concluída' };
+  if (s === 'backlog')    return { cls: '',     txt: 'sem prazo' };
+  const due = Store.taskNextDue(t);
+  return { cls: '', txt: due ? 'próx: ' + fmtDate(due) : 'sem prazo' };
+}
+
+function cardHTML(t, opts) {
+  opts = opts || {};
+  const st = Store.taskStatus(t);
+  const b  = badgeFor(t);
+  const doneStrike = (st === 'done' || st === 'done-today');
+  const checked = doneStrike;
+  return `<div class="tsk-card${st === 'overdue' ? ' overdue' : ''}${doneStrike ? ' done-strike' : ''}">
+    <button class="tsk-check${checked ? ' done' : ''}" onclick="quickToggle(${t.id})" title="${checked ? 'Desmarcar hoje' : 'Concluir'}">${checked ? '✓' : ''}</button>
+    <div class="tsk-main-col">
+      <div class="tsk-head">
+        <span class="tsk-title">${esc(t.title)}</span>
+        <span class="tsk-badge ${b.cls}">${b.txt}</span>
+      </div>
+      <div class="tsk-sched">${esc(schedText(t))}${t.archived ? ' · arquivada' : ''}</div>
+      ${t.notes ? `<div class="tsk-notes">${esc(t.notes)}</div>` : ''}
+    </div>
+    <div class="tsk-actions">
+      <button class="tsk-btn" title="Editar" onclick="openModal(${t.id})">✎</button>
+      <button class="tsk-btn" title="${t.archived ? 'Desarquivar' : 'Arquivar'}" onclick="toggleArchive(${t.id})">${t.archived ? '↺' : '⊟'}</button>
+      <button class="tsk-btn danger" title="Excluir" onclick="removeTask(${t.id})">✕</button>
+    </div>
+  </div>`;
+}
+
+function render() {
+  const all = Store.getTasks();
+  const showArch = document.getElementById('show-arch').checked;
+
+  const activeTasks = all.filter(t => !t.archived && Store.taskStatus(t) !== 'done');
+  const overdue = all.filter(t => !t.archived && Store.taskStatus(t) === 'overdue').length;
+
+  document.getElementById('sc-active').textContent = activeTasks.length;
+  document.getElementById('sc-done').textContent   = Store.taskDoneTotal();
+  const overEl = document.getElementById('sc-over');
+  overEl.textContent = overdue;
+  overEl.classList.toggle('warn', overdue > 0);
+  document.getElementById('sc-streak').textContent = Store.taskStreak();
+
+  // HOJE
+  const today = Store.tasksForToday()
+    .sort((a, b) => rank(Store.taskStatus(a)) - rank(Store.taskStatus(b)));
+  document.getElementById('today-list').innerHTML = today.length
+    ? today.map(t => cardHTML(t)).join('')
+    : `<div class="empty-state"><div class="empty-icon">✓</div><div class="empty-sub">Nada vencendo hoje. Respira.</div></div>`;
+
+  // TODAS
+  const list = all.filter(t => showArch ? true : !t.archived)
+    .sort((a, b) => {
+      if (!!a.archived !== !!b.archived) return a.archived ? 1 : -1;
+      return rank(Store.taskStatus(a)) - rank(Store.taskStatus(b));
+    });
+  document.getElementById('all-list').innerHTML = list.length
+    ? list.map(t => cardHTML(t)).join('')
+    : `<div class="empty-state"><div class="empty-icon">◌</div><div class="empty-sub">Nenhuma tarefa ainda. Crie a primeira.</div></div>`;
+}
+
+function rank(st) {
+  return { overdue: 0, due: 1, backlog: 2, upcoming: 3, 'done-today': 4, done: 5 }[st] ?? 3;
+}
+
+function quickToggle(id) {
+  const done = Store.getTaskDone(id) || [];
+  const d = new Date();
+  const localISO = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  const t = Store.getTasks().find(x => x.id === id);
+  const isOnce = t && t.sched === 'once';
+  if (isOnce) {
+    if (done.length) { Store.uncompleteTask(id, done[done.length - 1]); }
+    else { Store.completeTask(id); toast('Tarefa concluída ✓'); }
+  } else {
+    if (done.indexOf(localISO) !== -1) { Store.uncompleteTask(id, localISO); }
+    else { Store.completeTask(id); toast('Feita hoje ✓'); }
+  }
+  render();
+}
+
+function toggleArchive(id) {
+  const t = Store.getTasks().find(x => x.id === id);
+  if (!t) return;
+  Store.setTaskArchived(id, !t.archived);
+  toast(t.archived ? 'Desarquivada' : 'Arquivada');
+  render();
+}
+
+function removeTask(id) {
+  const t = Store.getTasks().find(x => x.id === id);
+  if (!t) return;
+  if (!confirm(`Excluir "${t.title}"? Isso apaga a tarefa e seu histórico.`)) return;
+  Store.deleteTask(id);
+  toast('Tarefa excluída');
+  render();
+}
+
+/* ── MODAL ── */
+let editingId = null;
+
+function setSchedUI(sched) {
+  document.getElementById('cond-once').hidden     = sched !== 'once';
+  document.getElementById('cond-everyN').hidden   = sched !== 'everyN';
+  document.getElementById('cond-weekdays').hidden = sched !== 'weekdays';
+}
+
+function openModal(id) {
+  editingId = id || null;
+  const ov = document.getElementById('tm-overlay');
+  const t = id ? Store.getTasks().find(x => x.id === id) : null;
+
+  document.getElementById('tm-title').innerHTML = t ? 'Editar <em>tarefa.</em>' : 'Nova <em>tarefa.</em>';
+  document.getElementById('t-title').value    = t ? t.title : '';
+  document.getElementById('t-notes').value    = t ? (t.notes || '') : '';
+  const sched = t ? t.sched : 'once';
+  document.querySelectorAll('input[name="t-sched"]').forEach(r => { r.checked = r.value === sched; });
+  document.getElementById('t-anchor').value   = (t && t.sched === 'once' && t.anchor) ? t.anchor : '';
+  document.getElementById('t-interval').value = (t && t.intervalDays) ? t.intervalDays : 7;
+  document.querySelectorAll('#t-days .m-day').forEach(el => {
+    el.classList.toggle('on', !!(t && t.weekdays && t.weekdays.indexOf(+el.dataset.d) !== -1));
+  });
+  document.getElementById('t-overdue').value = t ? t.overdue : 'accumulate';
+  setSchedUI(sched);
+
+  ov.classList.add('open');
+  document.getElementById('t-title').focus();
+}
+
+function closeModal() { document.getElementById('tm-overlay').classList.remove('open'); editingId = null; }
+
+function saveModal() {
+  const title = document.getElementById('t-title').value.trim();
+  if (!title) { document.getElementById('t-title').style.borderColor = 'rgba(252,165,165,0.6)'; document.getElementById('t-title').focus(); return; }
+  const sched = document.querySelector('input[name="t-sched"]:checked').value;
+  const notes = document.getElementById('t-notes').value.trim();
+  const overdue = document.getElementById('t-overdue').value;
+  const anchor = sched === 'once' ? (document.getElementById('t-anchor').value || null) : null;
+  const intervalDays = sched === 'everyN' ? Math.max(1, parseInt(document.getElementById('t-interval').value, 10) || 1) : null;
+  const weekdays = sched === 'weekdays'
+    ? [...document.querySelectorAll('#t-days .m-day.on')].map(el => +el.dataset.d)
+    : [];
+
+  if (sched === 'weekdays' && !weekdays.length) { toast('Escolha ao menos um dia da semana'); return; }
+
+  const payload = { title, notes, sched, overdue, anchor, intervalDays, weekdays };
+  if (editingId) { Store.updateTask(editingId, payload); toast('Tarefa atualizada ✓'); }
+  else { Store.addTask(payload); toast('Tarefa criada ✓'); }
+  closeModal();
+  render();
+}
+
+document.getElementById('btn-new').addEventListener('click', () => openModal());
+document.getElementById('tm-cancel').addEventListener('click', closeModal);
+document.getElementById('tm-save').addEventListener('click', saveModal);
+document.getElementById('tm-overlay').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
+document.getElementById('show-arch').addEventListener('change', render);
+document.getElementById('t-title').addEventListener('input', function(){ this.style.borderColor = ''; });
+document.querySelectorAll('input[name="t-sched"]').forEach(r => r.addEventListener('change', () => setSchedUI(r.value)));
+document.querySelectorAll('#t-days .m-day').forEach(el => el.addEventListener('click', () => el.classList.toggle('on')));
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && document.getElementById('tm-overlay').classList.contains('open')) closeModal();
+});
+
+function init() { initSidebar(); render(); }
+
+window.addEventListener('p90:synced', init);
+window.addEventListener('p90:synced', notifyNewAchievements);
+init();
+
+(function(){
+  const canvas=document.createElement('canvas');
+  canvas.style.cssText='position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;';
+  document.body.insertBefore(canvas,document.body.firstChild);
+  const ctx=canvas.getContext('2d'),SIZE=80;
+  let W,H,cols,rows,nodes,t=0;
+  function resize(){W=canvas.width=window.innerWidth;H=canvas.height=window.innerHeight;cols=Math.ceil(W/SIZE)+2;rows=Math.ceil(H/SIZE)+2;nodes=[];for(let r=0;r<rows;r++)for(let c=0;c<cols;c++)nodes.push({phase:Math.random()*Math.PI*2});}
+  function draw(){ctx.clearRect(0,0,W,H);ctx.lineWidth=.4;const offX=(t*6)%SIZE,offY=(t*3)%SIZE;for(let c=0;c<cols;c++){const x=c*SIZE-offX,w=.5+.5*Math.sin(t*.4+c*.35);ctx.strokeStyle='rgba(245,245,240,'+(0.006+w*0.012)+')';ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}for(let r=0;r<rows;r++){const y=r*SIZE-offY,w=.5+.5*Math.sin(t*.35+r*.4+1.2);ctx.strokeStyle='rgba(245,245,240,'+(0.006+w*0.012)+')';ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){const nd=nodes[r*cols+c],x=c*SIZE-offX,y=r*SIZE-offY,p=.5+.5*Math.sin(t*.7+nd.phase);ctx.beginPath();ctx.arc(x,y,.5+p*.9,0,Math.PI*2);ctx.fillStyle='rgba(245,245,240,'+(p*0.07)+')';ctx.fill();}const grd=ctx.createRadialGradient(W*.65,H*.5,0,W*.65,H*.5,Math.max(W,H)*.75);grd.addColorStop(0,'rgba(8,8,8,0)');grd.addColorStop(.6,'rgba(8,8,8,0)');grd.addColorStop(1,'rgba(8,8,8,.7)');ctx.fillStyle=grd;ctx.fillRect(0,0,W,H);t+=.006;requestAnimationFrame(draw);}
+  window.addEventListener('resize',resize);resize();draw();
+})();
+</script>
+</body>
+</html>

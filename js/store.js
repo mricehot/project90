@@ -41,6 +41,8 @@ const Store = (() => {
       speechStats:   { sessionsPlayed: 0, repsTotal: 0, ratingSum: 0, ratingCount: 0, bestStreak: 0 },
       speechDays:    {},
       bibleDays:     {},
+      tasks:         [],
+      taskDone:      {},
     };
   }
 
@@ -121,6 +123,31 @@ const Store = (() => {
       Object.keys(cache.bibleDays).forEach(k => delete cache.bibleDays[k]);
       Object.assign(cache.bibleDays, data.bibleDays);
     }
+    if (Array.isArray(data.tasks)) {
+      cache.tasks.length = 0;
+      data.tasks.map(_rowToTask).forEach(t => cache.tasks.push(t));
+    }
+    if (data.taskDone && typeof data.taskDone === 'object') {
+      Object.keys(cache.taskDone).forEach(k => delete cache.taskDone[k]);
+      Object.keys(data.taskDone).forEach(k => {
+        cache.taskDone[k] = (data.taskDone[k] || []).map(d => String(d).slice(0, 10)).sort();
+      });
+    }
+  }
+
+  function _rowToTask(t) {
+    return {
+      id:           t.id,
+      title:        t.title || '',
+      notes:        t.notes || '',
+      sched:        t.sched || 'once',
+      intervalDays: t.intervalDays != null ? t.intervalDays : (t.interval_days != null ? t.interval_days : null),
+      weekdays:     Array.isArray(t.weekdays) ? t.weekdays : [],
+      overdue:      t.overdue || 'accumulate',
+      anchor:       t.anchor ? String(t.anchor).slice(0, 10) : null,
+      archived:     !!t.archived,
+      createdAt:    t.createdAt || t.created_at || new Date().toISOString(),
+    };
   }
 
   function _rowToVocabWord(w) {
@@ -307,7 +334,7 @@ const Store = (() => {
         '</div>' +
         '<p style="font-size:12px;line-height:1.9;color:var(--mid,#999);margin-bottom:8px;">' +
           'Isso apaga <b style="color:var(--white,#f5f5f0)">todo o seu progresso</b> — hábitos, ' +
-          'histórico, entradas do diário, revisões semanais, vocabulário, dicção, plano da Bíblia e conquistas — e reinicia ' +
+          'histórico, entradas do diário, revisões semanais, vocabulário, dicção, plano da Bíblia, tarefas e conquistas — e reinicia ' +
           'o desafio no dia 1. Os hábitos fixos voltam ao estado inicial.' +
         '</p>' +
         '<p style="font-size:11px;letter-spacing:.06em;color:var(--red,#fca5a5);margin-bottom:24px;">' +
@@ -1023,6 +1050,207 @@ const Store = (() => {
   }
 
   /* ──────────────────────────────────────────
+     TAREFAS
+  ────────────────────────────────────────── */
+  function _addDaysISO(iso, n) {
+    const d = new Date(iso + 'T00:00:00');
+    d.setDate(d.getDate() + n);
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+  function _isoWeekdayApp(iso) {           // 0=Seg..6=Dom
+    const js = new Date(iso + 'T00:00:00').getDay();
+    return js === 0 ? 6 : js - 1;
+  }
+
+  function getTasks() { return cache.tasks; }
+  function getTaskDone(id) { return cache.taskDone[id] || []; }
+  function taskLastDone(id) {
+    const arr = cache.taskDone[id];
+    return (arr && arr.length) ? arr[arr.length - 1] : null;
+  }
+
+  function _taskRow(t) {
+    return {
+      id: t.id, user_id: _uid, title: t.title, notes: t.notes || null,
+      sched: t.sched,
+      interval_days: t.sched === 'everyN' ? (t.intervalDays || null) : null,
+      weekdays: t.sched === 'weekdays' ? (t.weekdays || []) : null,
+      overdue: t.overdue, anchor: t.anchor || null, archived: !!t.archived,
+      sort_order: 0, created_at: t.createdAt,
+    };
+  }
+
+  function addTask(input) {
+    const id = (cache.tasks.reduce((m, t) => Math.max(m, t.id), 0) || 0) + 1;
+    const t = {
+      id,
+      title:        (input.title || '').trim(),
+      notes:        (input.notes || '').trim(),
+      sched:        input.sched || 'once',
+      intervalDays: input.intervalDays != null ? Number(input.intervalDays) : null,
+      weekdays:     Array.isArray(input.weekdays) ? input.weekdays.slice() : [],
+      overdue:      input.overdue || 'accumulate',
+      anchor:       input.anchor || null,
+      archived:     false,
+      createdAt:    new Date().toISOString(),
+    };
+    cache.tasks.push(t);
+    _saveMirror();
+    _push(async () => {
+      const { error } = await window.sb.from('tasks').upsert(_taskRow(t), { onConflict: 'user_id,id' });
+      if (error) throw error;
+    });
+    return t;
+  }
+
+  function updateTask(id, patch) {
+    const t = cache.tasks.find(x => x.id === id);
+    if (!t) return;
+    ['title', 'notes', 'sched', 'overdue', 'anchor'].forEach(k => { if (patch[k] !== undefined) t[k] = patch[k]; });
+    if (patch.intervalDays !== undefined) t.intervalDays = patch.intervalDays != null ? Number(patch.intervalDays) : null;
+    if (patch.weekdays !== undefined) t.weekdays = Array.isArray(patch.weekdays) ? patch.weekdays.slice() : [];
+    if (patch.archived !== undefined) t.archived = !!patch.archived;
+    t.title = (t.title || '').trim();
+    t.notes = (t.notes || '').trim();
+    _saveMirror();
+    _push(async () => {
+      const { error } = await window.sb.from('tasks').update(_taskRow(t)).eq('user_id', _uid).eq('id', id);
+      if (error) throw error;
+    });
+  }
+
+  function setTaskArchived(id, val) { updateTask(id, { archived: !!val }); }
+
+  function deleteTask(id) {
+    const idx = cache.tasks.findIndex(t => t.id === id);
+    if (idx !== -1) cache.tasks.splice(idx, 1);
+    delete cache.taskDone[id];
+    _saveMirror();
+    _push(async () => {
+      const { error: e1 } = await window.sb.from('task_completions').delete().eq('user_id', _uid).eq('task_id', id);
+      if (e1) throw e1;
+      const { error: e2 } = await window.sb.from('tasks').delete().eq('user_id', _uid).eq('id', id);
+      if (e2) throw e2;
+    });
+  }
+
+  function completeTask(id, dateStr) {
+    const d = dateStr || _localDate(0);
+    if (!cache.taskDone[id]) cache.taskDone[id] = [];
+    if (cache.taskDone[id].indexOf(d) === -1) { cache.taskDone[id].push(d); cache.taskDone[id].sort(); }
+    _saveMirror();
+    _push(async () => {
+      const { error } = await window.sb.from('task_completions').upsert({
+        user_id: _uid, task_id: id, done_date: d,
+      }, { onConflict: 'user_id,task_id,done_date' });
+      if (error) throw error;
+    });
+  }
+
+  function uncompleteTask(id, dateStr) {
+    const d = dateStr || _localDate(0);
+    const arr = cache.taskDone[id];
+    if (arr) { const i = arr.indexOf(d); if (i !== -1) arr.splice(i, 1); }
+    _saveMirror();
+    _push(async () => {
+      const { error } = await window.sb.from('task_completions').delete()
+        .eq('user_id', _uid).eq('task_id', id).eq('done_date', d);
+      if (error) throw error;
+    });
+  }
+
+  // Próximo vencimento (ISO) de uma tarefa. null = once sem data / once concluída.
+  function taskNextDue(task) {
+    const today = _localDate(0);
+    const done  = cache.taskDone[task.id] || [];
+
+    if (task.sched === 'once') {
+      if (done.length) return null;
+      return task.anchor || null;
+    }
+
+    const base = taskLastDone(task.id) || task.anchor || String(task.createdAt).slice(0, 10);
+
+    if (task.sched === 'everyN') {
+      const n = Math.max(1, task.intervalDays || 1);
+      let due = _addDaysISO(base, n);
+      if (task.overdue === 'skip') { while (due < today) due = _addDaysISO(due, n); }
+      return due;
+    }
+
+    // weekdays
+    const wds = (task.weekdays && task.weekdays.length) ? task.weekdays : [0, 1, 2, 3, 4, 5, 6];
+    let scan = base;
+    const floor = _addDaysISO(today, -180);
+    if (scan < floor) scan = floor;
+    for (let k = 0; k <= 400; k++) {
+      const iso = _addDaysISO(scan, k);
+      if (wds.indexOf(_isoWeekdayApp(iso)) === -1) continue;
+      if (done.indexOf(iso) !== -1) continue;
+      if (task.overdue === 'skip' && iso < today) continue;
+      return iso;
+    }
+    return null;
+  }
+
+  // 'done-today' | 'due' | 'overdue' | 'upcoming' | 'backlog' | 'done'
+  function taskStatus(task) {
+    const today = _localDate(0);
+    const done  = cache.taskDone[task.id] || [];
+    if (task.sched === 'once') {
+      if (done.length) return 'done';
+      if (!task.anchor) return 'backlog';
+      if (task.anchor === today) return 'due';
+      return task.anchor < today ? 'overdue' : 'upcoming';
+    }
+    if (done.indexOf(today) !== -1) return 'done-today';
+    const due = taskNextDue(task);
+    if (!due) return 'upcoming';
+    if (due === today) return 'due';
+    return due < today ? 'overdue' : 'upcoming';
+  }
+
+  function tasksForToday() {
+    return cache.tasks.filter(t => {
+      if (t.archived) return false;
+      const s = taskStatus(t);
+      return s === 'due' || s === 'overdue' || s === 'backlog';
+    });
+  }
+
+  // Sequência de dias-calendário seguidos (terminando hoje ou ontem) com ≥1
+  // conclusão de tarefa.
+  function taskStreak() {
+    const dates = new Set();
+    Object.keys(cache.taskDone).forEach(id => (cache.taskDone[id] || []).forEach(d => dates.add(d)));
+    if (!dates.size) return 0;
+    let streak = 0, cur = 0;
+    if (dates.has(_localDate(0))) { streak = 1; cur = -1; }
+    else if (dates.has(_localDate(-1))) { streak = 1; cur = -2; }
+    else return 0;
+    while (dates.has(_localDate(cur))) { streak++; cur--; }
+    return streak;
+  }
+
+  function taskDoneTotal() {
+    return Object.keys(cache.taskDone).reduce((s, k) => s + (cache.taskDone[k] || []).length, 0);
+  }
+
+  // Índices de dia do desafio (1-based) com ≥1 conclusão de tarefa —
+  // integração "mista": esses dias contam como "dia ativo".
+  function _taskActiveChallengeDays() {
+    const set = new Set();
+    const start = getStartDate();
+    const startMid = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+    const total = getTotalDays();
+    Object.keys(cache.taskDone).forEach(id => (cache.taskDone[id] || []).forEach(d => {
+      const idx = Math.round((new Date(d + 'T00:00:00') - startMid) / 86400000) + 1;
+      if (idx >= 1 && idx <= total) set.add(idx);
+    }));
+    return set;
+  }
+
+  /* ──────────────────────────────────────────
      COMPUTED HELPERS
   ────────────────────────────────────────── */
 
@@ -1074,15 +1302,19 @@ const Store = (() => {
   }
 
   function currentStreak(habits, currentDay) {
-    const active = habits.filter(h => !h.paused);
-    if (!active.length) return 0;
-    const frozen = cache.meta.frozenDays || [];
+    const active   = habits.filter(h => !h.paused);
+    const frozen   = cache.meta.frozenDays || [];
+    const taskDays = _taskActiveChallengeDays();      // integração "mista"
     let streak = 0;
     for (let i = currentDay - 1; i >= 0; i--) {
+      const hasTask = taskDays.has(i + 1);
       const due = active.filter(h => scheduledOn(h, i));
-      if (!due.length) continue;                       // dia de descanso: não quebra a streak
-      if (frozen.includes(i + 1)) { streak++; continue; } // dia de folga: mantém a streak
-      if (due.some(h => habitVal(h, i) > 0)) streak++; else break;
+      if (!due.length) {                              // sem hábito devido nesse dia
+        if (hasTask) streak++;                        // ...mas fez uma tarefa: conta
+        continue;                                     // ...senão descanso, não quebra
+      }
+      if (frozen.includes(i + 1)) { streak++; continue; } // dia de folga: mantém
+      if (hasTask || due.some(h => habitVal(h, i) > 0)) streak++; else break;
     }
     return streak;
   }
@@ -1125,10 +1357,15 @@ const Store = (() => {
     }
 
     const frozenSet    = new Set(cache.meta.frozenDays || []);
-    const dayStreak    = maxStreak(currentDay, i => frozenSet.has(i + 1) || active.some(h => habitVal(h, i) > 0));
-    const daysActive   = countDays(currentDay, i => active.some(h => habitVal(h, i) > 0));
+    const taskSet      = _taskActiveChallengeDays();                       // integração "mista"
+    const dayActive    = i => taskSet.has(i + 1) || active.some(h => habitVal(h, i) > 0);
+    const dayStreak    = maxStreak(currentDay, i => frozenSet.has(i + 1) || dayActive(i));
+    const daysActive   = countDays(currentDay, dayActive);
     const allDoneCount = countDays(currentDay, i => allHabitsDone(habits, i));
     const perfStreak   = maxStreak(currentDay, i => allHabitsDone(habits, i));
+
+    const taskTotal    = taskDoneTotal();
+    const taskStk      = taskStreak();
 
     const journalEntries = Object.keys(journal).length;
     const journalStreak  = (() => {
@@ -1180,6 +1417,10 @@ const Store = (() => {
       speech_reps200:   speechStats.repsTotal || 0,
       speech_plan7:    speechPlanDone,
       speech_plan30:   speechPlanDone,
+      task_first:   Math.min(1, taskTotal),
+      task_10:      taskTotal,
+      task_50:      taskTotal,
+      task_streak7: taskStk,
     };
   }
 
@@ -1236,6 +1477,8 @@ const Store = (() => {
     speechPerDay, speechPlanForDay, getSpeechDays, getSpeechDay, saveSpeechDay,
     speechDaysDone, speechDayStreak,
     getBiblePlan, getBibleDays, setBibleReading, bibleReadCount, bibleNextDay, bibleStreak,
+    getTasks, getTaskDone, taskLastDone, addTask, updateTask, deleteTask, setTaskArchived,
+    completeTask, uncompleteTask, taskNextDue, taskStatus, tasksForToday, taskStreak, taskDoneTotal,
     // computed
     habitVal, scheduledOn, dayCompletionPct, maxStreak, countDays,
     allHabitsDone, currentStreak, computeAchievementProgress, computeLevels,
