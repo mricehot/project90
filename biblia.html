@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Project 90 — Bíblia</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/components.css">
+<script src="js/supabase-config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase.js"></script>
+<script src="js/store.js"></script>
+<script src="js/achievements.js"></script>
+<script src="js/bible-plan.js"></script>
+<style>
+
+.bib-main { padding: 32px 36px; overflow-y: auto; display: flex; flex-direction: column; gap: 26px; }
+
+.topbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+.page-title { font-family: 'DM Serif Display', serif; font-size: 26px; font-weight: 400; display: flex; align-items: baseline; gap: 10px; }
+.page-title em { font-style: italic; opacity: 0.45; font-size: 22px; }
+
+.g4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+.stat-card { background: var(--surface); border: 1px solid var(--border); padding: 20px 22px; }
+.stat-lbl { font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--mid); margin-bottom: 8px; }
+.stat-val { font-family: 'Bebas Neue', sans-serif; font-size: 40px; line-height: 1; }
+.stat-sub { font-size: 10px; letter-spacing: 0.1em; color: var(--mid); margin-top: 6px; }
+
+/* ── LEITURA DE HOJE ── */
+.today-card {
+  background: var(--surface); border: 1px solid var(--border2);
+  padding: 26px 30px; display: flex; align-items: center; gap: 24px; flex-wrap: wrap;
+}
+.tc-body { flex: 1; min-width: 220px; }
+.tc-eyebrow { font-size: 9px; letter-spacing: 0.24em; text-transform: uppercase; color: var(--mid); margin-bottom: 6px; }
+.tc-ref { font-family: 'DM Serif Display', serif; font-size: 30px; line-height: 1.2; color: var(--white); }
+.tc-day { font-size: 11px; letter-spacing: 0.1em; color: var(--mid); margin-top: 6px; }
+.tc-btn {
+  padding: 15px 30px; background: var(--white); color: var(--bg); border: none;
+  font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase;
+  cursor: pointer; transition: opacity 0.2s, transform 0.15s; flex-shrink: 0;
+}
+.tc-btn:hover:not(:disabled) { opacity: 0.85; transform: translateY(-1px); }
+.tc-btn:disabled { opacity: 0.35; cursor: default; }
+.tc-btn.done { background: rgba(134,239,172,0.12); color: #86efac; }
+
+.bib-bar-bg { height: 3px; background: var(--muted); margin-top: 16px; }
+.bib-bar-fill { height: 100%; background: var(--white); transition: width 0.9s cubic-bezier(0.16,1,0.3,1); }
+.bib-bar-meta { display: flex; justify-content: space-between; font-size: 9px; letter-spacing: 0.1em; color: var(--mid); margin-top: 5px; }
+
+/* ── TOOLBAR + LISTA ── */
+.bib-toolbar { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.bib-filter { display: flex; align-items: center; gap: 8px; font-size: 11px; letter-spacing: 0.06em; color: var(--mid); cursor: pointer; }
+.bib-filter input { accent-color: #86efac; width: 15px; height: 15px; cursor: pointer; }
+.bib-jump {
+  background: var(--surface2); border: 1px solid var(--border2); color: var(--white);
+  font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase;
+  padding: 9px 16px; cursor: pointer; transition: border-color 0.2s;
+}
+.bib-jump:hover { border-color: rgba(245,245,240,0.35); }
+.bib-count { font-size: 10px; letter-spacing: 0.1em; color: var(--mid); }
+.bib-count span { color: var(--white); }
+
+.bib-list { display: flex; flex-direction: column; }
+.bib-row {
+  display: flex; align-items: center; gap: 14px; padding: 11px 14px;
+  border-bottom: 1px solid var(--border); transition: background 0.15s;
+}
+.bib-row:hover { background: rgba(245,245,240,0.02); }
+.bib-row.read .bib-ref { color: var(--mid); text-decoration: line-through; }
+.bib-row.current { background: rgba(245,245,240,0.05); }
+.bib-check {
+  width: 20px; height: 20px; flex-shrink: 0; border: 1px solid var(--border2);
+  display: flex; align-items: center; justify-content: center; cursor: pointer;
+  font-size: 11px; color: var(--bg); background: none; transition: background 0.15s, border-color 0.15s;
+}
+.bib-row.read .bib-check { background: #86efac; border-color: #86efac; }
+.bib-daynum { font-family: 'Bebas Neue', sans-serif; font-size: 15px; color: var(--mid); width: 42px; flex-shrink: 0; }
+.bib-row.current .bib-daynum { color: var(--white); }
+.bib-ref { font-size: 12.5px; letter-spacing: 0.02em; color: var(--white); }
+
+@media (max-width: 900px) {
+  body { overflow: auto; }
+  .app { grid-template-columns: 1fr; }
+  .bib-main { padding: 20px; }
+  .g4 { grid-template-columns: 1fr 1fr; }
+  .tc-ref { font-size: 24px; }
+}
+@media (max-width: 520px) { .g4 { grid-template-columns: 1fr; } }
+
+.app,.bib-main{position:relative;z-index:1;}
+</style>
+</head>
+<body>
+
+<div id="cur"></div>
+<div id="cur-ring"></div>
+<div id="tip" class="tip"></div>
+<div class="toast" id="toast"></div>
+
+<div class="app">
+
+  <aside class="sidebar">
+    <div class="sb-logo">
+      <a href="index.html" class="sb-logomark">Project 90</a>
+      <div class="sb-logosub">Transformação pessoal</div>
+    </div>
+    <div class="sb-day">
+      <div class="sb-daynum" id="sb-daynum">34</div>
+      <div class="sb-daylbl">de 90 dias</div>
+      <div style="display:flex;justify-content:space-between;font-size:10px;letter-spacing:0.1em;color:var(--mid);margin-top:10px">
+        <span>Progresso</span><span id="sb-pct">38%</span>
+      </div>
+      <div class="sb-prog-bar-bg"><div class="sb-prog-bar-fill" id="sb-fill" style="width:0%"></div></div>
+      <div class="sb-prog-meta"><span id="sb-days-left">56 restantes</span><span id="sb-pct2">38%</span></div>
+    </div>
+    <nav class="sb-nav">
+      <a class="sb-item" href="dashboard.html"><span class="sb-item-icon">◈</span> Dashboard</a>
+      <a class="sb-item" href="habitos.html"><span class="sb-item-icon">◉</span> Hábitos</a>
+      <a class="sb-item" href="metricas.html"><span class="sb-item-icon">△</span> Métricas</a>
+      <a class="sb-item" href="diario.html"><span class="sb-item-icon">◻</span> Diário</a>
+      <a class="sb-item" href="conquistas.html"><span class="sb-item-icon">◆</span> Conquistas</a>
+      <a class="sb-item" href="vocabulario.html"><span class="sb-item-icon">▤</span> Vocabulário</a>
+      <a class="sb-item" href="diccao.html"><span class="sb-item-icon">◗</span> Dicção</a>
+      <a class="sb-item active" href="biblia.html"><span class="sb-item-icon">✝</span> Bíblia</a>
+    </nav>
+    <div class="sb-bottom">
+      <div class="sb-streak">
+        <span class="sb-streak-icon">🔥</span>
+        <div>
+          <div class="sb-streak-val" id="sb-streak-val">12</div>
+          <div class="sb-streak-lbl">Dias seguidos</div>
+        </div>
+      </div>
+      <a href="login.html" class="sb-logout">← Sair</a>
+    </div>
+  </aside>
+
+  <main class="bib-main">
+
+    <div class="topbar">
+      <div class="page-title">Bíblia <em>em um ano.</em></div>
+    </div>
+
+    <div class="g4">
+      <div class="stat-card">
+        <div class="stat-lbl">Lidos</div>
+        <div class="stat-val" id="sc-read">0</div>
+        <div class="stat-sub" id="sc-read-sub">de 365 dias</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-lbl">Progresso</div>
+        <div class="stat-val" id="sc-pct">0%</div>
+        <div class="stat-sub">do plano</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-lbl">Dias seguidos</div>
+        <div class="stat-val" id="sc-streak">0</div>
+        <div class="stat-sub">com leitura</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-lbl">Dia do plano</div>
+        <div class="stat-val" id="sc-cur">1</div>
+        <div class="stat-sub">próxima leitura</div>
+      </div>
+    </div>
+
+    <div class="today-card">
+      <div class="tc-body">
+        <div class="tc-eyebrow">Próxima leitura</div>
+        <div class="tc-ref" id="tc-ref">—</div>
+        <div class="tc-day" id="tc-day">Dia 1 de 365</div>
+        <div class="bib-bar-bg"><div class="bib-bar-fill" id="bib-bar" style="width:0%"></div></div>
+        <div class="bib-bar-meta"><span id="bib-bar-left">0 lidos</span><span id="bib-bar-total">365 no plano</span></div>
+      </div>
+      <button class="tc-btn" id="tc-btn">✓ Marcar como lida</button>
+    </div>
+
+    <div class="bib-toolbar">
+      <label class="bib-filter"><input type="checkbox" id="bib-only-unread" /> Mostrar só não lidos</label>
+      <button class="bib-jump" id="bib-jump">↓ Ir para a leitura atual</button>
+      <span class="bib-count" id="bib-count"><span>0</span> / 365</span>
+    </div>
+
+    <div class="bib-list" id="bib-list"></div>
+
+  </main>
+</div>
+
+<script>
+/* ── CURSOR ── */
+(function() {
+  const cur = document.getElementById('cur'), ring = document.getElementById('cur-ring');
+  let mx=0,my=0,rx=0,ry=0;
+  document.addEventListener('mousemove', e => { mx=e.clientX; my=e.clientY; cur.style.transform=`translate(${mx-3}px,${my-3}px)`; });
+  (function tick(){ rx+=(mx-rx-15)*0.1; ry+=(my-ry-15)*0.1; ring.style.transform=`translate(${rx}px,${ry}px)`; requestAnimationFrame(tick); })();
+})();
+
+/* ── TOAST ── */
+let toastTimer;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
+}
+
+const DAY  = Store.getCurrentDay();
+const DAYS = Store.getTotalDays();
+const PLAN = Store.getBiblePlan();
+const PLAN_TOTAL = PLAN.length || 365;
+
+let onlyUnread = false;
+
+function initSidebar() {
+  const pct = Math.round(DAY / DAYS * 100);
+  document.getElementById('sb-daynum').textContent = DAY;
+  document.getElementById('sb-pct').textContent = pct + '%';
+  document.getElementById('sb-pct2').textContent = pct + '%';
+  document.getElementById('sb-days-left').textContent = (DAYS - DAY) + ' restantes';
+  document.getElementById('sb-streak-val').textContent = Store.currentStreak(Store.getHabits(), DAY);
+  setTimeout(() => { document.getElementById('sb-fill').style.width = pct + '%'; }, 400);
+}
+
+function refFor(d) {
+  const it = PLAN.find(x => x.d === d);
+  return it ? it.r : '—';
+}
+
+function init() {
+  initSidebar();
+  render();
+}
+
+function render() {
+  const days   = Store.getBibleDays();
+  const read   = Store.bibleReadCount();
+  const next   = Store.bibleNextDay();
+  const pct    = Math.round(read / PLAN_TOTAL * 100);
+  const done   = read >= PLAN_TOTAL;
+
+  document.getElementById('sc-read').textContent    = read;
+  document.getElementById('sc-read-sub').textContent = `de ${PLAN_TOTAL} dias`;
+  document.getElementById('sc-pct').textContent     = pct + '%';
+  document.getElementById('sc-streak').textContent  = Store.bibleStreak();
+  document.getElementById('sc-cur').textContent     = done ? '✓' : next;
+
+  document.getElementById('tc-ref').textContent = done ? 'Plano concluído' : refFor(next);
+  document.getElementById('tc-day').textContent = done
+    ? `${PLAN_TOTAL} de ${PLAN_TOTAL} dias lidos`
+    : `Dia ${next} de ${PLAN_TOTAL}`;
+
+  const btn = document.getElementById('tc-btn');
+  if (done) {
+    btn.disabled = true; btn.classList.add('done'); btn.textContent = '✓ Plano concluído';
+  } else {
+    btn.disabled = false; btn.classList.remove('done'); btn.textContent = '✓ Marcar como lida';
+  }
+
+  document.getElementById('bib-bar-left').textContent  = `${read} lido${read === 1 ? '' : 's'}`;
+  document.getElementById('bib-bar-total').textContent = `${PLAN_TOTAL} no plano`;
+  document.getElementById('bib-count').innerHTML = `<span>${read}</span> / ${PLAN_TOTAL}`;
+  setTimeout(() => { document.getElementById('bib-bar').style.width = pct + '%'; }, 150);
+
+  const list = document.getElementById('bib-list');
+  const rows = PLAN.filter(it => !onlyUnread || !days[it.d]).map(it => {
+    const isRead = !!days[it.d];
+    const isCur  = !isRead && it.d === next;
+    return `<div class="bib-row${isRead ? ' read' : ''}${isCur ? ' current' : ''}" id="brow-${it.d}">
+      <button class="bib-check" onclick="toggleDay(${it.d})">${isRead ? '✓' : ''}</button>
+      <span class="bib-daynum">${it.d}</span>
+      <span class="bib-ref">${it.r}</span>
+    </div>`;
+  }).join('');
+  list.innerHTML = rows || '<div style="padding:32px;text-align:center;font-size:12px;color:var(--mid)">Tudo lido ✓</div>';
+}
+
+function toggleDay(d) {
+  const wasRead = !!Store.getBibleDays()[d];
+  Store.setBibleReading(d, !wasRead);
+  render();
+}
+
+function markToday() {
+  const next = Store.bibleNextDay();
+  if (next > PLAN_TOTAL) return;
+  Store.setBibleReading(next, true);
+  toast(`Dia ${next} marcado como lido ✓`);
+  render();
+}
+
+function jumpToCurrent() {
+  const el = document.getElementById('brow-' + Store.bibleNextDay());
+  if (el) el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+}
+
+document.getElementById('tc-btn').addEventListener('click', markToday);
+document.getElementById('bib-jump').addEventListener('click', jumpToCurrent);
+document.getElementById('bib-only-unread').addEventListener('change', function () {
+  onlyUnread = this.checked; render();
+});
+
+window.addEventListener('p90:synced', init);
+window.addEventListener('p90:synced', notifyNewAchievements);
+init();
+
+(function(){
+  const canvas=document.createElement('canvas');
+  canvas.style.cssText='position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;';
+  document.body.insertBefore(canvas,document.body.firstChild);
+  const ctx=canvas.getContext('2d'),SIZE=80;
+  let W,H,cols,rows,nodes,t=0;
+  function resize(){W=canvas.width=window.innerWidth;H=canvas.height=window.innerHeight;cols=Math.ceil(W/SIZE)+2;rows=Math.ceil(H/SIZE)+2;nodes=[];for(let r=0;r<rows;r++)for(let c=0;c<cols;c++)nodes.push({phase:Math.random()*Math.PI*2});}
+  function draw(){ctx.clearRect(0,0,W,H);ctx.lineWidth=.4;const offX=(t*6)%SIZE,offY=(t*3)%SIZE;for(let c=0;c<cols;c++){const x=c*SIZE-offX,w=.5+.5*Math.sin(t*.4+c*.35);ctx.strokeStyle='rgba(245,245,240,'+(0.006+w*0.012)+')';ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}for(let r=0;r<rows;r++){const y=r*SIZE-offY,w=.5+.5*Math.sin(t*.35+r*.4+1.2);ctx.strokeStyle='rgba(245,245,240,'+(0.006+w*0.012)+')';ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){const nd=nodes[r*cols+c],x=c*SIZE-offX,y=r*SIZE-offY,p=.5+.5*Math.sin(t*.7+nd.phase);ctx.beginPath();ctx.arc(x,y,.5+p*.9,0,Math.PI*2);ctx.fillStyle='rgba(245,245,240,'+(p*0.07)+')';ctx.fill();}const grd=ctx.createRadialGradient(W*.65,H*.5,0,W*.65,H*.5,Math.max(W,H)*.75);grd.addColorStop(0,'rgba(8,8,8,0)');grd.addColorStop(.6,'rgba(8,8,8,0)');grd.addColorStop(1,'rgba(8,8,8,.7)');ctx.fillStyle=grd;ctx.fillRect(0,0,W,H);t+=.006;requestAnimationFrame(draw);}
+  window.addEventListener('resize',resize);resize();draw();
+})();
+</script>
+</body>
+</html>
