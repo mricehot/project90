@@ -491,7 +491,7 @@ function renderStats(){
   var perfect=dayStatuses.filter(function(s){return s===1;}).length;
   document.getElementById('sc-disc').textContent=disc+'%';
   document.getElementById('sc-perfect').textContent=perfect;
-  document.getElementById('sc-perfect-sub').textContent='de '+DAY+' dias';
+  document.getElementById('sc-perfect-sub').textContent='de '+DAY+(DAY===1?' dia':' dias');
   document.getElementById('sc-forecast').textContent=Math.min(99,Math.round(disc*1.02))+'%';
 
   // delta real desta semana vs a anterior (só dá pra comparar com pelo
@@ -512,7 +512,7 @@ function renderStats(){
   var bestStreak=active.length ? Math.max.apply(null, active.map(function(h){ return h.maxStreak||0; })) : 0;
   var curStreak=Store.currentStreak(realHabits, DAY);
   document.getElementById('sc-best-streak').textContent = active.length ? bestStreak+'d' : '—';
-  document.getElementById('sc-best-streak-sub').textContent = active.length ? ('Atual: '+curStreak+' dias') : 'Nenhum hábito ainda';
+  document.getElementById('sc-best-streak-sub').textContent = active.length ? ('Atual: '+curStreak+(curStreak===1?' dia':' dias')) : 'Nenhum hábito ainda';
 }
 
 /* ── LINE CHART ── */

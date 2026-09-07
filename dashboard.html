@@ -109,8 +109,9 @@ body { overflow: hidden; }
 .bp-mark { color: var(--mid); flex-shrink: 0; line-height: 1.6; }
 .bp-text { flex: 1; font-size: 12.5px; letter-spacing: 0.02em; line-height: 1.6; word-break: break-word; }
 .bp-day { font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--mid); white-space: nowrap; flex-shrink: 0; margin-top: 2px; }
-.bp-del { background: none; border: none; color: var(--mid); font-size: 13px; cursor: pointer; line-height: 1; padding: 2px 4px; opacity: 0; transition: opacity 0.15s, color 0.15s; }
-.bp-row:hover .bp-del { opacity: 1; }
+.bp-del { background: none; border: none; color: var(--mid); font-size: 13px; cursor: pointer; line-height: 1; padding: 4px 6px; opacity: 0.4; transition: opacity 0.15s, color 0.15s; }
+.bp-row:hover .bp-del, .bp-del:focus-visible { opacity: 1; }
+@media (hover: none) { .bp-del { opacity: 0.65; } }
 .bp-del:hover { color: #fca5a5; }
 .bp-sub { font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--mid); margin: 16px 0 8px; }
 .bp-ach { display: flex; flex-wrap: wrap; gap: 6px; }
@@ -148,8 +149,9 @@ body { overflow: hidden; }
 .bpm-mark { color: var(--mid); line-height: 1.6; flex-shrink: 0; }
 .bpm-text { flex: 1; font-size: 12.5px; line-height: 1.65; letter-spacing: 0.02em; word-break: break-word; }
 .bpm-day { font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--mid); white-space: nowrap; flex-shrink: 0; margin-top: 3px; }
-.bpm-del { background: none; border: none; color: var(--mid); font-size: 13px; cursor: pointer; line-height: 1; padding: 2px 4px; opacity: 0; transition: opacity 0.15s, color 0.15s; }
-.bpm-item:hover .bpm-del { opacity: 1; }
+.bpm-del { background: none; border: none; color: var(--mid); font-size: 13px; cursor: pointer; line-height: 1; padding: 4px 6px; opacity: 0.4; transition: opacity 0.15s, color 0.15s; }
+.bpm-item:hover .bpm-del, .bpm-del:focus-visible { opacity: 1; }
+@media (hover: none) { .bpm-del { opacity: 0.65; } }
 .bpm-del:hover { color: #fca5a5; }
 .bpm-empty { text-align: center; color: var(--mid); font-size: 12px; padding: 36px 0; line-height: 1.8; }
 .bpm-footer { padding: 14px 30px 20px; border-top: 1px solid var(--border); }
@@ -172,8 +174,9 @@ body { overflow: hidden; }
 .dc-slip:hover { color: #fca5a5; border-color: rgba(252,165,165,0.4); }
 .dc-undo { background: none; border: none; color: var(--mid); font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; flex-shrink: 0; }
 .dc-undo:hover { color: var(--white); }
-.dc-del { background: none; border: none; color: var(--mid); font-size: 13px; cursor: pointer; line-height: 1; padding: 2px 4px; opacity: 0; transition: opacity 0.15s, color 0.15s; flex-shrink: 0; }
-.dc-row:hover .dc-del { opacity: 1; }
+.dc-del { background: none; border: none; color: var(--mid); font-size: 13px; cursor: pointer; line-height: 1; padding: 4px 6px; opacity: 0.4; transition: opacity 0.15s, color 0.15s; flex-shrink: 0; }
+.dc-row:hover .dc-del, .dc-del:focus-visible { opacity: 1; }
+@media (hover: none) { .dc-del { opacity: 0.65; } }
 .dc-del:hover { color: #fca5a5; }
 .dc-empty { font-size: 12px; color: var(--mid); line-height: 1.8; padding: 8px 0 4px; }
 
@@ -362,7 +365,7 @@ body { overflow: hidden; }
     <div class="g4">
       <div class="stat-card"><div class="stat-lbl">Disciplina geral</div><div class="stat-val" id="sc-disc">87%</div><div class="stat-delta up">↑ +3% esta semana</div></div>
       <div class="stat-card"><div class="stat-lbl">Dias completos</div><div class="stat-val" id="sc-comp">28</div><div class="stat-sub">de <span id="sc-days">34</span> dias</div></div>
-      <div class="stat-card"><div class="stat-lbl">Streak atual</div><div class="stat-val" id="sc-streak">12</div><div class="stat-sub">Máximo: <span id="sc-max">18</span> dias · <span id="sc-freezes">2</span> folgas</div></div>
+      <div class="stat-card"><div class="stat-lbl">Streak atual</div><div class="stat-val" id="sc-streak">12</div><div class="stat-sub">Máximo: <span id="sc-max">18</span> dias · <span id="sc-freezes">2</span> <span id="sc-freezes-lbl">folgas</span></div></div>
       <div class="stat-card"><div class="stat-lbl">Hábitos hoje</div><div class="stat-val" id="sc-today">3/5</div><div class="stat-delta dn" id="sc-today-msg">↓ 2 pendentes</div></div>
     </div>
 
@@ -827,7 +830,9 @@ function renderStats() {
   countUp(complete,  800, v => document.getElementById('sc-comp').textContent   = v,       350);
   countUp(streakNow, 800, v => document.getElementById('sc-streak').textContent = v,       500);
   countUp(streakMax, 600, v => document.getElementById('sc-max').textContent    = v,       500);
-  document.getElementById('sc-freezes').textContent = Store.getMeta().freezesLeft;
+  const fz = Store.getMeta().freezesLeft;
+  document.getElementById('sc-freezes').textContent = fz;
+  document.getElementById('sc-freezes-lbl').textContent = fz === 1 ? 'folga' : 'folgas';
   countUp(DAY,       500, v => document.getElementById('sc-days').textContent   = v,       350);
 
   setTimeout(() => {
