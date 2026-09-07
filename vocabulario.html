@@ -486,11 +486,19 @@ function initSidebar() {
 
 let searchTerm = '';
 let sortMode   = 'recent';
+let _autoReviewDone = false;
 
 function init() {
   initSidebar();
   renderStats();
   renderList();
+
+  // Chegou de "Revisar agora" no dashboard → abre a revisão direto (uma vez).
+  if (!_autoReviewDone && location.hash === '#revisar') {
+    _autoReviewDone = true;
+    if (history.replaceState) history.replaceState(null, '', location.pathname + location.search);
+    if (Store.vocabDueToday().length) startReview();
+  }
 }
 
 /* ════════════════════════════════════
