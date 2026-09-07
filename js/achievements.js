@@ -74,6 +74,15 @@ window.P90_ACHIEVEMENTS = [
     ],
   },
   {
+    id: 'tarefas', name: 'Tarefas', icon: '✓',
+    achievements: [
+      { id:'task_first',    icon:'📌', name:'Primeira tarefa',    points:50,  target:1,  req:'1 tarefa concluída',        desc:'Concluiu a primeira tarefa.' },
+      { id:'task_10',       icon:'📋', name:'Executor',           points:150, target:10, req:'10 tarefas concluídas',     desc:'10 tarefas riscadas da lista.' },
+      { id:'task_50',       icon:'✅', name:'Máquina de fazer',   points:400, target:50, req:'50 tarefas concluídas',     desc:'50 tarefas concluídas. A vida não te pega desprevenido.' },
+      { id:'task_streak7',  icon:'🔗', name:'Semana produtiva',   points:200, target:7,  req:'7 dias seguidos com tarefa', desc:'7 dias seguidos concluindo pelo menos uma tarefa.' },
+    ],
+  },
+  {
     id: 'especial', name: 'Especial', icon: '◆',
     achievements: [
       { id:'comeback',   icon:'🔄', name:'Volta por cima',       points:100, target:1,  req:'Retomar após uma falha',  desc:'Falhou um dia e voltou no seguinte sem desistir.' },

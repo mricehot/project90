@@ -25,6 +25,7 @@ Dashboard → **SQL Editor** → **New query** → rode os arquivos **na ordem**
 11. `supabase/migrations/0011_speech.sql` → **Run**
 12. `supabase/migrations/0012_speech_daily.sql` → **Run**
 13. `supabase/migrations/0013_bible_plan.sql` → **Run**
+14. `supabase/migrations/0014_tasks.sql` → **Run**
 
 **Opção B — CLI:**
 ```bash
@@ -49,6 +50,8 @@ Os scripts criam:
 | `speech_practice_stats` | placar acumulado das sessões de dicção (`0011`): sessões, repetições, soma/contagem das auto-avaliações 1–5, maior sequência de notas boas. 1 linha por usuário. |
 | `speech_days` | progresso do **plano diário** de dicção (`0012`): 1 linha por dia do desafio com `reps`/`rating_sum`/`rating_count`/`done`. `done` marca o hábito fixo `praticar_diccao` naquele dia (histórico derivado). |
 | `bible_days` | plano de leitura da Bíblia em 1 ano (`0013`): 1 linha por dia do plano marcado como lido (`day_num` 1–365, `done`, `done_date`). A lista dia→referência mora no cliente (`js/bible-plan.js`); só o que foi lido fica no banco. Começa vazio. |
+| `tasks` | sistema de tarefas (`0014`): título, notas, `sched` (`once`/`everyN`/`weekdays`), `interval_days`, `weekdays` jsonb (0=Seg..6=Dom), `overdue` (`accumulate`/`skip`), `anchor` (data de vencimento p/ `once` ou data-base), `archived`. Id gerado pelo cliente. |
+| `task_completions` | 1 linha por `(tarefa, data concluída)`. Sem FK para `tasks` — `deleteTask` apaga as duas. O agendamento/atraso é calculado no cliente (`Store.taskNextDue`/`taskStatus`). |
 | **RLS** | ligado em tudo — cada usuário só vê as próprias linhas |
 | `handle_new_user()` | trigger em `auth.users`: cria profile + meta + hábitos fixos |
 | `seed_core_habits(user)` | semeia os hábitos fixos que faltam (idempotente) |
@@ -57,7 +60,7 @@ Os scripts criam:
 | `set_habit_status(habit_id, day_index, status)` | marca um dia e recalcula `streak`/`max_streak` |
 | `use_freeze()` | consome 1 dia de folga (de 2 por desafio) e protege a sequência do dia atual, sem exigir nenhum hábito marcado (`0010`) |
 | `unlock_achievement(id, day)` / `mark_achievement_seen(id)` | conquistas |
-| `reset_progress()` | apaga hábitos + diário + revisões semanais + conquistas + vocabulário + dicção + plano da Bíblia do usuário, zera o `challenge_meta` (inclusive `freezes_left`/`frozen_days`) e re-semeia os fixos (botão "Resetar progresso" na sidebar) |
+| `reset_progress()` | apaga hábitos + diário + revisões semanais + conquistas + vocabulário + dicção + plano da Bíblia + tarefas do usuário, zera o `challenge_meta` (inclusive `freezes_left`/`frozen_days`) e re-semeia os fixos (botão "Resetar progresso" na sidebar) |
 | `app_bootstrap()` | devolve todo o estado do usuário num JSON só (usado no load) |
 
 > `0003` removeu o módulo de água dedicado (`water_config`, `water_logs`,
@@ -189,6 +192,16 @@ podem ser excluídos, só pausados.
   desmarcado. **Conferir contra o livro físico:** o dia 331 começa em
   "2Coríntios 4" (pode haver "2Co 1–3" no dia 330) e os dias 361–365
   (Apocalipse 7–22) foram acrescentados para fechar o livro.
+- **Sistema de tarefas** (`0014` + `tarefas.html`): seção nova, própria. Cada
+  tarefa escolhe um modo — **não repete** (com data de vencimento opcional),
+  **a cada N dias** (elástico: conta da última conclusão) ou **dias da semana** —
+  e uma política de atraso (**acumular** = fica atrasada até fazer · **pular** =
+  só reaparece no próximo dia). Agendamento calculado no cliente
+  (`Store.taskNextDue` / `taskStatus`). Integração **mista**: concluir uma tarefa
+  num dia do desafio marca esse dia como "ativo" — não quebra a sequência geral
+  (`Store.currentStreak`) e conta nas conquistas de dias ativos (`dayStreak` /
+  `daysActive`), mas tarefa não é hábito fixo nem entra no XP por pilar.
+  Categoria de conquistas "Tarefas" (1ª, 10, 50, 7 dias seguidos com tarefa).
 - `Store.js` (raiz, com S maiúsculo) é a versão **antiga** só-localStorage e
   não é usada por nenhuma página (todas carregam `js/store.js`). Pode apagar.
 - **Rollover de dia** (resolvido no cliente): no bootstrap, `Store._rollForward()`
