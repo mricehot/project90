@@ -43,9 +43,35 @@ body {
   font-family: 'DM Mono', monospace; font-weight: 300;
   -webkit-font-smoothing: antialiased; overflow: hidden;
 }
-/* cursor customizado + I-beam nos campos vêm de css/base.css (com media-query
-   pra ponteiro fino) */
 input, textarea { cursor: text; }
+
+/* Esta página é self-contained (não linka base/components.css), então
+   espelha aqui: foco de teclado, cursor customizado, movimento reduzido. */
+:focus-visible { outline: 2px solid var(--white); outline-offset: 2px; }
+.ptab.active:focus-visible { outline-color: var(--bg); outline-offset: -4px; }
+.sb-item:focus-visible { outline-offset: -2px; }
+
+#cur, #cur-ring { display: none; }
+@media (hover: hover) and (pointer: fine) {
+  body { cursor: none; }
+  #cur {
+    display: block; width: 6px; height: 6px; background: var(--white); border-radius: 50%;
+    position: fixed; top: 0; left: 0; pointer-events: none; z-index: 9999;
+    mix-blend-mode: difference; will-change: transform;
+  }
+  #cur-ring {
+    display: block; width: 30px; height: 30px; border: 1px solid rgba(245,245,240,0.3); border-radius: 50%;
+    position: fixed; top: 0; left: 0; pointer-events: none; z-index: 9998;
+    mix-blend-mode: difference; will-change: transform;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important; animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important; scroll-behavior: auto !important;
+  }
+}
 
 /* ── APP SHELL ── */
 .app { display: grid; grid-template-columns: 220px 1fr; height: 100vh; }
@@ -185,12 +211,53 @@ input, textarea { cursor: text; }
 .radial-lbl  { font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--mid); }
 
 /* ── RESPONSIVE ── */
+.mobile-topbar   { display: none; }
+.sidebar-backdrop { display: none; }
 @media (max-width: 900px) {
   body { overflow: auto; }
   .app { grid-template-columns: 1fr; }
   .met-main { padding: 20px; }
   .g4  { grid-template-columns: 1fr 1fr; }
   .g2, .g21 { grid-template-columns: 1fr; }
+
+  /* ── MOBILE NAV (barra + drawer) — página self-contained, precisa da
+     mesma regra de css/components.css. Os `display:none` base estão logo
+     depois do fechamento deste @media. ── */
+  body { overflow: auto; }
+  body.nav-open { overflow: hidden; }
+  body .app { display: block; height: auto; min-height: 100vh; }
+  .app > main, .app > .met-main { height: auto; overflow: visible; }
+  .mobile-topbar {
+    display: flex; align-items: center; gap: 14px;
+    position: sticky; top: 0; z-index: 90; padding: 11px 16px;
+    background: var(--surface); border-bottom: 1px solid var(--border);
+  }
+  .mobile-topbar .mt-logo {
+    font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 0.12em;
+    color: var(--white); text-decoration: none;
+  }
+  .mobile-topbar .mt-page {
+    margin-left: auto; font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--mid); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 45vw;
+  }
+  .hamburger {
+    display: flex; align-items: center; justify-content: center;
+    width: 34px; height: 34px; flex-shrink: 0; padding: 0;
+    background: none; border: 1px solid var(--border2); color: var(--white);
+    font-size: 15px; line-height: 1; cursor: pointer; transition: border-color 0.2s;
+  }
+  .hamburger:hover { border-color: rgba(245,245,240,0.35); }
+  .app > .sidebar {
+    display: flex; position: fixed; top: 0; left: 0; bottom: 0;
+    width: 264px; max-width: 82vw; height: 100%; overflow-y: auto; z-index: 1001;
+    transform: translateX(-100%); transition: transform 0.28s cubic-bezier(0.16,1,0.3,1);
+  }
+  .app > .sidebar.open { transform: translateX(0); }
+  .sidebar-backdrop {
+    display: block; position: fixed; inset: 0; z-index: 1000;
+    background: rgba(8,8,8,0.6); opacity: 0; pointer-events: none; transition: opacity 0.28s;
+  }
+  .sidebar-backdrop.show { opacity: 1; pointer-events: auto; }
 }
 @media (max-width: 520px) {
   .g4 { grid-template-columns: 1fr; }
