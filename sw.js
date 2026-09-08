@@ -5,7 +5,9 @@
    do Store — o SW não cacheia chamadas de API.
    Bump CACHE pra invalidar tudo.
 ═══════════════════════════════════════════════ */
-const CACHE = 'p90-shell-v1';
+importScripts('js/idb.js');
+
+const CACHE = 'p90-shell-v2';
 const FONTS = 'p90-fonts-v1';
 
 const ASSETS = [
@@ -16,7 +18,7 @@ const ASSETS = [
   'css/base.css', 'css/components.css',
   'js/store.js', 'js/ui.js', 'js/achievements.js', 'js/quotes.js',
   'js/supabase.js', 'js/supabase-config.js', 'js/speech-library.js',
-  'js/bible-plan.js', 'js/journal-prompts.js', 'js/pwa.js',
+  'js/bible-plan.js', 'js/journal-prompts.js', 'js/pwa.js', 'js/idb.js',
   'manifest.webmanifest',
   'icons/icon-192.png', 'icons/icon-512.png',
 ];
@@ -43,6 +45,51 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('message', (event) => {
   if (event.data === 'skipWaiting') self.skipWaiting();
+});
+
+/* ── LEMBRETE DIÁRIO ──
+   O navegador acorda o SW de vez em quando (periodic background sync, só
+   em PWA instalado no Chrome/Android). Aqui a gente checa a config
+   (gravada em IndexedDB pela página) e dispara a notificação uma vez por
+   dia, depois da hora escolhida. Não é pontual — é "mais ou menos". */
+self.addEventListener('periodicsync', (event) => {
+  if (event.tag === 'p90-reminder') event.waitUntil(maybeRemind());
+});
+
+async function maybeRemind() {
+  let cfg;
+  try { cfg = await self.p90idb.get('reminder'); } catch (e) { return; }
+  if (!cfg || !cfg.enabled) return;
+
+  const now = new Date();
+  if (now.getHours() < cfg.hour) return;
+
+  const today = now.getFullYear() + '-' + (now.getMonth() + 1) + '-' + now.getDate();
+  let last;
+  try { last = await self.p90idb.get('reminderFired'); } catch (e) { last = null; }
+  if (last === today) return;
+
+  try { await self.p90idb.set('reminderFired', today); } catch (e) {}
+  await self.registration.showNotification('Project 90', {
+    body: 'Hora de fechar o dia — dá uma olhada nos hábitos.',
+    tag: 'p90-daily', renotify: true,
+    icon: 'icons/icon-192.png', badge: 'icons/icon-192.png',
+    data: { url: 'dashboard.html' },
+  });
+}
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const url = (event.notification.data && event.notification.data.url) || 'dashboard.html';
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((wins) => {
+      for (const w of wins) {
+        if (w.url.indexOf(url) !== -1 && 'focus' in w) return w.focus();
+      }
+      if (wins[0] && 'navigate' in wins[0]) { wins[0].navigate(url); return wins[0].focus(); }
+      return self.clients.openWindow(url);
+    })
+  );
 });
 
 self.addEventListener('fetch', (event) => {
