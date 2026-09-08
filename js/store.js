@@ -1768,3 +1768,52 @@ window.p90confirm = function (message, opts) {
     ov.querySelector('#p90c-yes').focus();
   });
 };
+
+/* ──────────────────────────────────────────
+   Focus-trap global pros modais. Sem fio por página: um MutationObserver
+   olha as classes de overlay conhecidas; enquanto um estiver aberto, o Tab
+   circula dentro dele e o foco volta pro gatilho ao fechar.
+────────────────────────────────────────── */
+(function p90ModalFocusGuard() {
+  var OPEN = '.modal-overlay.open, .quiz-overlay.show, .prac-overlay.show, ' +
+             '.jm-overlay.open, .bpm-overlay.open, #p90-confirm-modal, #p90-reset-modal';
+  var FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), ' +
+                  'select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+  var trapped = null, lastFocus = null;
+
+  function items() {
+    return trapped ? Array.prototype.filter.call(
+      trapped.querySelectorAll(FOCUSABLE),
+      function (el) { return el.offsetWidth || el.offsetHeight || el.getClientRects().length; }
+    ) : [];
+  }
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Tab' || !trapped) return;
+    var f = items();
+    if (!f.length) return;
+    var first = f[0], last = f[f.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    else if (!trapped.contains(document.activeElement)) { e.preventDefault(); first.focus(); }
+  }, true);
+
+  function scan() {
+    var open = document.querySelector(OPEN);
+    if (open === trapped) return;
+    if (open) {
+      if (!trapped) lastFocus = document.activeElement;
+      trapped = open;
+      var f = items();
+      if (f.length && !open.contains(document.activeElement)) { try { f[0].focus(); } catch (e) {} }
+    } else {
+      trapped = null;
+      if (lastFocus && lastFocus.focus) { try { lastFocus.focus(); } catch (e) {} }
+      lastFocus = null;
+    }
+  }
+  if (typeof MutationObserver === 'function') {
+    new MutationObserver(scan).observe(document.documentElement, {
+      attributes: true, attributeFilter: ['class'], subtree: true, childList: true,
+    });
+  }
+})();

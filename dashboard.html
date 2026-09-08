@@ -448,11 +448,10 @@ body { overflow: hidden; }
     <div class="card" id="counters-card">
       <div class="card-hd">
         <span class="card-title">Dias desde</span>
-        <button type="button" class="card-action" id="dc-add-btn">+ adicionar</button>
       </div>
-      <form id="dc-form" autocomplete="off" hidden>
+      <form id="dc-form" autocomplete="off">
         <input class="bp-input" id="dc-input" maxlength="80"
-               placeholder="Ex: sem rede social até tarde" />
+               placeholder="Adicionar contador — ex: sem rede social até tarde" />
       </form>
       <div id="dc-list"></div>
     </div>
@@ -1220,21 +1219,15 @@ async function removeCounter(id) {
 }
 
 (function wireCountersForm() {
-  const btn  = document.getElementById('dc-add-btn');
   const form = document.getElementById('dc-form');
   const input = document.getElementById('dc-input');
-  if (!btn || !form) return;
-  btn.addEventListener('click', () => {
-    form.hidden = !form.hidden;
-    if (!form.hidden) input.focus();
-  });
+  if (!form) return;
   form.addEventListener('submit', e => {
     e.preventDefault();
     const v = input.value.trim();
     if (!v) return;
     Store.addStreakCounter(v);
     input.value = '';
-    form.hidden = true;
     toast('Contador criado ✓');
     renderCountersCard();
   });
