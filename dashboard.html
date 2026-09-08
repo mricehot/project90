@@ -19,6 +19,16 @@ body { overflow: hidden; }
 
 /* ── MAIN AREA ── */
 .dash-main { padding: 32px 36px; overflow-y: auto; display: flex; flex-direction: column; gap: 28px; }
+
+/* grade dos cards de resumo (tarefas · revisão · provas · contadores):
+   2+ por linha em telas largas em vez de uma coluna gigante */
+.dash-cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+@media (max-width: 720px) { .dash-cards { grid-template-columns: 1fr; } }
 .topbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
 .page-title { font-family: 'DM Serif Display', serif; font-size: 26px; font-weight: 400; display: flex; align-items: baseline; gap: 10px; }
 .page-title em { font-style: italic; opacity: 0.45; font-size: 22px; }
@@ -413,47 +423,52 @@ body { overflow: hidden; }
 
     </div>
 
-    <!-- TAREFAS DE HOJE -->
-    <div class="card" id="tasks-card">
-      <div class="card-hd">
-        <span class="card-title">Tarefas de hoje</span>
-        <a class="card-action" href="tarefas.html">Gerenciar →</a>
-      </div>
-      <div id="dash-tasks"></div>
-    </div>
+    <!-- GRID DE CARDS (tarefas · revisão · provas · contadores) -->
+    <div class="dash-cards">
 
-    <!-- REVISAR VOCABULÁRIO -->
-    <div class="card" id="review-card" hidden>
-      <div class="card-hd">
-        <span class="card-title">Revisar vocabulário</span>
-        <a class="card-action" href="vocabulario.html#revisar">Revisar agora →</a>
+      <!-- TAREFAS DE HOJE -->
+      <div class="card" id="tasks-card">
+        <div class="card-hd">
+          <span class="card-title">Tarefas de hoje</span>
+          <a class="card-action" href="tarefas.html">Gerenciar →</a>
+        </div>
+        <div id="dash-tasks"></div>
       </div>
-      <div id="dash-review"></div>
-    </div>
 
-    <!-- BANCO DE PROVAS -->
-    <div class="card" id="wins-card">
-      <div class="card-hd">
-        <span class="card-title">Banco de provas</span>
-        <button type="button" class="card-action" id="bp-count"></button>
+      <!-- REVISAR VOCABULÁRIO -->
+      <div class="card" id="review-card" hidden>
+        <div class="card-hd">
+          <span class="card-title">Revisar vocabulário</span>
+          <a class="card-action" href="vocabulario.html#revisar">Revisar agora →</a>
+        </div>
+        <div id="dash-review"></div>
       </div>
-      <form id="bp-form" autocomplete="off">
-        <input class="bp-input" id="bp-input" maxlength="240"
-               placeholder="Registre uma prova de que você é capaz…" />
-      </form>
-      <div id="bp-list"></div>
-    </div>
 
-    <!-- CONTADORES "DIAS DESDE" -->
-    <div class="card" id="counters-card">
-      <div class="card-hd">
-        <span class="card-title">Dias desde</span>
+      <!-- BANCO DE PROVAS -->
+      <div class="card" id="wins-card">
+        <div class="card-hd">
+          <span class="card-title">Banco de provas</span>
+          <button type="button" class="card-action" id="bp-count"></button>
+        </div>
+        <form id="bp-form" autocomplete="off">
+          <input class="bp-input" id="bp-input" maxlength="240"
+                 placeholder="Registre uma prova de que você é capaz…" />
+        </form>
+        <div id="bp-list"></div>
       </div>
-      <form id="dc-form" autocomplete="off">
-        <input class="bp-input" id="dc-input" maxlength="80"
-               placeholder="Adicionar contador — ex: sem rede social até tarde" />
-      </form>
-      <div id="dc-list"></div>
+
+      <!-- CONTADORES "DIAS DESDE" -->
+      <div class="card" id="counters-card">
+        <div class="card-hd">
+          <span class="card-title">Dias desde</span>
+        </div>
+        <form id="dc-form" autocomplete="off">
+          <input class="bp-input" id="dc-input" maxlength="80"
+                 placeholder="Adicionar contador — ex: sem rede social até tarde" />
+        </form>
+        <div id="dc-list"></div>
+      </div>
+
     </div>
 
     <!-- CHARTS -->
