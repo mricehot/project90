@@ -20,15 +20,12 @@ body { overflow: hidden; }
 /* ── MAIN AREA ── */
 .dash-main { padding: 32px 36px; overflow-y: auto; display: flex; flex-direction: column; gap: 28px; }
 
-/* grade dos cards de resumo (tarefas · revisão · provas · contadores):
-   2+ por linha em telas largas em vez de uma coluna gigante */
-.dash-cards {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
-  align-items: start;
-}
-@media (max-width: 720px) { .dash-cards { grid-template-columns: 1fr; } }
+/* Cards de resumo (tarefas · revisão · provas · contadores) em 2 colunas.
+   Multi-column (não grid) pra não deixar buraco quando as alturas diferem
+   ou quando um card está oculto — os cards fluem preenchendo a coluna. */
+.dash-cards { column-count: 2; column-gap: 16px; }
+.dash-cards > .card { break-inside: avoid; margin-bottom: 16px; }
+@media (max-width: 720px) { .dash-cards { column-count: 1; } }
 .topbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
 .page-title { font-family: 'DM Serif Display', serif; font-size: 26px; font-weight: 400; display: flex; align-items: baseline; gap: 10px; }
 .page-title em { font-style: italic; opacity: 0.45; font-size: 22px; }
