@@ -30,6 +30,7 @@ Dashboard → **SQL Editor** → **New query** → rode os arquivos **na ordem**
 16. `supabase/migrations/0016_journal_prompt.sql` → **Run**
 17. `supabase/migrations/0017_wins.sql` → **Run**
 18. `supabase/migrations/0018_streak_counters.sql` → **Run**
+19. `supabase/migrations/0019_daily_closeout.sql` → **Run**
 
 **Opção B — CLI:**
 ```bash
@@ -58,6 +59,7 @@ Os scripts criam:
 | `task_completions` | 1 linha por `(tarefa, data concluída)`. Sem FK para `tasks` — `deleteTask` apaga as duas. O agendamento/atraso é calculado no cliente (`Store.taskNextDue`/`taskStatus`). |
 | `wins` | banco de provas (`0017`): 1 linha por vitória registrada à mão (`text`, `day_num`). Id gerado pelo cliente. Card no dashboard (`renderWinsCard`); as conquistas desbloqueadas aparecem no mesmo card, derivadas de `achievements` — não viram linha aqui. |
 | `streak_counters` | contadores "dias desde" (`0018`): `label`, `last_slip` (data do último deslize, nula = nunca), `start_date` (base enquanto `last_slip` for nula), `best_run` (recorde em dias). Id gerado pelo cliente. Card no dashboard (`renderCountersCard`). Independente de hábitos/streak/conquistas. |
+| `daily_closeouts` | fechamento do dia / ritual noturno (`0019`): 1 linha por dia do desafio em que o usuário rodou o ritual — `closed_at`, `tomorrow_priority` (a única prioridade escolhida pra amanhã) e `priority_done` (marcada no dia seguinte). Card no dashboard (`renderCloseCard` + modal "Fechar o dia"). |
 | **RLS** | ligado em tudo — cada usuário só vê as próprias linhas |
 | `handle_new_user()` | trigger em `auth.users`: cria profile + meta + hábitos fixos |
 | `seed_core_habits(user)` | semeia os hábitos fixos que faltam (idempotente) |
@@ -66,7 +68,7 @@ Os scripts criam:
 | `set_habit_status(habit_id, day_index, status)` | marca um dia e recalcula `streak`/`max_streak` |
 | `use_freeze()` | consome 1 dia de folga (de 2 por desafio) e protege a sequência do dia atual, sem exigir nenhum hábito marcado (`0010`) |
 | `unlock_achievement(id, day)` / `mark_achievement_seen(id)` | conquistas |
-| `reset_progress()` | apaga hábitos + diário + revisões semanais + conquistas + vocabulário + dicção + plano da Bíblia + tarefas do usuário, zera o `challenge_meta` (inclusive `freezes_left`/`frozen_days`) e re-semeia os fixos (botão "Resetar progresso" na sidebar) |
+| `reset_progress()` | apaga hábitos + diário + revisões semanais + conquistas + vocabulário + dicção + plano da Bíblia + tarefas + contadores + fechamentos de dia do usuário, zera o `challenge_meta` (inclusive `freezes_left`/`frozen_days`) e re-semeia os fixos (botão "Resetar progresso" na sidebar) |
 | `app_bootstrap()` | devolve todo o estado do usuário num JSON só (usado no load) |
 
 > `0003` removeu o módulo de água dedicado (`water_config`, `water_logs`,
