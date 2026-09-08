@@ -34,50 +34,35 @@ body { overflow: hidden; }
 .dash-cards > .card { break-inside: avoid; margin-bottom: 16px; }
 @media (max-width: 720px) { .dash-cards { column-count: 1; } }
 
-/* ── FECHAR O DIA ── */
-#close-card .card-action { color: rgba(134,239,172,0.85); }
-.cl-pri { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; margin-bottom: 14px;
-  border: 1px solid var(--border2); background: var(--surface2); }
-.cl-pri-check { flex-shrink: 0; width: 18px; height: 18px; border: 1px solid var(--border2); border-radius: 50%;
-  display: flex; align-items: center; justify-content: center; font-size: 11px; color: var(--white); cursor: pointer; }
-.cl-pri.done .cl-pri-check { background: rgba(134,239,172,0.2); border-color: rgba(134,239,172,0.5); }
-.cl-pri-body { flex: 1; min-width: 0; }
-.cl-pri-lbl { font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--mid); margin-bottom: 3px; }
-.cl-pri-txt { font-size: 12px; line-height: 1.5; color: var(--white); }
-.cl-pri.done .cl-pri-txt { color: var(--mid); text-decoration: line-through; }
-.cl-summary { font-size: 12px; color: var(--mid); line-height: 1.7; margin-bottom: 14px; }
-.cl-summary b { color: var(--white); font-weight: 400; }
-.cl-open { width: 100%; padding: 12px; background: var(--white); color: var(--bg); border: none;
-  font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase;
-  cursor: pointer; transition: opacity 0.2s; }
-.cl-open:hover { opacity: 0.88; }
-.cl-done-line { font-size: 12px; color: var(--mid); line-height: 1.7; }
-.cl-done-line b { color: var(--white); font-weight: 400; }
-.cl-reopen { background: none; border: none; color: var(--mid); font-family: 'DM Mono', monospace;
-  font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; padding: 0; margin-top: 8px; }
-.cl-reopen:hover { color: var(--white); }
-
-/* modal do ritual */
-.modal.close-modal { max-width: 460px; max-height: 86vh; overflow-y: auto; }
-.cl-step { margin-bottom: 22px; }
-.cl-step-hd { display: flex; align-items: center; gap: 8px; font-size: 10px; letter-spacing: 0.14em;
-  text-transform: uppercase; color: var(--mid); margin-bottom: 10px; }
-.cl-step-n { width: 18px; height: 18px; border: 1px solid var(--border2); display: flex; align-items: center;
-  justify-content: center; font-size: 10px; color: var(--white); flex-shrink: 0; }
-.cl-step-meta { margin-left: auto; color: var(--white); letter-spacing: 0.08em; }
-.cl-hab { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border: 1px solid var(--border);
-  margin-bottom: 6px; cursor: pointer; transition: border-color 0.15s; }
-.cl-hab:hover { border-color: var(--border2); }
-.cl-hab-check { width: 18px; height: 18px; border: 1px solid var(--border2); flex-shrink: 0; display: flex;
-  align-items: center; justify-content: center; font-size: 11px; color: var(--white); }
-.cl-hab.done .cl-hab-check { background: var(--white); color: var(--bg); border-color: var(--white); }
-.cl-hab-name { font-size: 12px; }
-.cl-hab.done .cl-hab-name { color: var(--mid); text-decoration: line-through; }
-.cl-none { font-size: 12px; color: var(--mid); padding: 4px 0; }
-.cl-hint { font-size: 10px; color: var(--mid); margin-top: 6px; line-height: 1.5; }
-.cl-vocab { font-size: 12px; color: var(--mid); line-height: 1.6; }
-.cl-vocab a { color: var(--white); }
-textarea.modal-input { resize: none; font-family: 'DM Mono', monospace; }
+/* ── ROTINA NOTURNA ── */
+.nr-switch { display: inline-flex; border: 1px solid var(--border2); flex-shrink: 0; }
+.nr-rbtn { background: none; border: none; color: var(--mid); font-family: 'Bebas Neue', sans-serif;
+  font-size: 14px; letter-spacing: 0.12em; padding: 2px 11px; cursor: pointer;
+  transition: background 0.15s, color 0.15s; }
+.nr-rbtn + .nr-rbtn { border-left: 1px solid var(--border2); }
+.nr-rbtn.active { background: var(--white); color: var(--bg); }
+.nr-streak-line { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--mid);
+  padding: 2px 0 12px; }
+.nr-row { display: flex; align-items: center; gap: 10px; padding: 9px 2px; border-bottom: 1px solid var(--border);
+  cursor: pointer; }
+.nr-row:last-of-type { border-bottom: none; }
+.nr-check { width: 18px; height: 18px; border: 1px solid var(--border2); flex-shrink: 0; display: flex;
+  align-items: center; justify-content: center; font-size: 11px; color: var(--white); transition: background 0.15s; }
+.nr-row.done .nr-check { background: var(--white); color: var(--bg); border-color: var(--white); }
+.nr-label { flex: 1; min-width: 0; font-size: 12px; line-height: 1.4; }
+.nr-row.done .nr-label { color: var(--mid); text-decoration: line-through; }
+.nr-del { background: none; border: none; color: var(--mid); font-size: 13px; cursor: pointer; padding: 2px 4px;
+  opacity: 0; transition: opacity 0.15s, color 0.15s; flex-shrink: 0; }
+.nr-row:hover .nr-del { opacity: 1; }
+.nr-del:hover { color: var(--white); }
+@media (hover: none) { .nr-del { opacity: 0.5; } }
+.nr-done-msg { font-size: 12px; color: rgba(134,239,172,0.9); line-height: 1.6; padding: 10px 0 4px; }
+.nr-empty { font-size: 12px; color: var(--mid); line-height: 1.7; padding: 4px 0 10px; }
+.nr-add { width: 100%; background: var(--surface2); border: 1px solid var(--border); color: var(--white);
+  font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.03em; padding: 9px 12px; margin-top: 10px;
+  outline: none; transition: border-color 0.2s; }
+.nr-add:focus { border-color: rgba(245,245,240,0.35); }
+.nr-add::placeholder { color: var(--mid); }
 .topbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
 .page-title { font-family: 'DM Serif Display', serif; font-size: 26px; font-weight: 400; display: flex; align-items: baseline; gap: 10px; }
 .page-title em { font-style: italic; opacity: 0.45; font-size: 22px; }
@@ -421,13 +406,20 @@ textarea.modal-input { resize: none; font-family: 'DM Mono', monospace; }
     <!-- GRID DE CARDS (fechar o dia · tarefas · revisão · contadores) -->
     <div class="dash-cards">
 
-      <!-- FECHAR O DIA (ritual noturno) -->
-      <div class="card" id="close-card">
+      <!-- ROTINA NOTURNA (duas rotinas: I / II) -->
+      <div class="card" id="night-card">
         <div class="card-hd">
-          <span class="card-title">Fechar o dia</span>
-          <span class="card-action" id="close-time"></span>
+          <span class="card-title">Rotina noturna</span>
+          <span class="nr-switch" role="group" aria-label="Escolher rotina">
+            <button type="button" class="nr-rbtn" data-r="1" onclick="switchNightRoutine(1)">I</button>
+            <button type="button" class="nr-rbtn" data-r="2" onclick="switchNightRoutine(2)">II</button>
+          </span>
         </div>
-        <div id="close-body"></div>
+        <div id="nr-body"></div>
+        <form id="nr-form" autocomplete="off">
+          <input class="nr-add" id="nr-input" maxlength="80"
+                 placeholder="Adicionar à rotina — ex: separar a roupa de amanhã" />
+        </form>
       </div>
 
       <!-- TAREFAS DE HOJE -->
@@ -475,39 +467,6 @@ textarea.modal-input { resize: none; font-family: 'DM Mono', monospace; }
     </div>
 
   </main>
-</div>
-
-<!-- MODAL — FECHAR O DIA -->
-<div class="modal-overlay" id="close-overlay">
-  <div class="modal close-modal" role="dialog" aria-modal="true" aria-labelledby="cl-modal-title">
-    <div class="modal-title" id="cl-modal-title">Fechar o dia <em id="cl-modal-day"></em></div>
-
-    <div class="cl-step">
-      <div class="cl-step-hd"><span class="cl-step-n">1</span> Hábitos de hoje <span class="cl-step-meta" id="cl-hab-count"></span></div>
-      <div id="cl-habits"></div>
-    </div>
-
-    <div class="cl-step">
-      <div class="cl-step-hd"><span class="cl-step-n">2</span> Uma linha sobre o dia</div>
-      <textarea id="cl-journal" class="modal-input" rows="3" maxlength="600" placeholder="Como foi hoje?"></textarea>
-      <div class="cl-hint" id="cl-journal-hint"></div>
-    </div>
-
-    <div class="cl-step">
-      <div class="cl-step-hd"><span class="cl-step-n">3</span> Vocabulário pendente</div>
-      <div class="cl-vocab" id="cl-vocab"></div>
-    </div>
-
-    <div class="cl-step">
-      <div class="cl-step-hd"><span class="cl-step-n">4</span> Prioridade de amanhã</div>
-      <input id="cl-priority" class="modal-input" maxlength="140" placeholder="A única coisa que não pode faltar amanhã" />
-    </div>
-
-    <div class="modal-footer">
-      <button class="modal-btn ghost" type="button" id="cl-cancel">Agora não</button>
-      <button class="modal-btn primary" type="button" id="cl-finish">Concluir fechamento</button>
-    </div>
-  </div>
 </div>
 
 <script src="js/supabase-config.js"></script>
@@ -584,7 +543,7 @@ function init() {
   renderDashTasks();
   renderDashReview();
   renderCountersCard();
-  renderCloseCard();
+  renderNightCard();
 }
 
 /* ═══════════════════════════════
@@ -802,8 +761,8 @@ function _maybeNotify() {
   const firedKey = 'p90_reminder_fired_' + _todayKey();
   try { if (localStorage.getItem(firedKey) === '1') return; } catch (e) {}
 
-  // já rodou o ritual de fechar o dia? não incomoda.
-  if (typeof Store.isDayClosed === 'function' && Store.isDayClosed(Store.getCurrentDay())) return;
+  // já fechou a rotina noturna? não incomoda.
+  if (typeof Store.nightRoutineComplete === 'function' && Store.nightRoutineComplete()) return;
 
   const day   = Store.getCurrentDay();
   const due   = Store.getHabits().filter(h => !h.paused && Store.scheduledOn(h, day - 1));
@@ -1175,144 +1134,75 @@ function quickToggleTask(id) {
 }
 
 /* ═══════════════════════════════
-   FECHAR O DIA — ritual noturno
+   ROTINA NOTURNA — checklist de antes de dormir (zera toda noite)
 ═══════════════════════════════ */
-function _fmtTime(iso) {
-  const d = new Date(iso);
-  return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
-}
-function _dueHabitsToday() {
-  const day = Store.getCurrentDay();
-  return Store.getHabits().filter(h => !h.paused && Store.scheduledOn(h, day - 1));
-}
+function _nrRoman(n) { return n === 2 ? 'II' : 'I'; }
 
-function renderCloseCard() {
-  const body = document.getElementById('close-body');
-  const timeEl = document.getElementById('close-time');
-  if (!body || typeof Store.getTodayCloseout !== 'function') return;
+function renderNightCard() {
+  const body = document.getElementById('nr-body');
+  if (!body || typeof Store.getNightHabits !== 'function') return;
 
-  const day = Store.getCurrentDay();
-  const co  = Store.getTodayCloseout();
-  const pri = Store.priorityForToday();
-  let html = '';
+  const active = Store.getNightRoutineActive();
+  document.querySelectorAll('#night-card .nr-rbtn').forEach(b =>
+    b.classList.toggle('active', Number(b.dataset.r) === active));
 
-  // prioridade herdada de ontem, fixada até ser cumprida
-  if (pri) {
-    html += `<div class="cl-pri ${pri.done ? 'done' : ''}">
-      <span class="cl-pri-check" onclick="togglePriorityDone(${pri.dayNum})" title="${pri.done ? 'Desmarcar' : 'Marcar como feita'}">${pri.done ? '✓' : ''}</span>
-      <span class="cl-pri-body">
-        <span class="cl-pri-lbl">Prioridade de hoje</span>
-        <span class="cl-pri-txt">${_esc(pri.text)}</span>
-      </span>
-    </div>`;
+  const items  = Store.getNightHabits();          // já vem filtrado pela rotina ativa
+  const done   = new Set(Store.getNightRoutine());
+  const streak = Store.nightRoutineStreak();
+  const streakHTML = streak > 0
+    ? `<div class="nr-streak-line">🌙 ${streak} noite${streak === 1 ? '' : 's'} seguida${streak === 1 ? '' : 's'}</div>`
+    : '';
+
+  if (!items.length) {
+    body.innerHTML =
+      `<div class="nr-empty">Rotina ${_nrRoman(active)} vazia. Monte a checklist que você faz antes de dormir ` +
+      `na semana em que essa rotina vale — preparar o sono, deixar o dia seguinte pronto.</div>`;
+    return;
   }
 
-  if (co) {
-    timeEl.textContent = '✓ ' + _fmtTime(co.closedAt);
-    html += `<div class="cl-done-line">Dia fechado.`;
-    if (co.tomorrowPriority) html += `<br>Amanhã: <b>${_esc(co.tomorrowPriority)}</b>`;
-    html += `</div><button class="cl-reopen" onclick="reopenCloseout()">Reabrir</button>`;
-  } else {
-    timeEl.textContent = '';
-    const due  = _dueHabitsToday();
-    const hd   = due.filter(h => Store.habitVal(h, day - 1) > 0).length;
-    const vd   = typeof Store.vocabDueToday === 'function' ? Store.vocabDueToday().length : 0;
-    const bits = [];
-    bits.push(`<b>${hd}/${due.length}</b> hábito${due.length === 1 ? '' : 's'}`);
-    if (vd) bits.push(`<b>${vd}</b> palavra${vd === 1 ? '' : 's'} p/ revisar`);
-    html += `<div class="cl-summary">${bits.join(' · ')}</div>`;
-    html += `<button class="cl-open" onclick="openCloseModal()">Fechar o dia →</button>`;
-  }
-
-  body.innerHTML = html;
+  const allDone = items.every(h => done.has(h.id));
+  body.innerHTML = streakHTML +
+    items.map(h => `
+      <div class="nr-row ${done.has(h.id) ? 'done' : ''}" onclick="toggleNight(${h.id}, event)">
+        <span class="nr-check">${done.has(h.id) ? '✓' : ''}</span>
+        <span class="nr-label">${_esc(h.label)}</span>
+        <button class="nr-del" type="button" title="Remover da rotina" onclick="removeNight(${h.id}, event)">✕</button>
+      </div>`).join('') +
+    (allDone ? '<div class="nr-done-msg">Rotina completa. Boa noite.</div>' : '');
 }
 
-function togglePriorityDone(dayNum) {
-  const c = Store.getCloseout(dayNum);
-  Store.setPriorityDone(dayNum, !(c && c.priorityDone));
-  renderCloseCard();
+function switchNightRoutine(n) {
+  Store.setNightRoutineActive(n);
+  const input = document.getElementById('nr-input');
+  if (input) input.placeholder = `Adicionar à rotina ${_nrRoman(n)} — ex: separar a roupa de amanhã`;
+  renderNightCard();
 }
 
-function reopenCloseout() {
-  Store.reopenDay(Store.getCurrentDay());
-  renderCloseCard();
+function toggleNight(id, ev) {
+  if (ev && ev.target.closest('.nr-del')) return;
+  Store.toggleNightHabitDone(id);
+  renderNightCard();
 }
 
-function _clRenderHabits() {
-  const day = Store.getCurrentDay();
-  const due = _dueHabitsToday();
-  const el  = document.getElementById('cl-habits');
-  const cnt = document.getElementById('cl-hab-count');
-  if (!due.length) { el.innerHTML = '<div class="cl-none">Nenhum hábito agendado pra hoje.</div>'; cnt.textContent = ''; return; }
-  const doneN = due.filter(h => Store.habitVal(h, day - 1) > 0).length;
-  cnt.textContent = doneN + '/' + due.length;
-  el.innerHTML = due.map(h => {
-    const done = Store.habitVal(h, day - 1) > 0;
-    return `<div class="cl-hab ${done ? 'done' : ''}" onclick="clToggleHabit(${h.id})">
-      <span class="cl-hab-check">${done ? '✓' : ''}</span>
-      <span class="cl-hab-name">${_esc(h.name)}</span>
-    </div>`;
-  }).join('');
+async function removeNight(id, ev) {
+  if (ev) ev.stopPropagation();
+  const h = Store.getNightHabits().find(x => x.id === id);
+  if (!await window.p90confirm(`Remover "${h ? h.label : ''}" da rotina ${_nrRoman(Store.getNightRoutineActive())}?`, { okText: 'Remover' })) return;
+  Store.deleteNightHabit(id);
+  renderNightCard();
 }
 
-function clToggleHabit(id) {
-  toggleHabit(id);      // reusa o toggle real do dashboard (persiste + re-renderiza o resto)
-  _clRenderHabits();
-  renderCloseCard();
-}
-
-function openCloseModal() {
-  const day = Store.getCurrentDay();
-  document.getElementById('cl-modal-day').textContent = 'dia ' + day;
-  _clRenderHabits();
-
-  const entry = Store.getJournalEntry(day) || {};
-  const ta = document.getElementById('cl-journal');
-  ta.value = entry.free || '';
-  document.getElementById('cl-journal-hint').textContent = entry.free
-    ? 'Você já escreveu no diário hoje — dá pra completar aqui.'
-    : 'Salvo no texto livre do diário de hoje.';
-
-  const vd = typeof Store.vocabDueToday === 'function' ? Store.vocabDueToday() : [];
-  document.getElementById('cl-vocab').innerHTML = vd.length
-    ? `${vd.length} palavra${vd.length === 1 ? '' : 's'} esperando — <a href="vocabulario.html#revisar">revisar agora →</a>`
-    : 'Nada pendente ✓';
-
-  document.getElementById('cl-priority').value = (Store.getTodayCloseout() || {}).tomorrowPriority || '';
-
-  document.getElementById('close-overlay').classList.add('open');
-  setTimeout(() => ta.focus(), 60);
-}
-
-function closeCloseModal() {
-  document.getElementById('close-overlay').classList.remove('open');
-}
-
-function _clFinish() {
-  const day  = Store.getCurrentDay();
-  const free = document.getElementById('cl-journal').value.trim();
-  const entry = Store.getJournalEntry(day) || {};
-  if ((entry.free || '') !== free) {
-    entry.free = free || null;
-    Store.saveJournalEntry(day, entry);
-  }
-  Store.saveCloseout(day, { tomorrowPriority: document.getElementById('cl-priority').value });
-  closeCloseModal();
-  toast('Dia fechado ✓');
-  renderCloseCard();
-  renderHabits();
-  renderHeatmap();
-  initSidebar();
-}
-
-(function wireCloseModal() {
-  const ov = document.getElementById('close-overlay');
-  if (!ov) return;
-  document.getElementById('cl-finish').addEventListener('click', _clFinish);
-  document.getElementById('cl-cancel').addEventListener('click', closeCloseModal);
-  ov.addEventListener('click', e => { if (e.target === ov) closeCloseModal(); });
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Escape' && ov.classList.contains('open')) closeCloseModal();
+(function wireNightForm() {
+  const form = document.getElementById('nr-form');
+  const input = document.getElementById('nr-input');
+  if (!form) return;
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+    const v = input.value.trim();
+    if (!v) return;
+    Store.addNightHabit(v);
+    input.value = '';
+    renderNightCard();
   });
 })();
 
