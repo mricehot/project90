@@ -34,6 +34,22 @@ body { overflow: hidden; }
 .dash-cards > .card { break-inside: avoid; margin-bottom: 16px; }
 @media (max-width: 720px) { .dash-cards { column-count: 1; } }
 
+/* ── FACULDADE ── */
+#faculdade-card .card-action.warn { color: var(--red); }
+.fc-over { font-size: 12px; color: var(--red); line-height: 1.6; margin-bottom: 10px; }
+.fc-row { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--border); }
+.fc-row:last-child { border-bottom: none; }
+.fc-check { width: 16px; height: 16px; border: 1px solid var(--border2); flex-shrink: 0; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; font-size: 10px; color: var(--white); }
+.fc-info { flex: 1; min-width: 0; }
+.fc-title { font-size: 12px; line-height: 1.35; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fc-meta { font-size: 10px; letter-spacing: 0.04em; color: var(--mid); margin-top: 2px; }
+.fc-when { font-size: 10px; letter-spacing: 0.06em; white-space: nowrap; flex-shrink: 0; color: var(--mid); }
+.fc-when.soon { color: var(--white); }
+.fc-when.over { color: var(--red); }
+.fc-none { font-size: 12px; color: var(--mid); line-height: 1.6; }
+.fc-more { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--mid); margin-top: 8px; }
+
 /* ── ROTINA NOTURNA ── */
 .nr-switch { display: inline-flex; border: 1px solid var(--border2); flex-shrink: 0; }
 .nr-rbtn { background: none; border: none; color: var(--mid); font-family: 'Bebas Neue', sans-serif;
@@ -317,6 +333,7 @@ body { overflow: hidden; }
       <a class="sb-item" href="diccao.html"><span class="sb-item-icon">◗</span> Dicção</a>
       <a class="sb-item" href="biblia.html"><span class="sb-item-icon">✝</span> Bíblia</a>
       <a class="sb-item" href="tarefas.html"><span class="sb-item-icon">✓</span> Tarefas</a>
+      <a class="sb-item" href="faculdade.html"><span class="sb-item-icon">▦</span> Faculdade</a>
       <a class="sb-item" href="conquistas.html"><span class="sb-item-icon">◆</span> Conquistas</a>
     </nav>
 
@@ -429,6 +446,15 @@ body { overflow: hidden; }
           <a class="card-action" href="tarefas.html">Gerenciar →</a>
         </div>
         <div id="dash-tasks"></div>
+      </div>
+
+      <!-- FACULDADE (prazos) -->
+      <div class="card" id="faculdade-card" hidden>
+        <div class="card-hd">
+          <span class="card-title">Faculdade</span>
+          <a class="card-action" id="fac-card-action" href="faculdade.html">Gerenciar →</a>
+        </div>
+        <div id="fac-card-body"></div>
       </div>
 
       <!-- REVISAR VOCABULÁRIO -->
@@ -544,6 +570,7 @@ function init() {
   renderDashReview();
   renderCountersCard();
   renderNightCard();
+  renderFaculdadeCard();
 }
 
 /* ═══════════════════════════════
@@ -1205,6 +1232,60 @@ async function removeNight(id, ev) {
     renderNightCard();
   });
 })();
+
+/* ═══════════════════════════════
+   FACULDADE — o que está vencendo (≤ 7 dias) + atrasadas
+═══════════════════════════════ */
+function renderFaculdadeCard() {
+  const card = document.getElementById('faculdade-card');
+  const body = document.getElementById('fac-card-body');
+  const actionEl = document.getElementById('fac-card-action');
+  if (!card || typeof Store.getStudySubjects !== 'function') return;
+
+  if (!Store.getStudySubjects().length) { card.hidden = true; return; }
+  card.hidden = false;
+
+  const { overdue, soon } = Store.studyUpcoming(7);
+  actionEl.classList.toggle('warn', overdue.length > 0);
+  actionEl.textContent = overdue.length
+    ? `${overdue.length} atrasada${overdue.length === 1 ? '' : 's'} →`
+    : 'Gerenciar →';
+
+  let html = '';
+  if (overdue.length) {
+    html += `<div class="fc-over">${overdue.length} entrega${overdue.length === 1 ? '' : 's'} atrasada${overdue.length === 1 ? '' : 's'}</div>`;
+  }
+
+  const shown = [...overdue, ...soon].slice(0, 4);
+  if (!shown.length) {
+    html += '<div class="fc-none">Nada vencendo nos próximos 7 dias.</div>';
+  } else {
+    html += shown.map(a => {
+      const n = Store.studyDaysUntil(a);
+      let when, cls;
+      if (n < 0)        { when = 'atrasada'; cls = 'over'; }
+      else if (n === 0) { when = 'hoje';     cls = 'soon'; }
+      else if (n === 1) { when = 'amanhã';   cls = 'soon'; }
+      else              { when = n + ' dias'; cls = n <= 3 ? 'soon' : ''; }
+      return `<div class="fc-row">
+        <div class="fc-check" onclick="facCardToggle(${a.id})" title="Marcar entregue"></div>
+        <div class="fc-info">
+          <div class="fc-title">${_esc(a.title)}</div>
+          <div class="fc-meta">${_esc(Store.studySubjectName(a.subjectId))}</div>
+        </div>
+        <div class="fc-when ${cls}">${when}</div>
+      </div>`;
+    }).join('');
+    const extra = overdue.length + soon.length - shown.length;
+    if (extra > 0) html += `<div class="fc-more">+${extra} mais</div>`;
+  }
+  body.innerHTML = html;
+}
+
+function facCardToggle(id) {
+  Store.toggleStudyDone(id);
+  renderFaculdadeCard();
+}
 
 /* ─ WEEKLY CHART ─ */
 function renderWeeklyChart() {

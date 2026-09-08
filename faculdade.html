@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#080808">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Project 90">
+<title>Project 90 — Faculdade</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/components.css">
+<script src="js/supabase-config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase.js"></script>
+<script src="js/store.js"></script>
+<script src="js/achievements.js"></script>
+<style>
+
+.fac-main { padding: 32px 36px; overflow-y: auto; display: flex; flex-direction: column; gap: 24px; }
+.topbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+.page-title { font-family: 'DM Serif Display', serif; font-size: 26px; font-weight: 400; display: flex; align-items: baseline; gap: 10px; }
+.page-title em { font-style: italic; opacity: 0.45; font-size: 22px; }
+
+.g3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.stat-card { background: var(--surface); border: 1px solid var(--border); padding: 18px 20px; }
+.stat-lbl { font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--mid); margin-bottom: 8px; }
+.stat-val { font-family: 'Bebas Neue', sans-serif; font-size: 38px; line-height: 1; }
+.stat-val.warn { color: var(--red); }
+
+/* nova disciplina */
+.fac-newsubj { display: flex; gap: 10px; }
+.fac-newsubj input {
+  flex: 1; background: var(--surface2); border: 1px solid var(--border); color: var(--white);
+  font-family: 'DM Mono', monospace; font-size: 12px; letter-spacing: 0.02em; padding: 10px 14px;
+  outline: none; transition: border-color 0.2s;
+}
+.fac-newsubj input:focus { border-color: rgba(245,245,240,0.35); }
+.fac-newsubj input::placeholder { color: var(--mid); }
+
+/* disciplina (accordion) */
+.fac-subj { border: 1px solid var(--border); background: var(--surface); margin-bottom: 12px; }
+.fac-subj-hd {
+  display: flex; align-items: center; gap: 12px; padding: 14px 16px; cursor: pointer;
+  user-select: none;
+}
+.fac-subj-caret { color: var(--mid); font-size: 10px; width: 12px; flex-shrink: 0; transition: transform 0.15s; }
+.fac-subj.collapsed .fac-subj-caret { transform: rotate(-90deg); }
+.fac-subj-name { flex: 1; min-width: 0; font-size: 13px; letter-spacing: 0.04em; color: var(--white); }
+.fac-subj-name-input {
+  flex: 1; background: var(--surface2); border: 1px solid var(--border2); color: var(--white);
+  font-family: 'DM Mono', monospace; font-size: 13px; letter-spacing: 0.04em; padding: 6px 10px; outline: none;
+}
+.fac-subj-count { font-size: 10px; letter-spacing: 0.08em; color: var(--mid); white-space: nowrap; flex-shrink: 0; }
+.fac-subj-count .over { color: var(--red); }
+.fac-subj-acts { display: flex; gap: 4px; flex-shrink: 0; opacity: 0; transition: opacity 0.15s; }
+.fac-subj-hd:hover .fac-subj-acts { opacity: 1; }
+@media (hover: none) { .fac-subj-acts { opacity: 0.6; } }
+.fac-subj-acts button {
+  background: none; border: none; color: var(--mid); font-size: 13px; cursor: pointer; padding: 2px 5px;
+  transition: color 0.15s;
+}
+.fac-subj-acts button:hover { color: var(--white); }
+.fac-subj-body { border-top: 1px solid var(--border); padding: 6px 16px 14px; }
+.fac-subj.collapsed .fac-subj-body { display: none; }
+
+/* atividade */
+.fac-act { display: flex; align-items: center; gap: 12px; padding: 10px 2px; border-bottom: 1px solid var(--border); }
+.fac-act:last-of-type { border-bottom: none; }
+.fac-check {
+  width: 18px; height: 18px; border: 1px solid var(--border2); flex-shrink: 0; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; font-size: 11px; color: var(--white);
+  transition: background 0.15s;
+}
+.fac-act.done .fac-check { background: var(--white); color: var(--bg); border-color: var(--white); }
+.fac-act-body { flex: 1; min-width: 0; }
+.fac-act-title { font-size: 12px; line-height: 1.4; color: var(--white); }
+.fac-act.done .fac-act-title { color: var(--mid); text-decoration: line-through; }
+.fac-act-due { font-size: 10px; letter-spacing: 0.06em; color: var(--mid); margin-top: 3px; }
+.fac-act-due .rel-over { color: var(--red); }
+.fac-act-due .rel-soon { color: var(--white); }
+.fac-act-due .rel-done { color: var(--green); }
+.fac-act-tools { display: flex; gap: 2px; flex-shrink: 0; opacity: 0; transition: opacity 0.15s; }
+.fac-act:hover .fac-act-tools { opacity: 1; }
+@media (hover: none) { .fac-act-tools { opacity: 0.6; } }
+.fac-act-tools button {
+  background: none; border: none; color: var(--mid); font-size: 12px; cursor: pointer; padding: 2px 5px;
+  transition: color 0.15s;
+}
+.fac-act-tools button:hover { color: var(--white); }
+
+.fac-empty { font-size: 12px; color: var(--mid); line-height: 1.7; padding: 8px 0; }
+
+/* quick-add */
+.fac-qa { display: flex; gap: 8px; margin-top: 10px; }
+.fac-qa input {
+  background: var(--surface2); border: 1px solid var(--border); color: var(--white);
+  font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.02em; padding: 8px 10px;
+  outline: none; transition: border-color 0.2s;
+}
+.fac-qa input:focus { border-color: rgba(245,245,240,0.35); }
+.fac-qa input::placeholder { color: var(--mid); }
+.fac-qa-title { flex: 1; min-width: 0; }
+.fac-qa-date { width: 140px; color-scheme: dark; }
+.fac-qa button {
+  background: none; border: 1px solid var(--border2); color: var(--mid); font-family: 'DM Mono', monospace;
+  font-size: 12px; letter-spacing: 0.1em; padding: 0 14px; cursor: pointer; transition: color 0.2s, border-color 0.2s;
+}
+.fac-qa button:hover { color: var(--white); border-color: rgba(245,245,240,0.35); }
+
+.arch-toggle { display: inline-flex; align-items: center; gap: 8px; font-size: 11px; letter-spacing: 0.06em; color: var(--mid); cursor: pointer; }
+.arch-toggle input { accent-color: var(--white); width: 14px; height: 14px; cursor: pointer; }
+
+.modal-input[type="date"] { color-scheme: dark; }
+
+@media (max-width: 720px) {
+  .g3 { grid-template-columns: 1fr 1fr; }
+  .fac-qa { flex-wrap: wrap; }
+  .fac-qa-title { flex-basis: 100%; }
+}
+
+</style>
+</head>
+<body>
+
+<div id="cur"></div>
+<div id="cur-ring"></div>
+<div class="toast" id="toast"></div>
+
+<div class="app">
+
+  <aside class="sidebar">
+    <div class="sb-logo">
+      <a href="index.html" class="sb-logomark">Project 90</a>
+      <div class="sb-logosub">Transformação pessoal</div>
+    </div>
+    <div class="sb-day">
+      <div class="sb-daynum" id="sb-daynum">34</div>
+      <div class="sb-daylbl">de 90 dias</div>
+      <div style="display:flex;justify-content:space-between;font-size:10px;letter-spacing:0.1em;color:var(--mid);margin-top:10px">
+        <span>Progresso</span><span id="sb-pct">38%</span>
+      </div>
+      <div class="sb-prog-bar-bg"><div class="sb-prog-bar-fill" id="sb-fill" style="width:0%"></div></div>
+      <div class="sb-prog-meta"><span id="sb-days-left">56 restantes</span><span id="sb-pct2">38%</span></div>
+    </div>
+    <nav class="sb-nav">
+      <a class="sb-item" href="dashboard.html"><span class="sb-item-icon">◈</span> Dashboard</a>
+      <a class="sb-item" href="habitos.html"><span class="sb-item-icon">◉</span> Hábitos</a>
+      <a class="sb-item" href="metricas.html"><span class="sb-item-icon">△</span> Métricas</a>
+      <a class="sb-item" href="diario.html"><span class="sb-item-icon">◻</span> Diário</a>
+      <a class="sb-item" href="vocabulario.html"><span class="sb-item-icon">▤</span> Vocabulário</a>
+      <a class="sb-item" href="diccao.html"><span class="sb-item-icon">◗</span> Dicção</a>
+      <a class="sb-item" href="biblia.html"><span class="sb-item-icon">✝</span> Bíblia</a>
+      <a class="sb-item" href="tarefas.html"><span class="sb-item-icon">✓</span> Tarefas</a>
+      <a class="sb-item active" href="faculdade.html"><span class="sb-item-icon">▦</span> Faculdade</a>
+      <a class="sb-item" href="conquistas.html"><span class="sb-item-icon">◆</span> Conquistas</a>
+    </nav>
+    <div class="sb-bottom">
+      <div class="sb-streak">
+        <span class="sb-streak-icon">🔥</span>
+        <div>
+          <div class="sb-streak-val" id="sb-streak-val">12</div>
+          <div class="sb-streak-lbl">Dias seguidos</div>
+        </div>
+      </div>
+      <a href="login.html" class="sb-logout">← Sair</a>
+    </div>
+  </aside>
+
+  <main class="fac-main">
+
+    <div class="topbar">
+      <div class="page-title">Faculdade <em>&amp; prazos.</em></div>
+    </div>
+
+    <div class="g3">
+      <div class="stat-card">
+        <div class="stat-lbl">Pendentes</div>
+        <div class="stat-val" id="sc-pend">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-lbl">Atrasadas</div>
+        <div class="stat-val warn" id="sc-over">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-lbl">Entregues</div>
+        <div class="stat-val" id="sc-done">0</div>
+      </div>
+    </div>
+
+    <form class="fac-newsubj" id="newsubj-form" autocomplete="off">
+      <input id="newsubj-input" maxlength="120" placeholder="Nova disciplina — ex: Cálculo I" />
+    </form>
+
+    <div id="fac-list"></div>
+
+    <label class="arch-toggle"><input type="checkbox" id="show-arch" /> ver disciplinas arquivadas</label>
+
+  </main>
+</div>
+
+<!-- EDITAR ATIVIDADE -->
+<div class="modal-overlay" id="fac-modal">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="fm-hd">
+    <div class="modal-title" id="fm-hd">Editar atividade</div>
+    <div class="modal-field">
+      <label class="modal-lbl" for="fm-title">Título</label>
+      <input class="modal-input" id="fm-title" maxlength="200" />
+    </div>
+    <div class="modal-field">
+      <label class="modal-lbl" for="fm-date">Data de entrega</label>
+      <input class="modal-input" id="fm-date" type="date" />
+    </div>
+    <div class="modal-footer">
+      <button class="modal-btn ghost" type="button" id="fm-del">Excluir</button>
+      <button class="modal-btn primary" type="button" id="fm-save">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ── CURSOR ── */
+(function() {
+  const cur = document.getElementById('cur'), ring = document.getElementById('cur-ring');
+  let mx=0,my=0,rx=0,ry=0;
+  document.addEventListener('mousemove', e => { mx=e.clientX; my=e.clientY; cur.style.transform=`translate(${mx-3}px,${my-3}px)`; });
+  (function tick(){ rx+=(mx-rx-15)*0.1; ry+=(my-ry-15)*0.1; ring.style.transform=`translate(${rx}px,${ry}px)`; requestAnimationFrame(tick); })();
+})();
+
+let toastTimer;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
+}
+function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+const DAY  = Store.getCurrentDay();
+const DAYS = Store.getTotalDays();
+
+function initSidebar() {
+  const pct = Math.round(DAY / DAYS * 100);
+  document.getElementById('sb-daynum').textContent = DAY;
+  document.getElementById('sb-pct').textContent = pct + '%';
+  document.getElementById('sb-pct2').textContent = pct + '%';
+  document.getElementById('sb-days-left').textContent = (DAYS - DAY) + ' restantes';
+  document.getElementById('sb-streak-val').textContent = Store.currentStreak(Store.getHabits(), DAY);
+  setTimeout(() => { document.getElementById('sb-fill').style.width = pct + '%'; }, 400);
+}
+
+function fmtDue(iso) {
+  if (!iso) return 'sem data';
+  const d = new Date(iso + 'T00:00:00');
+  return d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
+}
+function relLabel(a) {
+  const st = Store.studyActivityStatus(a);
+  if (st === 'entregue') {
+    const on = a.doneOn ? ' · ' + fmtDue(a.doneOn) : '';
+    return `<span class="rel-done">entregue${on}</span>`;
+  }
+  const n = Store.studyDaysUntil(a);
+  if (n == null) return '';
+  if (n < 0)  return `<span class="rel-over">atrasada ${-n} ${(-n) === 1 ? 'dia' : 'dias'}</span>`;
+  if (n === 0) return `<span class="rel-soon">hoje</span>`;
+  if (n === 1) return `<span class="rel-soon">amanhã</span>`;
+  if (n <= 7)  return `<span class="rel-soon">faltam ${n} dias</span>`;
+  return `faltam ${n} dias`;
+}
+
+/* estado de collapse por disciplina */
+const CKEY = 'p90_fac_collapsed';
+function collapsedSet() {
+  try { return new Set(JSON.parse(localStorage.getItem(CKEY) || '[]')); } catch (e) { return new Set(); }
+}
+function saveCollapsed(set) {
+  try { localStorage.setItem(CKEY, JSON.stringify([...set])); } catch (e) {}
+}
+
+function render() {
+  const showArch = document.getElementById('show-arch').checked;
+  const subjects = Store.getStudySubjects(showArch);
+  const collapsed = collapsedSet();
+
+  /* stats — só de disciplinas não arquivadas */
+  let pend = 0, over = 0, done = 0;
+  const liveIds = new Set(Store.getStudySubjects(false).map(s => s.id));
+  Store.getStudyActivities().forEach(a => {
+    if (!liveIds.has(a.subjectId)) return;
+    if (a.done) { done++; return; }
+    if (Store.studyActivityStatus(a) === 'atrasada') over++;
+    pend++;
+  });
+  document.getElementById('sc-pend').textContent = pend;
+  document.getElementById('sc-over').textContent = over;
+  document.getElementById('sc-done').textContent = done;
+
+  const list = document.getElementById('fac-list');
+  if (!subjects.length) {
+    list.innerHTML = '<div class="fac-empty">Nenhuma disciplina ainda. Adicione a primeira no campo acima e vá lançando as atividades com a data de entrega.</div>';
+    return;
+  }
+
+  list.innerHTML = subjects.map(s => {
+    const acts = Store.getStudyActivities(s.id);
+    const pending = acts.filter(a => !a.done);
+    const doneActs = acts.filter(a => a.done);
+    const nOver = pending.filter(a => Store.studyActivityStatus(a) === 'atrasada').length;
+    const isCol = collapsed.has(s.id);
+
+    const countBits = [];
+    if (pending.length) countBits.push(pending.length + ' pendente' + (pending.length === 1 ? '' : 's'));
+    if (nOver) countBits.push('<span class="over">' + nOver + ' atrasada' + (nOver === 1 ? '' : 's') + '</span>');
+    if (!pending.length && !doneActs.length) countBits.push('sem atividades');
+
+    const rowHTML = a => {
+      const st = Store.studyActivityStatus(a);
+      return `<div class="fac-act ${a.done ? 'done' : ''}" data-id="${a.id}">
+        <div class="fac-check" data-act="check" title="${a.done ? 'Desmarcar' : 'Marcar entregue'}">${a.done ? '✓' : ''}</div>
+        <div class="fac-act-body">
+          <div class="fac-act-title">${esc(a.title)}</div>
+          <div class="fac-act-due">${a.dueOn ? fmtDue(a.dueOn) + ' · ' : ''}${relLabel(a)}</div>
+        </div>
+        <div class="fac-act-tools">
+          <button data-act="edit" title="Editar">✎</button>
+          <button data-act="del" title="Excluir">✕</button>
+        </div>
+      </div>`;
+    };
+
+    const body = isCol ? '' : `<div class="fac-subj-body">
+      ${(pending.map(rowHTML).join('') + doneActs.map(rowHTML).join('')) ||
+        '<div class="fac-empty">Nenhuma atividade. Adicione abaixo.</div>'}
+      <form class="fac-qa" data-subj="${s.id}" autocomplete="off">
+        <input class="fac-qa-title" maxlength="200" placeholder="Nova atividade" />
+        <input class="fac-qa-date" type="date" />
+        <button type="submit">+</button>
+      </form>
+    </div>`;
+
+    return `<div class="fac-subj ${isCol ? 'collapsed' : ''}" data-subj="${s.id}">
+      <div class="fac-subj-hd" data-act="toggle">
+        <span class="fac-subj-caret">▼</span>
+        <span class="fac-subj-name">${esc(s.name)}${s.archived ? ' <span style="color:var(--mid)">(arquivada)</span>' : ''}</span>
+        <span class="fac-subj-count">${countBits.join(' · ')}</span>
+        <span class="fac-subj-acts">
+          <button data-act="rename" title="Renomear">✎</button>
+          <button data-act="archive" title="${s.archived ? 'Desarquivar' : 'Arquivar'}">${s.archived ? '⇧' : '⌂'}</button>
+          <button data-act="delsubj" title="Excluir disciplina">✕</button>
+        </span>
+      </div>
+      ${body}
+    </div>`;
+  }).join('');
+}
+
+/* ── delegação de eventos na lista ── */
+const listEl = document.getElementById('fac-list');
+
+listEl.addEventListener('click', e => {
+  const btn = e.target.closest('[data-act]');
+  if (!btn) return;
+  const act = btn.dataset.act;
+  const subjEl = e.target.closest('.fac-subj');
+  const subjId = subjEl ? Number(subjEl.dataset.subj) : null;
+  const actEl = e.target.closest('.fac-act');
+  const actId = actEl ? Number(actEl.dataset.id) : null;
+
+  if (act === 'toggle') {
+    if (e.target.closest('.fac-subj-acts')) return;
+    const set = collapsedSet();
+    set.has(subjId) ? set.delete(subjId) : set.add(subjId);
+    saveCollapsed(set);
+    render();
+  } else if (act === 'rename') {
+    e.stopPropagation();
+    startRename(subjEl, subjId);
+  } else if (act === 'archive') {
+    e.stopPropagation();
+    const s = Store.getStudySubjects(true).find(x => x.id === subjId);
+    Store.setStudySubjectArchived(subjId, !(s && s.archived));
+    render();
+  } else if (act === 'delsubj') {
+    e.stopPropagation();
+    removeSubject(subjId);
+  } else if (act === 'check') {
+    Store.toggleStudyDone(actId);
+    render();
+  } else if (act === 'edit') {
+    openEdit(actId);
+  } else if (act === 'del') {
+    removeActivity(actId);
+  }
+});
+
+listEl.addEventListener('submit', e => {
+  const form = e.target.closest('.fac-qa');
+  if (!form) return;
+  e.preventDefault();
+  const subjId = Number(form.dataset.subj);
+  const tEl = form.querySelector('.fac-qa-title');
+  const dEl = form.querySelector('.fac-qa-date');
+  const title = tEl.value.trim();
+  if (!title) { tEl.focus(); return; }
+  Store.addStudyActivity(subjId, { title, dueOn: dEl.value || null });
+  render();
+  // re-foca o quick-add da mesma disciplina
+  const again = listEl.querySelector(`.fac-qa[data-subj="${subjId}"] .fac-qa-title`);
+  if (again) again.focus();
+});
+
+function startRename(subjEl, subjId) {
+  const nameEl = subjEl.querySelector('.fac-subj-name');
+  if (!nameEl || subjEl.querySelector('.fac-subj-name-input')) return;
+  const cur = (Store.getStudySubjects(true).find(x => x.id === subjId) || {}).name || '';
+  const inp = document.createElement('input');
+  inp.className = 'fac-subj-name-input';
+  inp.value = cur; inp.maxLength = 120;
+  nameEl.replaceWith(inp);
+  inp.focus(); inp.select();
+  const commit = () => {
+    const v = inp.value.trim();
+    if (v && v !== cur) { Store.renameStudySubject(subjId, v); }
+    render();
+  };
+  inp.addEventListener('keydown', ev => {
+    if (ev.key === 'Enter') { ev.preventDefault(); commit(); }
+    if (ev.key === 'Escape') render();
+  });
+  inp.addEventListener('blur', commit);
+}
+
+async function removeSubject(subjId) {
+  const s = Store.getStudySubjects(true).find(x => x.id === subjId);
+  const n = Store.getStudyActivities(subjId).length;
+  const msg = `Excluir "${s ? s.name : ''}"` + (n ? ` e as ${n} atividade${n === 1 ? '' : 's'} dela?` : '?');
+  if (!await window.p90confirm(msg, { okText: 'Excluir', danger: true })) return;
+  Store.deleteStudySubject(subjId);
+  render();
+}
+
+async function removeActivity(actId) {
+  const a = Store.getStudyActivities().find(x => x.id === actId);
+  if (!await window.p90confirm(`Excluir "${a ? a.title : ''}"?`, { okText: 'Excluir' })) return;
+  Store.deleteStudyActivity(actId);
+  render();
+}
+
+/* ── nova disciplina ── */
+document.getElementById('newsubj-form').addEventListener('submit', e => {
+  e.preventDefault();
+  const inp = document.getElementById('newsubj-input');
+  const v = inp.value.trim();
+  if (!v) return;
+  Store.addStudySubject(v);
+  inp.value = '';
+  toast('Disciplina adicionada');
+  render();
+});
+
+document.getElementById('show-arch').addEventListener('change', render);
+
+/* ── modal editar atividade ── */
+let editingId = null;
+function openEdit(id) {
+  const a = Store.getStudyActivities().find(x => x.id === id);
+  if (!a) return;
+  editingId = id;
+  document.getElementById('fm-title').value = a.title;
+  document.getElementById('fm-date').value = a.dueOn || '';
+  document.getElementById('fac-modal').classList.add('open');
+  setTimeout(() => document.getElementById('fm-title').focus(), 50);
+}
+function closeEdit() {
+  document.getElementById('fac-modal').classList.remove('open');
+  editingId = null;
+}
+document.getElementById('fm-save').addEventListener('click', () => {
+  if (editingId == null) return;
+  const title = document.getElementById('fm-title').value.trim();
+  if (!title) { document.getElementById('fm-title').focus(); return; }
+  Store.updateStudyActivity(editingId, { title, dueOn: document.getElementById('fm-date').value || null });
+  closeEdit();
+  render();
+});
+document.getElementById('fm-del').addEventListener('click', async () => {
+  if (editingId == null) return;
+  const id = editingId;
+  const a = Store.getStudyActivities().find(x => x.id === id);
+  if (!await window.p90confirm(`Excluir "${a ? a.title : ''}"?`, { okText: 'Excluir' })) return;
+  Store.deleteStudyActivity(id);
+  closeEdit();
+  render();
+});
+document.getElementById('fac-modal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeEdit();
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && document.getElementById('fac-modal').classList.contains('open')) closeEdit();
+});
+
+function init() { initSidebar(); render(); }
+window.addEventListener('p90:synced', init);
+init();
+
+/* ── fundo (grade sutil) ── */
+(function(){
+  const canvas=document.createElement('canvas');
+  canvas.style.cssText='position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;';
+  document.body.insertBefore(canvas,document.body.firstChild);
+  const ctx=canvas.getContext('2d'),SIZE=80;
+  let W,H,cols,rows,nodes,t=0;
+  function resize(){W=canvas.width=window.innerWidth;H=canvas.height=window.innerHeight;cols=Math.ceil(W/SIZE)+2;rows=Math.ceil(H/SIZE)+2;nodes=[];for(let r=0;r<rows;r++)for(let c=0;c<cols;c++)nodes.push({phase:Math.random()*Math.PI*2});}
+  function draw(){ctx.clearRect(0,0,W,H);ctx.lineWidth=.4;const offX=(t*6)%SIZE,offY=(t*3)%SIZE;for(let c=0;c<cols;c++){const x=c*SIZE-offX,w=.5+.5*Math.sin(t*.4+c*.35);ctx.strokeStyle='rgba(245,245,240,'+(0.006+w*0.012)+')';ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}for(let r=0;r<rows;r++){const y=r*SIZE-offY,w=.5+.5*Math.sin(t*.35+r*.4+1.2);ctx.strokeStyle='rgba(245,245,240,'+(0.006+w*0.012)+')';ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){const nd=nodes[r*cols+c],x=c*SIZE-offX,y=r*SIZE-offY,p=.5+.5*Math.sin(t*.7+nd.phase);ctx.beginPath();ctx.arc(x,y,.5+p*.9,0,Math.PI*2);ctx.fillStyle='rgba(245,245,240,'+(p*0.07)+')';ctx.fill();}const grd=ctx.createRadialGradient(W*.65,H*.5,0,W*.65,H*.5,Math.max(W,H)*.75);grd.addColorStop(0,'rgba(8,8,8,0)');grd.addColorStop(.6,'rgba(8,8,8,0)');grd.addColorStop(1,'rgba(8,8,8,.7)');ctx.fillStyle=grd;ctx.fillRect(0,0,W,H);t+=.006;requestAnimationFrame(draw);}
+  window.addEventListener('resize',resize);resize();if (!matchMedia('(prefers-reduced-motion: reduce)').matches) draw();
+})();
+</script>
+<script src="js/pwa.js"></script>
+</body>
+</html>
