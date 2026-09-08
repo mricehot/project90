@@ -35,7 +35,14 @@ body { overflow: hidden; }
 @media (max-width: 720px) { .dash-cards { column-count: 1; } }
 
 /* ── ROTINA NOTURNA ── */
-#night-card .card-action { color: var(--mid); letter-spacing: 0.08em; }
+.nr-switch { display: inline-flex; border: 1px solid var(--border2); flex-shrink: 0; }
+.nr-rbtn { background: none; border: none; color: var(--mid); font-family: 'Bebas Neue', sans-serif;
+  font-size: 14px; letter-spacing: 0.12em; padding: 2px 11px; cursor: pointer;
+  transition: background 0.15s, color 0.15s; }
+.nr-rbtn + .nr-rbtn { border-left: 1px solid var(--border2); }
+.nr-rbtn.active { background: var(--white); color: var(--bg); }
+.nr-streak-line { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--mid);
+  padding: 2px 0 12px; }
 .nr-row { display: flex; align-items: center; gap: 10px; padding: 9px 2px; border-bottom: 1px solid var(--border);
   cursor: pointer; }
 .nr-row:last-of-type { border-bottom: none; }
@@ -399,11 +406,14 @@ body { overflow: hidden; }
     <!-- GRID DE CARDS (fechar o dia · tarefas · revisão · contadores) -->
     <div class="dash-cards">
 
-      <!-- ROTINA NOTURNA -->
+      <!-- ROTINA NOTURNA (duas rotinas: I / II) -->
       <div class="card" id="night-card">
         <div class="card-hd">
           <span class="card-title">Rotina noturna</span>
-          <span class="card-action" id="nr-streak"></span>
+          <span class="nr-switch" role="group" aria-label="Escolher rotina">
+            <button type="button" class="nr-rbtn" data-r="1" onclick="switchNightRoutine(1)">I</button>
+            <button type="button" class="nr-rbtn" data-r="2" onclick="switchNightRoutine(2)">II</button>
+          </span>
         </div>
         <div id="nr-body"></div>
         <form id="nr-form" autocomplete="off">
@@ -1126,24 +1136,32 @@ function quickToggleTask(id) {
 /* ═══════════════════════════════
    ROTINA NOTURNA — checklist de antes de dormir (zera toda noite)
 ═══════════════════════════════ */
+function _nrRoman(n) { return n === 2 ? 'II' : 'I'; }
+
 function renderNightCard() {
   const body = document.getElementById('nr-body');
-  const streakEl = document.getElementById('nr-streak');
   if (!body || typeof Store.getNightHabits !== 'function') return;
 
-  const items  = Store.getNightHabits();
+  const active = Store.getNightRoutineActive();
+  document.querySelectorAll('#night-card .nr-rbtn').forEach(b =>
+    b.classList.toggle('active', Number(b.dataset.r) === active));
+
+  const items  = Store.getNightHabits();          // já vem filtrado pela rotina ativa
   const done   = new Set(Store.getNightRoutine());
   const streak = Store.nightRoutineStreak();
-  streakEl.textContent = streak > 0 ? `🌙 ${streak} noite${streak === 1 ? '' : 's'}` : '';
+  const streakHTML = streak > 0
+    ? `<div class="nr-streak-line">🌙 ${streak} noite${streak === 1 ? '' : 's'} seguida${streak === 1 ? '' : 's'}</div>`
+    : '';
 
   if (!items.length) {
-    body.innerHTML = '<div class="nr-empty">Monte a rotina que você faz toda noite antes de dormir — ' +
-      'preparar o sono e deixar o dia seguinte pronto.</div>';
+    body.innerHTML =
+      `<div class="nr-empty">Rotina ${_nrRoman(active)} vazia. Monte a checklist que você faz antes de dormir ` +
+      `na semana em que essa rotina vale — preparar o sono, deixar o dia seguinte pronto.</div>`;
     return;
   }
 
   const allDone = items.every(h => done.has(h.id));
-  body.innerHTML =
+  body.innerHTML = streakHTML +
     items.map(h => `
       <div class="nr-row ${done.has(h.id) ? 'done' : ''}" onclick="toggleNight(${h.id}, event)">
         <span class="nr-check">${done.has(h.id) ? '✓' : ''}</span>
@@ -1151,6 +1169,13 @@ function renderNightCard() {
         <button class="nr-del" type="button" title="Remover da rotina" onclick="removeNight(${h.id}, event)">✕</button>
       </div>`).join('') +
     (allDone ? '<div class="nr-done-msg">Rotina completa. Boa noite.</div>' : '');
+}
+
+function switchNightRoutine(n) {
+  Store.setNightRoutineActive(n);
+  const input = document.getElementById('nr-input');
+  if (input) input.placeholder = `Adicionar à rotina ${_nrRoman(n)} — ex: separar a roupa de amanhã`;
+  renderNightCard();
 }
 
 function toggleNight(id, ev) {
@@ -1162,7 +1187,7 @@ function toggleNight(id, ev) {
 async function removeNight(id, ev) {
   if (ev) ev.stopPropagation();
   const h = Store.getNightHabits().find(x => x.id === id);
-  if (!await window.p90confirm(`Remover "${h ? h.label : ''}" da rotina noturna?`, { okText: 'Remover' })) return;
+  if (!await window.p90confirm(`Remover "${h ? h.label : ''}" da rotina ${_nrRoman(Store.getNightRoutineActive())}?`, { okText: 'Remover' })) return;
   Store.deleteNightHabit(id);
   renderNightCard();
 }

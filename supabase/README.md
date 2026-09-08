@@ -60,12 +60,13 @@ Os scripts criam:
 | `task_completions` | 1 linha por `(tarefa, data concluída)`. Sem FK para `tasks` — `deleteTask` apaga as duas. O agendamento/atraso é calculado no cliente (`Store.taskNextDue`/`taskStatus`). |
 | `wins` | banco de provas (`0017`): 1 linha por vitória registrada à mão (`text`, `day_num`). Id gerado pelo cliente. Card no dashboard (`renderWinsCard`); as conquistas desbloqueadas aparecem no mesmo card, derivadas de `achievements` — não viram linha aqui. |
 | `streak_counters` | contadores "dias desde" (`0018`): `label`, `last_slip` (data do último deslize, nula = nunca), `start_date` (base enquanto `last_slip` for nula), `best_run` (recorde em dias). Id gerado pelo cliente. Card no dashboard (`renderCountersCard`). Independente de hábitos/streak/conquistas. |
-| `night_habits` / `night_routine_days` | **rotina noturna** (`0020`, substitui `daily_closeouts` da `0019`): `night_habits` é a checklist de hábitos só de antes de dormir (itens livres do usuário, id gerado pelo cliente); `night_routine_days` tem 1 linha por noite com `done_ids` (jsonb) — quais itens foram marcados. Zera toda noite. Card no dashboard (`renderNightCard`). A `0020` derruba a `daily_closeouts`. |
+| `night_habits` / `night_routine_days` | **rotina noturna** (`0020`, substitui `daily_closeouts` da `0019`): checklist de hábitos só de antes de dormir. São **duas rotinas** (`night_habits.routine` 1\|2 — ex.: semana de manhã / semana à tarde); a ativa fica em `challenge_meta.night_routine_active`. `night_routine_days` tem 1 linha por noite com `done_ids` (jsonb) + `routine` (qual rotina valia naquela noite). Zera toda noite. Card no dashboard (`renderNightCard`) com seletor I/II. A `0020` derruba a `daily_closeouts`. |
 | **RLS** | ligado em tudo — cada usuário só vê as próprias linhas |
 | `handle_new_user()` | trigger em `auth.users`: cria profile + meta + hábitos fixos |
 | `seed_core_habits(user)` | semeia os hábitos fixos que faltam (idempotente) |
 | `challenge_day()` | dia atual do desafio (1-based, limitado ao total), **no fuso do usuário** (`challenge_meta.timezone`) |
 | `set_timezone(tz)` | grava o fuso do usuário; ancora `start_date` na data local se ainda no dia 1 (o cliente envia via `js/store.js` no load) |
+| `set_night_routine(n)` | troca a rotina noturna ativa (1 ou 2) em `challenge_meta.night_routine_active` (`0020`) |
 | `set_habit_status(habit_id, day_index, status)` | marca um dia e recalcula `streak`/`max_streak` |
 | `use_freeze()` | consome 1 dia de folga (de 2 por desafio) e protege a sequência do dia atual, sem exigir nenhum hábito marcado (`0010`) |
 | `unlock_achievement(id, day)` / `mark_achievement_seen(id)` | conquistas |

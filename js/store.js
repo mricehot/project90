@@ -29,7 +29,7 @@ const Store = (() => {
   ────────────────────────────────────────── */
   function _emptyCache() {
     return {
-      meta:          { totalDays: DEFAULT_TOTAL_DAYS, freezesLeft: 2, frozenDays: [] },
+      meta:          { totalDays: DEFAULT_TOTAL_DAYS, freezesLeft: 2, frozenDays: [], nightRoutineActive: 1 },
       currentDay:    null,
       habits:        [],
       journal:       {},
@@ -79,6 +79,7 @@ const Store = (() => {
       cache.meta.timezone     = data.meta.timezone || cache.meta.timezone || 'UTC';
       cache.meta.freezesLeft  = data.meta.freezesLeft != null ? data.meta.freezesLeft : 2;
       cache.meta.frozenDays   = Array.isArray(data.meta.frozenDays) ? data.meta.frozenDays : [];
+      cache.meta.nightRoutineActive = (data.meta.nightRoutineActive === 2) ? 2 : 1;
     }
     if (data.currentDay) cache.currentDay = data.currentDay;
 
@@ -148,14 +149,19 @@ const Store = (() => {
     if (Array.isArray(data.nightHabits)) {
       cache.nightHabits.length = 0;
       data.nightHabits.forEach(h => cache.nightHabits.push({
-        id: h.id, label: h.label, createdAt: h.createdAt,
+        id: h.id, label: h.label,
+        routine: (h.routine === 2) ? 2 : 1,
+        createdAt: h.createdAt,
       }));
     }
     if (data.nightRoutineDays && typeof data.nightRoutineDays === 'object') {
       Object.keys(cache.nightRoutine).forEach(k => delete cache.nightRoutine[k]);
       Object.keys(data.nightRoutineDays).forEach(k => {
-        cache.nightRoutine[k] = Array.isArray(data.nightRoutineDays[k])
-          ? data.nightRoutineDays[k].slice() : [];
+        const v = data.nightRoutineDays[k];
+        // formato novo: { ids, routine }; formato antigo: [ids]
+        const ids = Array.isArray(v) ? v : (v && Array.isArray(v.ids) ? v.ids : []);
+        const routine = (v && v.routine === 2) ? 2 : 1;
+        cache.nightRoutine[k] = { ids: ids.slice(), routine };
       });
     }
   }
@@ -756,31 +762,53 @@ const Store = (() => {
   }
 
   /* ──────────────────────────────────────────
-     ROTINA NOTURNA
-     Uma checklist de hábitos só de antes de dormir (preparar o sono,
-     preparar o dia seguinte). Zera toda noite.
-       cache.nightHabits: [{ id, label, createdAt }]        — os itens da rotina
-       cache.nightRoutine: { [dayNum]: [id, id, ...] }      — o que foi marcado naquela noite
+     ROTINA NOTURNA (duas rotinas: I e II)
+     Checklist de hábitos só de antes de dormir. São duas listas (ex.: semana
+     de manhã / semana à tarde); a ativa fica em cache.meta.nightRoutineActive.
+     Zera toda noite.
+       cache.nightHabits: [{ id, label, routine, createdAt }]
+       cache.nightRoutine: { [dayNum]: { ids:[...], routine } }  — o que foi marcado + a rotina daquela noite
   ────────────────────────────────────────── */
-  function getNightHabits() {
-    return cache.nightHabits.slice().sort((a, b) =>
-      (String(a.createdAt).localeCompare(String(b.createdAt))) || (a.id - b.id));
+  function getNightRoutineActive() {
+    return (cache.meta && cache.meta.nightRoutineActive === 2) ? 2 : 1;
+  }
+
+  function setNightRoutineActive(n) {
+    const r = (Number(n) === 2) ? 2 : 1;
+    if (getNightRoutineActive() === r) return r;
+    cache.meta.nightRoutineActive = r;
+    _saveMirror();
+    _push(async () => {
+      const { error } = await window.sb.rpc('set_night_routine', { p_n: r });
+      if (error) throw error;
+    });
+    return r;
+  }
+
+  // Itens de uma rotina (default: a ativa), em ordem de criação.
+  function getNightHabits(routine) {
+    const r = routine == null ? getNightRoutineActive() : ((Number(routine) === 2) ? 2 : 1);
+    return cache.nightHabits
+      .filter(h => ((h.routine === 2) ? 2 : 1) === r)
+      .sort((a, b) => (String(a.createdAt).localeCompare(String(b.createdAt))) || (a.id - b.id));
   }
 
   function _pushNightHabit(h) {
     _push(async () => {
       const { error } = await window.sb.from('night_habits').upsert({
-        user_id: _uid, id: h.id, label: h.label, created_at: h.createdAt,
+        user_id: _uid, id: h.id, label: h.label,
+        routine: h.routine || 1, created_at: h.createdAt,
       }, { onConflict: 'user_id,id' });
       if (error) throw error;
     });
   }
 
-  function addNightHabit(label) {
+  function addNightHabit(label, routine) {
     const t = String(label || '').trim();
     if (!t) return null;
+    const r = routine == null ? getNightRoutineActive() : ((Number(routine) === 2) ? 2 : 1);
     const id = (cache.nightHabits.reduce((m, h) => Math.max(m, h.id), 0) || 0) + 1;
-    const h = { id, label: t, createdAt: new Date().toISOString() };
+    const h = { id, label: t, routine: r, createdAt: new Date().toISOString() };
     cache.nightHabits.push(h);
     _saveMirror();
     _pushNightHabit(h);
@@ -801,9 +829,10 @@ const Store = (() => {
     cache.nightHabits.splice(idx, 1);
     // tira o id das noites já registradas
     Object.keys(cache.nightRoutine).forEach(k => {
-      const arr = cache.nightRoutine[k] || [];
-      const i = arr.indexOf(id);
-      if (i !== -1) { arr.splice(i, 1); _pushNightRoutineDay(k); }
+      const row = cache.nightRoutine[k];
+      if (!row || !Array.isArray(row.ids)) return;
+      const i = row.ids.indexOf(id);
+      if (i !== -1) { row.ids.splice(i, 1); _pushNightRoutineDay(k); }
     });
     _saveMirror();
     _push(async () => {
@@ -813,29 +842,39 @@ const Store = (() => {
     });
   }
 
+  function _nightRow(d) {
+    const row = cache.nightRoutine[d];
+    if (row && Array.isArray(row.ids)) return row;
+    return { ids: [], routine: getNightRoutineActive() };
+  }
+
+  // Ids marcados numa noite (default: hoje).
   function getNightRoutine(dayNum) {
     const d = dayNum == null ? getCurrentDay() : dayNum;
-    return (cache.nightRoutine[d] || []).slice();
+    return _nightRow(d).ids.slice();
   }
 
   function _pushNightRoutineDay(dayNum) {
+    const row = _nightRow(dayNum);
     _push(async () => {
       const { error } = await window.sb.from('night_routine_days').upsert({
         user_id: _uid, day_num: Number(dayNum),
-        done_ids: cache.nightRoutine[dayNum] || [],
+        done_ids: row.ids, routine: row.routine || 1,
         updated_at: new Date().toISOString(),
       }, { onConflict: 'user_id,day_num' });
       if (error) throw error;
     });
   }
 
-  // Marca/desmarca um item da rotina na noite de um dia. Devolve o novo estado.
+  // Marca/desmarca um item na noite de um dia. Grava também qual rotina está
+  // ativa (pra saber, no futuro, contra qual lista aquela noite conta).
   function toggleNightHabitDone(itemId, dayNum) {
     const d = dayNum == null ? getCurrentDay() : dayNum;
-    const arr = cache.nightRoutine[d] ? cache.nightRoutine[d].slice() : [];
-    const i = arr.indexOf(itemId);
-    if (i === -1) arr.push(itemId); else arr.splice(i, 1);
-    cache.nightRoutine[d] = arr;
+    const prev = cache.nightRoutine[d];
+    const ids = (prev && Array.isArray(prev.ids)) ? prev.ids.slice() : [];
+    const i = ids.indexOf(itemId);
+    if (i === -1) ids.push(itemId); else ids.splice(i, 1);
+    cache.nightRoutine[d] = { ids, routine: getNightRoutineActive() };
     _saveMirror();
     _pushNightRoutineDay(d);
     return i === -1;
@@ -851,17 +890,27 @@ const Store = (() => {
            '-' + String(d.getDate()).padStart(2, '0');
   }
 
-  // Rotina da noite completa? Conta só os itens que já existiam naquela noite,
-  // pra adicionar um item hoje não "quebrar" as noites passadas.
+  // Rotina de referência de uma noite: hoje = a ativa agora; passado = a que
+  // ficou gravada naquela noite (ou a ativa, se noite sem registro).
+  function _routineForDay(d) {
+    if (d === getCurrentDay()) return getNightRoutineActive();
+    const row = cache.nightRoutine[d];
+    return (row && row.routine === 2) ? 2 : 1;
+  }
+
+  // Rotina da noite completa? Conta só os itens da rotina daquela noite que
+  // já existiam então — adicionar item hoje não "quebra" as noites passadas.
   function nightRoutineComplete(dayNum) {
-    if (!cache.nightHabits.length) return false;
     const d = dayNum == null ? getCurrentDay() : dayNum;
-    const done = new Set(cache.nightRoutine[d] || []);
+    const r = _routineForDay(d);
+    const items = cache.nightHabits.filter(h => ((h.routine === 2) ? 2 : 1) === r);
+    if (!items.length) return false;
+    const done = new Set(_nightRow(d).ids);
     if (!done.size) return false;
     const dayDate = _dayDateISO(d);
     const applicable = dayDate
-      ? cache.nightHabits.filter(h => String(h.createdAt).slice(0, 10) <= dayDate)
-      : cache.nightHabits;
+      ? items.filter(h => String(h.createdAt).slice(0, 10) <= dayDate)
+      : items;
     if (!applicable.length) return false;
     return applicable.every(h => done.has(h.id));
   }
@@ -1862,6 +1911,7 @@ const Store = (() => {
     getWins, winsCount, addWin, deleteWin,
     getStreakCounters, counterDaysSince, addStreakCounter, renameStreakCounter,
     registerCounterSlip, undoCounterSlip, deleteStreakCounter,
+    getNightRoutineActive, setNightRoutineActive,
     getNightHabits, addNightHabit, renameNightHabit, deleteNightHabit,
     getNightRoutine, toggleNightHabitDone, nightRoutineComplete, nightRoutineStreak,
     // computed

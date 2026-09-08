@@ -1,12 +1,15 @@
 -- ============================================================================
---  PROJECT 90 — Rotina noturna
+--  PROJECT 90 — Rotina noturna (duas rotinas: I e II)
 --
 --  Substitui o "fechamento do dia" (0019) por uma checklist de hábitos só
 --  de antes de dormir: preparar o sono, deixar o dia seguinte pronto.
---  A lista é do usuário (itens livres); zera toda noite.
 --
---    night_habits        — os itens da rotina (id gerado pelo cliente)
---    night_routine_days   — 1 linha por noite: quais itens foram marcados
+--  São DUAS rotinas (ex.: uma semana trabalha de manhã, outra à tarde).
+--  Cada item pertence à rotina 1 ou 2; `challenge_meta.night_routine_active`
+--  guarda qual está selecionada. A checklist zera toda noite.
+--
+--    night_habits         — os itens (id gerado pelo cliente, `routine` 1|2)
+--    night_routine_days    — 1 linha por noite: itens marcados + a rotina da noite
 --
 --  Aplicar depois de 0019_daily_closeout.sql. Remove a tabela daily_closeouts
 --  (o recurso mudou de forma antes de ir pro ar de verdade).
@@ -14,23 +17,33 @@
 
 drop table if exists public.daily_closeouts cascade;
 
+alter table public.challenge_meta
+  add column if not exists night_routine_active smallint not null default 1;
+
 create table if not exists public.night_habits (
   user_id    uuid        not null references auth.users (id) on delete cascade,
   id         bigint      not null,
   label      text        not null,
+  routine    smallint    not null default 1,
   created_at timestamptz not null default now(),
   primary key (user_id, id)
 );
 create index if not exists night_habits_user_idx on public.night_habits (user_id);
+-- caso a tabela já exista de uma versão anterior desta migração
+alter table public.night_habits
+  add column if not exists routine smallint not null default 1;
 
 create table if not exists public.night_routine_days (
   user_id    uuid        not null references auth.users (id) on delete cascade,
   day_num    integer     not null,
   done_ids   jsonb       not null default '[]'::jsonb,
+  routine    smallint    not null default 1,
   updated_at timestamptz not null default now(),
   primary key (user_id, day_num)
 );
 create index if not exists night_routine_days_user_idx on public.night_routine_days (user_id);
+alter table public.night_routine_days
+  add column if not exists routine smallint not null default 1;
 
 alter table public.night_habits       enable row level security;
 alter table public.night_routine_days enable row level security;
@@ -62,7 +75,30 @@ create policy "night_routine_days: delete own" on public.night_routine_days
   for delete using (auth.uid() = user_id);
 
 -- ============================================================================
+--  set_night_routine(n) — troca a rotina noturna ativa (1 ou 2)
+-- ============================================================================
+create or replace function public.set_night_routine(p_n integer)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if p_n not in (1, 2) then
+    return;
+  end if;
+  update public.challenge_meta
+  set night_routine_active = p_n
+  where user_id = auth.uid();
+end;
+$$;
+
+revoke all on function public.set_night_routine(integer) from public;
+grant execute on function public.set_night_routine(integer) to authenticated;
+
+-- ============================================================================
 --  app_bootstrap() — troca 'closeouts' por 'nightHabits' + 'nightRoutineDays'
+--  e devolve 'nightRoutineActive' no meta
 -- ============================================================================
 create or replace function public.app_bootstrap()
 returns jsonb
@@ -76,7 +112,8 @@ as $$
                'totalDays', m.total_days,
                'timezone',  m.timezone,
                'freezesLeft', m.freezes_left,
-               'frozenDays',  coalesce(to_jsonb(m.frozen_days), '[]'::jsonb)
+               'frozenDays',  coalesce(to_jsonb(m.frozen_days), '[]'::jsonb),
+               'nightRoutineActive', coalesce(m.night_routine_active, 1)
              )
       from public.challenge_meta m where m.user_id = auth.uid()
     ),
@@ -190,13 +227,15 @@ as $$
     ), '[]'::jsonb),
     'nightHabits', coalesce((
       select jsonb_agg(
-               jsonb_build_object('id', n.id, 'label', n.label, 'createdAt', n.created_at)
+               jsonb_build_object('id', n.id, 'label', n.label,
+                                  'routine', coalesce(n.routine, 1), 'createdAt', n.created_at)
                order by n.created_at, n.id
              )
       from public.night_habits n where n.user_id = auth.uid()
     ), '[]'::jsonb),
     'nightRoutineDays', coalesce((
-      select jsonb_object_agg(r.day_num::text, r.done_ids)
+      select jsonb_object_agg(r.day_num::text,
+               jsonb_build_object('ids', r.done_ids, 'routine', coalesce(r.routine, 1)))
       from public.night_routine_days r where r.user_id = auth.uid()
     ), '{}'::jsonb)
   );
@@ -238,7 +277,8 @@ begin
   insert into public.challenge_meta (user_id, start_date, total_days, timezone, freezes_left, frozen_days)
   values (auth.uid(), (now() at time zone tz)::date, 90, tz, 2, '{}')
   on conflict (user_id) do update
-    set start_date = excluded.start_date, total_days = 90, freezes_left = 2, frozen_days = '{}';
+    set start_date = excluded.start_date, total_days = 90, freezes_left = 2,
+        frozen_days = '{}', night_routine_active = 1;
 
   perform public.seed_core_habits(auth.uid());
 end;
