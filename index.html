@@ -11,12 +11,14 @@
 :root{
   --bg:#080808;--s:#111;--s2:#181818;
   --b:rgba(245,245,240,.08);--b2:rgba(245,245,240,.16);
-  --w:#f5f5f0;--m:#555;--mu:#2a2a2a;--g:#86efac;
+  --w:#f5f5f0;--m:#7d7d7d;--mu:#2a2a2a;--g:#86efac;
   --gut:clamp(24px,5vw,72px);--max:1100px;
 }
 html{scroll-behavior:smooth;}
 body{background:var(--bg);color:var(--w);font-family:'DM Mono',monospace;font-weight:300;-webkit-font-smoothing:antialiased;overflow-x:hidden;}
 input,textarea{cursor:text;}
+:focus-visible{outline:2px solid var(--w);outline-offset:2px;}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important;}}
 #cur,#cur-ring{display:none;}
 @media (hover:hover) and (pointer:fine){
 body{cursor:none;}
