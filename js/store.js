@@ -290,12 +290,19 @@ const Store = (() => {
 
     if (!sidebar.id) sidebar.id = 'p90-sidebar';
 
+    // nome da seção atual (sem a sidebar visível no mobile, é a única pista de "onde estou")
+    const activeItem = sidebar.querySelector('.sb-item.active');
+    const section = activeItem
+      ? activeItem.textContent.replace(/^[^A-Za-zÀ-ÿ]+/, '').trim()
+      : (document.title.split('—')[1] || '').trim();
+
     const bar = document.createElement('div');
     bar.className = 'mobile-topbar';
     bar.innerHTML =
       '<button class="hamburger" type="button" aria-label="Abrir menu" ' +
         'aria-expanded="false" aria-controls="' + sidebar.id + '">☰</button>' +
-      '<a class="mt-logo" href="index.html">Project 90</a>';
+      '<a class="mt-logo" href="index.html">Project 90</a>' +
+      (section ? '<span class="mt-page">' + section + '</span>' : '');
 
     const backdrop = document.createElement('div');
     backdrop.className = 'sidebar-backdrop';
@@ -1708,4 +1715,105 @@ const Store = (() => {
     allHabitsDone, currentStreak, computeAchievementProgress, computeLevels,
   };
 
+})();
+
+/* ──────────────────────────────────────────
+   p90confirm(msg, opts?) — modal de confirmação no lugar do confirm() nativo.
+   Retorna Promise<boolean>. opts: { okText, cancelText, danger (default true) }
+   Enter = confirmar, Esc / clique no fundo = cancelar.
+────────────────────────────────────────── */
+window.p90confirm = function (message, opts) {
+  opts = opts || {};
+  return new Promise(function (resolve) {
+    if (document.getElementById('p90-confirm-modal')) { resolve(false); return; }
+    var danger = opts.danger !== false;
+    var esc = String(message).replace(/[&<>]/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c];
+    });
+    var ov = document.createElement('div');
+    ov.id = 'p90-confirm-modal';
+    ov.style.cssText =
+      'position:fixed;inset:0;z-index:2147483000;background:rgba(8,8,8,.85);' +
+      'display:flex;align-items:center;justify-content:center;padding:24px;' +
+      "font-family:'DM Mono',monospace;";
+    ov.innerHTML =
+      '<div role="alertdialog" aria-modal="true" style="background:var(--surface,#111);' +
+      'border:1px solid var(--border2,rgba(245,245,240,.16));max-width:400px;width:100%;padding:32px 34px;">' +
+        '<p style="font-size:13px;line-height:1.75;color:var(--white,#f5f5f0);margin-bottom:24px;">' + esc + '</p>' +
+        '<div style="display:flex;gap:10px;">' +
+          '<button id="p90c-no" style="flex:1;padding:12px;font-family:inherit;font-size:11px;' +
+            'letter-spacing:.14em;text-transform:uppercase;cursor:pointer;background:none;' +
+            'border:1px solid var(--border2,rgba(245,245,240,.16));color:var(--mid,#999);">' +
+            (opts.cancelText || 'Cancelar') + '</button>' +
+          '<button id="p90c-yes" style="flex:1;padding:12px;font-family:inherit;font-size:11px;' +
+            'letter-spacing:.14em;text-transform:uppercase;cursor:pointer;border:none;color:#080808;' +
+            (danger ? 'background:var(--red,#fca5a5);' : 'background:var(--white,#f5f5f0);') + '">' +
+            (opts.okText || 'Confirmar') + '</button>' +
+        '</div>' +
+      '</div>';
+    function done(v) {
+      ov.remove();
+      document.removeEventListener('keydown', onKey, true);
+      resolve(v);
+    }
+    function onKey(e) {
+      if (e.key === 'Escape') { e.stopPropagation(); done(false); }
+      else if (e.key === 'Enter') { e.stopPropagation(); done(true); }
+    }
+    ov.addEventListener('click', function (e) { if (e.target === ov) done(false); });
+    document.addEventListener('keydown', onKey, true);
+    document.body.appendChild(ov);
+    ov.querySelector('#p90c-no').addEventListener('click', function () { done(false); });
+    ov.querySelector('#p90c-yes').addEventListener('click', function () { done(true); });
+    ov.querySelector('#p90c-yes').focus();
+  });
+};
+
+/* ──────────────────────────────────────────
+   Focus-trap global pros modais. Sem fio por página: um MutationObserver
+   olha as classes de overlay conhecidas; enquanto um estiver aberto, o Tab
+   circula dentro dele e o foco volta pro gatilho ao fechar.
+────────────────────────────────────────── */
+(function p90ModalFocusGuard() {
+  var OPEN = '.modal-overlay.open, .quiz-overlay.show, .prac-overlay.show, ' +
+             '.jm-overlay.open, .bpm-overlay.open, #p90-confirm-modal, #p90-reset-modal';
+  var FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), ' +
+                  'select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+  var trapped = null, lastFocus = null;
+
+  function items() {
+    return trapped ? Array.prototype.filter.call(
+      trapped.querySelectorAll(FOCUSABLE),
+      function (el) { return el.offsetWidth || el.offsetHeight || el.getClientRects().length; }
+    ) : [];
+  }
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Tab' || !trapped) return;
+    var f = items();
+    if (!f.length) return;
+    var first = f[0], last = f[f.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    else if (!trapped.contains(document.activeElement)) { e.preventDefault(); first.focus(); }
+  }, true);
+
+  function scan() {
+    var open = document.querySelector(OPEN);
+    if (open === trapped) return;
+    if (open) {
+      if (!trapped) lastFocus = document.activeElement;
+      trapped = open;
+      var f = items();
+      if (f.length && !open.contains(document.activeElement)) { try { f[0].focus(); } catch (e) {} }
+    } else {
+      trapped = null;
+      if (lastFocus && lastFocus.focus) { try { lastFocus.focus(); } catch (e) {} }
+      lastFocus = null;
+    }
+  }
+  if (typeof MutationObserver === 'function') {
+    new MutationObserver(scan).observe(document.documentElement, {
+      attributes: true, attributeFilter: ['class'], subtree: true, childList: true,
+    });
+  }
 })();

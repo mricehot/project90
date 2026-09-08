@@ -612,11 +612,11 @@ function togglePause(id) {
   saveHabits(); renderAll();
 }
 
-function deleteHabit(id) {
+async function deleteHabit(id) {
   const h = habits.find(x => x.id === id);
   if (!h) return;
   if (h.coreKey) { toast('Hábito fixo não pode ser excluído — você pode pausá-lo.'); return; }
-  if (!confirm(`Excluir "${h.name}"? Esta ação não pode ser desfeita.`)) return;
+  if (!await window.p90confirm(`Excluir "${h.name}"? Esta ação não pode ser desfeita.`, { okText: 'Excluir' })) return;
   habits = habits.filter(x => x.id !== id);
   saveHabits(); renderAll(); toast('Hábito excluído');
 }
@@ -707,6 +707,12 @@ window.addEventListener('p90:synced', notifyNewAchievements);
 initSidebar();
 renderAll();
 
+// veio do "+ Hábito" do dashboard → abre o modal de criação direto
+if (new URLSearchParams(location.search).get('new') === '1') {
+  if (history.replaceState) history.replaceState(null, '', location.pathname);
+  openModal();
+}
+
 /* ── BG CANVAS ── */
 (function() {
   const canvas = document.createElement('canvas');
@@ -732,7 +738,7 @@ renderAll();
     ctx.fillStyle=grd; ctx.fillRect(0,0,W,H);
     t+=0.006; requestAnimationFrame(draw);
   }
-  window.addEventListener('resize',resize); resize(); draw();
+  window.addEventListener('resize',resize); resize(); if (!matchMedia('(prefers-reduced-motion: reduce)').matches) draw();
 })();
 
 /* ── CARD HOVER GLOW ── */

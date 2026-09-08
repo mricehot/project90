@@ -18,7 +18,7 @@
   --border:   rgba(245,245,240,0.08);
   --border2:  rgba(245,245,240,0.16);
   --white:    #f5f5f0;
-  --mid:      #555555;
+  --mid:      #7d7d7d;
   --muted:    #2a2a2a;
   --green:    #86efac;
   --red:      #fca5a5;
@@ -32,6 +32,18 @@ body {
   overflow: hidden; min-height: 100vh;
 }
 input, textarea { cursor: text; }
+
+/* ── FOCO DE TECLADO ── */
+:focus-visible { outline: 2px solid var(--white); outline-offset: 2px; }
+.btn-google:focus-visible { outline-offset: -4px; }
+
+/* ── MOVIMENTO REDUZIDO ── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important; animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important; scroll-behavior: auto !important;
+  }
+}
 
 /* ── CURSOR CUSTOMIZADO — só em ponteiro fino (mouse/trackpad) ── */
 #cur, #cur-ring { display: none; }
@@ -365,7 +377,7 @@ async function doLogin() {
     ctx.fillStyle=grd; ctx.fillRect(0,0,W,H);
     t+=0.008; requestAnimationFrame(draw);
   }
-  window.addEventListener('resize',resize); resize(); draw();
+  window.addEventListener('resize',resize); resize(); if (!matchMedia('(prefers-reduced-motion: reduce)').matches) draw();
 })();
 </script>
 </body>

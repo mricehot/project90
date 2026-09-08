@@ -104,14 +104,7 @@
 .empty-icon { font-size: 32px; margin-bottom: 16px; opacity: 0.4; }
 .empty-title { font-family: 'DM Serif Display', serif; font-size: 20px; font-weight: 400; margin-bottom: 8px; opacity: 0.6; }
 .empty-sub { font-size: 12px; color: var(--mid); margin-bottom: 24px; line-height: 1.8; }
-.btn-sm {
-  padding: 10px 20px; background: none; border: 1px solid var(--border2); color: var(--mid);
-  font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
-  cursor: pointer; transition: color 0.2s, border-color 0.2s, background 0.2s;
-}
-.btn-sm:hover { border-color: rgba(245,245,240,0.3); color: var(--white); }
-.btn-sm.primary { background: var(--white); color: var(--bg); border-color: var(--white); }
-.btn-sm.primary:hover { background: rgba(245,245,240,0.88); color: var(--bg); }
+/* .btn-sm vem de css/components.css */
 
 textarea.modal-input { resize: vertical; min-height: 72px; line-height: 1.7; }
 
@@ -599,20 +592,20 @@ function renderList() {
     </div>`).join('') + note;
 }
 
-function loadLibrary() {
+async function loadLibrary() {
   const have = new Set(Store.getSpeechExercises().map(e => (e.title || '').trim().toLowerCase()));
   const fresh = DEFAULT_EXERCISES.filter(e => !have.has(e.title.trim().toLowerCase()));
   if (!fresh.length) { toast('A biblioteca inicial já está toda cadastrada.'); return; }
-  if (fresh.length > 50 && !confirm(`Adicionar ${fresh.length} exercícios de dicção à sua biblioteca?`)) return;
+  if (fresh.length > 50 && !await window.p90confirm(`Adicionar ${fresh.length} exercícios de dicção à sua biblioteca?`, { okText: 'Adicionar', danger: false })) return;
   const added = Store.addSpeechExercises(fresh);
   toast(`${added.length} exercício${added.length > 1 ? 's' : ''} adicionado${added.length > 1 ? 's' : ''} à biblioteca ✓`);
   renderStats(); renderList();
 }
 
-function removeEx(id) {
+async function removeEx(id) {
   const e = Store.getSpeechExercises().find(x => x.id === id);
   if (!e) return;
-  if (!confirm(`Excluir "${e.title}"? Esta ação não pode ser desfeita.`)) return;
+  if (!await window.p90confirm(`Excluir "${e.title}"? Esta ação não pode ser desfeita.`, { okText: 'Excluir' })) return;
   Store.deleteSpeechExercise(id);
   toast('Exercício excluído');
   renderStats(); renderList();
@@ -960,7 +953,7 @@ init();
   let W,H,cols,rows,nodes,t=0;
   function resize(){W=canvas.width=window.innerWidth;H=canvas.height=window.innerHeight;cols=Math.ceil(W/SIZE)+2;rows=Math.ceil(H/SIZE)+2;nodes=[];for(let r=0;r<rows;r++)for(let c=0;c<cols;c++)nodes.push({phase:Math.random()*Math.PI*2});}
   function draw(){ctx.clearRect(0,0,W,H);ctx.lineWidth=.4;const offX=(t*6)%SIZE,offY=(t*3)%SIZE;for(let c=0;c<cols;c++){const x=c*SIZE-offX,w=.5+.5*Math.sin(t*.4+c*.35);ctx.strokeStyle='rgba(245,245,240,'+(0.006+w*0.012)+')';ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}for(let r=0;r<rows;r++){const y=r*SIZE-offY,w=.5+.5*Math.sin(t*.35+r*.4+1.2);ctx.strokeStyle='rgba(245,245,240,'+(0.006+w*0.012)+')';ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){const nd=nodes[r*cols+c],x=c*SIZE-offX,y=r*SIZE-offY,p=.5+.5*Math.sin(t*.7+nd.phase);ctx.beginPath();ctx.arc(x,y,.5+p*.9,0,Math.PI*2);ctx.fillStyle='rgba(245,245,240,'+(p*0.07)+')';ctx.fill();}const grd=ctx.createRadialGradient(W*.65,H*.5,0,W*.65,H*.5,Math.max(W,H)*.75);grd.addColorStop(0,'rgba(8,8,8,0)');grd.addColorStop(.6,'rgba(8,8,8,0)');grd.addColorStop(1,'rgba(8,8,8,.7)');ctx.fillStyle=grd;ctx.fillRect(0,0,W,H);t+=.006;requestAnimationFrame(draw);}
-  window.addEventListener('resize',resize);resize();draw();
+  window.addEventListener('resize',resize);resize();if (!matchMedia('(prefers-reduced-motion: reduce)').matches) draw();
 })();
 (function(){
   document.querySelectorAll('.stat-card,.ex-card,.prac-cta').forEach(function(card){

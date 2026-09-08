@@ -6,6 +6,24 @@
    Incluído em TODAS as páginas de app.
 ═══════════════════════════════════════════════ */
 
+/* ── FOCO DE TECLADO ──
+   Antes não havia realce nenhum: navegar por Tab era invisível. */
+:focus-visible {
+  outline: 2px solid var(--white);
+  outline-offset: 2px;
+}
+/* em elementos de fundo claro o contorno branco sumiria — contorno interno escuro */
+.btn-sm.primary:focus-visible,
+.modal-btn.primary:focus-visible,
+.btn-primary:focus-visible,
+.nav-cta:focus-visible,
+.ptab.active:focus-visible {
+  outline-color: var(--bg);
+  outline-offset: -4px;
+}
+/* itens da sidebar: contorno interno pra não ser cortado pela borda esquerda */
+.sb-item:focus-visible { outline-offset: -2px; }
+
 /* ── LAYOUT ── */
 .wrap         { max-width: var(--max); margin: 0 auto; padding: 0 var(--gut); }
 .divider      { height: 1px; background: var(--border); }
@@ -69,14 +87,14 @@
 .btn-outline:hover { color: var(--white); }
 
 .btn-sm {
-  padding: 8px 18px; border: 1px solid var(--border2); background: none;
-  color: var(--white); font-family: 'DM Mono', monospace; font-size: 11px;
-  letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer;
-  transition: background 0.2s, border-color 0.2s;
+  padding: 10px 20px; border: 1px solid var(--border2); background: none;
+  color: var(--mid); font-family: 'DM Mono', monospace; font-size: 11px;
+  letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer;
+  transition: color 0.2s, border-color 0.2s, background 0.2s;
 }
-.btn-sm:hover { background: rgba(245,245,240,0.06); }
+.btn-sm:hover { color: var(--white); border-color: rgba(245,245,240,0.3); }
 .btn-sm.primary { background: var(--white); color: var(--bg); border-color: var(--white); }
-.btn-sm.primary:hover { background: rgba(245,245,240,0.88); }
+.btn-sm.primary:hover { background: rgba(245,245,240,0.88); color: var(--bg); }
 
 /* ── FORMS ── */
 .field-wrap { margin-bottom: 14px; }
@@ -109,7 +127,9 @@
   margin-bottom: 16px; padding-bottom: 14px; border-bottom: 1px solid var(--border);
 }
 .card-title  { font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--mid); }
-.card-action { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--mid); cursor: pointer; transition: color 0.2s; }
+.card-action { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--mid); cursor: pointer; transition: color 0.2s;
+  /* funciona igual como <span>, <a> ou <button> */
+  background: none; border: 0; padding: 0; margin: 0; font-family: inherit; text-align: inherit; }
 .card-action:hover { color: var(--white); }
 
 /* ── STAT CARD ── */
@@ -270,6 +290,11 @@
   .mobile-topbar .mt-logo {
     font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 0.12em;
     color: var(--white); text-decoration: none;
+  }
+  .mobile-topbar .mt-page {
+    margin-left: auto;
+    font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--mid);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 45vw;
   }
   .hamburger {
     display: flex; align-items: center; justify-content: center;
