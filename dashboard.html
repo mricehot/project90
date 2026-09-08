@@ -3,6 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#080808">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Project 90">
 <title>Project 90 — Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
@@ -504,6 +511,7 @@ body { overflow: hidden; }
 <script src="js/store.js"></script>
 <script src="js/achievements.js"></script>
 <script src="js/quotes.js"></script>
+<script src="js/idb.js"></script>
 <script>
 const DAY  = Store.getCurrentDay();
 const DAYS = Store.getTotalDays();
@@ -745,15 +753,38 @@ function _toggleReminderPopover() {
     if (perm !== 'granted') { toast('Permissão de notificação negada.'); return; }
     const h = parseInt(document.getElementById('nudge-hour').value, 10) || 20;
     try { localStorage.setItem('p90_reminder', JSON.stringify({ hour: h })); } catch (e) {}
+    _syncReminderToSW({ enabled: true, hour: h });
     toast('Lembrete diário ativado para as ' + String(h).padStart(2,'0') + 'h.');
     renderNudge();
   };
   const off = document.getElementById('nudge-rem-off');
   if (off) off.onclick = () => {
     try { localStorage.removeItem('p90_reminder'); } catch (e) {}
+    _syncReminderToSW({ enabled: false });
     toast('Lembrete diário desativado.');
     renderNudge();
   };
+}
+
+// Espelha a config do lembrete pro service worker (que dispara com a aba
+// fechada, via periodic background sync — só em PWA instalado no Chrome).
+async function _syncReminderToSW(cfg) {
+  try {
+    if (window.p90idb) await window.p90idb.set('reminder', cfg);
+    if (cfg.enabled) await window.p90idb.del('reminderFired');
+  } catch (e) {}
+  if (!('serviceWorker' in navigator)) return;
+  try {
+    const reg = await navigator.serviceWorker.ready;
+    if (!reg.periodicSync) return;
+    if (cfg.enabled) {
+      const st = await navigator.permissions.query({ name: 'periodic-background-sync' }).catch(() => null);
+      if (st && st.state !== 'granted') return;
+      await reg.periodicSync.register('p90-reminder', { minInterval: 12 * 60 * 60 * 1000 });
+    } else {
+      await reg.periodicSync.unregister('p90-reminder');
+    }
+  } catch (e) { /* navegador sem periodicSync — o lembrete com a aba aberta segue funcionando */ }
 }
 
 // Dispara a notificação quando a hora chega e o dia não está completo.
@@ -1388,5 +1419,6 @@ _maybeNotify();
 })();
 </script>
 <script src="js/ui.js"></script>
+<script src="js/pwa.js"></script>
 </body>
 </html>

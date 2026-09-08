@@ -113,6 +113,17 @@ dashboard. Um usuário novo começa no **dia 1** com **5 hábitos fixos** (os qu
 alimentam achievements) e monta o resto da rotina livremente. Os 5 fixos não
 podem ser excluídos, só pausados.
 
+### PWA
+
+O site é instalável: `manifest.webmanifest` + `sw.js` (registrado por `js/pwa.js`,
+incluído em toda página) + `icons/` + `.nojekyll`. O service worker cacheia o app
+shell (HTML/CSS/JS/ícones) com **rede-primeiro** pra navegação e
+**stale-while-revalidate** pros estáticos; **não** cacheia chamadas ao Supabase
+(offline cai no espelho `localStorage` do `Store`). Fontes do Google vão pra um
+cache de runtime. `start_url` = `dashboard.html`. Bumpar `CACHE` no `sw.js`
+invalida tudo; `pwa.js` recarrega a aba quando um SW novo assume.
+Só funciona em HTTPS (ou `localhost`).
+
 ## Como o front usa isso
 
 - `js/supabase.js` cria `window.sb`.
