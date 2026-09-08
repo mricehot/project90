@@ -45,6 +45,7 @@ const Store = (() => {
       taskDone:      {},
       wins:          [],
       streakCounters: [],
+      closeouts:     {},
     };
   }
 
@@ -142,6 +143,9 @@ const Store = (() => {
     if (Array.isArray(data.streakCounters)) {
       cache.streakCounters.length = 0;
       data.streakCounters.map(_rowToCounter).forEach(c => cache.streakCounters.push(c));
+    }
+    if (data.closeouts && typeof data.closeouts === 'object') {
+      _replaceObject(cache.closeouts, data.closeouts);
     }
   }
 
@@ -738,6 +742,71 @@ const Store = (() => {
       }, { onConflict: 'user_id,week_num' });
       if (error) throw error;
     });
+  }
+
+  /* ──────────────────────────────────────────
+     FECHAMENTO DO DIA (ritual noturno)
+     cache.closeouts: { [dayNum]: { closedAt, tomorrowPriority, priorityDone } }
+  ────────────────────────────────────────── */
+  function getCloseout(dayNum) { return cache.closeouts[dayNum] || null; }
+  function getTodayCloseout() { return getCloseout(getCurrentDay()); }
+  function isDayClosed(dayNum) { return !!cache.closeouts[dayNum]; }
+
+  function _pushCloseout(dayNum, c) {
+    _push(async () => {
+      const { error } = await window.sb.from('daily_closeouts').upsert({
+        user_id: _uid, day_num: Number(dayNum),
+        closed_at: c.closedAt, tomorrow_priority: c.tomorrowPriority ?? null,
+        priority_done: !!c.priorityDone,
+      }, { onConflict: 'user_id,day_num' });
+      if (error) throw error;
+    });
+  }
+
+  // Grava (ou atualiza) o fechamento do dia. Mantém closedAt do primeiro
+  // fechamento; só a prioridade de amanhã pode ser reeditada depois.
+  function saveCloseout(dayNum, fields) {
+    const prev = cache.closeouts[dayNum] || {};
+    const c = {
+      closedAt: prev.closedAt || new Date().toISOString(),
+      tomorrowPriority: (fields && 'tomorrowPriority' in fields)
+        ? (String(fields.tomorrowPriority || '').trim() || null)
+        : (prev.tomorrowPriority ?? null),
+      priorityDone: prev.priorityDone || false,
+    };
+    cache.closeouts[dayNum] = c;
+    _saveMirror();
+    _pushCloseout(dayNum, c);
+    return c;
+  }
+
+  // Marca/desmarca a prioridade de um dia como cumprida (feito no dia seguinte).
+  function setPriorityDone(dayNum, val) {
+    const c = cache.closeouts[dayNum];
+    if (!c) return;
+    c.priorityDone = !!val;
+    _saveMirror();
+    _pushCloseout(dayNum, c);
+  }
+
+  // Reabre o dia: apaga o fechamento (o usuário quer refazer o ritual).
+  function reopenDay(dayNum) {
+    if (!cache.closeouts[dayNum]) return;
+    delete cache.closeouts[dayNum];
+    _saveMirror();
+    _push(async () => {
+      const { error } = await window.sb.from('daily_closeouts')
+        .delete().eq('user_id', _uid).eq('day_num', Number(dayNum));
+      if (error) throw error;
+    });
+  }
+
+  // A prioridade definida ontem (para hoje), se houver — pra fixar no dashboard.
+  function priorityForToday() {
+    const d = getCurrentDay() - 1;
+    const c = cache.closeouts[d];
+    if (!c || !c.tomorrowPriority) return null;
+    return { dayNum: d, text: c.tomorrowPriority, done: !!c.priorityDone };
   }
 
   /* ──────────────────────────────────────────
@@ -1726,6 +1795,8 @@ const Store = (() => {
     getWins, winsCount, addWin, deleteWin,
     getStreakCounters, counterDaysSince, addStreakCounter, renameStreakCounter,
     registerCounterSlip, undoCounterSlip, deleteStreakCounter,
+    getCloseout, getTodayCloseout, isDayClosed, saveCloseout, setPriorityDone,
+    reopenDay, priorityForToday,
     // computed
     habitVal, scheduledOn, dayCompletionPct, maxStreak, countDays,
     allHabitsDone, currentStreak, computeAchievementProgress, computeLevels,
