@@ -32,6 +32,7 @@ Dashboard → **SQL Editor** → **New query** → rode os arquivos **na ordem**
 18. `supabase/migrations/0018_streak_counters.sql` → **Run**
 19. `supabase/migrations/0019_daily_closeout.sql` → **Run**
 20. `supabase/migrations/0020_night_routine.sql` → **Run**
+21. `supabase/migrations/0022_faculdade.sql` → **Run**  *(0021 fica reservada — feature "Sistema", ainda não construída)*
 
 **Opção B — CLI:**
 ```bash
@@ -61,6 +62,7 @@ Os scripts criam:
 | `wins` | banco de provas (`0017`): 1 linha por vitória registrada à mão (`text`, `day_num`). Id gerado pelo cliente. Card no dashboard (`renderWinsCard`); as conquistas desbloqueadas aparecem no mesmo card, derivadas de `achievements` — não viram linha aqui. |
 | `streak_counters` | contadores "dias desde" (`0018`): `label`, `last_slip` (data do último deslize, nula = nunca), `start_date` (base enquanto `last_slip` for nula), `best_run` (recorde em dias). Id gerado pelo cliente. Card no dashboard (`renderCountersCard`). Independente de hábitos/streak/conquistas. |
 | `night_habits` / `night_routine_days` | **rotina noturna** (`0020`, substitui `daily_closeouts` da `0019`): checklist de hábitos só de antes de dormir. São **duas rotinas** (`night_habits.routine` 1\|2 — ex.: semana de manhã / semana à tarde); a ativa fica em `challenge_meta.night_routine_active`. `night_routine_days` tem 1 linha por noite com `done_ids` (jsonb) + `routine` (qual rotina valia naquela noite). Zera toda noite. Card no dashboard (`renderNightCard`) com seletor I/II. A `0020` derruba a `daily_closeouts`. |
+| `study_subjects` / `study_activities` | **Faculdade** — controle de prazos (`0022`): `study_subjects` são as disciplinas (id gerado pelo cliente); `study_activities` são as atividades — `title`, `due_on`, `done`/`done_on`. Status "atrasada" é derivado no cliente (venceu e não entregue). Página `faculdade.html` (accordion por disciplina) + card `#faculdade-card` no dashboard avisando o que vence em ≤ 7 dias. Sem nota, tipo, recorrência ou timeline. |
 | **RLS** | ligado em tudo — cada usuário só vê as próprias linhas |
 | `handle_new_user()` | trigger em `auth.users`: cria profile + meta + hábitos fixos |
 | `seed_core_habits(user)` | semeia os hábitos fixos que faltam (idempotente) |
@@ -70,7 +72,7 @@ Os scripts criam:
 | `set_habit_status(habit_id, day_index, status)` | marca um dia e recalcula `streak`/`max_streak` |
 | `use_freeze()` | consome 1 dia de folga (de 2 por desafio) e protege a sequência do dia atual, sem exigir nenhum hábito marcado (`0010`) |
 | `unlock_achievement(id, day)` / `mark_achievement_seen(id)` | conquistas |
-| `reset_progress()` | apaga hábitos + diário + revisões semanais + conquistas + vocabulário + dicção + plano da Bíblia + tarefas + contadores + rotina noturna do usuário, zera o `challenge_meta` (inclusive `freezes_left`/`frozen_days`) e re-semeia os fixos (botão "Resetar progresso" na sidebar) |
+| `reset_progress()` | apaga hábitos + diário + revisões semanais + conquistas + vocabulário + dicção + plano da Bíblia + tarefas + contadores + rotina noturna + faculdade do usuário, zera o `challenge_meta` (inclusive `freezes_left`/`frozen_days`) e re-semeia os fixos (botão "Resetar progresso" na sidebar) |
 | `app_bootstrap()` | devolve todo o estado do usuário num JSON só (usado no load) |
 
 > `0003` removeu o módulo de água dedicado (`water_config`, `water_logs`,

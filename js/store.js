@@ -47,6 +47,8 @@ const Store = (() => {
       streakCounters: [],
       nightHabits:   [],
       nightRoutine:  {},
+      studySubjects:   [],
+      studyActivities: [],
     };
   }
 
@@ -163,6 +165,21 @@ const Store = (() => {
         const routine = (v && v.routine === 2) ? 2 : 1;
         cache.nightRoutine[k] = { ids: ids.slice(), routine };
       });
+    }
+    if (Array.isArray(data.studySubjects)) {
+      cache.studySubjects.length = 0;
+      data.studySubjects.forEach(s => cache.studySubjects.push({
+        id: s.id, name: s.name, archived: !!s.archived, createdAt: s.createdAt,
+      }));
+    }
+    if (Array.isArray(data.studyActivities)) {
+      cache.studyActivities.length = 0;
+      data.studyActivities.forEach(a => cache.studyActivities.push({
+        id: a.id, subjectId: a.subjectId, title: a.title,
+        dueOn: a.dueOn ? String(a.dueOn).slice(0, 10) : null,
+        done: !!a.done, doneOn: a.doneOn ? String(a.doneOn).slice(0, 10) : null,
+        createdAt: a.createdAt,
+      }));
     }
   }
 
@@ -1673,6 +1690,183 @@ const Store = (() => {
   }
 
   /* ──────────────────────────────────────────
+     FACULDADE — controle de prazos (disciplinas + atividades)
+       cache.studySubjects:   [{ id, name, archived, createdAt }]
+       cache.studyActivities: [{ id, subjectId, title, dueOn, done, doneOn, createdAt }]
+     Status "atrasada" é derivado (venceu e não entregue).
+  ────────────────────────────────────────── */
+  function _pushSubject(s) {
+    _push(async () => {
+      const { error } = await window.sb.from('study_subjects').upsert({
+        user_id: _uid, id: s.id, name: s.name,
+        sort_order: s.sortOrder || 0, archived: !!s.archived, created_at: s.createdAt,
+      }, { onConflict: 'user_id,id' });
+      if (error) throw error;
+    });
+  }
+
+  function getStudySubjects(includeArchived) {
+    return cache.studySubjects
+      .filter(s => includeArchived || !s.archived)
+      .slice()
+      .sort((a, b) => String(a.createdAt).localeCompare(String(b.createdAt)) || (a.id - b.id));
+  }
+
+  function studySubjectName(id) {
+    const s = cache.studySubjects.find(x => x.id === id);
+    return s ? s.name : '';
+  }
+
+  function addStudySubject(name) {
+    const t = String(name || '').trim();
+    if (!t) return null;
+    const id = (cache.studySubjects.reduce((m, s) => Math.max(m, s.id), 0) || 0) + 1;
+    const s = { id, name: t, archived: false, sortOrder: cache.studySubjects.length,
+                createdAt: new Date().toISOString() };
+    cache.studySubjects.push(s);
+    _saveMirror();
+    _pushSubject(s);
+    return s;
+  }
+
+  function renameStudySubject(id, name) {
+    const s = cache.studySubjects.find(x => x.id === id);
+    if (!s) return;
+    s.name = String(name || '').trim() || s.name;
+    _saveMirror();
+    _pushSubject(s);
+  }
+
+  function setStudySubjectArchived(id, val) {
+    const s = cache.studySubjects.find(x => x.id === id);
+    if (!s) return;
+    s.archived = !!val;
+    _saveMirror();
+    _pushSubject(s);
+  }
+
+  function deleteStudySubject(id) {
+    const si = cache.studySubjects.findIndex(s => s.id === id);
+    if (si !== -1) cache.studySubjects.splice(si, 1);
+    let removed = 0;
+    for (let i = cache.studyActivities.length - 1; i >= 0; i--) {
+      if (cache.studyActivities[i].subjectId === id) { cache.studyActivities.splice(i, 1); removed++; }
+    }
+    _saveMirror();
+    _push(async () => {
+      if (removed) {
+        const { error: e1 } = await window.sb.from('study_activities')
+          .delete().eq('user_id', _uid).eq('subject_id', id);
+        if (e1) throw e1;
+      }
+      const { error } = await window.sb.from('study_subjects')
+        .delete().eq('user_id', _uid).eq('id', id);
+      if (error) throw error;
+    });
+  }
+
+  function _pushActivity(a) {
+    _push(async () => {
+      const { error } = await window.sb.from('study_activities').upsert({
+        user_id: _uid, id: a.id, subject_id: a.subjectId, title: a.title,
+        due_on: a.dueOn || null, done: !!a.done, done_on: a.doneOn || null,
+        created_at: a.createdAt,
+      }, { onConflict: 'user_id,id' });
+      if (error) throw error;
+    });
+  }
+
+  function _studyActSort(a, b) {
+    if (a.dueOn && b.dueOn) return a.dueOn < b.dueOn ? -1 : a.dueOn > b.dueOn ? 1 : (a.id - b.id);
+    if (a.dueOn) return -1;
+    if (b.dueOn) return 1;
+    return a.id - b.id;
+  }
+
+  function getStudyActivities(subjectId) {
+    return cache.studyActivities
+      .filter(a => subjectId == null || a.subjectId === subjectId)
+      .slice()
+      .sort(_studyActSort);
+  }
+
+  function addStudyActivity(subjectId, fields) {
+    const f = fields || {};
+    const t = String(f.title || '').trim();
+    if (!t || subjectId == null) return null;
+    const id = (cache.studyActivities.reduce((m, a) => Math.max(m, a.id), 0) || 0) + 1;
+    const a = {
+      id, subjectId, title: t,
+      dueOn: f.dueOn ? String(f.dueOn).slice(0, 10) : null,
+      done: false, doneOn: null, createdAt: new Date().toISOString(),
+    };
+    cache.studyActivities.push(a);
+    _saveMirror();
+    _pushActivity(a);
+    return a;
+  }
+
+  function updateStudyActivity(id, fields) {
+    const a = cache.studyActivities.find(x => x.id === id);
+    if (!a || !fields) return;
+    if ('title' in fields) a.title = String(fields.title || '').trim() || a.title;
+    if ('dueOn' in fields) a.dueOn = fields.dueOn ? String(fields.dueOn).slice(0, 10) : null;
+    _saveMirror();
+    _pushActivity(a);
+  }
+
+  function toggleStudyDone(id) {
+    const a = cache.studyActivities.find(x => x.id === id);
+    if (!a) return;
+    a.done = !a.done;
+    a.doneOn = a.done ? _localDate(0) : null;
+    _saveMirror();
+    _pushActivity(a);
+    return a.done;
+  }
+
+  function deleteStudyActivity(id) {
+    const i = cache.studyActivities.findIndex(a => a.id === id);
+    if (i !== -1) cache.studyActivities.splice(i, 1);
+    _saveMirror();
+    _push(async () => {
+      const { error } = await window.sb.from('study_activities')
+        .delete().eq('user_id', _uid).eq('id', id);
+      if (error) throw error;
+    });
+  }
+
+  // 'entregue' | 'atrasada' | 'pendente'
+  function studyActivityStatus(a) {
+    if (!a) return 'pendente';
+    if (a.done) return 'entregue';
+    if (a.dueOn && a.dueOn < _localDate(0)) return 'atrasada';
+    return 'pendente';
+  }
+
+  // Dias até a entrega (0 = hoje, negativo = atrasada). null se sem data.
+  function studyDaysUntil(a) {
+    if (!a || !a.dueOn) return null;
+    const ms = new Date(a.dueOn + 'T00:00:00') - new Date(_localDate(0) + 'T00:00:00');
+    return Math.round(ms / 86400000);
+  }
+
+  // { overdue, soon } — atividades não entregues; 'soon' vence em [hoje, hoje+days].
+  function studyUpcoming(days) {
+    const win = days == null ? 7 : days;
+    const overdue = [], soon = [];
+    cache.studyActivities.forEach(a => {
+      if (a.done || !a.dueOn) return;
+      const d = studyDaysUntil(a);
+      if (d < 0) overdue.push(a);
+      else if (d <= win) soon.push(a);
+    });
+    overdue.sort(_studyActSort);
+    soon.sort(_studyActSort);
+    return { overdue, soon };
+  }
+
+  /* ──────────────────────────────────────────
      COMPUTED HELPERS
   ────────────────────────────────────────── */
 
@@ -1914,6 +2108,10 @@ const Store = (() => {
     getNightRoutineActive, setNightRoutineActive,
     getNightHabits, addNightHabit, renameNightHabit, deleteNightHabit,
     getNightRoutine, toggleNightHabitDone, nightRoutineComplete, nightRoutineStreak,
+    getStudySubjects, studySubjectName, addStudySubject, renameStudySubject,
+    setStudySubjectArchived, deleteStudySubject,
+    getStudyActivities, addStudyActivity, updateStudyActivity, toggleStudyDone,
+    deleteStudyActivity, studyActivityStatus, studyDaysUntil, studyUpcoming,
     // computed
     habitVal, scheduledOn, dayCompletionPct, maxStreak, countDays,
     allHabitsDone, currentStreak, computeAchievementProgress, computeLevels,
