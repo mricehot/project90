@@ -956,16 +956,9 @@ function checkAll() {
 }
 
 function addHabit() {
-  const name = prompt('Nome do novo hábito:');
-  if (!name || !name.trim()) return;
-  const nextId = Math.max(0, ...realHabits.map(h => h.id)) + 1;
-  realHabits.push({
-    id: nextId, name: name.trim(), pillar: 'Corpo', freq: [0,1,2,3,4,5,6],
-    goal: '', streak: 0, maxStreak: 0, paused: false, createdDay: DAY, history: ['miss'],
-  });
-  saveRealHabits(realHabits);
-  refreshFromRealHabits();
-  renderHabits(); renderHeatmap(); initSidebar();
+  // criar hábito é na página de Hábitos, com o modal completo (pilar,
+  // frequência, meta) — não um prompt() cru com defaults escondidos.
+  location.href = 'habitos.html?new=1';
 }
 
 /* ─ TAREFAS DE HOJE ─ */
@@ -1104,8 +1097,8 @@ function renderWinsCard() {
   el.innerHTML = html;
 }
 
-function removeWin(id) {
-  if (!confirm('Remover esta prova?')) return;
+async function removeWin(id) {
+  if (!await window.p90confirm('Remover esta prova?', { okText: 'Remover' })) return;
   Store.deleteWin(id);
   renderWinsCard();
   if (document.getElementById('bpm-overlay').classList.contains('open')) renderWinsModalList();
@@ -1218,9 +1211,9 @@ function undoSlip(id) {
   Store.undoCounterSlip(id);
   renderCountersCard();
 }
-function removeCounter(id) {
+async function removeCounter(id) {
   const c = Store.getStreakCounters().find(x => x.id === id);
-  if (!confirm(`Excluir o contador "${c ? c.label : ''}"?`)) return;
+  if (!await window.p90confirm(`Excluir o contador "${c ? c.label : ''}"?`, { okText: 'Excluir' })) return;
   Store.deleteStreakCounter(id);
   renderCountersCard();
 }

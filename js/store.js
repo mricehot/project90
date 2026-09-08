@@ -1709,3 +1709,55 @@ const Store = (() => {
   };
 
 })();
+
+/* ──────────────────────────────────────────
+   p90confirm(msg, opts?) — modal de confirmação no lugar do confirm() nativo.
+   Retorna Promise<boolean>. opts: { okText, cancelText, danger (default true) }
+   Enter = confirmar, Esc / clique no fundo = cancelar.
+────────────────────────────────────────── */
+window.p90confirm = function (message, opts) {
+  opts = opts || {};
+  return new Promise(function (resolve) {
+    if (document.getElementById('p90-confirm-modal')) { resolve(false); return; }
+    var danger = opts.danger !== false;
+    var esc = String(message).replace(/[&<>]/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c];
+    });
+    var ov = document.createElement('div');
+    ov.id = 'p90-confirm-modal';
+    ov.style.cssText =
+      'position:fixed;inset:0;z-index:2147483000;background:rgba(8,8,8,.85);' +
+      'display:flex;align-items:center;justify-content:center;padding:24px;' +
+      "font-family:'DM Mono',monospace;";
+    ov.innerHTML =
+      '<div role="alertdialog" aria-modal="true" style="background:var(--surface,#111);' +
+      'border:1px solid var(--border2,rgba(245,245,240,.16));max-width:400px;width:100%;padding:32px 34px;">' +
+        '<p style="font-size:13px;line-height:1.75;color:var(--white,#f5f5f0);margin-bottom:24px;">' + esc + '</p>' +
+        '<div style="display:flex;gap:10px;">' +
+          '<button id="p90c-no" style="flex:1;padding:12px;font-family:inherit;font-size:11px;' +
+            'letter-spacing:.14em;text-transform:uppercase;cursor:pointer;background:none;' +
+            'border:1px solid var(--border2,rgba(245,245,240,.16));color:var(--mid,#999);">' +
+            (opts.cancelText || 'Cancelar') + '</button>' +
+          '<button id="p90c-yes" style="flex:1;padding:12px;font-family:inherit;font-size:11px;' +
+            'letter-spacing:.14em;text-transform:uppercase;cursor:pointer;border:none;color:#080808;' +
+            (danger ? 'background:var(--red,#fca5a5);' : 'background:var(--white,#f5f5f0);') + '">' +
+            (opts.okText || 'Confirmar') + '</button>' +
+        '</div>' +
+      '</div>';
+    function done(v) {
+      ov.remove();
+      document.removeEventListener('keydown', onKey, true);
+      resolve(v);
+    }
+    function onKey(e) {
+      if (e.key === 'Escape') { e.stopPropagation(); done(false); }
+      else if (e.key === 'Enter') { e.stopPropagation(); done(true); }
+    }
+    ov.addEventListener('click', function (e) { if (e.target === ov) done(false); });
+    document.addEventListener('keydown', onKey, true);
+    document.body.appendChild(ov);
+    ov.querySelector('#p90c-no').addEventListener('click', function () { done(false); });
+    ov.querySelector('#p90c-yes').addEventListener('click', function () { done(true); });
+    ov.querySelector('#p90c-yes').focus();
+  });
+};

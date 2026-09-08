@@ -687,10 +687,10 @@ function escapeHtml(s) {
   return String(s || '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
 }
 
-function removeWord(id) {
+async function removeWord(id) {
   const w = Store.getVocabWords().find(x => x.id === id);
   if (!w) return;
-  if (!confirm(`Excluir "${w.word}"? Esta ação não pode ser desfeita.`)) return;
+  if (!await window.p90confirm(`Excluir "${w.word}"? Esta ação não pode ser desfeita.`, { okText: 'Excluir' })) return;
   Store.deleteVocabWord(id);
   toast('Palavra excluída');
   renderStats(); renderList();

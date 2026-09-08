@@ -592,20 +592,20 @@ function renderList() {
     </div>`).join('') + note;
 }
 
-function loadLibrary() {
+async function loadLibrary() {
   const have = new Set(Store.getSpeechExercises().map(e => (e.title || '').trim().toLowerCase()));
   const fresh = DEFAULT_EXERCISES.filter(e => !have.has(e.title.trim().toLowerCase()));
   if (!fresh.length) { toast('A biblioteca inicial já está toda cadastrada.'); return; }
-  if (fresh.length > 50 && !confirm(`Adicionar ${fresh.length} exercícios de dicção à sua biblioteca?`)) return;
+  if (fresh.length > 50 && !await window.p90confirm(`Adicionar ${fresh.length} exercícios de dicção à sua biblioteca?`, { okText: 'Adicionar', danger: false })) return;
   const added = Store.addSpeechExercises(fresh);
   toast(`${added.length} exercício${added.length > 1 ? 's' : ''} adicionado${added.length > 1 ? 's' : ''} à biblioteca ✓`);
   renderStats(); renderList();
 }
 
-function removeEx(id) {
+async function removeEx(id) {
   const e = Store.getSpeechExercises().find(x => x.id === id);
   if (!e) return;
-  if (!confirm(`Excluir "${e.title}"? Esta ação não pode ser desfeita.`)) return;
+  if (!await window.p90confirm(`Excluir "${e.title}"? Esta ação não pode ser desfeita.`, { okText: 'Excluir' })) return;
   Store.deleteSpeechExercise(id);
   toast('Exercício excluído');
   renderStats(); renderList();

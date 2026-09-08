@@ -384,10 +384,10 @@ function toggleArchive(id) {
   render();
 }
 
-function removeTask(id) {
+async function removeTask(id) {
   const t = Store.getTasks().find(x => x.id === id);
   if (!t) return;
-  if (!confirm(`Excluir "${t.title}"? Isso apaga a tarefa e seu histórico.`)) return;
+  if (!await window.p90confirm(`Excluir "${t.title}"? Isso apaga a tarefa e seu histórico.`, { okText: 'Excluir' })) return;
   Store.deleteTask(id);
   toast('Tarefa excluída');
   render();
