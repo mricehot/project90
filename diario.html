@@ -37,9 +37,35 @@ body {
   font-family: 'DM Mono', monospace; font-weight: 300;
   -webkit-font-smoothing: antialiased; overflow: hidden;
 }
-/* cursor customizado + I-beam nos campos vêm de css/base.css (com media-query
-   pra ponteiro fino) */
 input, textarea { cursor: text; }
+
+/* Esta página é self-contained (não linka base/components.css), então
+   espelha aqui: foco de teclado, cursor customizado, movimento reduzido. */
+:focus-visible { outline: 2px solid var(--white); outline-offset: 2px; }
+.btn-sm.primary:focus-visible, .jm-btn.primary:focus-visible { outline-color: var(--bg); outline-offset: -4px; }
+.sb-item:focus-visible { outline-offset: -2px; }
+
+#cur, #cur-ring { display: none; }
+@media (hover: hover) and (pointer: fine) {
+  body { cursor: none; }
+  #cur {
+    display: block; width: 6px; height: 6px; background: var(--white); border-radius: 50%;
+    position: fixed; top: 0; left: 0; pointer-events: none; z-index: 9999;
+    mix-blend-mode: difference; will-change: transform;
+  }
+  #cur-ring {
+    display: block; width: 30px; height: 30px; border: 1px solid rgba(245,245,240,0.3); border-radius: 50%;
+    position: fixed; top: 0; left: 0; pointer-events: none; z-index: 9998;
+    mix-blend-mode: difference; will-change: transform;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important; animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important; scroll-behavior: auto !important;
+  }
+}
 
 /* ── TOAST ── */
 .toast {
@@ -124,7 +150,16 @@ input, textarea { cursor: text; }
 .day-nav-btn:disabled { opacity: 0.25; cursor: default; }
 .day-nav-lbl { font-size: 11px; letter-spacing: 0.1em; color: var(--mid); min-width: 80px; text-align: center; }
 
-/* ── BUTTONS ── (.btn-sm vem de css/components.css) */
+/* ── BUTTONS ── (self-contained; espelha css/components.css) */
+.btn-sm {
+  padding: 10px 20px; border: 1px solid var(--border2); background: none;
+  color: var(--mid); font-family: 'DM Mono', monospace; font-size: 11px;
+  letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer;
+  transition: color 0.2s, border-color 0.2s, background 0.2s;
+}
+.btn-sm:hover { color: var(--white); border-color: rgba(245,245,240,0.3); }
+.btn-sm.primary { background: var(--white); color: var(--bg); border-color: var(--white); }
+.btn-sm.primary:hover { background: rgba(245,245,240,0.88); color: var(--bg); }
 
 /* ── UNSAVED DOT ── */
 .unsaved-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(245,245,240,0.4); display: none; flex-shrink: 0; }
