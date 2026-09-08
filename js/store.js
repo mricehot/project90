@@ -45,7 +45,8 @@ const Store = (() => {
       taskDone:      {},
       wins:          [],
       streakCounters: [],
-      closeouts:     {},
+      nightHabits:   [],
+      nightRoutine:  {},
     };
   }
 
@@ -144,8 +145,18 @@ const Store = (() => {
       cache.streakCounters.length = 0;
       data.streakCounters.map(_rowToCounter).forEach(c => cache.streakCounters.push(c));
     }
-    if (data.closeouts && typeof data.closeouts === 'object') {
-      _replaceObject(cache.closeouts, data.closeouts);
+    if (Array.isArray(data.nightHabits)) {
+      cache.nightHabits.length = 0;
+      data.nightHabits.forEach(h => cache.nightHabits.push({
+        id: h.id, label: h.label, createdAt: h.createdAt,
+      }));
+    }
+    if (data.nightRoutineDays && typeof data.nightRoutineDays === 'object') {
+      Object.keys(cache.nightRoutine).forEach(k => delete cache.nightRoutine[k]);
+      Object.keys(data.nightRoutineDays).forEach(k => {
+        cache.nightRoutine[k] = Array.isArray(data.nightRoutineDays[k])
+          ? data.nightRoutineDays[k].slice() : [];
+      });
     }
   }
 
@@ -745,68 +756,124 @@ const Store = (() => {
   }
 
   /* ──────────────────────────────────────────
-     FECHAMENTO DO DIA (ritual noturno)
-     cache.closeouts: { [dayNum]: { closedAt, tomorrowPriority, priorityDone } }
+     ROTINA NOTURNA
+     Uma checklist de hábitos só de antes de dormir (preparar o sono,
+     preparar o dia seguinte). Zera toda noite.
+       cache.nightHabits: [{ id, label, createdAt }]        — os itens da rotina
+       cache.nightRoutine: { [dayNum]: [id, id, ...] }      — o que foi marcado naquela noite
   ────────────────────────────────────────── */
-  function getCloseout(dayNum) { return cache.closeouts[dayNum] || null; }
-  function getTodayCloseout() { return getCloseout(getCurrentDay()); }
-  function isDayClosed(dayNum) { return !!cache.closeouts[dayNum]; }
+  function getNightHabits() {
+    return cache.nightHabits.slice().sort((a, b) =>
+      (String(a.createdAt).localeCompare(String(b.createdAt))) || (a.id - b.id));
+  }
 
-  function _pushCloseout(dayNum, c) {
+  function _pushNightHabit(h) {
     _push(async () => {
-      const { error } = await window.sb.from('daily_closeouts').upsert({
+      const { error } = await window.sb.from('night_habits').upsert({
+        user_id: _uid, id: h.id, label: h.label, created_at: h.createdAt,
+      }, { onConflict: 'user_id,id' });
+      if (error) throw error;
+    });
+  }
+
+  function addNightHabit(label) {
+    const t = String(label || '').trim();
+    if (!t) return null;
+    const id = (cache.nightHabits.reduce((m, h) => Math.max(m, h.id), 0) || 0) + 1;
+    const h = { id, label: t, createdAt: new Date().toISOString() };
+    cache.nightHabits.push(h);
+    _saveMirror();
+    _pushNightHabit(h);
+    return h;
+  }
+
+  function renameNightHabit(id, label) {
+    const h = cache.nightHabits.find(x => x.id === id);
+    if (!h) return;
+    h.label = String(label || '').trim() || h.label;
+    _saveMirror();
+    _pushNightHabit(h);
+  }
+
+  function deleteNightHabit(id) {
+    const idx = cache.nightHabits.findIndex(h => h.id === id);
+    if (idx === -1) return;
+    cache.nightHabits.splice(idx, 1);
+    // tira o id das noites já registradas
+    Object.keys(cache.nightRoutine).forEach(k => {
+      const arr = cache.nightRoutine[k] || [];
+      const i = arr.indexOf(id);
+      if (i !== -1) { arr.splice(i, 1); _pushNightRoutineDay(k); }
+    });
+    _saveMirror();
+    _push(async () => {
+      const { error } = await window.sb.from('night_habits')
+        .delete().eq('user_id', _uid).eq('id', id);
+      if (error) throw error;
+    });
+  }
+
+  function getNightRoutine(dayNum) {
+    const d = dayNum == null ? getCurrentDay() : dayNum;
+    return (cache.nightRoutine[d] || []).slice();
+  }
+
+  function _pushNightRoutineDay(dayNum) {
+    _push(async () => {
+      const { error } = await window.sb.from('night_routine_days').upsert({
         user_id: _uid, day_num: Number(dayNum),
-        closed_at: c.closedAt, tomorrow_priority: c.tomorrowPriority ?? null,
-        priority_done: !!c.priorityDone,
+        done_ids: cache.nightRoutine[dayNum] || [],
+        updated_at: new Date().toISOString(),
       }, { onConflict: 'user_id,day_num' });
       if (error) throw error;
     });
   }
 
-  // Grava (ou atualiza) o fechamento do dia. Mantém closedAt do primeiro
-  // fechamento; só a prioridade de amanhã pode ser reeditada depois.
-  function saveCloseout(dayNum, fields) {
-    const prev = cache.closeouts[dayNum] || {};
-    const c = {
-      closedAt: prev.closedAt || new Date().toISOString(),
-      tomorrowPriority: (fields && 'tomorrowPriority' in fields)
-        ? (String(fields.tomorrowPriority || '').trim() || null)
-        : (prev.tomorrowPriority ?? null),
-      priorityDone: prev.priorityDone || false,
-    };
-    cache.closeouts[dayNum] = c;
+  // Marca/desmarca um item da rotina na noite de um dia. Devolve o novo estado.
+  function toggleNightHabitDone(itemId, dayNum) {
+    const d = dayNum == null ? getCurrentDay() : dayNum;
+    const arr = cache.nightRoutine[d] ? cache.nightRoutine[d].slice() : [];
+    const i = arr.indexOf(itemId);
+    if (i === -1) arr.push(itemId); else arr.splice(i, 1);
+    cache.nightRoutine[d] = arr;
     _saveMirror();
-    _pushCloseout(dayNum, c);
-    return c;
+    _pushNightRoutineDay(d);
+    return i === -1;
   }
 
-  // Marca/desmarca a prioridade de um dia como cumprida (feito no dia seguinte).
-  function setPriorityDone(dayNum, val) {
-    const c = cache.closeouts[dayNum];
-    if (!c) return;
-    c.priorityDone = !!val;
-    _saveMirror();
-    _pushCloseout(dayNum, c);
+  // Data (YYYY-MM-DD) do dia N do desafio.
+  function _dayDateISO(n) {
+    const s = cache.meta && cache.meta.startDate;
+    if (!s) return null;
+    const d = new Date(String(s).slice(0, 10) + 'T00:00:00');
+    d.setDate(d.getDate() + (Number(n) - 1));
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') +
+           '-' + String(d.getDate()).padStart(2, '0');
   }
 
-  // Reabre o dia: apaga o fechamento (o usuário quer refazer o ritual).
-  function reopenDay(dayNum) {
-    if (!cache.closeouts[dayNum]) return;
-    delete cache.closeouts[dayNum];
-    _saveMirror();
-    _push(async () => {
-      const { error } = await window.sb.from('daily_closeouts')
-        .delete().eq('user_id', _uid).eq('day_num', Number(dayNum));
-      if (error) throw error;
-    });
+  // Rotina da noite completa? Conta só os itens que já existiam naquela noite,
+  // pra adicionar um item hoje não "quebrar" as noites passadas.
+  function nightRoutineComplete(dayNum) {
+    if (!cache.nightHabits.length) return false;
+    const d = dayNum == null ? getCurrentDay() : dayNum;
+    const done = new Set(cache.nightRoutine[d] || []);
+    if (!done.size) return false;
+    const dayDate = _dayDateISO(d);
+    const applicable = dayDate
+      ? cache.nightHabits.filter(h => String(h.createdAt).slice(0, 10) <= dayDate)
+      : cache.nightHabits;
+    if (!applicable.length) return false;
+    return applicable.every(h => done.has(h.id));
   }
 
-  // A prioridade definida ontem (para hoje), se houver — pra fixar no dashboard.
-  function priorityForToday() {
-    const d = getCurrentDay() - 1;
-    const c = cache.closeouts[d];
-    if (!c || !c.tomorrowPriority) return null;
-    return { dayNum: d, text: c.tomorrowPriority, done: !!c.priorityDone };
+  // Noites seguidas com a rotina completa (terminando hoje ou ontem).
+  function nightRoutineStreak() {
+    if (!cache.nightHabits.length) return 0;
+    let d = getCurrentDay();
+    if (!nightRoutineComplete(d)) d -= 1;   // a noite de hoje ainda pode estar aberta
+    let n = 0;
+    while (d >= 1 && nightRoutineComplete(d)) { n++; d--; }
+    return n;
   }
 
   /* ──────────────────────────────────────────
@@ -1795,8 +1862,8 @@ const Store = (() => {
     getWins, winsCount, addWin, deleteWin,
     getStreakCounters, counterDaysSince, addStreakCounter, renameStreakCounter,
     registerCounterSlip, undoCounterSlip, deleteStreakCounter,
-    getCloseout, getTodayCloseout, isDayClosed, saveCloseout, setPriorityDone,
-    reopenDay, priorityForToday,
+    getNightHabits, addNightHabit, renameNightHabit, deleteNightHabit,
+    getNightRoutine, toggleNightHabitDone, nightRoutineComplete, nightRoutineStreak,
     // computed
     habitVal, scheduledOn, dayCompletionPct, maxStreak, countDays,
     allHabitsDone, currentStreak, computeAchievementProgress, computeLevels,
