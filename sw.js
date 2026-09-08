@@ -7,7 +7,7 @@
 ═══════════════════════════════════════════════ */
 importScripts('js/idb.js');
 
-const CACHE = 'p90-shell-v3';
+const CACHE = 'p90-shell-v4';
 const FONTS = 'p90-fonts-v1';
 
 const ASSETS = [
@@ -112,8 +112,11 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Navegação (HTML): rede primeiro, cache como fallback offline.
-  if (req.mode === 'navigate') {
+  // Navegação (HTML) + código (JS/CSS): rede primeiro, cache só como fallback
+  // offline. Assim uma correção publicada vale já na próxima abertura — antes,
+  // JS/CSS eram stale-while-revalidate e todo deploy ficava "uma abertura
+  // atrás" (foi o que segurou os fixes de menu mobile no PWA instalado).
+  if (req.mode === 'navigate' || /\.(?:js|css)$/.test(url.pathname)) {
     event.respondWith(
       fetch(req)
         .then((res) => {
@@ -121,12 +124,16 @@ self.addEventListener('fetch', (event) => {
           caches.open(CACHE).then((cache) => cache.put(req, copy));
           return res;
         })
-        .catch(() => caches.match(req).then((hit) => hit || caches.match('dashboard.html')))
+        .catch(() =>
+          caches.match(req).then((hit) =>
+            hit || (req.mode === 'navigate' ? caches.match('dashboard.html') : undefined)
+          )
+        )
     );
     return;
   }
 
-  // Estáticos mesmo domínio: stale-while-revalidate.
+  // Demais estáticos mesmo domínio (ícones, manifest, imagens): stale-while-revalidate.
   event.respondWith(
     caches.open(CACHE).then((cache) =>
       cache.match(req).then((hit) => {

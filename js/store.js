@@ -531,22 +531,33 @@ const Store = (() => {
   function bootstrap() {
     if (_readyPromise) return _readyPromise;
 
+    // Chrome da navegação (topbar/hambúrguer no mobile, logout, reset) é só
+    // DOM — não depende de sessão nem de rede. Fica FORA do caminho autenticado
+    // pra não sumir quando o Supabase demora, falha ou o app abre offline
+    // (era o motivo do hambúrguer não aparecer no PWA instalado).
+    const wireSidebar = () => { _wireLogout(); _wireReset(); _wireMobileNav(); };
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', wireSidebar, { once: true });
+    } else {
+      wireSidebar();
+    }
+
     _readyPromise = (async () => {
       if (!window.sb) {
         console.error('[Project 90] cliente Supabase indisponível (js/supabase.js).');
         return;
       }
 
-      const { data: { session } } = await window.sb.auth.getSession();
+      let session = null;
+      try {
+        const r = await window.sb.auth.getSession();
+        session = (r && r.data && r.data.session) || null;
+      } catch (e) {
+        console.error('[Project 90] getSession falhou:', e);
+        return;
+      }
       if (!session) { _redirectToLogin(); return; }
       _uid = session.user.id;
-
-      const wireSidebar = () => { _wireLogout(); _wireReset(); _wireMobileNav(); };
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', wireSidebar, { once: true });
-      } else {
-        wireSidebar();
-      }
 
       const { data, error } = await window.sb.rpc('app_bootstrap');
       if (error) {
