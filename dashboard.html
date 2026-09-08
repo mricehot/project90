@@ -103,71 +103,17 @@ body { overflow: hidden; }
 .dr-words { font-size: 11px; letter-spacing: 0.04em; color: var(--mid); line-height: 1.9; word-break: break-word; }
 .dr-words .more { opacity: 0.55; }
 
-/* ── BANCO DE PROVAS (DASH) ── */
-.bp-input {
+/* ── input de "adicionar" dos cards (contadores) ── */
+.card-add-input {
   width: 100%; background: var(--surface2); border: 1px solid var(--border); color: var(--white);
   font-family: 'DM Mono', monospace; font-weight: 300; font-size: 12px; letter-spacing: 0.03em;
   padding: 11px 13px; outline: none; margin: 4px 0 14px; transition: border-color 0.2s;
 }
-.bp-input:focus { border-color: rgba(245,245,240,0.3); }
-.bp-input::placeholder { color: var(--mid); }
-.bp-row { display: flex; align-items: flex-start; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--border); }
-.bp-row:last-child { border-bottom: none; }
-.bp-mark { color: var(--mid); flex-shrink: 0; line-height: 1.6; }
-.bp-text { flex: 1; font-size: 12.5px; letter-spacing: 0.02em; line-height: 1.6; word-break: break-word; }
-.bp-day { font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--mid); white-space: nowrap; flex-shrink: 0; margin-top: 2px; }
-.bp-del { background: none; border: none; color: var(--mid); font-size: 13px; cursor: pointer; line-height: 1; padding: 4px 6px; opacity: 0.4; transition: opacity 0.15s, color 0.15s; }
-.bp-row:hover .bp-del, .bp-del:focus-visible { opacity: 1; }
-@media (hover: none) { .bp-del { opacity: 0.65; } }
-.bp-del:hover { color: #fca5a5; }
-.bp-sub { font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--mid); margin: 16px 0 8px; }
-.bp-ach { display: flex; flex-wrap: wrap; gap: 6px; }
-.bp-chip { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--border); padding: 4px 9px; font-size: 10px; letter-spacing: 0.04em; color: var(--mid); }
-.bp-chip .i { filter: grayscale(1); opacity: 0.85; }
-.bp-empty { font-size: 12px; color: var(--mid); line-height: 1.8; padding: 8px 0 4px; }
-#bp-count { cursor: pointer; }
-#bp-count:hover { color: var(--white); }
+.card-add-input:focus { border-color: rgba(245,245,240,0.3); }
+.card-add-input::placeholder { color: var(--mid); }
 
-/* ── MODAL: BANCO DE PROVAS (lista completa) ── */
-.bpm-overlay {
-  position: fixed; inset: 0; z-index: 500; background: rgba(8,8,8,0.88);
-  display: flex; align-items: center; justify-content: center; padding: 24px;
-  opacity: 0; pointer-events: none; transition: opacity 0.25s;
-}
-.bpm-overlay.open { opacity: 1; pointer-events: all; }
-.bpm-box {
-  background: var(--surface); border: 1px solid var(--border2);
-  width: 100%; max-width: 560px; max-height: 86vh; display: flex; flex-direction: column;
-  transform: translateY(12px); transition: transform 0.3s cubic-bezier(0.16,1,0.3,1);
-}
-.bpm-overlay.open .bpm-box { transform: translateY(0); }
-.bpm-head { padding: 26px 30px 16px; border-bottom: 1px solid var(--border); }
-.bpm-title { font-family: 'DM Serif Display', serif; font-size: 21px; color: var(--white); margin-bottom: 14px; }
-.bpm-title em { font-style: italic; opacity: 0.4; }
-.bpm-search {
-  width: 100%; background: var(--surface2); border: 1px solid var(--border2); color: var(--white);
-  font-family: 'DM Mono', monospace; font-size: 12px; padding: 10px 12px; outline: none;
-}
-.bpm-search::placeholder { color: var(--mid); }
-.bpm-search:focus { border-color: rgba(245,245,240,0.3); }
-.bpm-body { padding: 12px 30px; overflow-y: auto; }
-.bpm-item { display: flex; align-items: flex-start; gap: 10px; padding: 12px 0; border-bottom: 1px solid var(--border); }
-.bpm-item:last-child { border-bottom: none; }
-.bpm-mark { color: var(--mid); line-height: 1.6; flex-shrink: 0; }
-.bpm-text { flex: 1; font-size: 12.5px; line-height: 1.65; letter-spacing: 0.02em; word-break: break-word; }
-.bpm-day { font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--mid); white-space: nowrap; flex-shrink: 0; margin-top: 3px; }
-.bpm-del { background: none; border: none; color: var(--mid); font-size: 13px; cursor: pointer; line-height: 1; padding: 4px 6px; opacity: 0.4; transition: opacity 0.15s, color 0.15s; }
-.bpm-item:hover .bpm-del, .bpm-del:focus-visible { opacity: 1; }
-@media (hover: none) { .bpm-del { opacity: 0.65; } }
-.bpm-del:hover { color: #fca5a5; }
-.bpm-empty { text-align: center; color: var(--mid); font-size: 12px; padding: 36px 0; line-height: 1.8; }
-.bpm-footer { padding: 14px 30px 20px; border-top: 1px solid var(--border); }
-.bpm-btn {
-  width: 100%; padding: 12px; background: none; border: 1px solid var(--border2); color: var(--mid);
-  font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
-  cursor: pointer; transition: color 0.2s, border-color 0.2s;
-}
-.bpm-btn:hover { color: var(--white); border-color: rgba(245,245,240,0.3); }
+/* (removido: card + modal do "Banco de provas" — poluía o dashboard.
+   Tabela `wins` e Store.getWins/addWin/deleteWin seguem no código, sem UI.) */
 
 /* ── CONTADORES "DIAS DESDE" (DASH) ── */
 .dc-row { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); }
@@ -441,26 +387,13 @@ body { overflow: hidden; }
         <div id="dash-review"></div>
       </div>
 
-      <!-- BANCO DE PROVAS -->
-      <div class="card" id="wins-card">
-        <div class="card-hd">
-          <span class="card-title">Banco de provas</span>
-          <button type="button" class="card-action" id="bp-count"></button>
-        </div>
-        <form id="bp-form" autocomplete="off">
-          <input class="bp-input" id="bp-input" maxlength="240"
-                 placeholder="Registre uma prova de que você é capaz…" />
-        </form>
-        <div id="bp-list"></div>
-      </div>
-
       <!-- CONTADORES "DIAS DESDE" -->
       <div class="card" id="counters-card">
         <div class="card-hd">
           <span class="card-title">Dias desde</span>
         </div>
         <form id="dc-form" autocomplete="off">
-          <input class="bp-input" id="dc-input" maxlength="80"
+          <input class="card-add-input" id="dc-input" maxlength="80"
                  placeholder="Adicionar contador — ex: sem rede social até tarde" />
         </form>
         <div id="dc-list"></div>
@@ -481,20 +414,6 @@ body { overflow: hidden; }
     </div>
 
   </main>
-</div>
-
-<!-- MODAL: BANCO DE PROVAS (lista completa) -->
-<div class="bpm-overlay" id="bpm-overlay">
-  <div class="bpm-box">
-    <div class="bpm-head">
-      <div class="bpm-title">Banco de <em>provas.</em></div>
-      <input class="bpm-search" id="bpm-search" type="text" placeholder="Buscar nas provas…" autocomplete="off" />
-    </div>
-    <div class="bpm-body" id="bpm-body"></div>
-    <div class="bpm-footer">
-      <button class="bpm-btn" id="bpm-close">Fechar</button>
-    </div>
-  </div>
 </div>
 
 
@@ -570,7 +489,6 @@ function init() {
   renderLevels();
   renderDashTasks();
   renderDashReview();
-  renderWinsCard();
   renderCountersCard();
 }
 
@@ -1052,134 +970,6 @@ function renderDashReview() {
     `<div class="dr-count">${due.length} palavra${due.length > 1 ? 's' : ''} para revisar hoje</div>` +
     `<div class="dr-words">${shown}${more}</div>`;
 }
-
-/* ─ BANCO DE PROVAS ─ */
-// Conquistas desbloqueadas, mais recentes primeiro — derivadas do catálogo
-// (js/achievements.js) + estado salvo. Vão SEMPRE depois das provas manuais.
-function _unlockedAchievements() {
-  const cats  = window.P90_ACHIEVEMENTS || [];
-  const state = (typeof Store.getAchievements === 'function' && Store.getAchievements()) || {};
-  const out = [];
-  cats.forEach(c => (c.achievements || []).forEach(a => {
-    const s = state[a.id];
-    if (s) out.push({ icon: a.icon || '◆', name: a.name || a.id, day: s.unlockedDay || 0 });
-  }));
-  out.sort((x, y) => y.day - x.day);
-  return out;
-}
-
-const WINS_CARD_LIMIT = 5;
-
-function renderWinsCard() {
-  const el = document.getElementById('bp-list');
-  if (!el || typeof Store.getWins !== 'function') return;
-
-  const wins = Store.getWins();
-  const ach  = _unlockedAchievements();
-
-  const countEl = document.getElementById('bp-count');
-  countEl.textContent = wins.length
-    ? `${wins.length} prova${wins.length > 1 ? 's' : ''}${wins.length > WINS_CARD_LIMIT ? ' · ver todas' : ''}`
-    : '';
-  countEl.hidden = !wins.length;   // sem provas o botão não faz nada — esconde
-
-  let html = '';
-
-  if (wins.length) {
-    html += wins.slice(0, WINS_CARD_LIMIT).map(w => `
-      <div class="bp-row">
-        <span class="bp-mark">▸</span>
-        <span class="bp-text">${_esc(w.text)}</span>
-        ${w.dayNum ? `<span class="bp-day">Dia ${w.dayNum}</span>` : ''}
-        <button class="bp-del" title="Remover" onclick="removeWin(${w.id})">✕</button>
-      </div>`).join('');
-  } else if (!ach.length) {
-    html += `<div class="bp-empty">Nada registrado ainda.<br>Anote a primeira quando algo der certo — nos dias ruins isso conta.</div>`;
-  }
-
-  if (ach.length) {
-    const shown = ach.slice(0, 10);
-    html += `<div class="bp-sub">Conquistas desbloqueadas</div>` +
-      `<div class="bp-ach">` +
-      shown.map(a => `<span class="bp-chip"><span class="i">${a.icon}</span>${_esc(a.name)}</span>`).join('') +
-      (ach.length > shown.length ? `<span class="bp-chip">+${ach.length - shown.length}</span>` : '') +
-      `</div>`;
-  }
-
-  el.innerHTML = html;
-}
-
-async function removeWin(id) {
-  if (!await window.p90confirm('Remover esta prova?', { okText: 'Remover' })) return;
-  Store.deleteWin(id);
-  renderWinsCard();
-  if (document.getElementById('bpm-overlay').classList.contains('open')) renderWinsModalList();
-}
-
-/* ─ MODAL: lista completa do banco de provas (só leitura + busca) ─ */
-let bpmQuery = '';
-
-function openWinsModal() {
-  if (!Store.getWins().length) return;
-  bpmQuery = '';
-  document.getElementById('bpm-search').value = '';
-  renderWinsModalList();
-  document.getElementById('bpm-overlay').classList.add('open');
-  document.getElementById('bpm-search').focus();
-}
-function closeWinsModal() {
-  document.getElementById('bpm-overlay').classList.remove('open');
-}
-
-function renderWinsModalList() {
-  const body = document.getElementById('bpm-body');
-  const q = bpmQuery.trim().toLowerCase();
-  let wins = Store.getWins();
-  if (q) wins = wins.filter(w => (w.text || '').toLowerCase().includes(q));
-
-  if (!wins.length) {
-    body.innerHTML = q
-      ? `<div class="bpm-empty">Nada encontrado para “${_esc(bpmQuery)}”.</div>`
-      : `<div class="bpm-empty">Nenhuma prova registrada ainda.</div>`;
-    return;
-  }
-  body.innerHTML = wins.map(w => `
-    <div class="bpm-item">
-      <span class="bpm-mark">▸</span>
-      <span class="bpm-text">${_esc(w.text)}</span>
-      ${w.dayNum ? `<span class="bpm-day">Dia ${w.dayNum}</span>` : ''}
-      <button class="bpm-del" title="Remover" onclick="removeWin(${w.id})">✕</button>
-    </div>`).join('');
-}
-
-(function wireWinsModal() {
-  const ov = document.getElementById('bpm-overlay');
-  if (!ov) return;
-  document.getElementById('bp-count').addEventListener('click', openWinsModal);
-  document.getElementById('bpm-close').addEventListener('click', closeWinsModal);
-  ov.addEventListener('click', e => { if (e.target === ov) closeWinsModal(); });
-  document.getElementById('bpm-search').addEventListener('input', function () {
-    bpmQuery = this.value; renderWinsModalList();
-  });
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Escape' && ov.classList.contains('open')) closeWinsModal();
-  });
-})();
-
-(function wireWinsForm() {
-  const form = document.getElementById('bp-form');
-  if (!form) return;
-  form.addEventListener('submit', e => {
-    e.preventDefault();
-    const input = document.getElementById('bp-input');
-    const v = input.value.trim();
-    if (!v) return;
-    Store.addWin(v);
-    input.value = '';
-    toast('Registrado no banco de provas ✓');
-    renderWinsCard();
-  });
-})();
 
 /* ─ CONTADORES "DIAS DESDE" ─ */
 function renderCountersCard() {
