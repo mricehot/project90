@@ -363,10 +363,10 @@ body { overflow: hidden; }
 
     <!-- STAT CARDS -->
     <div class="g4">
-      <div class="stat-card"><div class="stat-lbl">Disciplina geral</div><div class="stat-val" id="sc-disc">87%</div><div class="stat-delta up">↑ +3% esta semana</div></div>
-      <div class="stat-card"><div class="stat-lbl">Dias completos</div><div class="stat-val" id="sc-comp">28</div><div class="stat-sub">de <span id="sc-days">34</span> dias</div></div>
-      <div class="stat-card"><div class="stat-lbl">Streak atual</div><div class="stat-val" id="sc-streak">12</div><div class="stat-sub">Máximo: <span id="sc-max">18</span> dias · <span id="sc-freezes">2</span> <span id="sc-freezes-lbl">folgas</span></div></div>
-      <div class="stat-card"><div class="stat-lbl">Hábitos hoje</div><div class="stat-val" id="sc-today">3/5</div><div class="stat-delta dn" id="sc-today-msg">↓ 2 pendentes</div></div>
+      <div class="stat-card"><div class="stat-lbl">Disciplina geral</div><div class="stat-val" id="sc-disc">—</div><div class="stat-delta" id="sc-disc-delta"></div></div>
+      <div class="stat-card"><div class="stat-lbl">Dias completos</div><div class="stat-val" id="sc-comp">—</div><div class="stat-sub">de <span id="sc-days">—</span> dias</div></div>
+      <div class="stat-card"><div class="stat-lbl">Streak atual</div><div class="stat-val" id="sc-streak">—</div><div class="stat-sub">Máximo: <span id="sc-max">—</span> dias · <span id="sc-freezes">—</span> <span id="sc-freezes-lbl">folgas</span></div></div>
+      <div class="stat-card"><div class="stat-lbl">Hábitos hoje</div><div class="stat-val" id="sc-today">—</div><div class="stat-delta" id="sc-today-msg"></div></div>
     </div>
 
     <!-- NÍVEIS POR PILAR -->
@@ -834,6 +834,21 @@ function renderStats() {
   document.getElementById('sc-freezes').textContent = fz;
   document.getElementById('sc-freezes-lbl').textContent = fz === 1 ? 'folga' : 'folgas';
   countUp(DAY,       500, v => document.getElementById('sc-days').textContent   = v,       350);
+
+  // delta real de disciplina: média desta semana vs a anterior (precisa de
+  // 14 dias de histórico; antes disso não mostra nada inventado)
+  const deltaEl = document.getElementById('sc-disc-delta');
+  if (deltaEl) {
+    if (DAY >= 14) {
+      const wk  = arr => arr.reduce((a, b) => a + (b > 0 ? 1 : 0), 0) / (arr.length || 1) * 100;
+      const d   = Math.round(wk(dayStatuses.slice(DAY - 7, DAY)) - wk(dayStatuses.slice(DAY - 14, DAY - 7)));
+      deltaEl.textContent = (d >= 0 ? '↑ +' : '↓ ') + d + '% vs semana ant.';
+      deltaEl.className   = 'stat-delta ' + (d >= 0 ? 'up' : 'dn');
+    } else {
+      deltaEl.textContent = '';
+      deltaEl.className = 'stat-delta';
+    }
+  }
 
   setTimeout(() => {
     document.getElementById('sc-today').textContent = `${doneToday}/${habits.length}`;
