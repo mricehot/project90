@@ -307,8 +307,13 @@ const Store = (() => {
     const backdrop = document.createElement('div');
     backdrop.className = 'sidebar-backdrop';
 
-    document.body.insertBefore(bar, document.body.firstChild);
-    document.body.appendChild(backdrop);
+    // A barra e o backdrop ficam DENTRO de `.app`: a `.sidebar` mora ali e
+    // `.app` tem `position:relative;z-index:1` (contexto de empilhamento p/
+    // o canvas de fundo). Se o backdrop ficasse no <body>, ele cobriria o
+    // drawer inteiro — menu escuro e links não clicáveis no mobile.
+    const shell = sidebar.parentElement || document.body;
+    shell.insertBefore(bar, shell.firstChild);
+    shell.appendChild(backdrop);
 
     const btn = bar.querySelector('.hamburger');
     const open = () => {
