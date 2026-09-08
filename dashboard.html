@@ -407,7 +407,7 @@ body { overflow: hidden; }
       </div>
 
       <div class="card">
-        <div class="card-hd"><span class="card-title">Hábitos de hoje</span><span class="card-action" onclick="addHabit()">+ Novo</span></div>
+        <div class="card-hd"><span class="card-title">Hábitos de hoje</span><button type="button" class="card-action" onclick="addHabit()">+ Novo</button></div>
         <div id="habits-list"></div>
       </div>
 
@@ -435,7 +435,7 @@ body { overflow: hidden; }
     <div class="card" id="wins-card">
       <div class="card-hd">
         <span class="card-title">Banco de provas</span>
-        <span class="card-action" id="bp-count">—</span>
+        <button type="button" class="card-action" id="bp-count"></button>
       </div>
       <form id="bp-form" autocomplete="off">
         <input class="bp-input" id="bp-input" maxlength="240"
@@ -448,7 +448,7 @@ body { overflow: hidden; }
     <div class="card" id="counters-card">
       <div class="card-hd">
         <span class="card-title">Dias desde</span>
-        <span class="card-action" id="dc-add-btn">+ adicionar</span>
+        <button type="button" class="card-action" id="dc-add-btn">+ adicionar</button>
       </div>
       <form id="dc-form" autocomplete="off" hidden>
         <input class="bp-input" id="dc-input" maxlength="80"
@@ -1076,6 +1076,7 @@ function renderWinsCard() {
   countEl.textContent = wins.length
     ? `${wins.length} prova${wins.length > 1 ? 's' : ''}${wins.length > WINS_CARD_LIMIT ? ' · ver todas' : ''}`
     : '';
+  countEl.hidden = !wins.length;   // sem provas o botão não faz nada — esconde
 
   let html = '';
 
