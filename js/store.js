@@ -290,12 +290,19 @@ const Store = (() => {
 
     if (!sidebar.id) sidebar.id = 'p90-sidebar';
 
+    // nome da seção atual (sem a sidebar visível no mobile, é a única pista de "onde estou")
+    const activeItem = sidebar.querySelector('.sb-item.active');
+    const section = activeItem
+      ? activeItem.textContent.replace(/^[^A-Za-zÀ-ÿ]+/, '').trim()
+      : (document.title.split('—')[1] || '').trim();
+
     const bar = document.createElement('div');
     bar.className = 'mobile-topbar';
     bar.innerHTML =
       '<button class="hamburger" type="button" aria-label="Abrir menu" ' +
         'aria-expanded="false" aria-controls="' + sidebar.id + '">☰</button>' +
-      '<a class="mt-logo" href="index.html">Project 90</a>';
+      '<a class="mt-logo" href="index.html">Project 90</a>' +
+      (section ? '<span class="mt-page">' + section + '</span>' : '');
 
     const backdrop = document.createElement('div');
     backdrop.className = 'sidebar-backdrop';

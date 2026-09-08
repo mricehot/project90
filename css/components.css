@@ -291,6 +291,11 @@
     font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 0.12em;
     color: var(--white); text-decoration: none;
   }
+  .mobile-topbar .mt-page {
+    margin-left: auto;
+    font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--mid);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 45vw;
+  }
   .hamburger {
     display: flex; align-items: center; justify-content: center;
     width: 34px; height: 34px; flex-shrink: 0; padding: 0;

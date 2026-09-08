@@ -873,10 +873,17 @@ function renderCalendar() {
     if (isToday)    cls += ' today-cell';
     if (isSelected) cls += ' selected';
     var dot     = (dn && hasEntry) ? '<div class="entry-dot"></div>' : '';
-    var onclick = (dn && !isFuture) ? 'onclick="loadDayIntoEditor('+dn+')"' : '';
+    var onclick = (dn && !isFuture) ? 'onclick="calDayClick('+dn+')"' : '';
     html += '<div class="cal-cell '+cls+'" '+onclick+' title="'+(dn?'Dia '+dn:'')+'">'+d+dot+'</div>';
   }
   document.getElementById('cal-grid').innerHTML = html;
+}
+
+// Clicar num dia do calendário: se já tem entrada, abre o modal só-leitura
+// (mesma coisa que a lista lateral faz); se não tem, abre o editor pra escrever.
+function calDayClick(n) {
+  if (entries[n]) openHistoryModal(n);
+  else loadDayIntoEditor(n);
 }
 
 /* ── ENTRIES LIST ── */
