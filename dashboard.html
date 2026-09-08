@@ -1374,7 +1374,7 @@ document.addEventListener('mousemove',e=>{ if(tipOn){tip.style.left=(e.clientX+1
     ctx.fillStyle=grd; ctx.fillRect(0,0,W,H);
     t+=0.006; requestAnimationFrame(draw);
   }
-  window.addEventListener('resize',resize); resize(); draw();
+  window.addEventListener('resize',resize); resize(); if (!matchMedia('(prefers-reduced-motion: reduce)').matches) draw();
 })();
 
 window.addEventListener('p90:synced', function () { refreshFromRealHabits(); init(); _maybeNotify(); });

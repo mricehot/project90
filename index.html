@@ -858,7 +858,7 @@ footer{border-top:1px solid var(--b);padding:36px var(--gut);position:relative;z
     ctx.fillStyle=grd;ctx.fillRect(0,0,W,H);
     t+=.005;requestAnimationFrame(draw);
   }
-  window.addEventListener('resize',resize);resize();draw();
+  window.addEventListener('resize',resize);resize();if (!matchMedia('(prefers-reduced-motion: reduce)').matches) draw();
 })();
 
 /* NAV */

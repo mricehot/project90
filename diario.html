@@ -1159,7 +1159,7 @@ init();
     ctx.fillStyle=grd;ctx.fillRect(0,0,W,H);
     t+=0.006;requestAnimationFrame(draw);
   }
-  window.addEventListener('resize',resize);resize();draw();
+  window.addEventListener('resize',resize);resize();if (!matchMedia('(prefers-reduced-motion: reduce)').matches) draw();
 })();
 
 /* ── CARD HOVER GLOW ── */
