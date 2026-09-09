@@ -25,6 +25,10 @@
 ::-webkit-scrollbar-thumb:hover  { background: rgba(245,245,240,0.30); }
 ::-webkit-scrollbar-thumb:active { background: rgba(245,245,240,0.45); }
 ::-webkit-scrollbar-corner { background: transparent; }
+html { transition: scrollbar-color 0.4s ease; }
+html.sb-scrolling, html.sb-scrolling * { scrollbar-color: var(--white) transparent; }
+html.sb-scrolling::-webkit-scrollbar-thumb,
+html.sb-scrolling ::-webkit-scrollbar-thumb { background: var(--white); }
 
 /* ── TOKENS ── */
 :root {

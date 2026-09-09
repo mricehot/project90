@@ -23,6 +23,9 @@
 ::-webkit-scrollbar-thumb:hover{background:rgba(245,245,240,.30);}
 ::-webkit-scrollbar-thumb:active{background:rgba(245,245,240,.45);}
 ::-webkit-scrollbar-corner{background:transparent;}
+html{transition:scrollbar-color .4s ease;}
+html.sb-scrolling,html.sb-scrolling *{scrollbar-color:var(--w) transparent;}
+html.sb-scrolling::-webkit-scrollbar-thumb,html.sb-scrolling ::-webkit-scrollbar-thumb{background:var(--w);}
 :root{
   --bg:#080808;--s:#111;--s2:#181818;
   --b:rgba(245,245,240,.08);--b2:rgba(245,245,240,.16);

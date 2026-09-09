@@ -75,6 +75,14 @@ input, textarea { cursor: text; }
 ::-webkit-scrollbar-thumb:active { background: rgba(245,245,240,0.45); }
 ::-webkit-scrollbar-corner { background: transparent; }
 
+/* Acende no branco da página enquanto rola (classe posta por js/pwa.js),
+   volta pro cinza ao parar. No Firefox a volta é suave (transição de
+   scrollbar-color); no Chromium a troca é instantânea. */
+html { transition: scrollbar-color 0.4s ease; }
+html.sb-scrolling, html.sb-scrolling * { scrollbar-color: var(--white) transparent; }
+html.sb-scrolling::-webkit-scrollbar-thumb,
+html.sb-scrolling ::-webkit-scrollbar-thumb { background: var(--white); }
+
 /* ── KEYFRAMES ── */
 @keyframes fadeUp    { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: none; } }
 @keyframes scrollPulse { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
