@@ -22,8 +22,59 @@
 <script src="js/achievements.js"></script>
 <style>
 
-.fac-main { padding: 32px 36px; overflow-y: auto; display: flex; flex-direction: column; gap: 24px; }
-.topbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+.fac-main { display: grid; grid-template-columns: 1fr 280px; grid-template-rows: auto 1fr; height: 100vh; overflow: hidden; }
+.topbar {
+  grid-column: 1 / -1;
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+  padding: 24px 32px 16px; border-bottom: 1px solid var(--border);
+}
+.fac-body {
+  grid-column: 1; grid-row: 2; overflow-y: auto; padding: 24px 32px;
+  display: flex; flex-direction: column; gap: 24px;
+}
+
+/* ── RAIL DIREITA — disciplinas ── */
+.fac-rail {
+  grid-column: 2; grid-row: 2; border-left: 1px solid var(--border); background: var(--surface);
+  display: flex; flex-direction: column; overflow: hidden;
+}
+.fac-rail-hd {
+  padding: 18px 20px 14px; border-bottom: 1px solid var(--border);
+  font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--mid);
+}
+.fac-rail-list { flex: 1; overflow-y: auto; }
+.fac-rail-item {
+  padding: 14px 20px; border-bottom: 1px solid var(--border); cursor: pointer;
+  transition: background 0.15s; display: flex; flex-direction: column; gap: 5px;
+}
+.fac-rail-item:hover { background: rgba(245,245,240,0.04); }
+.fac-rail-name { font-size: 12px; letter-spacing: 0.03em; color: var(--white); word-break: break-word; }
+.fac-rail-meta { font-size: 9px; letter-spacing: 0.08em; color: var(--mid); }
+.fac-rail-meta .over { color: var(--red); }
+.fac-rail-empty { padding: 16px 20px; font-size: 11px; color: var(--mid); line-height: 1.7; }
+
+/* ── MODAL — atividades da disciplina ── */
+.modal.fac-subj-box { max-width: 540px; max-height: 86vh; display: flex; flex-direction: column; }
+.fsm-list { flex: 1; overflow-y: auto; margin: 4px -4px 0; padding: 0 4px; }
+.fsm-row { display: flex; align-items: center; gap: 12px; padding: 11px 2px; border-bottom: 1px solid var(--border); }
+.fsm-row:last-child { border-bottom: none; }
+.fsm-check {
+  width: 18px; height: 18px; border: 1px solid var(--border2); flex-shrink: 0; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; font-size: 11px; color: var(--white); transition: background 0.15s;
+}
+.fsm-row.done .fsm-check { background: var(--white); color: var(--bg); border-color: var(--white); }
+.fsm-main { flex: 1; min-width: 0; cursor: pointer; }
+.fsm-title { font-size: 12px; line-height: 1.4; color: var(--white); }
+.fsm-row.done .fsm-title { color: var(--mid); text-decoration: line-through; }
+.fsm-due { font-size: 10px; letter-spacing: 0.06em; color: var(--mid); margin-top: 3px; }
+.fsm-due .rel-over { color: var(--red); }
+.fsm-due .rel-soon { color: var(--white); }
+.fsm-due .rel-done { color: var(--green); }
+.fsm-due .rel-fazendo { color: var(--white); }
+.fsm-link { color: var(--mid); text-decoration: none; font-size: 12px; flex-shrink: 0; padding: 2px 4px; }
+.fsm-link:hover { color: var(--white); }
+.fsm-empty { font-size: 12px; color: var(--mid); padding: 14px 2px; }
+.fsm-add { margin-top: 12px; }
 .page-title { font-family: 'DM Serif Display', serif; font-size: 26px; font-weight: 400; display: flex; align-items: baseline; gap: 10px; }
 .page-title em { font-style: italic; opacity: 0.45; font-size: 22px; }
 
@@ -192,6 +243,14 @@
 .fm-status button.active { background: var(--white); color: var(--bg); }
 textarea.modal-input { resize: vertical; min-height: 60px; line-height: 1.6; font-family: 'DM Mono', monospace; }
 
+@media (max-width: 1080px) {
+  .fac-main { grid-template-columns: 1fr 240px; }
+}
+@media (max-width: 900px) {
+  .fac-main { display: block; height: auto; overflow: visible; }
+  .fac-body { padding: 20px; }
+  .fac-rail { display: none; }
+}
 @media (max-width: 720px) {
   .g3 { grid-template-columns: 1fr 1fr; }
   .fac-qa { flex-wrap: wrap; }
@@ -258,29 +317,36 @@ textarea.modal-input { resize: vertical; min-height: 60px; line-height: 1.6; fon
       </div>
     </div>
 
-    <div class="g3">
-      <div class="stat-card">
-        <div class="stat-lbl">Pendentes</div>
-        <div class="stat-val" id="sc-pend">0</div>
+    <div class="fac-body">
+      <div class="g3">
+        <div class="stat-card">
+          <div class="stat-lbl">Pendentes</div>
+          <div class="stat-val" id="sc-pend">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-lbl">Atrasadas</div>
+          <div class="stat-val warn" id="sc-over">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-lbl">Entregues</div>
+          <div class="stat-val" id="sc-done">0</div>
+        </div>
       </div>
-      <div class="stat-card">
-        <div class="stat-lbl">Atrasadas</div>
-        <div class="stat-val warn" id="sc-over">0</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-lbl">Entregues</div>
-        <div class="stat-val" id="sc-done">0</div>
-      </div>
+
+      <form class="fac-newsubj" id="newsubj-form" autocomplete="off">
+        <input id="newsubj-input" maxlength="120" placeholder="Nova disciplina — ex: Cálculo I" />
+      </form>
+
+      <div id="fac-list"></div>
+      <div id="fac-kanban" hidden></div>
+
+      <label class="arch-toggle" id="arch-wrap"><input type="checkbox" id="show-arch" /> ver disciplinas arquivadas</label>
     </div>
 
-    <form class="fac-newsubj" id="newsubj-form" autocomplete="off">
-      <input id="newsubj-input" maxlength="120" placeholder="Nova disciplina — ex: Cálculo I" />
-    </form>
-
-    <div id="fac-list"></div>
-    <div id="fac-kanban" hidden></div>
-
-    <label class="arch-toggle" id="arch-wrap"><input type="checkbox" id="show-arch" /> ver disciplinas arquivadas</label>
+    <aside class="fac-rail">
+      <div class="fac-rail-hd">Disciplinas</div>
+      <div class="fac-rail-list" id="fac-rail-list"></div>
+    </aside>
 
   </main>
 </div>
@@ -316,6 +382,22 @@ textarea.modal-input { resize: vertical; min-height: 60px; line-height: 1.6; fon
     <div class="modal-footer">
       <button class="modal-btn ghost" type="button" id="fm-del">Excluir</button>
       <button class="modal-btn primary" type="button" id="fm-save">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ATIVIDADES DA DISCIPLINA -->
+<div class="modal-overlay" id="fac-subj-modal">
+  <div class="modal fac-subj-box" role="dialog" aria-modal="true" aria-labelledby="fsm-title">
+    <div class="modal-title" id="fsm-title">Disciplina</div>
+    <div class="fsm-list" id="fsm-list"></div>
+    <form class="fac-qa fsm-add" id="fsm-add" autocomplete="off">
+      <input class="fac-qa-title" id="fsm-add-title" maxlength="200" placeholder="Nova atividade" />
+      <input class="fac-qa-date" id="fsm-add-date" type="date" />
+      <button type="submit">+</button>
+    </form>
+    <div class="modal-footer">
+      <button class="modal-btn ghost" type="button" id="fsm-close">Fechar</button>
     </div>
   </div>
 </div>
@@ -399,7 +481,84 @@ function renderView() {
   document.getElementById('fac-kanban').hidden = v !== 'kanban';
   document.getElementById('arch-wrap').style.display = v === 'lista' ? '' : 'none';
   renderStats();
+  renderRail();
+  if (subjModalId != null) renderSubjModalList(subjModalId);
   if (v === 'kanban') renderKanban(); else renderList();
+}
+
+/* ── RAIL DIREITA — lista de disciplinas ── */
+function subjCounts(subjId) {
+  const acts = Store.getStudyActivities(subjId);
+  const pending = acts.filter(a => !a.done);
+  const over = pending.filter(a => Store.studyActivityStatus(a) === 'atrasada').length;
+  return { total: acts.length, pending: pending.length, over, done: acts.length - pending.length };
+}
+
+function renderRail() {
+  const el = document.getElementById('fac-rail-list');
+  if (!el) return;
+  const subjects = Store.getStudySubjects(false);
+  if (!subjects.length) {
+    el.innerHTML = '<div class="fac-rail-empty">Nenhuma disciplina ainda. Adicione uma no campo à esquerda.</div>';
+    return;
+  }
+  el.innerHTML = subjects.map(s => {
+    const c = subjCounts(s.id);
+    let meta;
+    if (!c.total) meta = 'sem atividades';
+    else if (!c.pending) meta = 'tudo entregue';
+    else {
+      meta = c.pending + ' pendente' + (c.pending === 1 ? '' : 's');
+      if (c.over) meta += ' · <span class="over">' + c.over + ' atrasada' + (c.over === 1 ? '' : 's') + '</span>';
+    }
+    return `<div class="fac-rail-item" data-subj="${s.id}">
+      <span class="fac-rail-name">${esc(s.name)}</span>
+      <span class="fac-rail-meta">${meta}</span>
+    </div>`;
+  }).join('');
+}
+
+/* ── MODAL: atividades de uma disciplina ── */
+let subjModalId = null;
+
+function renderSubjModalList(subjId) {
+  const listEl = document.getElementById('fsm-list');
+  const acts = Store.getStudyActivities(subjId);
+  const pending = acts.filter(a => !a.done);
+  const doneActs = acts.filter(a => a.done);
+  const rows = [...pending, ...doneActs];
+  if (!rows.length) {
+    listEl.innerHTML = '<div class="fsm-empty">Nenhuma atividade nesta disciplina. Adicione abaixo.</div>';
+    return;
+  }
+  listEl.innerHTML = rows.map(a => {
+    const rel = a.status === 'fazendo' && !a.done
+      ? `<span class="rel-fazendo">fazendo</span>${a.dueOn ? ' · ' + relLabel(a) : ''}`
+      : relLabel(a);
+    return `<div class="fsm-row ${a.done ? 'done' : ''}" data-id="${a.id}">
+      <div class="fsm-check" data-act="check" title="${a.done ? 'Desmarcar' : 'Marcar entregue'}">${a.done ? '✓' : ''}</div>
+      <div class="fsm-main" data-act="edit">
+        <div class="fsm-title">${esc(a.title)}</div>
+        <div class="fsm-due">${a.dueOn ? fmtDue(a.dueOn) + ' · ' : ''}${rel}</div>
+      </div>
+      ${linkIcon(a, 'fsm-link')}
+    </div>`;
+  }).join('');
+}
+
+function openSubjModal(subjId) {
+  const s = Store.getStudySubjects(true).find(x => x.id === subjId);
+  if (!s) return;
+  subjModalId = subjId;
+  document.getElementById('fsm-title').textContent = s.name;
+  document.getElementById('fsm-add-title').value = '';
+  document.getElementById('fsm-add-date').value = '';
+  renderSubjModalList(subjId);
+  document.getElementById('fac-subj-modal').classList.add('open');
+}
+function closeSubjModal() {
+  document.getElementById('fac-subj-modal').classList.remove('open');
+  subjModalId = null;
 }
 
 function renderStats() {
@@ -793,6 +952,46 @@ document.getElementById('fac-modal').addEventListener('click', e => {
 });
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape' && document.getElementById('fac-modal').classList.contains('open')) closeEdit();
+});
+
+/* ── rail + modal de disciplina ── */
+document.getElementById('fac-rail-list').addEventListener('click', e => {
+  const item = e.target.closest('.fac-rail-item');
+  if (item) openSubjModal(Number(item.dataset.subj));
+});
+
+document.getElementById('fsm-list').addEventListener('click', e => {
+  if (e.target.closest('.fsm-link')) return;
+  const row = e.target.closest('.fsm-row');
+  if (!row) return;
+  const id = Number(row.dataset.id);
+  if (e.target.closest('[data-act="check"]')) {
+    Store.toggleStudyDone(id);
+    render();
+  } else if (e.target.closest('[data-act="edit"]')) {
+    closeSubjModal();
+    openEdit(id);
+  }
+});
+
+document.getElementById('fsm-add').addEventListener('submit', e => {
+  e.preventDefault();
+  if (subjModalId == null) return;
+  const tEl = document.getElementById('fsm-add-title');
+  const title = tEl.value.trim();
+  if (!title) { tEl.focus(); return; }
+  Store.addStudyActivity(subjModalId, { title, dueOn: document.getElementById('fsm-add-date').value || null });
+  tEl.value = ''; document.getElementById('fsm-add-date').value = '';
+  render();
+  tEl.focus();
+});
+
+document.getElementById('fsm-close').addEventListener('click', closeSubjModal);
+document.getElementById('fac-subj-modal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeSubjModal();
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && document.getElementById('fac-subj-modal').classList.contains('open')) closeSubjModal();
 });
 
 function init() { initSidebar(); render(); }

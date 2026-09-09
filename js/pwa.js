@@ -28,3 +28,16 @@
     location.reload();
   });
 })();
+
+/* Barra de rolagem acende no branco enquanto rola e volta pro cinza ao parar.
+   O CSS (css/base.css + páginas self-contained) faz a cor; aqui só a classe. */
+(function () {
+  try { if (matchMedia('(prefers-reduced-motion: reduce)').matches) return; } catch (e) {}
+  var root = document.documentElement, timer;
+  function onScroll() {
+    root.classList.add('sb-scrolling');
+    clearTimeout(timer);
+    timer = setTimeout(function () { root.classList.remove('sb-scrolling'); }, 500);
+  }
+  window.addEventListener('scroll', onScroll, { capture: true, passive: true });
+})();
