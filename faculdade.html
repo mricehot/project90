@@ -44,10 +44,16 @@
 }
 .fac-rail-list { flex: 1; overflow-y: auto; }
 .fac-rail-item {
-  padding: 14px 20px; border-bottom: 1px solid var(--border); cursor: pointer;
+  position: relative; padding: 14px 30px 14px 20px; border-bottom: 1px solid var(--border); cursor: pointer;
   transition: background 0.15s; display: flex; flex-direction: column; gap: 5px;
 }
 .fac-rail-item:hover { background: rgba(245,245,240,0.04); }
+.fac-rail-item:focus-visible { outline: none; background: rgba(245,245,240,0.05); }
+.fac-rail-item::after {
+  content: '›'; position: absolute; right: 15px; top: 50%; transform: translateY(-50%);
+  color: var(--mid); font-size: 14px; opacity: 0; transition: opacity 0.15s;
+}
+.fac-rail-item:hover::after, .fac-rail-item:focus-visible::after { opacity: 1; }
 .fac-rail-name { font-size: 12px; letter-spacing: 0.03em; color: var(--white); word-break: break-word; }
 .fac-rail-meta { font-size: 9px; letter-spacing: 0.08em; color: var(--mid); }
 .fac-rail-meta .over { color: var(--red); }
@@ -55,6 +61,9 @@
 
 /* ── MODAL — atividades da disciplina ── */
 .modal.fac-subj-box { max-width: 540px; max-height: 86vh; display: flex; flex-direction: column; }
+.modal.fac-subj-box .modal-title { margin-bottom: 4px; }
+.fsm-sub { font-size: 10px; letter-spacing: 0.1em; color: var(--mid); margin-bottom: 20px; }
+.fsm-sub .over { color: var(--red); }
 .fsm-list { flex: 1; overflow-y: auto; margin: 4px -4px 0; padding: 0 4px; }
 .fsm-row { display: flex; align-items: center; gap: 12px; padding: 11px 2px; border-bottom: 1px solid var(--border); }
 .fsm-row:last-child { border-bottom: none; }
@@ -200,19 +209,32 @@
   display: flex; gap: 6px; cursor: pointer;
 }
 .kb-card:hover { border-color: rgba(245,245,240,0.3); }
+.kb-card:focus-visible { outline: none; border-color: rgba(245,245,240,0.4); }
 .kb-grip {
   flex-shrink: 0; width: 14px; color: var(--mid); cursor: grab; touch-action: none; user-select: none;
   display: flex; align-items: flex-start; justify-content: center; font-size: 12px; padding-top: 1px;
 }
 .kb-grip:active { cursor: grabbing; }
 .kb-card-main { flex: 1; min-width: 0; }
-.kb-card-title { font-size: 12px; line-height: 1.4; color: var(--white); }
+.kb-card-title {
+  font-size: 12px; line-height: 1.4; color: var(--white);
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+}
 .kb-card.done .kb-card-title { color: var(--mid); text-decoration: line-through; }
 .kb-card-meta { font-size: 10px; letter-spacing: 0.04em; color: var(--mid); margin-top: 4px; display: flex; gap: 8px; flex-wrap: wrap; }
 .kb-card-meta .kb-late { color: var(--red); }
 .kb-card-meta .kb-soon { color: var(--white); }
 .kb-card-link { color: var(--mid); text-decoration: none; font-size: 12px; flex-shrink: 0; padding-left: 2px; }
 .kb-card-link:hover { color: var(--white); }
+.kb-do {
+  flex-shrink: 0; width: 16px; height: 16px; align-self: flex-start; padding: 0; cursor: pointer;
+  background: none; border: 1px solid var(--border2); color: var(--mid);
+  display: flex; align-items: center; justify-content: center; font-size: 10px;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+.kb-do:hover { color: var(--white); border-color: rgba(245,245,240,0.4); }
+.kb-card.done .kb-do { background: var(--white); color: var(--bg); border-color: var(--white); }
+.kb-more { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--mid); padding: 8px 4px 2px; }
 .kb-empty { font-size: 11px; color: var(--mid); padding: 6px 4px; }
 .kb-ghost { position: fixed; top: 0; left: 0; z-index: 9000; pointer-events: none; opacity: 0.92; box-shadow: 0 10px 28px rgba(0,0,0,0.55); }
 .kb-dragging { opacity: 0.3; }
@@ -325,7 +347,7 @@ textarea.modal-input { resize: vertical; min-height: 60px; line-height: 1.6; fon
         </div>
         <div class="stat-card">
           <div class="stat-lbl">Atrasadas</div>
-          <div class="stat-val warn" id="sc-over">0</div>
+          <div class="stat-val" id="sc-over">0</div>
         </div>
         <div class="stat-card">
           <div class="stat-lbl">Entregues</div>
@@ -390,6 +412,7 @@ textarea.modal-input { resize: vertical; min-height: 60px; line-height: 1.6; fon
 <div class="modal-overlay" id="fac-subj-modal">
   <div class="modal fac-subj-box" role="dialog" aria-modal="true" aria-labelledby="fsm-title">
     <div class="modal-title" id="fsm-title">Disciplina</div>
+    <div class="fsm-sub" id="fsm-sub"></div>
     <div class="fsm-list" id="fsm-list"></div>
     <form class="fac-qa fsm-add" id="fsm-add" autocomplete="off">
       <input class="fac-qa-title" id="fsm-add-title" maxlength="200" placeholder="Nova atividade" />
@@ -433,10 +456,12 @@ function initSidebar() {
   setTimeout(() => { document.getElementById('sb-fill').style.width = pct + '%'; }, 400);
 }
 
+const MES_ABR = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
 function fmtDue(iso) {
   if (!iso) return 'sem data';
   const d = new Date(iso + 'T00:00:00');
-  return d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
+  const y = d.getFullYear();
+  return d.getDate() + ' ' + MES_ABR[d.getMonth()] + (y !== new Date().getFullYear() ? " '" + String(y).slice(2) : '');
 }
 function relLabel(a) {
   const st = Store.studyActivityStatus(a);
@@ -480,6 +505,16 @@ function renderView() {
   document.getElementById('fac-list').hidden   = v !== 'lista';
   document.getElementById('fac-kanban').hidden = v !== 'kanban';
   document.getElementById('arch-wrap').style.display = v === 'lista' ? '' : 'none';
+
+  // primeira carga sem nada em cache: evita o flash de "nenhuma disciplina"
+  const notReady = typeof Store.isReady === 'function' && !Store.isReady();
+  if (notReady && !Store.getStudySubjects(true).length) {
+    document.getElementById('fac-list').innerHTML = '<div class="fac-empty">Carregando…</div>';
+    document.getElementById('fac-kanban').innerHTML = '';
+    document.getElementById('fac-rail-list').innerHTML = '<div class="fac-rail-empty">Carregando…</div>';
+    return;
+  }
+
   renderStats();
   renderRail();
   if (subjModalId != null) renderSubjModalList(subjModalId);
@@ -511,7 +546,8 @@ function renderRail() {
       meta = c.pending + ' pendente' + (c.pending === 1 ? '' : 's');
       if (c.over) meta += ' · <span class="over">' + c.over + ' atrasada' + (c.over === 1 ? '' : 's') + '</span>';
     }
-    return `<div class="fac-rail-item" data-subj="${s.id}">
+    return `<div class="fac-rail-item" data-subj="${s.id}" role="button" tabindex="0"
+                 aria-label="${esc(s.name)} — ver atividades">
       <span class="fac-rail-name">${esc(s.name)}</span>
       <span class="fac-rail-meta">${meta}</span>
     </div>`;
@@ -526,6 +562,17 @@ function renderSubjModalList(subjId) {
   const acts = Store.getStudyActivities(subjId);
   const pending = acts.filter(a => !a.done);
   const doneActs = acts.filter(a => a.done);
+
+  const c = subjCounts(subjId);
+  let sub;
+  if (!c.total) sub = 'sem atividades';
+  else if (!c.pending) sub = c.total + ' atividade' + (c.total === 1 ? '' : 's') + ' · tudo entregue';
+  else {
+    sub = c.pending + ' pendente' + (c.pending === 1 ? '' : 's');
+    if (c.over) sub += ' · <span class="over">' + c.over + ' atrasada' + (c.over === 1 ? '' : 's') + '</span>';
+  }
+  document.getElementById('fsm-sub').innerHTML = sub;
+
   const rows = [...pending, ...doneActs];
   if (!rows.length) {
     listEl.innerHTML = '<div class="fsm-empty">Nenhuma atividade nesta disciplina. Adicione abaixo.</div>';
@@ -571,7 +618,9 @@ function renderStats() {
     pend++;
   });
   document.getElementById('sc-pend').textContent = pend;
-  document.getElementById('sc-over').textContent = over;
+  const overEl = document.getElementById('sc-over');
+  overEl.textContent = over;
+  overEl.classList.toggle('warn', over > 0);
   document.getElementById('sc-done').textContent = done;
 }
 
@@ -671,12 +720,16 @@ function kbCardHTML(a) {
   } else {
     bits.push('sem data');
   }
-  return `<div class="kb-card ${a.done ? 'done' : ''}" data-id="${a.id}">
+  const doBtn = a.done
+    ? `<button class="kb-do" data-do="a_fazer" type="button" title="Reabrir">↩</button>`
+    : `<button class="kb-do" data-do="entregue" type="button" title="Marcar entregue">✓</button>`;
+  return `<div class="kb-card ${a.done ? 'done' : ''}" data-id="${a.id}" tabindex="0">
     <div class="kb-grip" data-grip title="Arrastar">⠿</div>
     <div class="kb-card-main">
       <div class="kb-card-title">${esc(a.title)}</div>
       <div class="kb-card-meta">${bits.join('<span>·</span>')}</div>
     </div>
+    ${doBtn}
     ${linkIcon(a, 'kb-card-link')}
   </div>`;
 }
@@ -692,10 +745,14 @@ function renderKanban() {
   const subjects = Store.getStudySubjects(false);
   const subjOpts = subjects.map(s => `<option value="${s.id}">${esc(s.name)}</option>`).join('');
 
+  const DONE_CAP = 10;
   board.innerHTML = KB_COLS.map(col => {
-    const items = byStatus[col.status];
-    const cards = items.length
-      ? items.map(kbCardHTML).join('')
+    const all = byStatus[col.status];
+    const shown = (col.status === 'entregue' && all.length > DONE_CAP) ? all.slice(0, DONE_CAP) : all;
+    const hidden = all.length - shown.length;
+    const cards = shown.length
+      ? shown.map(kbCardHTML).join('') +
+        (hidden ? `<div class="kb-more">+${hidden} entregue${hidden === 1 ? '' : 's'} antes</div>` : '')
       : '<div class="kb-empty">—</div>';
     const addForm = col.status === 'a_fazer' && subjects.length
       ? `<form class="kb-add" autocomplete="off">
@@ -708,7 +765,7 @@ function renderKanban() {
          </form>`
       : '';
     return `<div class="kb-col" data-status="${col.status}">
-      <div class="kb-col-hd">${col.label}<span class="kb-count">${items.length}</span></div>
+      <div class="kb-col-hd">${col.label}<span class="kb-count">${all.length}</span></div>
       <div class="kb-col-body">${cards}</div>
       ${addForm}
     </div>`;
@@ -819,6 +876,7 @@ document.getElementById('newsubj-form').addEventListener('submit', e => {
   if (!v) return;
   Store.addStudySubject(v);
   inp.value = '';
+  inp.focus();
   toast('Disciplina adicionada');
   render();
 });
@@ -851,7 +909,16 @@ kbEl.addEventListener('submit', e => {
 kbEl.addEventListener('click', e => {
   if (e.target.closest('[data-grip]') || e.target.closest('.kb-card-link')) return;
   const card = e.target.closest('.kb-card');
-  if (card && !card.classList.contains('kb-dragging')) openEdit(Number(card.dataset.id));
+  if (!card || card.classList.contains('kb-dragging')) return;
+  const doBtn = e.target.closest('[data-do]');
+  if (doBtn) { Store.setStudyStatus(Number(card.dataset.id), doBtn.dataset.do); render(); return; }
+  openEdit(Number(card.dataset.id));
+});
+
+kbEl.addEventListener('keydown', e => {
+  if (e.key !== 'Enter') return;
+  const card = e.target.closest('.kb-card');
+  if (card && e.target === card) { e.preventDefault(); openEdit(Number(card.dataset.id)); }
 });
 
 (function kanbanDnD() {
@@ -958,6 +1025,11 @@ document.addEventListener('keydown', e => {
 document.getElementById('fac-rail-list').addEventListener('click', e => {
   const item = e.target.closest('.fac-rail-item');
   if (item) openSubjModal(Number(item.dataset.subj));
+});
+document.getElementById('fac-rail-list').addEventListener('keydown', e => {
+  if (e.key !== 'Enter' && e.key !== ' ') return;
+  const item = e.target.closest('.fac-rail-item');
+  if (item) { e.preventDefault(); openSubjModal(Number(item.dataset.subj)); }
 });
 
 document.getElementById('fsm-list').addEventListener('click', e => {
