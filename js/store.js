@@ -174,12 +174,19 @@ const Store = (() => {
     }
     if (Array.isArray(data.studyActivities)) {
       cache.studyActivities.length = 0;
-      data.studyActivities.forEach(a => cache.studyActivities.push({
-        id: a.id, subjectId: a.subjectId, title: a.title,
-        dueOn: a.dueOn ? String(a.dueOn).slice(0, 10) : null,
-        done: !!a.done, doneOn: a.doneOn ? String(a.doneOn).slice(0, 10) : null,
-        createdAt: a.createdAt,
-      }));
+      data.studyActivities.forEach(a => {
+        const done = !!a.done;
+        const status = (a.status === 'fazendo' || a.status === 'entregue' || a.status === 'a_fazer')
+          ? a.status : (done ? 'entregue' : 'a_fazer');
+        cache.studyActivities.push({
+          id: a.id, subjectId: a.subjectId, title: a.title,
+          dueOn: a.dueOn ? String(a.dueOn).slice(0, 10) : null,
+          status, done: status === 'entregue',
+          doneOn: a.doneOn ? String(a.doneOn).slice(0, 10) : null,
+          link: a.link || null, notes: a.notes || null,
+          createdAt: a.createdAt,
+        });
+      });
     }
   }
 
@@ -1692,9 +1699,11 @@ const Store = (() => {
   /* ──────────────────────────────────────────
      FACULDADE — controle de prazos (disciplinas + atividades)
        cache.studySubjects:   [{ id, name, archived, createdAt }]
-       cache.studyActivities: [{ id, subjectId, title, dueOn, done, doneOn, createdAt }]
-     Status "atrasada" é derivado (venceu e não entregue).
+       cache.studyActivities: [{ id, subjectId, title, dueOn, status, done, doneOn, link, notes, createdAt }]
+     status: 'a_fazer' | 'fazendo' | 'entregue' (kanban). `done` = status==='entregue'.
+     "atrasada" continua derivado (venceu e não entregue).
   ────────────────────────────────────────── */
+  var STUDY_STATUSES = ['a_fazer', 'fazendo', 'entregue'];
   function _pushSubject(s) {
     _push(async () => {
       const { error } = await window.sb.from('study_subjects').upsert({
@@ -1769,7 +1778,9 @@ const Store = (() => {
     _push(async () => {
       const { error } = await window.sb.from('study_activities').upsert({
         user_id: _uid, id: a.id, subject_id: a.subjectId, title: a.title,
-        due_on: a.dueOn || null, done: !!a.done, done_on: a.doneOn || null,
+        due_on: a.dueOn || null, status: a.status || 'a_fazer',
+        done: !!a.done, done_on: a.doneOn || null,
+        link: a.link || null, notes: a.notes || null,
         created_at: a.createdAt,
       }, { onConflict: 'user_id,id' });
       if (error) throw error;
@@ -1798,7 +1809,10 @@ const Store = (() => {
     const a = {
       id, subjectId, title: t,
       dueOn: f.dueOn ? String(f.dueOn).slice(0, 10) : null,
-      done: false, doneOn: null, createdAt: new Date().toISOString(),
+      status: 'a_fazer', done: false, doneOn: null,
+      link: (f.link && String(f.link).trim()) || null,
+      notes: (f.notes && String(f.notes).trim()) || null,
+      createdAt: new Date().toISOString(),
     };
     cache.studyActivities.push(a);
     _saveMirror();
@@ -1811,6 +1825,19 @@ const Store = (() => {
     if (!a || !fields) return;
     if ('title' in fields) a.title = String(fields.title || '').trim() || a.title;
     if ('dueOn' in fields) a.dueOn = fields.dueOn ? String(fields.dueOn).slice(0, 10) : null;
+    if ('link'  in fields) a.link  = (fields.link  && String(fields.link).trim())  || null;
+    if ('notes' in fields) a.notes = (fields.notes && String(fields.notes).trim()) || null;
+    _saveMirror();
+    _pushActivity(a);
+  }
+
+  // Move a atividade no kanban. Mantém done/doneOn em sincronia com o status.
+  function setStudyStatus(id, status) {
+    const a = cache.studyActivities.find(x => x.id === id);
+    if (!a || STUDY_STATUSES.indexOf(status) === -1 || a.status === status) return;
+    a.status = status;
+    a.done = status === 'entregue';
+    a.doneOn = a.done ? (a.doneOn || _localDate(0)) : null;
     _saveMirror();
     _pushActivity(a);
   }
@@ -1818,11 +1845,8 @@ const Store = (() => {
   function toggleStudyDone(id) {
     const a = cache.studyActivities.find(x => x.id === id);
     if (!a) return;
-    a.done = !a.done;
-    a.doneOn = a.done ? _localDate(0) : null;
-    _saveMirror();
-    _pushActivity(a);
-    return a.done;
+    setStudyStatus(id, a.done ? 'a_fazer' : 'entregue');
+    return a.done;   // já mutado por setStudyStatus
   }
 
   function deleteStudyActivity(id) {
@@ -2111,7 +2135,7 @@ const Store = (() => {
     getStudySubjects, studySubjectName, addStudySubject, renameStudySubject,
     setStudySubjectArchived, deleteStudySubject,
     getStudyActivities, addStudyActivity, updateStudyActivity, toggleStudyDone,
-    deleteStudyActivity, studyActivityStatus, studyDaysUntil, studyUpcoming,
+    setStudyStatus, deleteStudyActivity, studyActivityStatus, studyDaysUntil, studyUpcoming,
     // computed
     habitVal, scheduledOn, dayCompletionPct, maxStreak, countDays,
     allHabitsDone, currentStreak, computeAchievementProgress, computeLevels,
