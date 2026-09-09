@@ -64,6 +64,17 @@ input, textarea { cursor: text; }
   }
 }
 
+/* ── SCROLLBAR ──
+   Segue o tema: trilho invisível, polegar num cinza discreto que clareia
+   no hover/drag. Sem raio (regra do app). */
+* { scrollbar-width: thin; scrollbar-color: var(--muted) transparent; }
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--muted); }
+::-webkit-scrollbar-thumb:hover  { background: rgba(245,245,240,0.30); }
+::-webkit-scrollbar-thumb:active { background: rgba(245,245,240,0.45); }
+::-webkit-scrollbar-corner { background: transparent; }
+
 /* ── KEYFRAMES ── */
 @keyframes fadeUp    { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: none; } }
 @keyframes scrollPulse { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }

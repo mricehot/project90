@@ -15,6 +15,14 @@
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+/* barra de rolagem — segue o tema (espelha css/base.css) */
+*{scrollbar-width:thin;scrollbar-color:var(--mu) transparent;}
+::-webkit-scrollbar{width:8px;height:8px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--mu);}
+::-webkit-scrollbar-thumb:hover{background:rgba(245,245,240,.30);}
+::-webkit-scrollbar-thumb:active{background:rgba(245,245,240,.45);}
+::-webkit-scrollbar-corner{background:transparent;}
 :root{
   --bg:#080808;--s:#111;--s2:#181818;
   --b:rgba(245,245,240,.08);--b2:rgba(245,245,240,.16);

@@ -23,6 +23,15 @@
 /* ── RESET ── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+/* barra de rolagem — segue o tema (espelha css/base.css) */
+* { scrollbar-width: thin; scrollbar-color: var(--muted) transparent; }
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--muted); }
+::-webkit-scrollbar-thumb:hover  { background: rgba(245,245,240,0.30); }
+::-webkit-scrollbar-thumb:active { background: rgba(245,245,240,0.45); }
+::-webkit-scrollbar-corner { background: transparent; }
+
 /* ── TOKENS ── */
 :root {
   --bg:       #080808;
