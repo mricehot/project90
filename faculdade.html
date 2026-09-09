@@ -117,11 +117,87 @@
 .arch-toggle input { accent-color: var(--white); width: 14px; height: 14px; cursor: pointer; }
 
 .modal-input[type="date"] { color-scheme: dark; }
+.fac-act-due .rel-fazendo { color: var(--white); }
+.fac-act-link { color: var(--mid); text-decoration: none; font-size: 12px; padding: 2px 5px; }
+.fac-act-link:hover { color: var(--white); }
+
+/* alternador de visão */
+.fac-viewsw { display: inline-flex; border: 1px solid var(--border2); flex-shrink: 0; }
+.fac-viewbtn {
+  background: none; border: none; color: var(--mid); font-family: 'DM Mono', monospace;
+  font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; padding: 7px 14px; cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.fac-viewbtn + .fac-viewbtn { border-left: 1px solid var(--border2); }
+.fac-viewbtn.active { background: var(--white); color: var(--bg); }
+
+/* kanban */
+#fac-kanban { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; align-items: start; }
+.kb-col {
+  background: var(--surface); border: 1px solid var(--border); display: flex; flex-direction: column;
+  min-height: 140px; transition: border-color 0.15s, background 0.15s;
+}
+.kb-col.kb-over { border-color: rgba(245,245,240,0.45); background: var(--surface2); }
+.kb-col-hd {
+  display: flex; align-items: center; gap: 8px; padding: 12px 14px; border-bottom: 1px solid var(--border);
+  font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--mid);
+}
+.kb-col-hd .kb-count { margin-left: auto; color: var(--white); letter-spacing: 0.06em; }
+.kb-col-body { padding: 10px; display: flex; flex-direction: column; gap: 8px; flex: 1; max-height: 62vh; overflow-y: auto; }
+.kb-card {
+  background: var(--surface2); border: 1px solid var(--border2); padding: 10px 10px 10px 6px;
+  display: flex; gap: 6px; cursor: pointer;
+}
+.kb-card:hover { border-color: rgba(245,245,240,0.3); }
+.kb-grip {
+  flex-shrink: 0; width: 14px; color: var(--mid); cursor: grab; touch-action: none; user-select: none;
+  display: flex; align-items: flex-start; justify-content: center; font-size: 12px; padding-top: 1px;
+}
+.kb-grip:active { cursor: grabbing; }
+.kb-card-main { flex: 1; min-width: 0; }
+.kb-card-title { font-size: 12px; line-height: 1.4; color: var(--white); }
+.kb-card.done .kb-card-title { color: var(--mid); text-decoration: line-through; }
+.kb-card-meta { font-size: 10px; letter-spacing: 0.04em; color: var(--mid); margin-top: 4px; display: flex; gap: 8px; flex-wrap: wrap; }
+.kb-card-meta .kb-late { color: var(--red); }
+.kb-card-meta .kb-soon { color: var(--white); }
+.kb-card-link { color: var(--mid); text-decoration: none; font-size: 12px; flex-shrink: 0; padding-left: 2px; }
+.kb-card-link:hover { color: var(--white); }
+.kb-empty { font-size: 11px; color: var(--mid); padding: 6px 4px; }
+.kb-ghost { position: fixed; top: 0; left: 0; z-index: 9000; pointer-events: none; opacity: 0.92; box-shadow: 0 10px 28px rgba(0,0,0,0.55); }
+.kb-dragging { opacity: 0.3; }
+.kb-add { display: flex; flex-direction: column; gap: 6px; padding: 8px 10px 10px; border-top: 1px solid var(--border); }
+.kb-add select, .kb-add input {
+  background: var(--surface2); border: 1px solid var(--border); color: var(--white);
+  font-family: 'DM Mono', monospace; font-size: 11px; padding: 7px 9px; outline: none;
+}
+.kb-add select { appearance: none; cursor: pointer; }
+.kb-add select:focus, .kb-add input:focus { border-color: rgba(245,245,240,0.35); }
+.kb-add-row { display: flex; gap: 6px; }
+.kb-add-row input[type="date"] { flex-shrink: 0; width: 118px; color-scheme: dark; }
+.kb-add-title { flex: 1; min-width: 0; }
+.kb-add button {
+  background: none; border: 1px solid var(--border2); color: var(--mid); font-family: 'DM Mono', monospace;
+  font-size: 11px; letter-spacing: 0.1em; padding: 7px; cursor: pointer; transition: color 0.2s, border-color 0.2s;
+}
+.kb-add button:hover { color: var(--white); border-color: rgba(245,245,240,0.35); }
+
+/* modal — situação */
+.fm-status { display: flex; gap: 0; border: 1px solid var(--border2); }
+.fm-status button {
+  flex: 1; background: none; border: none; color: var(--mid); font-family: 'DM Mono', monospace;
+  font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; padding: 9px 4px; cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.fm-status button + button { border-left: 1px solid var(--border2); }
+.fm-status button.active { background: var(--white); color: var(--bg); }
+textarea.modal-input { resize: vertical; min-height: 60px; line-height: 1.6; font-family: 'DM Mono', monospace; }
 
 @media (max-width: 720px) {
   .g3 { grid-template-columns: 1fr 1fr; }
   .fac-qa { flex-wrap: wrap; }
   .fac-qa-title { flex-basis: 100%; }
+  #fac-kanban { display: flex; overflow-x: auto; }
+  .kb-col { min-width: 80vw; flex-shrink: 0; }
 }
 
 </style>
@@ -176,6 +252,10 @@
 
     <div class="topbar">
       <div class="page-title">Faculdade <em>&amp; prazos.</em></div>
+      <div class="fac-viewsw" role="group" aria-label="Visualização">
+        <button type="button" class="fac-viewbtn" data-view="lista">Lista</button>
+        <button type="button" class="fac-viewbtn" data-view="kanban">Kanban</button>
+      </div>
     </div>
 
     <div class="g3">
@@ -198,8 +278,9 @@
     </form>
 
     <div id="fac-list"></div>
+    <div id="fac-kanban" hidden></div>
 
-    <label class="arch-toggle"><input type="checkbox" id="show-arch" /> ver disciplinas arquivadas</label>
+    <label class="arch-toggle" id="arch-wrap"><input type="checkbox" id="show-arch" /> ver disciplinas arquivadas</label>
 
   </main>
 </div>
@@ -215,6 +296,22 @@
     <div class="modal-field">
       <label class="modal-lbl" for="fm-date">Data de entrega</label>
       <input class="modal-input" id="fm-date" type="date" />
+    </div>
+    <div class="modal-field">
+      <label class="modal-lbl">Situação</label>
+      <div class="fm-status" id="fm-status">
+        <button type="button" data-s="a_fazer">A fazer</button>
+        <button type="button" data-s="fazendo">Fazendo</button>
+        <button type="button" data-s="entregue">Entregue</button>
+      </div>
+    </div>
+    <div class="modal-field">
+      <label class="modal-lbl" for="fm-link">Link do Studeo</label>
+      <input class="modal-input" id="fm-link" type="url" placeholder="https://…" />
+    </div>
+    <div class="modal-field">
+      <label class="modal-lbl" for="fm-notes">Observações</label>
+      <textarea class="modal-input" id="fm-notes" maxlength="1000" rows="3"></textarea>
     </div>
     <div class="modal-footer">
       <button class="modal-btn ghost" type="button" id="fm-del">Excluir</button>
@@ -283,12 +380,29 @@ function saveCollapsed(set) {
   try { localStorage.setItem(CKEY, JSON.stringify([...set])); } catch (e) {}
 }
 
-function render() {
-  const showArch = document.getElementById('show-arch').checked;
-  const subjects = Store.getStudySubjects(showArch);
-  const collapsed = collapsedSet();
+/* ── visão ativa (lista | kanban) ── */
+const VKEY = 'p90_fac_view';
+function curView() {
+  try { return localStorage.getItem(VKEY) === 'kanban' ? 'kanban' : 'lista'; } catch (e) { return 'lista'; }
+}
+function setView(v) {
+  try { localStorage.setItem(VKEY, v); } catch (e) {}
+  renderView();
+}
 
-  /* stats — só de disciplinas não arquivadas */
+function render() { renderView(); }   // alias — usado por todos os handlers de mutação
+
+function renderView() {
+  const v = curView();
+  document.querySelectorAll('.fac-viewbtn').forEach(b => b.classList.toggle('active', b.dataset.view === v));
+  document.getElementById('fac-list').hidden   = v !== 'lista';
+  document.getElementById('fac-kanban').hidden = v !== 'kanban';
+  document.getElementById('arch-wrap').style.display = v === 'lista' ? '' : 'none';
+  renderStats();
+  if (v === 'kanban') renderKanban(); else renderList();
+}
+
+function renderStats() {
   let pend = 0, over = 0, done = 0;
   const liveIds = new Set(Store.getStudySubjects(false).map(s => s.id));
   Store.getStudyActivities().forEach(a => {
@@ -300,8 +414,19 @@ function render() {
   document.getElementById('sc-pend').textContent = pend;
   document.getElementById('sc-over').textContent = over;
   document.getElementById('sc-done').textContent = done;
+}
 
+function linkIcon(a, cls) {
+  if (!a.link) return '';
+  return `<a class="${cls}" href="${esc(a.link)}" target="_blank" rel="noopener" title="Abrir no Studeo" onclick="event.stopPropagation()">↗</a>`;
+}
+
+function renderList() {
+  const showArch = document.getElementById('show-arch').checked;
+  const subjects = Store.getStudySubjects(showArch);
+  const collapsed = collapsedSet();
   const list = document.getElementById('fac-list');
+
   if (!subjects.length) {
     list.innerHTML = '<div class="fac-empty">Nenhuma disciplina ainda. Adicione a primeira no campo acima e vá lançando as atividades com a data de entrega.</div>';
     return;
@@ -320,14 +445,17 @@ function render() {
     if (!pending.length && !doneActs.length) countBits.push('sem atividades');
 
     const rowHTML = a => {
-      const st = Store.studyActivityStatus(a);
+      const rel = a.status === 'fazendo' && !a.done
+        ? `<span class="rel-fazendo">fazendo</span>${a.dueOn ? ' · ' + relLabel(a) : ''}`
+        : relLabel(a);
       return `<div class="fac-act ${a.done ? 'done' : ''}" data-id="${a.id}">
         <div class="fac-check" data-act="check" title="${a.done ? 'Desmarcar' : 'Marcar entregue'}">${a.done ? '✓' : ''}</div>
         <div class="fac-act-body">
           <div class="fac-act-title">${esc(a.title)}</div>
-          <div class="fac-act-due">${a.dueOn ? fmtDue(a.dueOn) + ' · ' : ''}${relLabel(a)}</div>
+          <div class="fac-act-due">${a.dueOn ? fmtDue(a.dueOn) + ' · ' : ''}${rel}</div>
         </div>
         <div class="fac-act-tools">
+          ${linkIcon(a, 'fac-act-link')}
           <button data-act="edit" title="Editar">✎</button>
           <button data-act="del" title="Excluir">✕</button>
         </div>
@@ -358,6 +486,78 @@ function render() {
       ${body}
     </div>`;
   }).join('');
+}
+
+/* ── KANBAN ── */
+const KB_COLS = [
+  { status: 'a_fazer',  label: 'A fazer' },
+  { status: 'fazendo',  label: 'Fazendo' },
+  { status: 'entregue', label: 'Entregue' },
+];
+
+function kbCardHTML(a) {
+  const subj = esc(Store.studySubjectName(a.subjectId));
+  const bits = [subj];
+  if (a.dueOn) {
+    if (a.done) {
+      bits.push(fmtDue(a.dueOn));
+    } else {
+      const n = Store.studyDaysUntil(a);
+      if (n < 0)       bits.push(`<span class="kb-late">atrasada ${-n}d</span>`);
+      else if (n === 0) bits.push(`<span class="kb-soon">hoje</span>`);
+      else if (n === 1) bits.push(`<span class="kb-soon">amanhã</span>`);
+      else if (n <= 7)  bits.push(`<span class="kb-soon">${n}d</span>`);
+      else              bits.push(fmtDue(a.dueOn));
+    }
+  } else {
+    bits.push('sem data');
+  }
+  return `<div class="kb-card ${a.done ? 'done' : ''}" data-id="${a.id}">
+    <div class="kb-grip" data-grip title="Arrastar">⠿</div>
+    <div class="kb-card-main">
+      <div class="kb-card-title">${esc(a.title)}</div>
+      <div class="kb-card-meta">${bits.join('<span>·</span>')}</div>
+    </div>
+    ${linkIcon(a, 'kb-card-link')}
+  </div>`;
+}
+
+function renderKanban() {
+  const board = document.getElementById('fac-kanban');
+  const liveIds = new Set(Store.getStudySubjects(false).map(s => s.id));
+  const acts = Store.getStudyActivities().filter(a => liveIds.has(a.subjectId));
+  const byStatus = { a_fazer: [], fazendo: [], entregue: [] };
+  acts.forEach(a => { (byStatus[a.status] || byStatus.a_fazer).push(a); });
+  byStatus.entregue.sort((x, y) => String(y.doneOn || '').localeCompare(String(x.doneOn || '')) || (y.id - x.id));
+
+  const subjects = Store.getStudySubjects(false);
+  const subjOpts = subjects.map(s => `<option value="${s.id}">${esc(s.name)}</option>`).join('');
+
+  board.innerHTML = KB_COLS.map(col => {
+    const items = byStatus[col.status];
+    const cards = items.length
+      ? items.map(kbCardHTML).join('')
+      : '<div class="kb-empty">—</div>';
+    const addForm = col.status === 'a_fazer' && subjects.length
+      ? `<form class="kb-add" autocomplete="off">
+           <select class="kb-add-subj" aria-label="Disciplina">${subjOpts}</select>
+           <div class="kb-add-row">
+             <input class="kb-add-title" maxlength="200" placeholder="Nova atividade" />
+             <input class="kb-add-date" type="date" />
+           </div>
+           <button type="submit">+ adicionar</button>
+         </form>`
+      : '';
+    return `<div class="kb-col" data-status="${col.status}">
+      <div class="kb-col-hd">${col.label}<span class="kb-count">${items.length}</span></div>
+      <div class="kb-col-body">${cards}</div>
+      ${addForm}
+    </div>`;
+  }).join('');
+
+  if (!subjects.length) {
+    board.innerHTML = '<div class="fac-empty">Nenhuma disciplina ainda. Adicione uma no campo acima.</div>';
+  }
 }
 
 /* ── delegação de eventos na lista ── */
@@ -466,14 +666,98 @@ document.getElementById('newsubj-form').addEventListener('submit', e => {
 
 document.getElementById('show-arch').addEventListener('change', render);
 
+/* ── alternador de visão ── */
+document.querySelector('.fac-viewsw').addEventListener('click', e => {
+  const b = e.target.closest('.fac-viewbtn');
+  if (b) setView(b.dataset.view);
+});
+
+/* ── KANBAN: adicionar atividade + drag-and-drop ── */
+const kbEl = document.getElementById('fac-kanban');
+
+kbEl.addEventListener('submit', e => {
+  const form = e.target.closest('.kb-add');
+  if (!form) return;
+  e.preventDefault();
+  const subjId = Number(form.querySelector('.kb-add-subj').value);
+  const tEl = form.querySelector('.kb-add-title');
+  const title = tEl.value.trim();
+  if (!title || !subjId) { tEl.focus(); return; }
+  Store.addStudyActivity(subjId, { title, dueOn: form.querySelector('.kb-add-date').value || null });
+  render();
+  const again = kbEl.querySelector('.kb-add-title');
+  if (again) again.focus();
+});
+
+kbEl.addEventListener('click', e => {
+  if (e.target.closest('[data-grip]') || e.target.closest('.kb-card-link')) return;
+  const card = e.target.closest('.kb-card');
+  if (card && !card.classList.contains('kb-dragging')) openEdit(Number(card.dataset.id));
+});
+
+(function kanbanDnD() {
+  let drag = null;
+  kbEl.addEventListener('pointerdown', e => {
+    const grip = e.target.closest('[data-grip]');
+    if (!grip) return;
+    const card = grip.closest('.kb-card');
+    if (!card) return;
+    e.preventDefault();
+    grip.setPointerCapture(e.pointerId);
+    drag = { id: Number(card.dataset.id), card, x0: e.clientX, y0: e.clientY, active: false, ghost: null };
+  });
+  kbEl.addEventListener('pointermove', e => {
+    if (!drag) return;
+    if (!drag.active) {
+      if (Math.hypot(e.clientX - drag.x0, e.clientY - drag.y0) < 6) return;
+      drag.active = true;
+      drag.w = drag.card.offsetWidth;
+      const g = drag.card.cloneNode(true);
+      g.classList.add('kb-ghost');
+      g.style.width = drag.w + 'px';
+      document.body.appendChild(g);
+      drag.ghost = g;
+      drag.card.classList.add('kb-dragging');
+    }
+    drag.ghost.style.transform = `translate(${e.clientX - drag.w / 2}px, ${e.clientY - 18}px)`;
+    const under = document.elementFromPoint(e.clientX, e.clientY);
+    const col = under && under.closest('.kb-col');
+    kbEl.querySelectorAll('.kb-col').forEach(c => c.classList.toggle('kb-over', c === col));
+  });
+  function finish(e) {
+    if (!drag) return;
+    const d = drag; drag = null;
+    if (d.ghost) d.ghost.remove();
+    if (!d.active) return;
+    const under = document.elementFromPoint(e.clientX, e.clientY);
+    const col = under && under.closest('.kb-col');
+    if (col && col.dataset.status) Store.setStudyStatus(d.id, col.dataset.status);
+    render();
+  }
+  kbEl.addEventListener('pointerup', finish);
+  kbEl.addEventListener('pointercancel', finish);
+})();
+
 /* ── modal editar atividade ── */
 let editingId = null;
+let editStatus = 'a_fazer';
+function _setFmStatus(s) {
+  editStatus = s;
+  document.querySelectorAll('#fm-status button').forEach(b => b.classList.toggle('active', b.dataset.s === s));
+}
+document.getElementById('fm-status').addEventListener('click', e => {
+  const b = e.target.closest('button[data-s]');
+  if (b) _setFmStatus(b.dataset.s);
+});
 function openEdit(id) {
   const a = Store.getStudyActivities().find(x => x.id === id);
   if (!a) return;
   editingId = id;
   document.getElementById('fm-title').value = a.title;
   document.getElementById('fm-date').value = a.dueOn || '';
+  document.getElementById('fm-link').value = a.link || '';
+  document.getElementById('fm-notes').value = a.notes || '';
+  _setFmStatus(a.status || (a.done ? 'entregue' : 'a_fazer'));
   document.getElementById('fac-modal').classList.add('open');
   setTimeout(() => document.getElementById('fm-title').focus(), 50);
 }
@@ -485,7 +769,13 @@ document.getElementById('fm-save').addEventListener('click', () => {
   if (editingId == null) return;
   const title = document.getElementById('fm-title').value.trim();
   if (!title) { document.getElementById('fm-title').focus(); return; }
-  Store.updateStudyActivity(editingId, { title, dueOn: document.getElementById('fm-date').value || null });
+  Store.updateStudyActivity(editingId, {
+    title,
+    dueOn: document.getElementById('fm-date').value || null,
+    link:  document.getElementById('fm-link').value.trim() || null,
+    notes: document.getElementById('fm-notes').value.trim() || null,
+  });
+  Store.setStudyStatus(editingId, editStatus);
   closeEdit();
   render();
 });
