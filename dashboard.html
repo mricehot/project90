@@ -341,6 +341,7 @@ body { overflow: hidden; }
       <a class="sb-item" href="biblia.html"><span class="sb-item-icon">✝</span> Bíblia</a>
       <a class="sb-item" href="tarefas.html"><span class="sb-item-icon">✓</span> Tarefas</a>
       <a class="sb-item" href="faculdade.html"><span class="sb-item-icon">▦</span> Faculdade</a>
+      <a class="sb-item" href="treino.html"><span class="sb-item-icon">◲</span> Treino</a>
       <a class="sb-item" href="conquistas.html"><span class="sb-item-icon">◆</span> Conquistas</a>
     </nav>
 
@@ -1112,6 +1113,40 @@ function renderTodayCard() {
         `<div class="tc-line"><b>${due.length}</b> palavra${due.length === 1 ? '' : 's'} pra revisar` +
         `<br><span style="opacity:.65">${words}${due.length > 8 ? ' …' : ''}</span></div>`));
     }
+  }
+
+  /* ── Treino de hoje ── */
+  if (typeof Store.getTrainingExercises === 'function' && Store.getTrainingExercises().length) {
+    const split = Store.nextTrainingSplit();
+    const logged = Store.trainingLoggedToday();
+    const nEx = Store.getTrainingExercises(split).length;
+    let inner;
+    if (logged) {
+      inner = '<div class="tc-line">Treino de hoje registrado. Bom trabalho.</div>';
+    } else if (!nEx) {
+      inner = `<div class="tc-line">Rotação sugere o treino <b>${split}</b>, mas ele está vazio.</div>`;
+    } else {
+      open += 1;
+      inner = `<div class="tc-line">Treino <b>${split}</b> hoje` +
+              `<br><span style="opacity:.65">${nEx} exercício${nEx === 1 ? '' : 's'} · rotação A/B/C</span></div>`;
+    }
+    sections.push(_tcSec('Treino', 'treino.html', 'Abrir →', inner));
+  }
+
+  /* ── Alimentação ── */
+  if (typeof Store.getMealItems === 'function' && Store.getMealItems().length) {
+    const items = Store.getMealItems();
+    const done  = Store.mealsDoneCount();
+    const left  = items.length - done;
+    let inner;
+    if (left <= 0) {
+      inner = '<div class="tc-line">Todas as refeições do dia marcadas.</div>';
+    } else {
+      open += left;
+      inner = `<div class="tc-line"><b>${done}/${items.length}</b> refeições marcadas hoje` +
+              `<br><span style="opacity:.65">falta${left === 1 ? '' : 'm'} ${left}</span></div>`;
+    }
+    sections.push(_tcSec('Alimentação', 'treino.html', 'Marcar →', inner));
   }
 
   document.getElementById('today-count').textContent = open ? `${open} aberta${open === 1 ? '' : 's'}` : '';
