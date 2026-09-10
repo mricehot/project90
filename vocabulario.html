@@ -83,6 +83,13 @@
 .rv-grade.again:hover { border-color: #fca5a5; background: rgba(252,165,165,0.09); color: #fca5a5; }
 .rv-grade.good:hover { border-color: #86efac; background: rgba(134,239,172,0.09); color: #86efac; }
 .rv-progress { text-align: center; font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--mid); margin-top: 20px; }
+.rv-kbd { text-align: center; font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--mid); margin-top: 14px; }
+.rv-kbd b { color: var(--white); font-weight: 400; padding: 1px 5px; border: 1px solid var(--border2); margin: 0 2px; }
+.rv-tap { cursor: pointer; }
+.qo-k { display: inline-block; width: 16px; color: var(--mid); }
+.quiz-opt.correct .qo-k, .quiz-opt.wrong .qo-k { color: inherit; }
+.quiz-kbd { text-align: center; font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--mid); margin-top: 12px; }
+.quiz-kbd b { color: var(--white); font-weight: 400; padding: 1px 5px; border: 1px solid var(--border2); margin: 0 2px; }
 
 /* ── EVOLUÇÃO DO VOCABULÁRIO (distribuição por caixa) ── */
 .vp-seg { display: flex; height: 8px; border: 1px solid var(--border); background: var(--surface2); overflow: hidden; margin: 4px 0 20px; }
@@ -120,6 +127,26 @@
 }
 .voc-count { font-size: 10px; letter-spacing: 0.1em; color: var(--mid); white-space: nowrap; }
 .voc-count span { color: var(--white); }
+.voc-group-btn {
+  background: var(--surface2); border: 1px solid var(--border); color: var(--mid);
+  font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase;
+  padding: 11px 14px; cursor: pointer; white-space: nowrap; transition: color 0.2s, border-color 0.2s, background 0.2s;
+}
+.voc-group-btn:hover { color: var(--white); border-color: var(--border2); }
+.voc-group-btn.on { background: var(--white); color: var(--bg); border-color: var(--white); }
+
+/* ── LISTA AGRUPADA POR CAIXA ── */
+.wl-group-hd {
+  font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--mid);
+  margin: 22px 0 10px; display: flex; align-items: center; gap: 10px;
+}
+.wl-group-hd:first-child { margin-top: 4px; }
+.wl-group-hd::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+.wl-group-hd .n { font-family: 'Bebas Neue', sans-serif; font-size: 15px; letter-spacing: 0.06em; color: var(--white); }
+.wl-group-hd.due { color: #86efac; }
+.wl-group-hd.due .n { color: #86efac; }
+.wl-group-hd.mastered { color: #86efac; }
+.wl-group-hd.mastered .n { color: #86efac; }
 
 /* ── WORD LIST ── */
 .word-list { display: flex; flex-direction: column; gap: 10px; }
@@ -349,6 +376,7 @@ textarea.modal-input { resize: vertical; min-height: 60px; line-height: 1.6; }
     <!-- TOOLBAR -->
     <div class="voc-toolbar">
       <input class="voc-search" id="voc-search" placeholder="Pesquisar palavra ou significado…" />
+      <button class="voc-group-btn" id="voc-group" title="Agrupar a lista por caixa da repetição espaçada">Por caixa</button>
       <select class="voc-sort" id="voc-sort">
         <option value="recent">Mais recentes</option>
         <option value="due">Revisar primeiro</option>
@@ -488,6 +516,8 @@ function initSidebar() {
 
 let searchTerm = '';
 let sortMode   = 'recent';
+let groupMode  = false;
+try { groupMode = localStorage.getItem('p90_voc_group') === '1'; } catch (e) {}
 let _autoReviewDone = false;
 
 function init() {
@@ -646,10 +676,47 @@ function fmtDate(iso) {
   return d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
+function wordCardHTML(w) {
+  return `
+    <div class="word-card">
+      <div class="word-main">
+        <div class="word-head">
+          <span class="word-term">${escapeHtml(w.word)}</span>
+          <span class="word-date">adicionada em ${fmtDate(w.createdAt)}</span>
+        </div>
+        <div class="word-meaning">${escapeHtml(w.meaning)}</div>
+        ${w.example ? `<div class="word-example">${escapeHtml(w.example)}</div>` : ''}
+        ${srsBadge(w)}
+      </div>
+      <div class="word-actions">
+        <button class="word-btn" title="Editar" onclick="openWordModal(${w.id})">✎</button>
+        <button class="word-btn danger" title="Excluir" onclick="removeWord(${w.id})">✕</button>
+      </div>
+    </div>`;
+}
+
+// Grupos por estado na repetição espaçada. "Para revisar" reúne as vencidas
+// de qualquer caixa; o resto vai pela caixa atual.
+function vocGroups(list) {
+  const t = todayISO();
+  const dueNow = w => (w.srsDue || t) <= t;
+  const defs = [
+    { name: 'Para revisar', cls: 'due',      test: w => dueNow(w) },
+    { name: 'Caixa 1',      cls: '',         test: w => !dueNow(w) && (w.srsBox || 1) === 1 },
+    { name: 'Caixa 2',      cls: '',         test: w => !dueNow(w) && (w.srsBox || 1) === 2 },
+    { name: 'Caixa 3',      cls: '',         test: w => !dueNow(w) && (w.srsBox || 1) === 3 },
+    { name: 'Caixa 4',      cls: '',         test: w => !dueNow(w) && (w.srsBox || 1) === 4 },
+    { name: 'Dominadas',    cls: 'mastered', test: w => !dueNow(w) && (w.srsBox || 1) >= 5 },
+  ];
+  return defs.map(d => ({ ...d, items: list.filter(d.test) })).filter(g => g.items.length);
+}
+
 function renderList() {
   const all  = Store.getVocabWords();
   const list = filteredSortedWords();
   document.getElementById('voc-count').innerHTML = `<span>${all.length}</span> palavra${all.length !== 1 ? 's' : ''}`;
+  document.getElementById('voc-group').classList.toggle('on', groupMode);
+  document.getElementById('voc-sort').disabled = groupMode;
 
   const wrap = document.getElementById('word-list');
 
@@ -674,22 +741,17 @@ function renderList() {
     return;
   }
 
-  wrap.innerHTML = list.map(w => `
-    <div class="word-card">
-      <div class="word-main">
-        <div class="word-head">
-          <span class="word-term">${escapeHtml(w.word)}</span>
-          <span class="word-date">adicionada em ${fmtDate(w.createdAt)}</span>
-        </div>
-        <div class="word-meaning">${escapeHtml(w.meaning)}</div>
-        ${w.example ? `<div class="word-example">${escapeHtml(w.example)}</div>` : ''}
-        ${srsBadge(w)}
-      </div>
-      <div class="word-actions">
-        <button class="word-btn" title="Editar" onclick="openWordModal(${w.id})">✎</button>
-        <button class="word-btn danger" title="Excluir" onclick="removeWord(${w.id})">✕</button>
-      </div>
-    </div>`).join('');
+  if (groupMode) {
+    wrap.innerHTML = vocGroups(list).map(g => {
+      const items = g.items.slice().sort((a, b) =>
+        (a.srsDue || '').localeCompare(b.srsDue || '') || a.word.localeCompare(b.word, 'pt-BR'));
+      return `<div class="wl-group-hd ${g.cls}">${g.name} <span class="n">${items.length}</span></div>` +
+             items.map(wordCardHTML).join('');
+    }).join('');
+    return;
+  }
+
+  wrap.innerHTML = list.map(wordCardHTML).join('');
 }
 
 function escapeHtml(s) {
@@ -766,6 +828,11 @@ document.getElementById('word-modal-overlay').addEventListener('click', e => {
 
 document.getElementById('voc-search').addEventListener('input', function() { searchTerm = this.value; renderList(); });
 document.getElementById('voc-sort').addEventListener('change', function() { sortMode = this.value; renderList(); });
+document.getElementById('voc-group').addEventListener('click', function() {
+  groupMode = !groupMode;
+  try { localStorage.setItem('p90_voc_group', groupMode ? '1' : '0'); } catch (e) {}
+  renderList();
+});
 
 /* ════════════════════════════════════
    QUIZ — "Testar meu vocabulário"
@@ -833,8 +900,9 @@ function renderQuizQuestion() {
     <div class="quiz-word">${escapeHtml(w.word)}</div>
     <div class="quiz-prompt">Qual é o significado desta palavra?</div>
     <div class="quiz-opts" id="quiz-opts">
-      ${opts.map((o, i) => `<button class="quiz-opt" data-correct="${o.correct}" onclick="answerQuiz(this)">${escapeHtml(o.text)}</button>`).join('')}
+      ${opts.map((o, i) => `<button class="quiz-opt" data-correct="${o.correct}" onclick="answerQuiz(this)"><span class="qo-k">${i + 1}</span>${escapeHtml(o.text)}</button>`).join('')}
     </div>
+    <div class="quiz-kbd"><b>1</b>–<b>${opts.length}</b> responde · <b>enter</b> avança</div>
     <div class="quiz-feedback" id="quiz-feedback"></div>
     <div class="quiz-stats-row">
       <span>Pontuação: <span>${quizScore.correct}/${quizScore.total}</span></span>
@@ -945,9 +1013,12 @@ function renderCard() {
   const w = rvQueue[rvIdx];
   document.getElementById('review-box').innerHTML = `
     ${_rvTopline()}
-    <div class="rv-front">${escapeHtml(w.word)}</div>
-    <div class="rv-hint">Lembra do significado?</div>
+    <div class="rv-tap" onclick="revealCard()">
+      <div class="rv-front">${escapeHtml(w.word)}</div>
+      <div class="rv-hint">Lembra do significado?</div>
+    </div>
     <button class="rv-reveal-btn" onclick="revealCard()">Mostrar resposta</button>
+    <div class="rv-kbd"><b>espaço</b> revela</div>
     ${_rvProgress()}`;
 }
 
@@ -966,6 +1037,7 @@ function revealCard() {
       <button class="rv-grade again" onclick="gradeCard('again')">Esqueci</button>
       <button class="rv-grade good" onclick="gradeCard('good')">Lembrei</button>
     </div>
+    <div class="rv-kbd"><b>1</b> esqueci · <b>2</b> lembrei</div>
     ${_rvProgress()}`;
 }
 
@@ -1008,10 +1080,36 @@ document.getElementById('review-overlay').addEventListener('click', e => {
 });
 
 document.addEventListener('keydown', e => {
-  if (e.key !== 'Escape') return;
-  if (document.getElementById('review-overlay').classList.contains('show')) closeReview();
-  else if (document.getElementById('quiz-overlay').classList.contains('show')) closeQuiz();
-  else if (document.getElementById('word-modal-overlay').classList.contains('open')) closeWordModal();
+  const reviewOn = document.getElementById('review-overlay').classList.contains('show');
+  const quizOn   = document.getElementById('quiz-overlay').classList.contains('show');
+
+  if (e.key === 'Escape') {
+    if (reviewOn) closeReview();
+    else if (quizOn) closeQuiz();
+    else if (document.getElementById('word-modal-overlay').classList.contains('open')) closeWordModal();
+    return;
+  }
+
+  // ── Revisão espaçada: espaço/enter revela · 1 esqueci · 2 lembrei ──
+  if (reviewOn && rvIdx < rvQueue.length) {
+    if (!rvRevealed) {
+      if (e.key === ' ' || e.key === 'Enter' || e.key === 'ArrowDown') { e.preventDefault(); revealCard(); }
+    } else {
+      if (e.key === '1' || e.key === 'ArrowLeft')       { e.preventDefault(); gradeCard('again'); }
+      else if (e.key === '2' || e.key === 'ArrowRight') { e.preventDefault(); gradeCard('good'); }
+    }
+    return;
+  }
+
+  // ── Quiz: 1–4 responde · enter avança ──
+  if (quizOn && quizIdx < ROUND_LEN) {
+    if (!quizAnswered && /^[1-9]$/.test(e.key)) {
+      const opt = document.querySelectorAll('#quiz-opts .quiz-opt')[+e.key - 1];
+      if (opt) { e.preventDefault(); answerQuiz(opt); }
+    } else if (quizAnswered && (e.key === 'Enter' || e.key === ' ')) {
+      e.preventDefault(); nextQuizQuestion();
+    }
+  }
 });
 
 window.addEventListener('p90:synced', init);
