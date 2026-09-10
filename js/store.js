@@ -1203,18 +1203,31 @@ const Store = (() => {
     });
   }
 
-  // Modelo pronto (push/pull/legs simples).
+  // Plano pronto — A: peito/ombro/tríceps · B: costas/bíceps · C: pernas/panturrilha.
   var TRAINING_MODEL = {
-    A: [['Supino reto', 4, '8-12'], ['Supino inclinado halteres', 3, '10-12'],
-        ['Crucifixo / crossover', 3, '12-15'], ['Tríceps testa', 3, '10-12'],
-        ['Tríceps corda', 3, '12-15']],
-    B: [['Puxada frente', 4, '8-12'], ['Remada curvada', 3, '8-12'],
-        ['Remada baixa', 3, '10-12'], ['Rosca direta', 3, '10-12'],
-        ['Rosca martelo', 3, '12-15']],
-    C: [['Agachamento livre', 4, '6-10'], ['Leg press', 3, '10-15'],
-        ['Cadeira extensora', 3, '12-15'], ['Mesa flexora', 3, '10-12'],
-        ['Elevação pélvica', 3, '10-12'], ['Desenvolvimento ombro', 3, '8-12'],
-        ['Elevação lateral', 3, '12-20']],
+    A: [['Supino reto', 4, '6-10'],
+        ['Supino inclinado com halteres', 3, '8-12'],
+        ['Crucifixo / crossover', 3, '10-15'],
+        ['Desenvolvimento com halteres', 3, '8-12'],
+        ['Elevação lateral', 4, '10-15'],
+        ['Tríceps testa', 3, '8-12'],
+        ['Tríceps corda', 3, '10-15']],
+    B: [['Barra fixa ou puxada alta', 4, '6-10'],
+        ['Remada curvada', 3, '6-10'],
+        ['Remada baixa', 3, '8-12'],
+        ['Puxada unilateral', 3, '10-12'],
+        ['Face pull', 3, '12-15'],
+        ['Rosca direta', 3, '8-12'],
+        ['Rosca alternada', 3, '8-12'],
+        ['Rosca martelo', 2, '10-15']],
+    C: [['Agachamento livre', 4, '6-10'],
+        ['Leg press', 4, '8-12'],
+        ['Cadeira extensora', 3, '10-15'],
+        ['Mesa flexora', 3, '8-12'],
+        ['Stiff', 3, '8-12'],
+        ['Cadeira flexora', 2, '10-15'],
+        ['Panturrilha em pé', 4, '10-15'],
+        ['Panturrilha sentado', 3, '12-20']],
   };
 
   // Preenche um plano (A/B/C) com o modelo — só se ele estiver vazio.
