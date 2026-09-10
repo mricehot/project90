@@ -20,6 +20,7 @@
 <script src="js/supabase.js"></script>
 <script src="js/store.js"></script>
 <script src="js/achievements.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
 .fin-main { padding: 30px 40px 72px; overflow-y: auto; display: flex; flex-direction: column; gap: 22px; }
 
@@ -143,6 +144,13 @@
 .cat-row .cat-track { flex: 1; height: 3px; background: var(--surface2); }
 .cat-row .cat-fill { height: 100%; background: rgba(245,245,240,0.6); }
 .cat-row .cat-amt { width: 96px; text-align: right; color: var(--white); font-family: 'DM Mono', monospace; }
+
+/* ── EVOLUÇÃO / GRÁFICOS ── */
+.evo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+.evo-lbl { font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--mid); margin-bottom: 8px; }
+.chart-box { position: relative; width: 100%; height: 200px; }
+.evo-empty { font-size: 12px; color: var(--mid); line-height: 1.8; padding: 8px 0; }
+@media (max-width: 900px) { .evo-grid { grid-template-columns: 1fr; } }
 
 .inv-tot { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--border); margin-bottom: 14px; }
 .inv-tot > div { background: var(--surface2); padding: 12px 12px; }
@@ -288,6 +296,29 @@
       </div>
     </div>
 
+    <!-- EVOLUÇÃO -->
+    <div class="fin-card" id="evo-card">
+      <div class="fc-hd">
+        <span class="fc-title">Evolução</span>
+        <span class="fc-meta" id="evo-meta"></span>
+        <button class="fc-add" id="evo-snap">+ Valor de um mês</button>
+      </div>
+      <div class="evo-grid">
+        <div class="evo-chart">
+          <div class="evo-lbl">Patrimônio × investido</div>
+          <div class="chart-box"><canvas id="chart-portfolio"></canvas></div>
+        </div>
+        <div class="evo-chart">
+          <div class="evo-lbl">Renda × saída × sobra por mês</div>
+          <div class="chart-box"><canvas id="chart-flow"></canvas></div>
+        </div>
+      </div>
+      <div class="evo-empty" id="evo-empty" hidden>
+        Ainda não dá pra desenhar a curva. Registre o valor da sua carteira em pelo
+        menos dois meses (aqui ou no lápis do card de Investimentos) e volte.
+      </div>
+    </div>
+
     <div class="fin-cols">
 
       <div class="fin-col">
@@ -385,6 +416,27 @@
 </div>
 
 <!-- ── MODAIS ── -->
+<div class="modal-overlay" id="m-snap">
+  <div class="modal">
+    <div class="modal-title">Valor da carteira <em>num mês</em></div>
+    <div class="m-row">
+      <div class="modal-field">
+        <label class="modal-lbl" for="snap-ym">Mês</label>
+        <input class="modal-input" id="snap-ym" type="month" />
+      </div>
+      <div class="modal-field">
+        <label class="modal-lbl" for="snap-val">Valor total (R$)</label>
+        <input class="modal-input" id="snap-val" inputmode="decimal" placeholder="0,00" />
+      </div>
+    </div>
+    <div class="m-hint">Registre o valor no fim do mês pra a curva do patrimônio ficar fiel.</div>
+    <div class="modal-footer">
+      <button class="modal-btn ghost" data-close="m-snap">Cancelar</button>
+      <button class="modal-btn primary" id="snap-save">Salvar</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="m-cfg">
   <div class="modal">
     <div class="modal-title">Salário <em>&amp; carteira</em></div>
@@ -654,6 +706,98 @@ function renderAll() {
   renderExpenses(s);
   renderInvest(s);
   renderGoals(s);
+  renderCharts();
+}
+
+/* ══ GRÁFICOS ══ */
+let chPortfolio = null, chFlow = null;
+function ymShort(ym) {
+  const M = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+  const [y, m] = String(ym).split('-').map(Number);
+  return M[m - 1] + '/' + String(y).slice(2);
+}
+function finBaseOpts() {
+  return {
+    responsive: true, maintainAspectRatio: false,
+    interaction: { mode: 'index', intersect: false },
+    plugins: {
+      legend: { display: true, position: 'bottom',
+        labels: { color: '#7d7d7d', font: { family: 'DM Mono', size: 10 }, boxWidth: 10, boxHeight: 10, padding: 12 } },
+      tooltip: {
+        backgroundColor: '#181818', borderColor: 'rgba(245,245,240,0.12)', borderWidth: 1,
+        titleColor: '#f5f5f0', bodyColor: '#b8b8b3',
+        titleFont: { family: 'DM Mono', size: 11 }, bodyFont: { family: 'DM Mono', size: 10 },
+        padding: 10,
+        callbacks: { label: c => ' ' + c.dataset.label + ': ' + fmtBRL(c.parsed.y) },
+      },
+    },
+    scales: {
+      x: { ticks: { color: '#555', font: { family: 'DM Mono', size: 9 }, maxRotation: 0, autoSkipPadding: 10 },
+           grid: { color: 'rgba(245,245,240,0.04)' }, border: { color: 'rgba(245,245,240,0.08)' } },
+      y: { ticks: { color: '#555', font: { family: 'DM Mono', size: 9 },
+             callback: v => v >= 1000 ? 'R$ ' + Math.round(v / 1000) + 'k' : 'R$ ' + v },
+           grid: { color: 'rgba(245,245,240,0.04)' }, border: { color: 'rgba(245,245,240,0.08)' } },
+    },
+  };
+}
+
+function renderCharts() {
+  const N = 18;
+  const port = Store.finPortfolioSeries(N);
+  const cost = Store.finAporteCumSeries(N);
+  const flow = Store.finFlowSeries(N);
+
+  const anySnap = port.some(p => p.value != null);
+  const twoPoints = Object.keys(Store.getFinSnapshots()).length >= 2;
+  document.getElementById('evo-empty').hidden = twoPoints;
+  document.querySelector('#evo-card .evo-grid').style.display = twoPoints ? '' : 'none';
+  document.getElementById('evo-meta').innerHTML = anySnap
+    ? `patrimônio <b>${fmtBRL0(Store.finInvestTotals().carteira)}</b>`
+    : '';
+  if (!twoPoints) {
+    if (chPortfolio) { chPortfolio.destroy(); chPortfolio = null; }
+    if (chFlow) { chFlow.destroy(); chFlow = null; }
+    return;
+  }
+
+  const labels = port.map(p => ymShort(p.ym));
+
+  /* patrimônio × investido acumulado */
+  if (chPortfolio) chPortfolio.destroy();
+  chPortfolio = new Chart(document.getElementById('chart-portfolio').getContext('2d'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        { label: 'Patrimônio', data: port.map(p => p.value),
+          borderColor: 'rgba(245,245,240,0.92)', borderWidth: 1.8, fill: true,
+          backgroundColor: 'rgba(245,245,240,0.05)', tension: 0.3,
+          pointRadius: 0, pointHoverRadius: 4, pointHoverBackgroundColor: '#f5f5f0', spanGaps: true },
+        { label: 'Investido (custo)', data: cost.map(p => p.value),
+          borderColor: '#86efac', borderWidth: 1.2, borderDash: [4, 4], fill: false,
+          tension: 0.3, pointRadius: 0, pointHoverRadius: 3 },
+      ],
+    },
+    options: finBaseOpts(),
+  });
+
+  /* renda × saída × sobra */
+  const fOpts = finBaseOpts();
+  if (chFlow) chFlow.destroy();
+  chFlow = new Chart(document.getElementById('chart-flow').getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        { label: 'Renda', data: flow.map(f => f.income), backgroundColor: 'rgba(245,245,240,0.58)', borderRadius: 0, barPercentage: 0.9, categoryPercentage: 0.66 },
+        { label: 'Saída', data: flow.map(f => f.outflow), backgroundColor: 'rgba(245,245,240,0.24)', borderRadius: 0, barPercentage: 0.9, categoryPercentage: 0.66 },
+        { label: 'Sobra', data: flow.map(f => f.surplus), type: 'line',
+          borderColor: '#86efac', borderWidth: 1.6, tension: 0.3, pointRadius: 0, pointHoverRadius: 4,
+          pointHoverBackgroundColor: '#86efac' },
+      ],
+    },
+    options: fOpts,
+  });
 }
 
 function renderMonthNav() {
@@ -908,6 +1052,23 @@ document.getElementById('cfg-save').addEventListener('click', () => {
     portfolioValue: parseMoney(document.getElementById('cfg-portfolio').value),
   });
   closeM('m-cfg'); toast('Salvo ✓'); renderAll();
+});
+
+/* valor da carteira num mês (backfill do histórico) */
+document.getElementById('evo-snap').addEventListener('click', () => {
+  const snaps = Store.getFinSnapshots();
+  document.getElementById('snap-ym').value = YM;
+  document.getElementById('snap-val').value = snaps[YM] != null ? String(snaps[YM]).replace('.', ',') : '';
+  openM('m-snap');
+  setTimeout(() => document.getElementById('snap-val').focus(), 50);
+});
+document.getElementById('snap-save').addEventListener('click', () => {
+  const ym = document.getElementById('snap-ym').value;
+  const val = parseMoney(document.getElementById('snap-val').value);
+  if (!ym) { toast('Escolha o mês'); return; }
+  if (val <= 0) { Store.deleteFinSnapshot(ym); toast('Valor removido'); }
+  else { Store.setFinSnapshot(ym, val); toast('Registrado ✓'); }
+  closeM('m-snap'); renderAll();
 });
 
 /* renda extra */
