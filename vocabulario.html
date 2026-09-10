@@ -32,9 +32,9 @@
 /* ── STAT CARDS ── */
 .g4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
 .stat-card { background: var(--surface); border: 1px solid var(--border); padding: 20px 22px; }
-.stat-lbl { font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--mid); margin-bottom: 8px; }
+.stat-lbl { font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--mid); margin-bottom: 8px; }
 .stat-val { font-family: 'Bebas Neue', sans-serif; font-size: 40px; line-height: 1; }
-.stat-sub { font-size: 10px; letter-spacing: 0.1em; color: var(--mid); margin-top: 6px; }
+.stat-sub { font-size: 11px; letter-spacing: 0.1em; color: var(--mid); margin-top: 6px; }
 
 /* ── QUIZ CTA BANNER ── */
 .quiz-cta {
@@ -45,10 +45,10 @@
 .qc-body { flex: 1; min-width: 200px; }
 .qc-title { font-family: 'DM Serif Display', serif; font-size: 18px; font-weight: 400; margin-bottom: 4px; }
 .qc-title em { font-style: italic; opacity: 0.4; }
-.qc-sub { font-size: 11px; letter-spacing: 0.04em; color: var(--mid); line-height: 1.6; }
+.qc-sub { font-size: 12px; letter-spacing: 0.04em; color: var(--mid); line-height: 1.6; }
 .qc-btn {
   padding: 14px 28px; background: var(--white); color: var(--bg); border: none;
-  font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase;
+  font-family: 'DM Mono', monospace; font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase;
   cursor: pointer; transition: opacity 0.2s, transform 0.15s; flex-shrink: 0;
 }
 .qc-btn:hover:not(:disabled) { opacity: 0.85; transform: translateY(-1px); }
@@ -59,7 +59,7 @@
 .review-cta.empty { border-color: var(--border); }
 
 /* ── SRS BADGE no card de palavra ── */
-.word-srs { display: inline-flex; align-items: center; gap: 8px; margin-top: 10px; font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--mid); }
+.word-srs { display: inline-flex; align-items: center; gap: 8px; margin-top: 10px; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--mid); }
 .srs-box { display: inline-flex; gap: 3px; }
 .srs-pip { width: 6px; height: 6px; border: 1px solid var(--border2); }
 .srs-pip.on { background: var(--white); border-color: var(--white); }
@@ -70,25 +70,25 @@
 
 /* ── FLASHCARD (revisão) ── reaproveita .quiz-overlay / .quiz-box ── */
 .rv-front { font-family: 'DM Serif Display', serif; font-size: 34px; text-align: center; margin: 6px 0 4px; word-break: break-word; }
-.rv-hint { text-align: center; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--mid); margin-bottom: 4px; }
+.rv-hint { text-align: center; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--mid); margin-bottom: 4px; }
 .rv-answer { border-top: 1px solid var(--border); padding-top: 20px; margin-top: 22px; }
 .rv-meaning { font-size: 14px; line-height: 1.7; color: var(--white); margin-bottom: 10px; }
-.rv-example { font-size: 12px; line-height: 1.7; font-style: italic; color: var(--mid); }
+.rv-example { font-size: 13px; line-height: 1.7; font-style: italic; color: var(--mid); }
 .rv-example::before { content: '"'; }
 .rv-example::after { content: '"'; }
-.rv-reveal-btn { width: 100%; margin-top: 24px; padding: 14px; background: var(--white); color: var(--bg); border: none; font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; cursor: pointer; transition: opacity 0.2s; }
+.rv-reveal-btn { width: 100%; margin-top: 24px; padding: 14px; background: var(--white); color: var(--bg); border: none; font-family: 'DM Mono', monospace; font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase; cursor: pointer; transition: opacity 0.2s; }
 .rv-reveal-btn:hover { opacity: 0.85; }
 .rv-grade-row { display: flex; gap: 10px; margin-top: 22px; }
-.rv-grade { flex: 1; padding: 14px; border: 1px solid var(--border2); background: var(--surface2); color: var(--white); font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; transition: border-color 0.2s, background 0.2s, color 0.2s; }
+.rv-grade { flex: 1; padding: 14px; border: 1px solid var(--border2); background: var(--surface2); color: var(--white); font-family: 'DM Mono', monospace; font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; transition: border-color 0.2s, background 0.2s, color 0.2s; }
 .rv-grade.again:hover { border-color: #fca5a5; background: rgba(252,165,165,0.09); color: #fca5a5; }
 .rv-grade.good:hover { border-color: #86efac; background: rgba(134,239,172,0.09); color: #86efac; }
-.rv-progress { text-align: center; font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--mid); margin-top: 20px; }
-.rv-kbd { text-align: center; font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--mid); margin-top: 14px; }
+.rv-progress { text-align: center; font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--mid); margin-top: 20px; }
+.rv-kbd { text-align: center; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--mid); margin-top: 14px; }
 .rv-kbd b { color: var(--white); font-weight: 400; padding: 1px 5px; border: 1px solid var(--border2); margin: 0 2px; }
 .rv-tap { cursor: pointer; }
 .qo-k { display: inline-block; width: 16px; color: var(--mid); }
 .quiz-opt.correct .qo-k, .quiz-opt.wrong .qo-k { color: inherit; }
-.quiz-kbd { text-align: center; font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--mid); margin-top: 12px; }
+.quiz-kbd { text-align: center; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--mid); margin-top: 12px; }
 .quiz-kbd b { color: var(--white); font-weight: 400; padding: 1px 5px; border: 1px solid var(--border2); margin: 0 2px; }
 
 /* ── EVOLUÇÃO DO VOCABULÁRIO (distribuição por caixa) ── */
@@ -102,34 +102,34 @@
 .vp-seg .s5 { background: #86efac; }
 .vp-rows { display: flex; flex-direction: column; gap: 9px; }
 .vp-row  { display: flex; align-items: center; gap: 12px; }
-.vp-name { width: 82px; flex-shrink: 0; font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--mid); }
+.vp-name { width: 82px; flex-shrink: 0; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--mid); }
 .vp-track { flex: 1; height: 4px; background: var(--surface2); }
 .vp-fill  { height: 100%; background: var(--white); transition: width 0.6s cubic-bezier(0.16,1,0.3,1); }
 .vp-row.mastered .vp-fill { background: #86efac; }
 .vp-row.mastered .vp-name { color: #86efac; }
 .vp-n { width: 30px; text-align: right; font-family: 'Bebas Neue', sans-serif; font-size: 15px; letter-spacing: 0.06em; }
-.vp-foot { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border); font-size: 10px; letter-spacing: 0.08em; color: var(--mid); }
+.vp-foot { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border); font-size: 11px; letter-spacing: 0.08em; color: var(--mid); }
 .vp-foot span { color: var(--white); }
 
 /* ── TOOLBAR ── */
 .voc-toolbar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .voc-search {
   flex: 1; min-width: 200px; background: var(--surface2); border: 1px solid var(--border); color: var(--white);
-  font-family: 'DM Mono', monospace; font-weight: 300; font-size: 12px; letter-spacing: 0.03em;
+  font-family: 'DM Mono', monospace; font-weight: 300; font-size: 13px; letter-spacing: 0.03em;
   padding: 11px 14px; outline: none; transition: border-color 0.2s;
 }
 .voc-search:focus { border-color: rgba(245,245,240,0.35); }
 .voc-search::placeholder { color: var(--mid); }
 .voc-sort {
   background: var(--surface2); border: 1px solid var(--border); color: var(--white);
-  font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.03em;
+  font-family: 'DM Mono', monospace; font-size: 12px; letter-spacing: 0.03em;
   padding: 11px 14px; outline: none; cursor: pointer; appearance: none;
 }
-.voc-count { font-size: 10px; letter-spacing: 0.1em; color: var(--mid); white-space: nowrap; }
+.voc-count { font-size: 11px; letter-spacing: 0.1em; color: var(--mid); white-space: nowrap; }
 .voc-count span { color: var(--white); }
 .voc-group-btn {
   background: var(--surface2); border: 1px solid var(--border); color: var(--mid);
-  font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase;
+  font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
   padding: 11px 14px; cursor: pointer; white-space: nowrap; transition: color 0.2s, border-color 0.2s, background 0.2s;
 }
 .voc-group-btn:hover { color: var(--white); border-color: var(--border2); }
@@ -137,7 +137,7 @@
 
 /* ── LISTA AGRUPADA POR CAIXA ── */
 .wl-group-hd {
-  font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--mid);
+  font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--mid);
   margin: 22px 0 10px; display: flex; align-items: center; gap: 10px;
 }
 .wl-group-hd:first-child { margin-top: 4px; }
@@ -159,15 +159,15 @@
 .word-main { flex: 1; min-width: 0; }
 .word-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 7px; }
 .word-term { font-family: 'DM Serif Display', serif; font-size: 19px; font-weight: 400; word-break: break-word; }
-.word-date { font-size: 9px; letter-spacing: 0.1em; color: var(--mid); white-space: nowrap; }
-.word-meaning { font-size: 12px; letter-spacing: 0.02em; color: var(--white); line-height: 1.7; margin-bottom: 5px; }
-.word-example { font-size: 11px; letter-spacing: 0.02em; color: var(--mid); font-style: italic; line-height: 1.7; }
+.word-date { font-size: 10px; letter-spacing: 0.1em; color: var(--mid); white-space: nowrap; }
+.word-meaning { font-size: 13px; letter-spacing: 0.02em; color: var(--white); line-height: 1.7; margin-bottom: 5px; }
+.word-example { font-size: 12px; letter-spacing: 0.02em; color: var(--mid); font-style: italic; line-height: 1.7; }
 .word-example::before { content: '"'; }
 .word-example::after { content: '"'; }
 .word-actions { display: flex; gap: 8px; flex-shrink: 0; }
 .word-btn {
   width: 32px; height: 32px; border: 1px solid var(--border); background: none; color: var(--mid);
-  cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 13px;
+  cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px;
   transition: color 0.2s, border-color 0.2s;
 }
 .word-btn:hover { color: var(--white); border-color: var(--border2); }
@@ -177,7 +177,7 @@
 .empty-state { text-align: center; padding: 64px 32px; border: 1px dashed rgba(245,245,240,0.12); background: var(--surface); }
 .empty-icon { font-size: 32px; margin-bottom: 16px; opacity: 0.4; }
 .empty-title { font-family: 'DM Serif Display', serif; font-size: 20px; font-weight: 400; margin-bottom: 8px; opacity: 0.6; }
-.empty-sub { font-size: 12px; color: var(--mid); margin-bottom: 24px; line-height: 1.8; }
+.empty-sub { font-size: 13px; color: var(--mid); margin-bottom: 24px; line-height: 1.8; }
 /* .btn-sm vem de css/components.css */
 
 textarea.modal-input { resize: vertical; min-height: 60px; line-height: 1.6; }
@@ -195,32 +195,32 @@ textarea.modal-input { resize: vertical; min-height: 60px; line-height: 1.6; }
 }
 .quiz-overlay.show .quiz-box { transform: scale(1); }
 .quiz-topline { display: flex; justify-content: space-between; align-items: center; margin-bottom: 26px; }
-.quiz-eyebrow { font-size: 9px; letter-spacing: 0.24em; text-transform: uppercase; color: var(--mid); }
+.quiz-eyebrow { font-size: 10px; letter-spacing: 0.24em; text-transform: uppercase; color: var(--mid); }
 .quiz-close { cursor: pointer; color: var(--mid); font-size: 16px; line-height: 1; transition: color 0.2s; }
 .quiz-close:hover { color: var(--white); }
 .quiz-word { font-family: 'DM Serif Display', serif; font-size: 32px; text-align: center; margin-bottom: 8px; word-break: break-word; }
-.quiz-prompt { text-align: center; font-size: 11px; letter-spacing: 0.08em; color: var(--mid); margin-bottom: 28px; }
+.quiz-prompt { text-align: center; font-size: 12px; letter-spacing: 0.08em; color: var(--mid); margin-bottom: 28px; }
 .quiz-opts { display: flex; flex-direction: column; gap: 10px; margin-bottom: 18px; }
 .quiz-opt {
   text-align: left; padding: 14px 18px; background: var(--surface2); border: 1px solid var(--border);
-  color: var(--white); font-family: 'DM Mono', monospace; font-weight: 300; font-size: 12px; line-height: 1.6;
+  color: var(--white); font-family: 'DM Mono', monospace; font-weight: 300; font-size: 13px; line-height: 1.6;
   letter-spacing: 0.02em; cursor: pointer; transition: border-color 0.2s, background 0.2s, color 0.2s;
 }
 .quiz-opt:hover:not(.disabled) { border-color: rgba(245,245,240,0.35); }
 .quiz-opt.correct { border-color: #86efac; background: rgba(134,239,172,0.09); color: #86efac; }
 .quiz-opt.wrong { border-color: #fca5a5; background: rgba(252,165,165,0.09); color: #fca5a5; }
 .quiz-opt.disabled { cursor: default; }
-.quiz-feedback { text-align: center; font-size: 12px; letter-spacing: 0.04em; min-height: 18px; margin-bottom: 4px; }
+.quiz-feedback { text-align: center; font-size: 13px; letter-spacing: 0.04em; min-height: 18px; margin-bottom: 4px; }
 .quiz-feedback.ok { color: #86efac; }
 .quiz-feedback.no { color: #fca5a5; }
 .quiz-stats-row {
   display: flex; justify-content: space-between; padding-top: 18px; margin-top: 14px;
-  border-top: 1px solid var(--border); font-size: 10px; letter-spacing: 0.1em; color: var(--mid);
+  border-top: 1px solid var(--border); font-size: 11px; letter-spacing: 0.1em; color: var(--mid);
 }
 .quiz-stats-row span { color: var(--white); }
 .quiz-next-btn {
   width: 100%; margin-top: 20px; padding: 13px; background: var(--white); color: var(--bg); border: none;
-  font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase;
+  font-family: 'DM Mono', monospace; font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase;
   cursor: pointer; opacity: 0; pointer-events: none; transition: opacity 0.2s;
 }
 .quiz-next-btn.show { opacity: 1; pointer-events: all; }
@@ -231,11 +231,11 @@ textarea.modal-input { resize: vertical; min-height: 60px; line-height: 1.6; }
 .qs-title { font-family: 'DM Serif Display', serif; font-size: 24px; margin-bottom: 4px; }
 .qs-title em { font-style: italic; opacity: 0.45; }
 .qs-score { font-family: 'Bebas Neue', sans-serif; font-size: 56px; line-height: 1; margin: 14px 0 6px; }
-.qs-pct { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--mid); margin-bottom: 26px; }
+.qs-pct { font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--mid); margin-bottom: 26px; }
 .qs-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 28px; }
 .qs-cell { border: 1px solid var(--border); padding: 12px 8px; }
 .qs-cell-val { font-family: 'Bebas Neue', sans-serif; font-size: 22px; }
-.qs-cell-lbl { font-size: 8px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--mid); margin-top: 3px; }
+.qs-cell-lbl { font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--mid); margin-top: 3px; }
 .qs-actions { display: flex; gap: 10px; }
 .qs-actions .modal-btn { flex: 1; }
 
@@ -276,7 +276,7 @@ textarea.modal-input { resize: vertical; min-height: 60px; line-height: 1.6; }
     <div class="sb-day">
       <div class="sb-daynum" id="sb-daynum">34</div>
       <div class="sb-daylbl">de 90 dias</div>
-      <div style="display:flex;justify-content:space-between;font-size:10px;letter-spacing:0.1em;color:var(--mid);margin-top:10px">
+      <div style="display:flex;justify-content:space-between;font-size:11px;letter-spacing:0.1em;color:var(--mid);margin-top:10px">
         <span>Progresso</span><span id="sb-pct">38%</span>
       </div>
       <div class="sb-prog-bar-bg"><div class="sb-prog-bar-fill" id="sb-fill" style="width:0%"></div></div>

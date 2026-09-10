@@ -32,10 +32,10 @@
 /* ── STAT CARDS ── */
 .g4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
 .stat-card { background: var(--surface); border: 1px solid var(--border); padding: 20px 22px; }
-.stat-lbl { font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--mid); margin-bottom: 8px; }
+.stat-lbl { font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--mid); margin-bottom: 8px; }
 .stat-val { font-family: 'Bebas Neue', sans-serif; font-size: 44px; line-height: 1; }
-.stat-sub { font-size: 10px; letter-spacing: 0.1em; color: var(--mid); margin-top: 6px; }
-.stat-delta { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; letter-spacing: 0.1em; margin-top: 6px; }
+.stat-sub { font-size: 11px; letter-spacing: 0.1em; color: var(--mid); margin-top: 6px; }
+.stat-delta { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; letter-spacing: 0.1em; margin-top: 6px; }
 .stat-delta.up { color: #86efac; }
 
 /* ── OVERALL PROGRESS BANNER ── */
@@ -47,15 +47,15 @@
 .pb-left {}
 .pb-title { font-family: 'DM Serif Display', serif; font-size: 18px; font-weight: 400; margin-bottom: 6px; }
 .pb-title em { font-style: italic; opacity: 0.4; }
-.pb-sub { font-size: 10px; letter-spacing: 0.1em; color: var(--mid); margin-bottom: 16px; }
+.pb-sub { font-size: 11px; letter-spacing: 0.1em; color: var(--mid); margin-bottom: 16px; }
 .pb-bar-bg { height: 2px; background: var(--muted); }
 .pb-bar-fill { height: 100%; background: var(--white); transition: width 1.2s cubic-bezier(0.16,1,0.3,1); }
 .pb-markers { display: flex; justify-content: space-between; margin-top: 8px; }
-.pb-marker { font-size: 9px; letter-spacing: 0.1em; color: var(--mid); }
+.pb-marker { font-size: 10px; letter-spacing: 0.1em; color: var(--mid); }
 .pb-marker.reached { color: var(--white); }
 .pb-right { text-align: right; }
 .pb-big { font-family: 'Bebas Neue', sans-serif; font-size: 64px; line-height: 0.9; }
-.pb-big-sub { font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--mid); margin-top: 6px; }
+.pb-big-sub { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--mid); margin-top: 6px; }
 
 /* ── CATEGORY SECTION ── */
 .cat-section { display: flex; flex-direction: column; gap: 16px; }
@@ -64,8 +64,8 @@
   padding-bottom: 12px; border-bottom: 1px solid var(--border);
 }
 .cat-icon { font-size: 15px; }
-.cat-name { font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--mid); flex: 1; }
-.cat-count { font-size: 10px; letter-spacing: 0.1em; color: var(--mid); }
+.cat-name { font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--mid); flex: 1; }
+.cat-count { font-size: 11px; letter-spacing: 0.1em; color: var(--mid); }
 .cat-count span { color: var(--white); }
 
 /* ── ACHIEVEMENT GRID ── */
@@ -122,9 +122,9 @@
 
 /* text */
 .ach-body { flex: 1; }
-.ach-name { font-size: 11px; letter-spacing: 0.06em; color: var(--mid); line-height: 1.4; margin-bottom: 4px; }
+.ach-name { font-size: 12px; letter-spacing: 0.06em; color: var(--mid); line-height: 1.4; margin-bottom: 4px; }
 .ach-card.unlocked .ach-name { color: var(--white); }
-.ach-desc { font-size: 10px; letter-spacing: 0.04em; color: var(--mid); line-height: 1.6; opacity: 0.7; }
+.ach-desc { font-size: 11px; letter-spacing: 0.04em; color: var(--mid); line-height: 1.6; opacity: 0.7; }
 
 /* progress bar at bottom */
 .ach-prog-wrap { }
@@ -132,8 +132,8 @@
   display: flex; justify-content: space-between; align-items: center;
   margin-bottom: 5px;
 }
-.ach-prog-req { font-size: 9px; letter-spacing: 0.1em; color: var(--mid); }
-.ach-prog-pct { font-size: 9px; letter-spacing: 0.1em; color: var(--mid); }
+.ach-prog-req { font-size: 10px; letter-spacing: 0.1em; color: var(--mid); }
+.ach-prog-pct { font-size: 10px; letter-spacing: 0.1em; color: var(--mid); }
 .ach-prog-pct.done { color: #86efac; }
 .ach-prog-bg { height: 1px; background: var(--muted); }
 .ach-prog-fill { height: 100%; background: var(--white); transition: width 1s cubic-bezier(0.16,1,0.3,1); }
@@ -142,7 +142,7 @@
 /* unlocked badge */
 .ach-badge {
   position: absolute; top: 12px; right: 12px;
-  font-size: 8px; letter-spacing: 0.14em; text-transform: uppercase;
+  font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase;
   padding: 2px 7px; border: 1px solid rgba(134,239,172,0.3);
   color: #86efac; background: rgba(134,239,172,0.07);
   opacity: 0; transition: opacity 0.3s;
@@ -151,7 +151,7 @@
 
 /* locked overlay text */
 .ach-locked-lbl {
-  font-size: 8px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted);
+  font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted);
 }
 .ach-card.unlocked .ach-locked-lbl { display: none; }
 
@@ -163,14 +163,14 @@
 }
 .nu-icon { font-size: 24px; flex-shrink: 0; }
 .nu-body { flex: 1; }
-.nu-lbl { font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--mid); margin-bottom: 4px; }
+.nu-lbl { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--mid); margin-bottom: 4px; }
 .nu-name { font-size: 14px; letter-spacing: 0.04em; margin-bottom: 8px; }
 .nu-bar-bg { height: 2px; background: var(--muted); }
 .nu-bar-fill { height: 100%; background: var(--white); transition: width 1s cubic-bezier(0.16,1,0.3,1); }
-.nu-meta { display: flex; justify-content: space-between; margin-top: 6px; font-size: 9px; letter-spacing: 0.1em; color: var(--mid); }
+.nu-meta { display: flex; justify-content: space-between; margin-top: 6px; font-size: 10px; letter-spacing: 0.1em; color: var(--mid); }
 .nu-right { text-align: right; flex-shrink: 0; }
 .nu-pct { font-family: 'Bebas Neue', sans-serif; font-size: 32px; line-height: 1; }
-.nu-sub { font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--mid); margin-top: 2px; }
+.nu-sub { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--mid); margin-top: 2px; }
 
 /* ── UNLOCK ANIMATION OVERLAY ── */
 .unlock-overlay {
@@ -192,13 +192,13 @@
 .unlock-overlay.show .unlock-modal { transform: scale(1); }
 .unlock-icon { font-size: 52px; display: block; margin-bottom: 20px; animation: popIn 0.5s cubic-bezier(0.16,1,0.3,1) 0.2s both; }
 @keyframes popIn { from { transform: scale(0.4); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-.unlock-eyebrow { font-size: 9px; letter-spacing: 0.3em; text-transform: uppercase; color: #86efac; margin-bottom: 10px; }
+.unlock-eyebrow { font-size: 10px; letter-spacing: 0.3em; text-transform: uppercase; color: #86efac; margin-bottom: 10px; }
 .unlock-title { font-family: 'DM Serif Display', serif; font-size: 26px; font-weight: 400; margin-bottom: 8px; }
 .unlock-title em { font-style: italic; opacity: 0.5; }
-.unlock-desc { font-size: 12px; letter-spacing: 0.04em; color: var(--mid); line-height: 1.7; margin-bottom: 32px; }
+.unlock-desc { font-size: 13px; letter-spacing: 0.04em; color: var(--mid); line-height: 1.7; margin-bottom: 32px; }
 .unlock-close {
   padding: 11px 32px; background: var(--white); color: var(--bg);
-  border: none; font-family: 'DM Mono', monospace; font-size: 11px;
+  border: none; font-family: 'DM Mono', monospace; font-size: 12px;
   letter-spacing: 0.16em; text-transform: uppercase; cursor: pointer;
   transition: opacity 0.2s;
 }
@@ -208,7 +208,7 @@
   color: #86efac; margin-bottom: 24px; letter-spacing: 0.06em;
 }
 .unlock-queue {
-  margin-top: 16px; font-size: 9px; letter-spacing: 0.2em;
+  margin-top: 16px; font-size: 10px; letter-spacing: 0.2em;
   text-transform: uppercase; color: var(--mid); min-height: 14px;
 }
 
@@ -263,7 +263,7 @@
     <div class="sb-day">
       <div class="sb-daynum" id="sb-daynum">34</div>
       <div class="sb-daylbl">de 90 dias</div>
-      <div style="display:flex;justify-content:space-between;font-size:10px;letter-spacing:0.1em;color:var(--mid);margin-top:10px">
+      <div style="display:flex;justify-content:space-between;font-size:11px;letter-spacing:0.1em;color:var(--mid);margin-top:10px">
         <span>Progresso</span><span id="sb-pct">38%</span>
       </div>
       <div class="sb-prog-bar-bg"><div class="sb-prog-bar-fill" id="sb-fill" style="width:0%"></div></div>

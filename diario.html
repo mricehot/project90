@@ -59,7 +59,7 @@ body { overflow: hidden; }
 }
 .day-nav-btn:hover:not(:disabled) { color: var(--white); border-color: rgba(245,245,240,0.3); }
 .day-nav-btn:disabled { opacity: 0.25; cursor: default; }
-.day-nav-lbl { font-size: 11px; letter-spacing: 0.1em; color: var(--mid); min-width: 80px; text-align: center; }
+.day-nav-lbl { font-size: 12px; letter-spacing: 0.1em; color: var(--mid); min-width: 80px; text-align: center; }
 
 /* ── UNSAVED DOT ── */
 .unsaved-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(245,245,240,0.4); display: none; flex-shrink: 0; }
@@ -81,14 +81,14 @@ body { overflow: hidden; }
 .wr-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 4px; }
 .wr-head-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
 .wr-title { font-family: 'DM Serif Display', serif; font-size: 18px; color: var(--white); }
-.wr-sub   { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--mid); margin-top: 4px; }
+.wr-sub   { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--mid); margin-top: 4px; }
 .wr-sub.pending { color: #fca5a5; }
 /* botão de recolher — só aparece no mobile, onde a revisão empurrava a
    entrada do dia pra baixo da dobra */
 .wr-toggle { display: none; }
 .wr-select {
   background: var(--surface); border: 1px solid var(--border2); color: var(--white);
-  font-family: 'DM Mono', monospace; font-size: 11px; padding: 6px 10px; outline: none; cursor: pointer;
+  font-family: 'DM Mono', monospace; font-size: 12px; padding: 6px 10px; outline: none; cursor: pointer;
 }
 .wr-body { margin-top: 16px; }
 .wr-body .prompt-block { margin-bottom: 16px; }
@@ -120,42 +120,42 @@ body { overflow: hidden; }
 .jm-title em { font-style: italic; opacity: 0.4; }
 .jm-select {
   width: 100%; background: var(--surface2); border: 1px solid var(--border2); color: var(--white);
-  font-family: 'DM Mono', monospace; font-size: 12px; padding: 10px 12px; outline: none; cursor: pointer;
+  font-family: 'DM Mono', monospace; font-size: 13px; padding: 10px 12px; outline: none; cursor: pointer;
 }
 .jm-search {
   width: 100%; background: var(--surface2); border: 1px solid var(--border2); color: var(--white);
-  font-family: 'DM Mono', monospace; font-size: 12px; padding: 10px 12px; outline: none; margin-bottom: 10px;
+  font-family: 'DM Mono', monospace; font-size: 13px; padding: 10px 12px; outline: none; margin-bottom: 10px;
 }
 .jm-search::placeholder { color: var(--mid); }
 .jm-search:focus { border-color: rgba(245,245,240,0.3); }
 .jm-body { padding: 24px 32px; overflow-y: auto; }
-.jm-results-count { font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--mid); margin-bottom: 14px; }
+.jm-results-count { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--mid); margin-bottom: 14px; }
 .jm-results { display: flex; flex-direction: column; gap: 8px; }
 .jm-result {
   display: block; width: 100%; text-align: left; background: var(--surface2);
   border: 1px solid var(--border); padding: 12px 14px; cursor: pointer; transition: border-color 0.2s;
 }
 .jm-result:hover { border-color: var(--border2); }
-.jm-result-meta { display: block; font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--mid); margin-bottom: 6px; }
+.jm-result-meta { display: block; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--mid); margin-bottom: 6px; }
 .jm-result-snip {
-  display: block; font-family: 'DM Mono', monospace; font-weight: 300; font-size: 12px; line-height: 1.7;
+  display: block; font-family: 'DM Mono', monospace; font-weight: 300; font-size: 13px; line-height: 1.7;
   color: var(--white); letter-spacing: 0.02em; word-break: break-word;
 }
 .jm-hit { background: rgba(245,245,240,0.22); color: var(--white); padding: 0 2px; border-radius: 2px; }
-.jm-meta { font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--mid); margin-bottom: 18px; }
+.jm-meta { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--mid); margin-bottom: 18px; }
 .jm-mood { font-size: 20px; margin-right: 8px; vertical-align: middle; }
-.jm-mood-lbl { font-size: 11px; letter-spacing: 0.06em; color: var(--white); }
+.jm-mood-lbl { font-size: 12px; letter-spacing: 0.06em; color: var(--white); }
 .jm-section { margin-bottom: 20px; }
 .jm-section:last-child { margin-bottom: 0; }
-.jm-lbl { font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--mid); margin-bottom: 8px; }
+.jm-lbl { font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--mid); margin-bottom: 8px; }
 .jm-text {
-  font-family: 'DM Mono', monospace; font-weight: 300; font-size: 12.5px; line-height: 1.9;
+  font-family: 'DM Mono', monospace; font-weight: 300; font-size: 13.5px; line-height: 1.9;
   color: var(--white); letter-spacing: 0.03em; white-space: pre-wrap; word-break: break-word;
 }
-.jm-empty { text-align: center; color: var(--mid); font-size: 12px; padding: 32px 0; }
+.jm-empty { text-align: center; color: var(--mid); font-size: 13px; padding: 32px 0; }
 .jm-footer { padding: 16px 32px 22px; border-top: 1px solid var(--border); display: flex; gap: 10px; }
 .jm-btn {
-  flex: 1; padding: 12px; font-family: 'DM Mono', monospace; font-size: 11px;
+  flex: 1; padding: 12px; font-family: 'DM Mono', monospace; font-size: 12px;
   letter-spacing: 0.14em; text-transform: uppercase; cursor: pointer; border: none; transition: opacity 0.2s;
 }
 .jm-btn:hover { opacity: 0.85; }
@@ -171,7 +171,7 @@ body { overflow: hidden; }
 }
 .entry-day-num   { font-family: 'Bebas Neue', sans-serif; font-size: 72px; line-height: 0.9; color: var(--white); }
 .entry-day-meta  { text-align: right; }
-.entry-date-full { font-size: 11px; letter-spacing: 0.14em; color: var(--mid); text-transform: uppercase; }
+.entry-date-full { font-size: 12px; letter-spacing: 0.14em; color: var(--mid); text-transform: uppercase; }
 .entry-mood-row  { display: flex; gap: 8px; margin-top: 8px; justify-content: flex-end; }
 .mood-btn {
   width: 28px; height: 28px; border: 1px solid var(--border); background: none;
@@ -184,7 +184,7 @@ body { overflow: hidden; }
 /* ── PROMPTS ── */
 .prompt-block { margin-bottom: 24px; }
 .prompt-lbl {
-  font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--mid);
+  font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--mid);
   margin-bottom: 8px; display: flex; align-items: center; gap: 10px;
 }
 .prompt-lbl::before { content: ''; display: inline-block; width: 14px; height: 1px; background: var(--mid); }
@@ -196,7 +196,7 @@ body { overflow: hidden; }
 .j-field {
   width: 100%; background: var(--surface2); border: 1px solid var(--border);
   color: var(--white); font-family: 'DM Mono', monospace; font-weight: 300;
-  font-size: 12px; letter-spacing: 0.04em; line-height: 1.85;
+  font-size: 13px; letter-spacing: 0.04em; line-height: 1.85;
   padding: 14px 16px; resize: none; outline: none;
   transition: border-color 0.2s, background 0.2s;
   min-height: 80px;
@@ -205,7 +205,7 @@ body { overflow: hidden; }
 .j-field::placeholder { color: var(--mid); }
 
 .field-footer { display: flex; justify-content: flex-end; margin-top: 4px; }
-.char-count   { font-size: 9px; letter-spacing: 0.1em; color: var(--muted); transition: color 0.2s; }
+.char-count   { font-size: 10px; letter-spacing: 0.1em; color: var(--muted); transition: color 0.2s; }
 .char-count.warn { color: rgba(252,165,165,0.6); }
 
 /* ── GRATIDÃO — 3 campos fixos ── */
@@ -227,9 +227,9 @@ body { overflow: hidden; }
 .hci-dot.done    { background: var(--white); }
 .hci-dot.partial { background: rgba(245,245,240,0.35); }
 .hci-dot.miss    { background: var(--muted); }
-.hci-name      { flex: 1; font-size: 11px; letter-spacing: 0.04em; color: var(--mid); }
+.hci-name      { flex: 1; font-size: 12px; letter-spacing: 0.04em; color: var(--mid); }
 .hci-name.done { color: var(--white); }
-.hci-status    { font-size: 9px; letter-spacing: 0.1em; color: var(--mid); }
+.hci-status    { font-size: 10px; letter-spacing: 0.1em; color: var(--mid); }
 
 /* ── SAVE BAR ── */
 .save-bar {
@@ -237,7 +237,7 @@ body { overflow: hidden; }
   padding-top: 24px; margin-top: auto;
   border-top: 1px solid var(--border);
 }
-.save-status        { font-size: 10px; letter-spacing: 0.1em; color: var(--mid); flex: 1; }
+.save-status        { font-size: 11px; letter-spacing: 0.1em; color: var(--mid); flex: 1; }
 .save-status.saved  { color: var(--green); }
 .save-status.unsaved { color: rgba(245,245,240,0.4); }
 
@@ -247,22 +247,22 @@ body { overflow: hidden; }
 /* ── MINI CALENDAR ── */
 .cal-header    { padding: 20px 20px 16px; border-bottom: 1px solid var(--border); }
 .cal-month-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
-.cal-month-lbl { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--white); }
+.cal-month-lbl { font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--white); }
 .cal-nav-btn {
   width: 22px; height: 22px; background: none; border: 1px solid var(--border);
-  color: var(--mid); cursor: pointer; font-size: 11px;
+  color: var(--mid); cursor: pointer; font-size: 12px;
   display: flex; align-items: center; justify-content: center;
   transition: color 0.2s, border-color 0.2s;
 }
 .cal-nav-btn:hover { color: var(--white); border-color: var(--border2); }
 .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
 .cal-dow {
-  font-size: 8px; letter-spacing: 0.1em; text-align: center;
+  font-size: 9px; letter-spacing: 0.1em; text-align: center;
   color: var(--mid); padding-bottom: 6px; text-transform: uppercase;
 }
 .cal-cell {
   aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
-  font-size: 10px; letter-spacing: 0.05em; cursor: pointer;
+  font-size: 11px; letter-spacing: 0.05em; cursor: pointer;
   position: relative; transition: background 0.15s;
   border: 1px solid transparent;
 }
@@ -280,7 +280,7 @@ body { overflow: hidden; }
 
 /* ── ENTRIES LIST ── */
 .entries-section-lbl {
-  font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--mid);
+  font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--mid);
   padding: 14px 20px 8px;
   position: sticky; top: 0; background: var(--surface); z-index: 2;
   border-bottom: 1px solid var(--border);
@@ -296,10 +296,10 @@ body { overflow: hidden; }
 .ei-top    { display: flex; align-items: flex-start; justify-content: space-between; }
 .ei-left   { display: flex; flex-direction: column; gap: 2px; }
 .ei-day    { font-family: 'Bebas Neue', sans-serif; font-size: 16px; line-height: 1; }
-.ei-date   { font-size: 9px; letter-spacing: 0.1em; color: var(--mid); }
+.ei-date   { font-size: 10px; letter-spacing: 0.1em; color: var(--mid); }
 .ei-mood   { font-size: 14px; line-height: 1; padding-top: 2px; }
 .ei-preview {
-  font-size: 10px; letter-spacing: 0.03em; line-height: 1.6; color: var(--mid);
+  font-size: 11px; letter-spacing: 0.03em; line-height: 1.6; color: var(--mid);
   overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
 }
 .ei-preview.has-text { color: rgba(245,245,240,0.45); }
@@ -319,7 +319,7 @@ body { overflow: hidden; }
     display: flex; align-items: center; justify-content: center;
     width: 28px; height: 28px; flex-shrink: 0;
     background: none; border: 1px solid var(--border2); color: var(--mid);
-    font-size: 12px; cursor: pointer; transition: color 0.2s, border-color 0.2s;
+    font-size: 13px; cursor: pointer; transition: color 0.2s, border-color 0.2s;
   }
   .wr-toggle:hover { color: var(--white); border-color: rgba(245,245,240,0.3); }
   .week-review .wr-body { display: none; }
@@ -353,7 +353,7 @@ body { overflow: hidden; }
     <div class="sb-day">
       <div class="sb-daynum" id="sb-daynum">34</div>
       <div class="sb-daylbl">de 90 dias</div>
-      <div style="display:flex;justify-content:space-between;font-size:10px;letter-spacing:0.1em;color:var(--mid);margin-top:10px">
+      <div style="display:flex;justify-content:space-between;font-size:11px;letter-spacing:0.1em;color:var(--mid);margin-top:10px">
         <span>Progresso</span><span id="sb-pct">38%</span>
       </div>
       <div class="sb-prog-bar-bg"><div class="sb-prog-bar-fill" id="sb-fill" style="width:0%"></div></div>
@@ -443,12 +443,12 @@ body { overflow: hidden; }
 
       <div class="entry-header">
         <div>
-          <div style="font-size:9px;letter-spacing:0.22em;text-transform:uppercase;color:var(--mid);margin-bottom:6px">Dia do desafio</div>
+          <div style="font-size:10px;letter-spacing:0.22em;text-transform:uppercase;color:var(--mid);margin-bottom:6px">Dia do desafio</div>
           <div class="entry-day-num" id="entry-day-num">34</div>
         </div>
         <div class="entry-day-meta">
           <div class="entry-date-full" id="entry-date-full"></div>
-          <div style="font-size:9px;letter-spacing:0.12em;color:var(--mid);margin-top:4px;margin-bottom:8px">Como foi seu dia?</div>
+          <div style="font-size:10px;letter-spacing:0.12em;color:var(--mid);margin-top:4px;margin-bottom:8px">Como foi seu dia?</div>
           <div class="entry-mood-row" id="mood-row">
             <button class="mood-btn" data-mood="🔥" title="Em chamas">🔥</button>
             <button class="mood-btn" data-mood="💪" title="Forte">💪</button>
@@ -817,7 +817,7 @@ function updateCharCount(id, len, max) {
 function renderHabitsCheckin(n) {
   var el = document.getElementById('habits-checkin');
   if (!habits.length) {
-    el.innerHTML = '<div style="font-size:11px;color:var(--mid);padding:4px 0">Nenhum hábito cadastrado ainda — <a href="habitos.html" style="color:var(--white)">adicione um</a>.</div>';
+    el.innerHTML = '<div style="font-size:12px;color:var(--mid);padding:4px 0">Nenhum hábito cadastrado ainda — <a href="habitos.html" style="color:var(--white)">adicione um</a>.</div>';
     return;
   }
   el.innerHTML = habits.map(function(h){
@@ -870,7 +870,7 @@ function calDayClick(n) {
 function renderEntriesList() {
   var el   = document.getElementById('entries-list');
   var days = Object.keys(entries).map(Number).sort(function(a,b){return b-a;});
-  if (!days.length) { el.innerHTML='<div style="padding:32px 20px;text-align:center;font-size:11px;color:var(--mid)">Nenhuma entrada ainda.</div>'; return; }
+  if (!days.length) { el.innerHTML='<div style="padding:32px 20px;text-align:center;font-size:12px;color:var(--mid)">Nenhuma entrada ainda.</div>'; return; }
   el.innerHTML = days.map(function(n){
     var data    = entries[n];
     var date    = dayToDate(n);

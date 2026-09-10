@@ -40,7 +40,7 @@
 }
 .bib-rail-hd {
   padding: 18px 20px 14px; border-bottom: 1px solid var(--border);
-  font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--mid);
+  font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--mid);
   display: flex; align-items: center; justify-content: space-between; gap: 8px;
 }
 .bib-rail-add {
@@ -53,12 +53,12 @@
 .bib-rail-list { flex: 1; overflow-y: auto; }
 .bp-item { padding: 14px 20px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.15s; }
 .bp-item:hover { background: rgba(245,245,240,0.04); }
-.bp-ref { font-size: 12px; letter-spacing: 0.03em; color: var(--white); }
+.bp-ref { font-size: 13px; letter-spacing: 0.03em; color: var(--white); }
 .bp-preview {
-  font-size: 10px; line-height: 1.6; color: var(--mid); margin-top: 5px;
+  font-size: 11px; line-height: 1.6; color: var(--mid); margin-top: 5px;
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; word-break: break-word;
 }
-.bib-rail-empty { padding: 16px 20px; font-size: 11px; color: var(--mid); line-height: 1.7; }
+.bib-rail-empty { padding: 16px 20px; font-size: 12px; color: var(--mid); line-height: 1.7; }
 
 /* ── MODAL — leitura da passagem ── */
 .bpv-ref { font-family: 'DM Serif Display', serif; font-size: 24px; color: var(--white); }
@@ -68,8 +68,8 @@
   padding: 16px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); margin: 16px 0;
   max-height: 40vh; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--muted) transparent;
 }
-.bpv-msg-lbl { font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--mid); margin-bottom: 6px; }
-.bpv-msg { font-size: 13px; line-height: 1.85; color: rgba(245,245,240,0.82); white-space: pre-wrap; word-break: break-word; }
+.bpv-msg-lbl { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--mid); margin-bottom: 6px; }
+.bpv-msg { font-size: 14px; line-height: 1.85; color: rgba(245,245,240,0.82); white-space: pre-wrap; word-break: break-word; }
 .bpf-row { display: flex; gap: 12px; }
 .bpf-row .modal-field { flex: 1; }
 .bpf-row .modal-field.book { flex: 2; }
@@ -80,9 +80,9 @@
 
 .g4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
 .stat-card { background: var(--surface); border: 1px solid var(--border); padding: 20px 22px; }
-.stat-lbl { font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--mid); margin-bottom: 8px; }
+.stat-lbl { font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--mid); margin-bottom: 8px; }
 .stat-val { font-family: 'Bebas Neue', sans-serif; font-size: 40px; line-height: 1; }
-.stat-sub { font-size: 10px; letter-spacing: 0.1em; color: var(--mid); margin-top: 6px; }
+.stat-sub { font-size: 11px; letter-spacing: 0.1em; color: var(--mid); margin-top: 6px; }
 
 /* ── LEITURA DE HOJE ── */
 .today-card {
@@ -90,12 +90,12 @@
   padding: 26px 30px; display: flex; align-items: center; gap: 24px; flex-wrap: wrap;
 }
 .tc-body { flex: 1; min-width: 220px; }
-.tc-eyebrow { font-size: 9px; letter-spacing: 0.24em; text-transform: uppercase; color: var(--mid); margin-bottom: 6px; }
+.tc-eyebrow { font-size: 10px; letter-spacing: 0.24em; text-transform: uppercase; color: var(--mid); margin-bottom: 6px; }
 .tc-ref { font-family: 'DM Serif Display', serif; font-size: 30px; line-height: 1.2; color: var(--white); }
-.tc-day { font-size: 11px; letter-spacing: 0.1em; color: var(--mid); margin-top: 6px; }
+.tc-day { font-size: 12px; letter-spacing: 0.1em; color: var(--mid); margin-top: 6px; }
 .tc-btn {
   padding: 15px 30px; background: var(--white); color: var(--bg); border: none;
-  font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase;
+  font-family: 'DM Mono', monospace; font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase;
   cursor: pointer; transition: opacity 0.2s, transform 0.15s; flex-shrink: 0;
 }
 .tc-btn:hover:not(:disabled) { opacity: 0.85; transform: translateY(-1px); }
@@ -104,19 +104,19 @@
 
 .bib-bar-bg { height: 3px; background: var(--muted); margin-top: 16px; }
 .bib-bar-fill { height: 100%; background: var(--white); transition: width 0.9s cubic-bezier(0.16,1,0.3,1); }
-.bib-bar-meta { display: flex; justify-content: space-between; font-size: 9px; letter-spacing: 0.1em; color: var(--mid); margin-top: 5px; }
+.bib-bar-meta { display: flex; justify-content: space-between; font-size: 10px; letter-spacing: 0.1em; color: var(--mid); margin-top: 5px; }
 
 /* ── TOOLBAR + LISTA ── */
 .bib-toolbar { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
-.bib-filter { display: flex; align-items: center; gap: 8px; font-size: 11px; letter-spacing: 0.06em; color: var(--mid); cursor: pointer; }
+.bib-filter { display: flex; align-items: center; gap: 8px; font-size: 12px; letter-spacing: 0.06em; color: var(--mid); cursor: pointer; }
 .bib-filter input { accent-color: #86efac; width: 15px; height: 15px; cursor: pointer; }
 .bib-jump {
   background: var(--surface2); border: 1px solid var(--border2); color: var(--white);
-  font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase;
+  font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
   padding: 9px 16px; cursor: pointer; transition: border-color 0.2s;
 }
 .bib-jump:hover { border-color: rgba(245,245,240,0.35); }
-.bib-count { font-size: 10px; letter-spacing: 0.1em; color: var(--mid); }
+.bib-count { font-size: 11px; letter-spacing: 0.1em; color: var(--mid); }
 .bib-count span { color: var(--white); }
 
 .bib-list { display: flex; flex-direction: column; }
@@ -137,13 +137,13 @@
   font-family: 'DM Mono', monospace; transition: background 0.15s;
 }
 .bk-head:hover { background: rgba(245,245,240,0.03); }
-.bk-chev { flex-shrink: 0; width: 10px; font-size: 10px; color: var(--mid); transition: transform 0.2s; }
+.bk-chev { flex-shrink: 0; width: 10px; font-size: 11px; color: var(--mid); transition: transform 0.2s; }
 .bk-group.open .bk-chev { transform: rotate(90deg); }
-.bk-name { flex: 1; min-width: 0; font-size: 13px; letter-spacing: 0.03em; }
-.bk-days { flex-shrink: 0; font-size: 10px; letter-spacing: 0.1em; color: var(--mid); }
+.bk-name { flex: 1; min-width: 0; font-size: 14px; letter-spacing: 0.03em; }
+.bk-days { flex-shrink: 0; font-size: 11px; letter-spacing: 0.1em; color: var(--mid); }
 .bk-prog { flex-shrink: 0; width: 54px; height: 2px; background: var(--muted); }
 .bk-prog-fill { display: block; height: 100%; background: var(--white); transition: width 0.6s cubic-bezier(0.16,1,0.3,1); }
-.bk-read { flex-shrink: 0; min-width: 40px; text-align: right; font-family: 'Bebas Neue', sans-serif; font-size: 13px; color: var(--mid); }
+.bk-read { flex-shrink: 0; min-width: 40px; text-align: right; font-family: 'Bebas Neue', sans-serif; font-size: 14px; color: var(--mid); }
 .bk-group.all-read .bk-read { color: #86efac; }
 .bk-group.all-read .bk-prog-fill { background: #86efac; }
 .bk-body { display: none; }
@@ -153,12 +153,12 @@
 .bib-check {
   width: 20px; height: 20px; flex-shrink: 0; border: 1px solid var(--border2);
   display: flex; align-items: center; justify-content: center; cursor: pointer;
-  font-size: 11px; color: var(--bg); background: none; transition: background 0.15s, border-color 0.15s;
+  font-size: 12px; color: var(--bg); background: none; transition: background 0.15s, border-color 0.15s;
 }
 .bib-row.read .bib-check { background: #86efac; border-color: #86efac; }
 .bib-daynum { font-family: 'Bebas Neue', sans-serif; font-size: 15px; color: var(--mid); width: 42px; flex-shrink: 0; }
 .bib-row.current .bib-daynum { color: var(--white); }
-.bib-ref { font-size: 12.5px; letter-spacing: 0.02em; color: var(--white); }
+.bib-ref { font-size: 13.5px; letter-spacing: 0.02em; color: var(--white); }
 
 @media (max-width: 1080px) { .bib-main { grid-template-columns: 1fr 240px; } }
 @media (max-width: 900px) {
@@ -193,7 +193,7 @@
     <div class="sb-day">
       <div class="sb-daynum" id="sb-daynum">34</div>
       <div class="sb-daylbl">de 90 dias</div>
-      <div style="display:flex;justify-content:space-between;font-size:10px;letter-spacing:0.1em;color:var(--mid);margin-top:10px">
+      <div style="display:flex;justify-content:space-between;font-size:11px;letter-spacing:0.1em;color:var(--mid);margin-top:10px">
         <span>Progresso</span><span id="sb-pct">38%</span>
       </div>
       <div class="sb-prog-bar-bg"><div class="sb-prog-bar-fill" id="sb-fill" style="width:0%"></div></div>
@@ -506,7 +506,7 @@ function render() {
       <div class="bk-body">${bodyHTML}</div>
     </div>`;
   }).join('');
-  list.innerHTML = html || '<div style="padding:32px;text-align:center;font-size:12px;color:var(--mid)">Tudo lido ✓</div>';
+  list.innerHTML = html || '<div style="padding:32px;text-align:center;font-size:13px;color:var(--mid)">Tudo lido ✓</div>';
 }
 
 function toggleDay(d) {
