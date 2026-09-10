@@ -92,10 +92,37 @@ body { overflow: hidden; }
 .radial-wrap { display: flex; flex-direction: column; align-items: center; gap: 10px; }
 .radial-lbl  { font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--mid); }
 
+/* ── CORRELAÇÕES ── */
+.corr-intro { font-size: 11px; line-height: 1.7; color: var(--mid); margin-bottom: 16px; }
+.corr-intro b { color: var(--white); }
+.corr-row { display: flex; align-items: center; gap: 12px; padding: 11px 0; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+.corr-row:last-child { border-bottom: none; }
+.corr-name { flex: 0 0 150px; font-size: 12px; letter-spacing: 0.03em; }
+.corr-track { flex: 1 1 120px; height: 22px; position: relative; background: var(--surface2); min-width: 90px; }
+.corr-mid { position: absolute; left: 50%; top: 0; bottom: 0; width: 1px; background: var(--border2); }
+.corr-fill { position: absolute; top: 4px; bottom: 4px; background: var(--white); transition: width 0.8s cubic-bezier(0.16,1,0.3,1); }
+.corr-fill.neg { background: var(--red); }
+.corr-delta { flex: 0 0 74px; text-align: right; font-family: 'Bebas Neue', sans-serif; font-size: 16px; }
+.corr-delta.neg { color: var(--red); }
+.corr-n { flex: 0 0 96px; text-align: right; font-size: 9px; letter-spacing: 0.1em; color: var(--mid); }
+.corr-low { flex: 1; font-size: 10px; color: var(--mid); letter-spacing: 0.05em; line-height: 1.6; }
+
+.mood-corr { display: flex; gap: 1px; margin-top: 10px; background: var(--border); }
+.mc-col { flex: 1; background: var(--surface2); padding: 12px 6px; text-align: center; }
+.mc-emoji { font-size: 16px; line-height: 1; }
+.mc-bar-wrap { height: 44px; display: flex; align-items: flex-end; margin: 8px 0 6px; }
+.mc-bar { width: 100%; background: rgba(245,245,240,0.7); transition: height 0.8s cubic-bezier(0.16,1,0.3,1); }
+.mc-val { font-family: 'Bebas Neue', sans-serif; font-size: 15px; line-height: 1; }
+.mc-n { font-size: 8px; letter-spacing: 0.1em; color: var(--mid); margin-top: 3px; }
+
 /* ── RESPONSIVE — só o que difere de css/components.css ──
    (shell mobile, barra + drawer, quebra dos grids e do .g4 já vêm de lá) */
 @media (max-width: 900px) {
   .met-main { padding: 20px; }
+}
+@media (max-width: 620px) {
+  .corr-name { flex-basis: 100%; }
+  .corr-n { flex-basis: 100%; text-align: left; }
 }
 </style>
 </head>
@@ -273,6 +300,15 @@ body { overflow: hidden; }
       <div id="consist-table"></div>
     </div>
 
+    <!-- CORRELAÇÕES -->
+    <div class="card">
+      <div class="card-hd">
+        <span class="card-title">Correlações</span>
+        <span class="card-action">o que anda junto</span>
+      </div>
+      <div id="corr-body"></div>
+    </div>
+
   </main>
 </div>
 
@@ -385,6 +421,7 @@ function renderAll(){
   renderHeatmap();
   renderConsistency();
   renderRadials();
+  renderCorrelations();
 }
 
 /* ── STATS ── */
@@ -578,6 +615,147 @@ function renderRadials(){
       '</div>'+
     '</div>';
   }).join('');
+}
+
+/* ── CORRELAÇÕES — cruza dados que já existem (diário, treino, bíblia,
+   rotina noturna, dicção) com a % de hábitos cumpridos no dia.
+   É associação, não causa — e só aparece com dados suficientes. ── */
+function _moodScore(m){ return { '🔥':5, '💪':4, '😐':3, '😓':2, '💀':1 }[m] || 0; }
+
+function _challengeDayForISO(iso){
+  var start = Store.getStartDate();
+  var s = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+  return Math.round((new Date(iso + 'T00:00:00') - s) / 86400000) + 1;
+}
+
+function _scheduledCount(dayIdx){
+  return realHabits.filter(function(h){
+    return !h.paused && (h.createdDay - 1) <= dayIdx && Store.scheduledOn(h, dayIdx);
+  }).length;
+}
+
+function renderCorrelations(){
+  var el = document.getElementById('corr-body');
+  if (!el) return;
+  var elapsed = DAY;
+
+  if (elapsed < 5 || !realHabits.length) {
+    el.innerHTML = '<div style="font-size:11px;color:var(--mid);padding:6px 0;line-height:1.7">'
+      + 'Ainda são poucos dias de dados. Depois de uma semana isso mostra o que costuma andar junto dos seus melhores dias.</div>';
+    return;
+  }
+
+  // % de hábitos cumpridos por dia (null = dia sem hábito programado, fica de fora)
+  var pct = [];
+  for (var i = 0; i < elapsed; i++) {
+    pct.push(_scheduledCount(i) > 0 ? Store.dayCompletionPct(realHabits, i) : null);
+  }
+
+  var journal    = Store.getJournal()   || {};
+  var speechDays = Store.getSpeechDays() || {};
+  var bibleDays  = Store.getBibleDays()  || {};
+  var bibleByDay = {};
+  Object.keys(bibleDays).forEach(function(k){
+    var dd = bibleDays[k] && bibleDays[k].doneDate;
+    if (dd) { var cd = _challengeDayForISO(String(dd).slice(0, 10)); if (cd >= 1) bibleByDay[cd] = true; }
+  });
+
+  function hasTraining(d){
+    var sess = Store.getTrainingSession ? Store.getTrainingSession(d) : null;
+    var ent = sess && sess.entries;
+    return !!(ent && Object.keys(ent).some(function(id){ return ent[id] && ent[id].done; }));
+  }
+  function hasJournal(d){
+    var j = journal[d];
+    return !!(j && (j.good || j.improve || j.free || j.gratitude || j.mood || j.promptReply));
+  }
+
+  var factors = [
+    { name: 'Dia com treino',       test: hasTraining },
+    { name: 'Leu a Bíblia',         test: function(d){ return !!bibleByDay[d]; } },
+    { name: 'Escreveu no diário',   test: hasJournal },
+    { name: 'Rotina noturna feita', test: function(d){ return Store.nightRoutineComplete(d); } },
+    { name: 'Praticou dicção',      test: function(d){ return !!(speechDays[d] && speechDays[d].done); } }
+  ];
+
+  var avg = function(a){ return a.length ? a.reduce(function(x, y){ return x + y; }, 0) / a.length : null; };
+
+  var rows = factors.map(function(f){
+    var withV = [], without = [];
+    for (var d = 1; d <= elapsed; d++) {
+      var v = pct[d - 1];
+      if (v == null) continue;
+      (f.test(d) ? withV : without).push(v);
+    }
+    var aw = avg(withV), ao = avg(without);
+    return {
+      name: f.name, nWith: withV.length, nWithout: without.length,
+      delta: (aw != null && ao != null) ? Math.round(aw - ao) : null
+    };
+  });
+
+  var shown = rows.filter(function(r){ return r.delta != null && r.nWith >= 3 && r.nWithout >= 3; });
+  shown.sort(function(a, b){ return b.delta - a.delta; });
+  var maxAbs = Math.max.apply(null, shown.map(function(r){ return Math.abs(r.delta); }).concat([1]));
+
+  var html = '<div class="corr-intro">Comparo a % de hábitos que você cumpre nos dias <b>com</b> cada fator vs. os dias <b>sem</b>. '
+    + 'É associação, não causa — mas mostra o que costuma andar junto dos seus melhores dias.</div>';
+
+  if (!shown.length) {
+    html += '<div style="font-size:11px;color:var(--mid);padding:6px 0">Nenhum fator tem dias suficientes dos dois lados ainda (mínimo 3 com e 3 sem).</div>';
+  } else {
+    html += shown.map(function(r){
+      var w = Math.round(Math.abs(r.delta) / maxAbs * 50);
+      var neg = r.delta < 0;
+      var style = (neg ? 'right:50%;' : 'left:50%;') + 'width:' + w + '%';
+      return '<div class="corr-row">'
+        + '<span class="corr-name">' + r.name + '</span>'
+        + '<div class="corr-track"><div class="corr-mid"></div>'
+        +   '<div class="corr-fill' + (neg ? ' neg' : '') + '" style="' + style + '"></div></div>'
+        + '<span class="corr-delta' + (neg ? ' neg' : '') + '">' + (r.delta > 0 ? '+' : '') + r.delta + ' pts</span>'
+        + '<span class="corr-n">' + r.nWith + ' com / ' + r.nWithout + ' sem</span>'
+        + '</div>';
+    }).join('');
+    var low = rows.filter(function(r){ return !(r.delta != null && r.nWith >= 3 && r.nWithout >= 3); });
+    if (low.length) {
+      html += '<div class="corr-row"><span class="corr-low">Poucos dados ainda: '
+        + low.map(function(r){ return r.name.toLowerCase(); }).join(' · ') + '</span></div>';
+    }
+  }
+
+  // Humor do dia × disciplina
+  var buckets = { 5: [], 4: [], 3: [], 2: [], 1: [] };
+  for (var d2 = 1; d2 <= elapsed; d2++) {
+    var v2 = pct[d2 - 1];
+    if (v2 == null) continue;
+    var j = journal[d2];
+    var sc = j && j.mood ? _moodScore(j.mood) : 0;
+    if (sc) buckets[sc].push(v2);
+  }
+  var moodDays = [5,4,3,2,1].reduce(function(s, k){ return s + buckets[k].length; }, 0);
+  if (moodDays >= 4) {
+    var EMO = { 5: '🔥', 4: '💪', 3: '😐', 2: '😓', 1: '💀' };
+    var avgs = {};
+    [5,4,3,2,1].forEach(function(k){ avgs[k] = buckets[k].length ? Math.round(avg(buckets[k])) : null; });
+    var maxMood = Math.max.apply(null, [5,4,3,2,1].map(function(k){ return avgs[k] || 0; }).concat([1]));
+    html += '<div style="margin-top:22px;padding-top:16px;border-top:1px solid var(--border)">'
+      + '<div class="stat-lbl" style="margin-bottom:6px">Humor do dia × disciplina</div>'
+      + '<div class="corr-intro" style="margin:0 0 4px">Média de hábitos cumpridos conforme o humor registrado no diário.</div>'
+      + '<div class="mood-corr">'
+      + [5,4,3,2,1].map(function(k){
+          var val = avgs[k];
+          var h = val == null ? 0 : Math.round(val / maxMood * 100);
+          return '<div class="mc-col">'
+            + '<div class="mc-emoji">' + EMO[k] + '</div>'
+            + '<div class="mc-bar-wrap"><div class="mc-bar" style="height:' + h + '%"></div></div>'
+            + '<div class="mc-val">' + (val == null ? '—' : val + '%') + '</div>'
+            + '<div class="mc-n">' + buckets[k].length + (buckets[k].length === 1 ? ' dia' : ' dias') + '</div>'
+            + '</div>';
+        }).join('')
+      + '</div></div>';
+  }
+
+  el.innerHTML = html;
 }
 
 window.addEventListener('p90:synced', function () {
