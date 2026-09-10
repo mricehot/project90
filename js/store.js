@@ -40,6 +40,7 @@ const Store = (() => {
       speechExercises: [],
       speechStats:   { sessionsPlayed: 0, repsTotal: 0, ratingSum: 0, ratingCount: 0, bestStreak: 0 },
       speechDays:    {},
+      readingTexts:  [],
       bibleDays:     {},
       tasks:         [],
       taskDone:      {},
@@ -130,6 +131,10 @@ const Store = (() => {
     if (data.speechDays && typeof data.speechDays === 'object') {
       Object.keys(cache.speechDays).forEach(k => delete cache.speechDays[k]);
       Object.assign(cache.speechDays, data.speechDays);
+    }
+    if (Array.isArray(data.readingTexts)) {
+      cache.readingTexts.length = 0;
+      data.readingTexts.map(_rowToReadingText).forEach(t => cache.readingTexts.push(t));
     }
     if (data.bibleDays && typeof data.bibleDays === 'object') {
       Object.keys(cache.bibleDays).forEach(k => delete cache.bibleDays[k]);
@@ -304,6 +309,20 @@ const Store = (() => {
       kind:      s.kind || 'trava-lingua',
       focus:     s.focus || '',
       createdAt: s.createdAt || s.created_at || new Date().toISOString(),
+    };
+  }
+
+  var READING_CATEGORIES = ['prosa', 'poesia', 'noticia', 'dialogo', 'discurso', 'instrucao', 'historico', 'outro'];
+  function _rowToReadingText(t) {
+    var cat = (t.category || '').toLowerCase();
+    return {
+      id:          t.id,
+      title:       t.title,
+      body:        t.body,
+      category:    READING_CATEGORIES.indexOf(cat) !== -1 ? cat : 'outro',
+      source:      t.source || '',
+      lastReadDay: t.lastReadDay != null ? Number(t.lastReadDay) : (t.last_read_day != null ? Number(t.last_read_day) : null),
+      createdAt:   t.createdAt || t.created_at || new Date().toISOString(),
     };
   }
 
@@ -1776,6 +1795,116 @@ const Store = (() => {
     });
   }
 
+  /* ──────────────────────────────────────────
+     LEITURA EM VOZ ALTA — textos longos da Dicção (seção separada)
+     cache.readingTexts: [{ id, title, body, category, source, lastReadDay, createdAt }]
+  ────────────────────────────────────────── */
+  function getReadingTexts() { return cache.readingTexts; }
+
+  function _nextReadingId() {
+    return (cache.readingTexts.reduce((m, t) => Math.max(m, t.id), 0) || 0) + 1;
+  }
+  function _readingRow(t) {
+    return {
+      id: t.id, user_id: _uid, title: t.title, body: t.body,
+      category: t.category || 'outro', source: t.source || null,
+      last_read_day: t.lastReadDay != null ? t.lastReadDay : null,
+      created_at: t.createdAt,
+    };
+  }
+  function _normCategory(c) {
+    c = String(c || '').toLowerCase().trim();
+    return READING_CATEGORIES.indexOf(c) !== -1 ? c : 'outro';
+  }
+
+  function addReadingText(t) {
+    t = t || {};
+    var title = String(t.title || '').trim();
+    var body  = String(t.body || '').trim();
+    if (!title || !body) return null;
+    var row = {
+      id: _nextReadingId(), title: title, body: body,
+      category: _normCategory(t.category), source: String(t.source || '').trim(),
+      lastReadDay: null, createdAt: new Date().toISOString(),
+    };
+    cache.readingTexts.push(row);
+    _saveMirror();
+    _push(async () => {
+      const { error } = await window.sb.from('reading_texts').upsert(_readingRow(row), { onConflict: 'user_id,id' });
+      if (error) throw error;
+    });
+    return row;
+  }
+
+  function addReadingTexts(list) {
+    if (!Array.isArray(list) || !list.length) return [];
+    var id = _nextReadingId();
+    var now = Date.now();
+    var rows = list
+      .filter(t => t && String(t.title || '').trim() && String(t.body || '').trim())
+      .map((t, i) => ({
+        id: id++, title: String(t.title).trim(), body: String(t.body).trim(),
+        category: _normCategory(t.category), source: String(t.source || '').trim(),
+        lastReadDay: null, createdAt: new Date(now + i).toISOString(),
+      }));
+    if (!rows.length) return [];
+    rows.forEach(r => cache.readingTexts.push(r));
+    _saveMirror();
+    _push(async () => {
+      const { error } = await window.sb.from('reading_texts')
+        .upsert(rows.map(_readingRow), { onConflict: 'user_id,id' });
+      if (error) throw error;
+    });
+    return rows;
+  }
+
+  function updateReadingText(id, patch) {
+    var t = cache.readingTexts.find(x => x.id === id);
+    if (!t) return;
+    if (patch.title != null) t.title = String(patch.title).trim() || t.title;
+    if (patch.body != null) t.body = String(patch.body).trim() || t.body;
+    if (patch.category != null) t.category = _normCategory(patch.category);
+    if (patch.source != null) t.source = String(patch.source).trim();
+    _saveMirror();
+    _push(async () => {
+      const { error } = await window.sb.from('reading_texts')
+        .update({ title: t.title, body: t.body, category: t.category, source: t.source || null })
+        .eq('user_id', _uid).eq('id', id);
+      if (error) throw error;
+    });
+  }
+
+  function deleteReadingText(id) {
+    var idx = cache.readingTexts.findIndex(x => x.id === id);
+    if (idx !== -1) cache.readingTexts.splice(idx, 1);
+    _saveMirror();
+    _push(async () => {
+      const { error } = await window.sb.from('reading_texts').delete().eq('user_id', _uid).eq('id', id);
+      if (error) throw error;
+    });
+  }
+
+  // Marca "li este texto" no dia atual (ou desmarca se já era hoje).
+  function markReadingText(id, dayNum) {
+    var t = cache.readingTexts.find(x => x.id === id);
+    if (!t) return null;
+    var d = dayNum == null ? getCurrentDay() : Number(dayNum);
+    t.lastReadDay = (t.lastReadDay === d) ? null : d;
+    _saveMirror();
+    var v = t.lastReadDay;
+    _push(async () => {
+      const { error } = await window.sb.from('reading_texts')
+        .update({ last_read_day: v }).eq('user_id', _uid).eq('id', id);
+      if (error) throw error;
+    });
+    return t.lastReadDay;
+  }
+
+  // Quantos textos já foram lidos ao menos uma vez.
+  function readingTextsReadCount() {
+    return cache.readingTexts.filter(t => t.lastReadDay != null).length;
+  }
+
   function getSpeechStats() { return cache.speechStats; }
 
   // Registra o resultado de uma sessão de prática (soma ao placar acumulado).
@@ -2686,6 +2815,8 @@ const Store = (() => {
     getVocabQuizStats, recordVocabQuizRound,
     vocabDueToday, reviewVocabWord, vocabSrsStats,
     getSpeechExercises, addSpeechExercise, addSpeechExercises, updateSpeechExercise, deleteSpeechExercise,
+    getReadingTexts, addReadingText, addReadingTexts, updateReadingText, deleteReadingText,
+    markReadingText, readingTextsReadCount,
     getSpeechStats, recordSpeechSession,
     speechPerDay, speechPlanForDay, getSpeechDays, getSpeechDay, saveSpeechDay,
     speechDaysDone, speechDayStreak,

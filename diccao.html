@@ -21,6 +21,7 @@
 <script src="js/store.js"></script>
 <script src="js/achievements.js"></script>
 <script src="js/speech-library.js"></script>
+<script src="js/reading-texts.js"></script>
 <style>
 
 /* ── MAIN ── */
@@ -186,6 +187,44 @@ textarea.modal-input { resize: vertical; min-height: 72px; line-height: 1.7; }
 .ps-actions { display: flex; gap: 10px; }
 .ps-actions .modal-btn { flex: 1; }
 
+/* ── LEITURA EM VOZ ALTA ── */
+.rd-intro { font-size: 11px; letter-spacing: 0.04em; color: var(--mid); line-height: 1.6; margin: 0 0 14px; }
+.rd-toolbar { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+.rd-toolbar .dcc-filter { flex: 0 1 200px; }
+.rd-list { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.rd-item {
+  border: 1px solid var(--border); background: var(--surface2); padding: 14px 16px; cursor: pointer;
+  display: flex; flex-direction: column; gap: 6px; transition: border-color 0.15s, background 0.15s;
+}
+.rd-item:hover { border-color: rgba(245,245,240,0.25); }
+.rd-item-top { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.rd-item-title { font-size: 13px; letter-spacing: 0.02em; color: var(--white); }
+.rd-item-cat { font-size: 8px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--mid); border: 1px solid var(--border); padding: 2px 7px; white-space: nowrap; flex-shrink: 0; }
+.rd-item-meta { font-size: 9px; letter-spacing: 0.06em; color: var(--mid); }
+.rd-item-meta .read { color: var(--green); }
+.rd-item-tools { display: flex; gap: 2px; margin-top: 2px; opacity: 0; transition: opacity 0.15s; }
+.rd-item:hover .rd-item-tools { opacity: 1; }
+@media (hover: none) { .rd-item-tools { opacity: 0.55; } }
+.rd-item-tools button { background: none; border: none; color: var(--mid); font-size: 12px; cursor: pointer; padding: 2px 5px; }
+.rd-item-tools button:hover { color: var(--white); }
+.rd-empty { font-size: 12px; color: var(--mid); line-height: 1.8; padding: 12px 2px; grid-column: 1 / -1; }
+
+/* overlay de leitura (reusa .prac-overlay / .prac-box) */
+.read-src { font-size: 10px; letter-spacing: 0.06em; color: var(--mid); margin-bottom: 14px; }
+.read-text {
+  font-family: 'DM Mono', monospace; font-weight: 300; font-size: 15px; line-height: 1.95;
+  color: var(--white); white-space: pre-wrap; word-break: break-word;
+  max-height: 46vh; overflow-y: auto; padding-right: 4px; margin-bottom: 20px;
+  scrollbar-width: thin; scrollbar-color: var(--muted) transparent;
+}
+.read-done-btn {
+  width: 100%; padding: 12px; background: none; border: 1px solid var(--border2); color: var(--mid);
+  font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
+  cursor: pointer; transition: color 0.2s, border-color 0.2s, background 0.2s; margin-top: 4px;
+}
+.read-done-btn:hover { color: var(--white); border-color: rgba(245,245,240,0.35); }
+.read-done-btn.on { border-color: #86efac; background: rgba(134,239,172,0.1); color: #86efac; }
+
 /* ── RESPONSIVE ── */
 @media (max-width: 900px) {
   body { overflow: auto; }
@@ -195,6 +234,12 @@ textarea.modal-input { resize: vertical; min-height: 72px; line-height: 1.7; }
   .ex-card { flex-direction: column; }
   .ex-actions { align-self: flex-end; }
   .prac-box { padding: 28px 22px; }
+  .rd-list { grid-template-columns: 1fr; }
+  /* CTA "Plano de hoje": os botões não cabiam lado a lado no mobile */
+  .prac-cta { padding: 20px; gap: 16px; }
+  .pc-body { min-width: 0; flex-basis: 100%; }
+  .pc-controls { width: 100%; }
+  .pc-controls .pc-btn, .pc-controls .btn-sm { flex: 1; min-width: 0; }
 }
 @media (max-width: 520px) {
   .g4 { grid-template-columns: 1fr; }
@@ -322,6 +367,21 @@ textarea.modal-input { resize: vertical; min-height: 72px; line-height: 1.7; }
     <!-- EXERCISE LIST -->
     <div class="ex-list" id="ex-list"></div>
 
+    <!-- LEITURA EM VOZ ALTA -->
+    <div class="card" id="reading-card">
+      <div class="card-hd">
+        <span class="card-title">Leitura em voz alta</span>
+        <span class="card-action" id="reading-count"></span>
+      </div>
+      <p class="rd-intro">Textos mais longos pra ler no seu ritmo, gravar e se ouvir — nada é salvo, só ouvir na hora.</p>
+      <div class="rd-toolbar">
+        <select class="dcc-filter" id="rd-filter"><option value="">Todas as categorias</option></select>
+        <button class="btn-sm" id="btn-load-reading" hidden>+ Carregar textos prontos</button>
+        <button class="btn-sm primary" id="btn-my-text">+ Meu texto</button>
+      </div>
+      <div class="rd-list" id="rd-list"></div>
+    </div>
+
   </main>
 </div>
 
@@ -355,6 +415,39 @@ textarea.modal-input { resize: vertical; min-height: 72px; line-height: 1.7; }
 <!-- PRACTICE OVERLAY -->
 <div class="prac-overlay" id="prac-overlay">
   <div class="prac-box" id="prac-box"></div>
+</div>
+
+<!-- LEITURA — overlay -->
+<div class="prac-overlay" id="read-overlay">
+  <div class="prac-box" id="read-box"></div>
+</div>
+
+<!-- MEU TEXTO — modal -->
+<div class="modal-overlay" id="rd-modal-overlay">
+  <div class="modal">
+    <div class="modal-title" id="rd-modal-title">Novo <em>texto.</em></div>
+    <div class="modal-field">
+      <label class="modal-lbl">Título</label>
+      <input class="modal-input" id="rd-title" placeholder="Ex: Discurso de posse" maxlength="100" />
+    </div>
+    <div class="modal-field">
+      <label class="modal-lbl">Categoria</label>
+      <select class="modal-select" id="rd-cat"></select>
+    </div>
+    <div class="modal-field">
+      <label class="modal-lbl">Texto para ler em voz alta</label>
+      <textarea class="modal-input" id="rd-body" rows="8" placeholder="Cole aqui o texto…" maxlength="4000"></textarea>
+    </div>
+    <div class="modal-field">
+      <label class="modal-lbl">Fonte (opcional)</label>
+      <input class="modal-input" id="rd-source" placeholder="Ex: autor, livro, site…" maxlength="120" />
+    </div>
+    <div class="modal-footer">
+      <button class="modal-btn ghost" id="rd-modal-del" hidden>Excluir</button>
+      <button class="modal-btn ghost" id="rd-modal-cancel">Cancelar</button>
+      <button class="modal-btn primary" id="rd-modal-save">Salvar</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -462,6 +555,7 @@ function init() {
   renderStats();
   renderPlan();
   renderList();
+  renderReading();
 }
 
 /* ════════════════════════════════════
@@ -753,15 +847,19 @@ async function toggleRec(btn) {
     }
   }
 
+  // o mesmo gravador serve o overlay de prática (#prac-rec) e o de leitura
+  // (#read-rec) — ambos têm a classe .prac-rec.
+  const holderEl = btn.closest('.prac-rec') || document.getElementById('prac-rec');
+
   const chunks = [];
-  const ctx = { rec, stream, chunks, url: null };
+  const ctx = { rec, stream, chunks, url: null, holder: holderEl };
   recActive = ctx;
 
   rec.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
   rec.onstop = () => {
     try { stream.getTracks().forEach(t => t.stop()); } catch (e) {}
     if (recActive !== ctx) return;                 // já trocou de exercício
-    const holder = document.getElementById('prac-rec');
+    const holder = ctx.holder && ctx.holder.isConnected ? ctx.holder : null;
     if (!holder) return;
     if (!chunks.length) {
       toast('A gravação saiu vazia — fale por alguns segundos antes de parar.');
@@ -946,9 +1044,192 @@ document.getElementById('prac-overlay').addEventListener('click', e => {
 document.addEventListener('keydown', e => {
   if (e.key !== 'Escape') return;
   if (document.getElementById('prac-overlay').classList.contains('show')) closePractice();
+  else if (document.getElementById('read-overlay').classList.contains('show')) closeRead();
+  else if (document.getElementById('rd-modal-overlay').classList.contains('open')) closeMyText();
   else if (document.getElementById('ex-modal-overlay').classList.contains('open')) closeExModal();
 });
 
+/* ════════════════════════════════════
+   LEITURA EM VOZ ALTA
+════════════════════════════════════ */
+const RD_CATS = {
+  prosa: 'Prosa', poesia: 'Poesia', noticia: 'Notícia', dialogo: 'Diálogo',
+  discurso: 'Discurso', instrucao: 'Instrução', historico: 'Histórico', outro: 'Outro',
+};
+function rdCatLabel(c) { return RD_CATS[c] || 'Outro'; }
+const DEFAULT_READING = Array.isArray(window.READING_TEXTS) ? window.READING_TEXTS : [];
+let rdFilter = '';
+let editingRdId = null;
+
+function fillRdCatSelect() {
+  document.getElementById('rd-cat').innerHTML =
+    Object.keys(RD_CATS).map(c => `<option value="${c}">${RD_CATS[c]}</option>`).join('');
+}
+
+function renderReading() {
+  const all = Store.getReadingTexts();
+  const readN = Store.readingTextsReadCount();
+
+  document.getElementById('reading-count').textContent =
+    all.length ? `${all.length} texto${all.length === 1 ? '' : 's'}${readN ? ` · ${readN} lido${readN === 1 ? '' : 's'}` : ''}` : '';
+
+  // filtro por categoria (só as que existem)
+  const cats = [...new Set(all.map(t => t.category))].sort();
+  const fsel = document.getElementById('rd-filter');
+  fsel.innerHTML = '<option value="">Todas as categorias</option>' +
+    cats.map(c => `<option value="${c}">${rdCatLabel(c)}</option>`).join('');
+  fsel.value = rdFilter;
+
+  // botão "carregar textos prontos": aparece se há textos do conjunto ainda não cadastrados
+  const have = new Set(all.map(t => (t.title || '').trim().toLowerCase()));
+  const fresh = DEFAULT_READING.filter(t => !have.has(t.title.trim().toLowerCase()));
+  document.getElementById('btn-load-reading').hidden = fresh.length === 0;
+
+  const list = rdFilter ? all.filter(t => t.category === rdFilter) : all;
+  const wrap = document.getElementById('rd-list');
+  if (!list.length) {
+    wrap.innerHTML = `<div class="rd-empty">${all.length
+      ? 'Nenhum texto nessa categoria.'
+      : 'Nenhum texto ainda. Carregue o conjunto pronto ou adicione o seu.'}</div>`;
+    return;
+  }
+  wrap.innerHTML = list.map(t => {
+    const readBadge = t.lastReadDay != null
+      ? (t.lastReadDay === DAY ? '<span class="read">lido hoje</span>' : `<span class="read">lido no dia ${t.lastReadDay}</span>`)
+      : 'nunca lido';
+    return `<div class="rd-item" data-id="${t.id}">
+      <div class="rd-item-top">
+        <span class="rd-item-title">${escapeHtml(t.title)}</span>
+        <span class="rd-item-cat">${rdCatLabel(t.category)}</span>
+      </div>
+      <div class="rd-item-meta">${t.source ? escapeHtml(t.source) + ' · ' : ''}${readBadge}</div>
+      <div class="rd-item-tools">
+        <button type="button" data-act="edit" title="Editar">✎</button>
+        <button type="button" data-act="del" title="Excluir">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openRead(id) {
+  const t = Store.getReadingTexts().find(x => x.id === id);
+  if (!t) return;
+  cleanupRec();
+  const recBlock = CAN_RECORD
+    ? `<div class="prac-rec" id="read-rec">${REC_IDLE_HTML}</div>`
+    : `<div class="prac-rec-hint">Leia o texto em voz alta, no seu ritmo, prestando atenção nas pausas.</div>`;
+  const isRead = t.lastReadDay != null;
+  document.getElementById('read-box').innerHTML = `
+    <div class="prac-topline">
+      <span class="prac-eyebrow">Leitura em voz alta</span>
+      <span class="prac-close" onclick="closeRead()">✕</span>
+    </div>
+    <div class="prac-kindrow">
+      <span class="prac-kind-badge">${rdCatLabel(t.category)}</span>
+    </div>
+    <div class="prac-text" style="font-size:19px;margin-bottom:6px">${escapeHtml(t.title)}</div>
+    ${t.source ? `<div class="read-src">${escapeHtml(t.source)}</div>` : '<div style="height:8px"></div>'}
+    <div class="read-text">${escapeHtml(t.body)}</div>
+    ${recBlock}
+    <button class="read-done-btn ${isRead ? 'on' : ''}" id="read-done" onclick="toggleReadMark(${t.id})">
+      ${isRead ? '✓ Lido' + (t.lastReadDay === DAY ? ' hoje' : ' no dia ' + t.lastReadDay) : 'Marcar como lido hoje'}
+    </button>`;
+  document.getElementById('read-overlay').classList.add('show');
+}
+
+function closeRead() {
+  cleanupRec();
+  document.getElementById('read-overlay').classList.remove('show');
+  renderReading();
+}
+
+function toggleReadMark(id) {
+  Store.markReadingText(id);
+  const t = Store.getReadingTexts().find(x => x.id === id);
+  const btn = document.getElementById('read-done');
+  if (btn && t) {
+    const isRead = t.lastReadDay != null;
+    btn.classList.toggle('on', isRead);
+    btn.textContent = isRead
+      ? '✓ Lido' + (t.lastReadDay === DAY ? ' hoje' : ' no dia ' + t.lastReadDay)
+      : 'Marcar como lido hoje';
+  }
+}
+
+/* — modal "meu texto" — */
+function openMyText(id) {
+  editingRdId = id || null;
+  const t = id ? Store.getReadingTexts().find(x => x.id === id) : null;
+  document.getElementById('rd-modal-title').innerHTML = t ? 'Editar <em>texto.</em>' : 'Novo <em>texto.</em>';
+  document.getElementById('rd-title').value  = t ? t.title : '';
+  document.getElementById('rd-body').value   = t ? t.body : '';
+  document.getElementById('rd-cat').value    = t ? t.category : 'outro';
+  document.getElementById('rd-source').value = t ? t.source : '';
+  document.getElementById('rd-modal-del').hidden = !t;
+  document.getElementById('rd-modal-overlay').classList.add('open');
+  setTimeout(() => document.getElementById('rd-title').focus(), 60);
+}
+function closeMyText() {
+  document.getElementById('rd-modal-overlay').classList.remove('open');
+  editingRdId = null;
+}
+
+document.getElementById('btn-my-text').addEventListener('click', () => openMyText());
+document.getElementById('rd-modal-cancel').addEventListener('click', closeMyText);
+document.getElementById('rd-modal-overlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('rd-modal-overlay')) closeMyText();
+});
+document.getElementById('rd-modal-save').addEventListener('click', () => {
+  const title = document.getElementById('rd-title').value.trim();
+  const body  = document.getElementById('rd-body').value.trim();
+  if (!title || !body) { toast('Preencha título e texto.'); return; }
+  const patch = { title, body, category: document.getElementById('rd-cat').value, source: document.getElementById('rd-source').value.trim() };
+  if (editingRdId) Store.updateReadingText(editingRdId, patch);
+  else Store.addReadingText(patch);
+  closeMyText();
+  renderReading();
+});
+document.getElementById('rd-modal-del').addEventListener('click', async () => {
+  if (editingRdId == null) return;
+  const t = Store.getReadingTexts().find(x => x.id === editingRdId);
+  if (!await window.p90confirm(`Excluir o texto "${t ? t.title : ''}"?`, { okText: 'Excluir' })) return;
+  Store.deleteReadingText(editingRdId);
+  closeMyText();
+  renderReading();
+});
+
+document.getElementById('btn-load-reading').addEventListener('click', async () => {
+  const have = new Set(Store.getReadingTexts().map(t => (t.title || '').trim().toLowerCase()));
+  const fresh = DEFAULT_READING.filter(t => !have.has(t.title.trim().toLowerCase()));
+  if (!fresh.length) { toast('Todos os textos prontos já estão na sua lista.'); return; }
+  const added = Store.addReadingTexts(fresh);
+  toast(`${added.length} texto${added.length === 1 ? '' : 's'} adicionado${added.length === 1 ? '' : 's'} ✓`);
+  renderReading();
+});
+
+document.getElementById('rd-filter').addEventListener('change', function () { rdFilter = this.value; renderReading(); });
+
+document.getElementById('rd-list').addEventListener('click', async e => {
+  const btn = e.target.closest('[data-act]');
+  const item = e.target.closest('.rd-item');
+  if (!item) return;
+  const id = Number(item.dataset.id);
+  if (btn && btn.dataset.act === 'edit') { openMyText(id); return; }
+  if (btn && btn.dataset.act === 'del') {
+    const t = Store.getReadingTexts().find(x => x.id === id);
+    if (!await window.p90confirm(`Excluir o texto "${t ? t.title : ''}"?`, { okText: 'Excluir' })) return;
+    Store.deleteReadingText(id);
+    renderReading();
+    return;
+  }
+  openRead(id);
+});
+
+document.getElementById('read-overlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('read-overlay')) closeRead();
+});
+
+fillRdCatSelect();
 fillKindSelects();
 window.addEventListener('p90:synced', init);
 window.addEventListener('p90:synced', notifyNewAchievements);
