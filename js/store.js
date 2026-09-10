@@ -53,6 +53,7 @@ const Store = (() => {
       trainingDays:      {},   // { [dayNum]: { split, entries: { [exId]: { done, kg } } } }
       mealItems:         [],
       mealDays:          {},   // { [dayNum]: [itemId, ...] }
+      bodyWeights:       {},   // { [dayNum]: kg }
     };
   }
 
@@ -224,6 +225,13 @@ const Store = (() => {
       Object.keys(data.mealDays).forEach(k => {
         const v = data.mealDays[k];
         cache.mealDays[k] = Array.isArray(v) ? v.slice() : [];
+      });
+    }
+    if (data.bodyWeights && typeof data.bodyWeights === 'object') {
+      Object.keys(cache.bodyWeights).forEach(k => delete cache.bodyWeights[k]);
+      Object.keys(data.bodyWeights).forEach(k => {
+        const n = parseFloat(data.bodyWeights[k]);
+        if (isFinite(n) && n > 0) cache.bodyWeights[k] = n;
       });
     }
   }
@@ -1364,6 +1372,85 @@ const Store = (() => {
     var n = 0;
     for (var d = 1; d <= getCurrentDay(); d++) if (mealDayComplete(d)) n++;
     return n;
+  }
+
+  /* ──────────────────────────────────────────
+     PROGRESSÃO — peso corporal + evolução de carga
+     cache.bodyWeights: { [dayNum]: kg }   — uma pesagem por dia (upsert)
+  ────────────────────────────────────────── */
+  function getBodyWeight(dayNum) {
+    var d = dayNum == null ? getCurrentDay() : dayNum;
+    var v = cache.bodyWeights[d];
+    return v != null ? v : null;
+  }
+
+  function setBodyWeight(kg, dayNum) {
+    var d = dayNum == null ? getCurrentDay() : dayNum;
+    var n = parseFloat(String(kg).replace(',', '.'));
+    if (!isFinite(n) || n <= 0) {
+      // valor vazio/zerado apaga a pesagem do dia
+      if (cache.bodyWeights[d] == null) return null;
+      delete cache.bodyWeights[d];
+      _saveMirror();
+      _push(async function () {
+        var { error } = await window.sb.from('body_weights')
+          .delete().eq('user_id', _uid).eq('day_num', Number(d));
+        if (error) throw error;
+      });
+      return null;
+    }
+    n = Math.round(n * 10) / 10;
+    cache.bodyWeights[d] = n;
+    _saveMirror();
+    _push(async function () {
+      var { error } = await window.sb.from('body_weights').upsert({
+        user_id: _uid, day_num: Number(d), kg: n, updated_at: new Date().toISOString(),
+      }, { onConflict: 'user_id,day_num' });
+      if (error) throw error;
+    });
+    return n;
+  }
+
+  // Série de pesagens em ordem de dia: [{ day, kg }].
+  function bodyWeightSeries() {
+    return Object.keys(cache.bodyWeights)
+      .map(function (k) { return { day: Number(k), kg: cache.bodyWeights[k] }; })
+      .filter(function (p) { return p.day >= 1 && p.day <= getCurrentDay(); })
+      .sort(function (a, b) { return a.day - b.day; });
+  }
+
+  function latestBodyWeight() {
+    var s = bodyWeightSeries();
+    return s.length ? s[s.length - 1] : null;   // { day, kg } | null
+  }
+
+  // Variação entre a primeira e a última pesagem: { kg, days } | null.
+  function bodyWeightDelta() {
+    var s = bodyWeightSeries();
+    if (s.length < 2) return null;
+    var a = s[0], b = s[s.length - 1];
+    return { kg: Math.round((b.kg - a.kg) * 10) / 10, days: b.day - a.day };
+  }
+
+  // Evolução de carga de um exercício: [{ day, kg }] pelos dias em que foi
+  // registrada carga naquele exercício.
+  function trainingWeightSeries(exId) {
+    return Object.keys(cache.trainingDays)
+      .map(function (k) {
+        var d = Number(k);
+        var ent = cache.trainingDays[k] && cache.trainingDays[k].entries;
+        var e = ent && ent[exId];
+        return (e && e.kg != null) ? { day: d, kg: e.kg } : null;
+      })
+      .filter(function (p) { return p && p.day >= 1 && p.day <= getCurrentDay(); })
+      .sort(function (a, b) { return a.day - b.day; });
+  }
+
+  // Recorde de carga de um exercício (maior kg já registrado). null se nunca.
+  function trainingExercisePR(exId) {
+    var s = trainingWeightSeries(exId);
+    if (!s.length) return null;
+    return s.reduce(function (m, p) { return p.kg > m ? p.kg : m; }, 0);
   }
 
   /* ──────────────────────────────────────────
@@ -2563,6 +2650,8 @@ const Store = (() => {
     trainingSessionsCount, trainingLoggedToday, trainingSessionComplete,
     getMealItems, addMealItem, renameMealItem, deleteMealItem, seedDefaultMeals,
     getMealDay, toggleMeal, mealsDoneCount, mealDayComplete, mealStreak, mealsCompleteDaysCount,
+    getBodyWeight, setBodyWeight, bodyWeightSeries, latestBodyWeight, bodyWeightDelta,
+    trainingWeightSeries, trainingExercisePR,
     // computed
     habitVal, scheduledOn, dayCompletionPct, maxStreak, countDays,
     allHabitsDone, currentStreak, computeAchievementProgress, computeLevels,

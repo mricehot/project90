@@ -15,6 +15,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/base.css">
 <link rel="stylesheet" href="css/components.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script src="js/supabase-config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/supabase.js"></script>
@@ -139,10 +140,39 @@
 }
 .ml-add button:hover { color: var(--white); border-color: rgba(245,245,240,0.35); }
 
+/* progressão */
+.pg-sec + .pg-sec { margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--border); }
+.pg-hd { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+.pg-title { font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--mid); }
+.pg-stat { font-size: 10px; letter-spacing: 0.06em; color: var(--mid); }
+.pg-stat b { color: var(--white); font-weight: 400; }
+.pg-stat .up { color: var(--green); }
+.pg-stat .dn { color: var(--red); }
+.bw-form { display: flex; gap: 8px; margin-bottom: 14px; }
+.bw-form input {
+  width: 90px; background: var(--surface2); border: 1px solid var(--border); color: var(--white);
+  font-family: 'DM Mono', monospace; font-size: 13px; text-align: right; padding: 8px 10px; outline: none;
+  transition: border-color 0.2s;
+}
+.bw-form input:focus { border-color: rgba(245,245,240,0.35); }
+.bw-form button {
+  background: none; border: 1px solid var(--border2); color: var(--mid); font-family: 'DM Mono', monospace;
+  font-size: 11px; letter-spacing: 0.1em; padding: 0 16px; cursor: pointer; transition: color 0.2s, border-color 0.2s;
+}
+.bw-form button:hover { color: var(--white); border-color: rgba(245,245,240,0.35); }
+.pg-chart { position: relative; width: 100%; height: 170px; }
+.pg-select {
+  background: var(--surface2); border: 1px solid var(--border2); color: var(--white);
+  font-family: 'DM Mono', monospace; font-size: 11px; padding: 6px 10px; outline: none; cursor: pointer;
+  max-width: 60%;
+}
+.pg-empty { font-size: 12px; color: var(--mid); line-height: 1.7; padding: 8px 0; }
+
 @media (max-width: 640px) {
   .tr-main { padding: 20px; }
   .tx-row { flex-wrap: wrap; }
   .tx-info { flex-basis: 100%; order: -1; }
+  .pg-select { max-width: 100%; }
 }
 </style>
 </head>
@@ -215,6 +245,35 @@
         </span>
       </div>
       <div id="today-body"></div>
+    </div>
+
+    <!-- PROGRESSÃO — peso corporal + evolução de carga -->
+    <div class="card" id="progress-card">
+      <div class="card-hd">
+        <span class="card-title">Progressão</span>
+      </div>
+
+      <div class="pg-sec">
+        <div class="pg-hd">
+          <span class="pg-title">Peso corporal</span>
+          <span class="pg-stat" id="bw-stat"></span>
+        </div>
+        <form class="bw-form" id="bw-form" autocomplete="off">
+          <input id="bw-input" inputmode="decimal" maxlength="6" placeholder="kg" aria-label="peso corporal em kg" />
+          <button type="submit">Registrar hoje</button>
+        </form>
+        <div id="bw-wrap"></div>
+      </div>
+
+      <div class="pg-sec">
+        <div class="pg-hd">
+          <span class="pg-title">Carga por exercício</span>
+          <span class="pg-stat" id="lc-stat"></span>
+        </div>
+        <select class="pg-select" id="lc-select" aria-label="Escolher exercício"></select>
+        <div style="height:10px"></div>
+        <div id="lc-wrap"></div>
+      </div>
     </div>
 
     <!-- PLANOS A/B/C -->
@@ -403,7 +462,124 @@ function renderMeals() {
     (allDone ? `<div class="ml-done-msg">Todas as refeições do dia marcadas.</div>` : '');
 }
 
-function renderAll() { renderToday(); renderPlans(); renderMeals(); }
+/* ══ PROGRESSÃO — peso corporal + evolução de carga ══ */
+const CHART_OPTS = {
+  responsive: true, maintainAspectRatio: false,
+  plugins: {
+    legend: { display: false },
+    tooltip: {
+      backgroundColor: '#181818', borderColor: 'rgba(245,245,240,0.1)', borderWidth: 1,
+      titleColor: '#f5f5f0', bodyColor: '#7d7d7d',
+      titleFont: { family: 'DM Mono', size: 11 }, bodyFont: { family: 'DM Mono', size: 10 },
+      callbacks: {
+        title: ctx => 'Dia ' + ctx[0].label,
+        label: ctx => ' ' + fmtKg(ctx.parsed.y) + ' kg',
+      },
+    },
+  },
+  layout: { padding: { left: 2, right: 4, top: 6 } },
+  scales: {
+    x: { ticks: { color: '#555', font: { family: 'DM Mono', size: 10 }, maxTicksLimit: 8 },
+         grid: { color: 'rgba(245,245,240,0.04)' }, border: { color: 'rgba(245,245,240,0.08)' } },
+    y: { ticks: { color: '#555', font: { family: 'DM Mono', size: 10 }, maxTicksLimit: 6, padding: 6 },
+         grid: { color: 'rgba(245,245,240,0.04)' }, border: { color: 'rgba(245,245,240,0.08)' } },
+  },
+};
+let bwChart = null, lcChart = null;
+
+function _lineChart(prev, canvas, series) {
+  if (prev) prev.destroy();
+  const vals = series.map(p => p.kg);
+  const span = Math.max(...vals) - Math.min(...vals);
+  const pad = Math.max(1, Math.ceil(span * 0.2) || 2);
+  const lo = Math.max(0, Math.floor(Math.min(...vals) - pad));
+  const hi = Math.ceil(Math.max(...vals) + pad);
+  return new Chart(canvas.getContext('2d'), {
+    type: 'line',
+    data: {
+      labels: series.map(p => p.day),
+      datasets: [{
+        data: series.map(p => p.kg),
+        borderColor: 'rgba(245,245,240,0.9)', borderWidth: 1.5,
+        fill: true, backgroundColor: 'rgba(245,245,240,0.05)',
+        tension: 0.3, pointRadius: 3, pointBackgroundColor: '#f5f5f0',
+        pointHoverRadius: 5,
+      }],
+    },
+    options: { ...CHART_OPTS, scales: { ...CHART_OPTS.scales, y: { ...CHART_OPTS.scales.y, min: lo, max: hi } } },
+  });
+}
+
+function renderProgress() {
+  /* ── peso corporal ── */
+  const bwWrap = document.getElementById('bw-wrap');
+  const bwStat = document.getElementById('bw-stat');
+  const bwInput = document.getElementById('bw-input');
+  const today = Store.getBodyWeight();
+  if (document.activeElement !== bwInput) bwInput.value = today != null ? fmtKg(today) : '';
+
+  const series = Store.bodyWeightSeries();
+  const latest = Store.latestBodyWeight();
+  const delta = Store.bodyWeightDelta();
+  if (latest) {
+    let d = '';
+    if (delta) {
+      const cls = delta.kg < 0 ? 'dn' : (delta.kg > 0 ? 'up' : '');
+      const sign = delta.kg > 0 ? '+' : '';
+      d = ` · <span class="${cls}">${sign}${fmtKg(delta.kg)} kg</span> em ${delta.days} dia${delta.days === 1 ? '' : 's'}`;
+    }
+    bwStat.innerHTML = `<b>${fmtKg(latest.kg)} kg</b>${d}`;
+  } else {
+    bwStat.textContent = '';
+  }
+
+  if (series.length >= 2) {
+    bwWrap.innerHTML = '<div class="pg-chart"><canvas id="bw-canvas"></canvas></div>';
+    bwChart = _lineChart(bwChart, document.getElementById('bw-canvas'), series);
+  } else {
+    if (bwChart) { bwChart.destroy(); bwChart = null; }
+    bwWrap.innerHTML = `<div class="pg-empty">${series.length === 1
+      ? 'Uma pesagem registrada. Registre em outro dia pra ver o gráfico.'
+      : 'Registre seu peso pra começar a acompanhar.'}</div>`;
+  }
+
+  /* ── carga por exercício ── */
+  const sel = document.getElementById('lc-select');
+  const lcWrap = document.getElementById('lc-wrap');
+  const lcStat = document.getElementById('lc-stat');
+  const exs = Store.getTrainingExercises();
+
+  if (!exs.length) {
+    sel.innerHTML = '';
+    sel.hidden = true;
+    lcStat.textContent = '';
+    lcWrap.innerHTML = `<div class="pg-empty">Monte os planos e registre cargas pra ver a evolução.</div>`;
+    if (lcChart) { lcChart.destroy(); lcChart = null; }
+    return;
+  }
+  sel.hidden = false;
+
+  const prevVal = sel.value;
+  sel.innerHTML = exs.map(e => `<option value="${e.id}">${e.split} · ${esc(e.name)}</option>`).join('');
+  if (prevVal && exs.some(e => String(e.id) === prevVal)) sel.value = prevVal;
+
+  const exId = Number(sel.value);
+  const s = Store.trainingWeightSeries(exId);
+  const pr = Store.trainingExercisePR(exId);
+  lcStat.innerHTML = pr != null ? `recorde <b>${fmtKg(pr)} kg</b>` : '';
+
+  if (s.length >= 2) {
+    lcWrap.innerHTML = '<div class="pg-chart"><canvas id="lc-canvas"></canvas></div>';
+    lcChart = _lineChart(lcChart, document.getElementById('lc-canvas'), s);
+  } else {
+    if (lcChart) { lcChart.destroy(); lcChart = null; }
+    lcWrap.innerHTML = `<div class="pg-empty">${s.length === 1
+      ? 'Uma sessão com carga registrada. Registre em outra pra ver a curva.'
+      : 'Sem carga registrada nesse exercício ainda.'}</div>`;
+  }
+}
+
+function renderAll() { renderToday(); renderProgress(); renderPlans(); renderMeals(); }
 
 /* ── HANDLERS ── */
 
@@ -427,7 +603,22 @@ document.getElementById('today-body').addEventListener('change', e => {
   const row = inp.closest('.tx-row');
   Store.setTrainingWeight(Number(row.dataset.id), inp.value);
   renderToday();
+  renderProgress();
 });
+
+// progressão: peso corporal + seletor de exercício
+document.getElementById('bw-form').addEventListener('submit', e => {
+  e.preventDefault();
+  const inp = document.getElementById('bw-input');
+  Store.setBodyWeight(inp.value);
+  inp.blur();
+  renderProgress();
+});
+document.getElementById('bw-input').addEventListener('change', () => {
+  Store.setBodyWeight(document.getElementById('bw-input').value);
+  renderProgress();
+});
+document.getElementById('lc-select').addEventListener('change', renderProgress);
 
 // tabs dos planos
 document.querySelectorAll('.plan-tab').forEach(b => {
