@@ -30,25 +30,46 @@ body { overflow: hidden; }
 /* Cards de resumo (tarefas · revisão · provas · contadores) em 2 colunas.
    Multi-column (não grid) pra não deixar buraco quando as alturas diferem
    ou quando um card está oculto — os cards fluem preenchendo a coluna. */
-.dash-cards { column-count: 2; column-gap: 16px; }
-.dash-cards > .card { break-inside: avoid; margin-bottom: 16px; }
-@media (max-width: 720px) { .dash-cards { column-count: 1; } }
+.dash-cards { display: flex; flex-direction: column; gap: 16px; }
+.dash-cards-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+@media (max-width: 720px) { .dash-cards-row { grid-template-columns: 1fr; } }
 
-/* ── FACULDADE ── */
-#faculdade-card .card-action.warn { color: var(--red); }
-.fc-over { font-size: 12px; color: var(--red); line-height: 1.6; margin-bottom: 10px; }
-.fc-row { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--border); }
-.fc-row:last-child { border-bottom: none; }
-.fc-check { width: 16px; height: 16px; border: 1px solid var(--border2); flex-shrink: 0; cursor: pointer;
-  display: flex; align-items: center; justify-content: center; font-size: 10px; color: var(--white); }
-.fc-info { flex: 1; min-width: 0; }
-.fc-title { font-size: 12px; line-height: 1.35; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.fc-meta { font-size: 10px; letter-spacing: 0.04em; color: var(--mid); margin-top: 2px; }
-.fc-when { font-size: 10px; letter-spacing: 0.06em; white-space: nowrap; flex-shrink: 0; color: var(--mid); }
-.fc-when.soon { color: var(--white); }
-.fc-when.over { color: var(--red); }
-.fc-none { font-size: 12px; color: var(--mid); line-height: 1.6; }
-.fc-more { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--mid); margin-top: 8px; }
+/* ── PENDÊNCIAS DE HOJE ── */
+.tc-section + .tc-section { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--border); }
+.tc-sec-hd { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+.tc-sec-title { font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--mid); }
+.tc-sec-title b { color: var(--red); font-weight: 400; }
+.tc-sec-link { font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--mid); text-decoration: none; white-space: nowrap; }
+.tc-sec-link:hover { color: var(--white); }
+.tc-row { display: flex; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+.tc-row:last-child { border-bottom: none; }
+.tc-check { width: 20px; height: 20px; border: 1px solid var(--border2); flex-shrink: 0; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 11px; color: var(--bg); background: none; transition: background 0.15s, border-color 0.15s; }
+.tc-check.done { background: var(--green); border-color: var(--green); }
+.tc-check:not(.done):hover { border-color: rgba(245,245,240,0.3); }
+.tc-info { flex: 1; min-width: 0; }
+.tc-name { font-size: 12.5px; letter-spacing: 0.02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tc-row.done .tc-name { color: var(--mid); text-decoration: line-through; }
+.tc-sub { font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--mid); margin-top: 3px; }
+.tc-when { font-size: 10px; letter-spacing: 0.06em; white-space: nowrap; flex-shrink: 0; color: var(--mid); }
+.tc-when.soon { color: var(--white); }
+.tc-when.over { color: var(--red); }
+.tc-line { font-size: 12px; color: var(--mid); line-height: 1.7; }
+.tc-line b { color: var(--white); font-weight: 400; }
+.tc-more { font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--mid); margin-top: 8px; }
+.tc-allclear { font-size: 13px; color: var(--white); line-height: 1.7; padding: 8px 0 4px; }
+.tc-allclear span { color: var(--mid); font-size: 11px; display: block; margin-top: 4px; letter-spacing: 0.02em; }
+
+/* botão "+" que revela o campo de adicionar (rotina noturna · dias desde) */
+.card-add-toggle {
+  background: none; border: 1px solid var(--border2); color: var(--mid);
+  width: 22px; height: 22px; font-size: 14px; line-height: 1; cursor: pointer; flex-shrink: 0; padding: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+.card-add-toggle:hover { color: var(--white); border-color: rgba(245,245,240,0.35); }
+.card-add-toggle.on { background: var(--white); color: var(--bg); border-color: var(--white); }
+.nr-hd-right { display: inline-flex; align-items: center; gap: 10px; }
+#nr-form:not([hidden]), #dc-form:not([hidden]) { margin-top: 12px; }
 
 /* ── ROTINA NOTURNA ── */
 .nr-switch { display: inline-flex; border: 1px solid var(--border2); flex-shrink: 0; }
@@ -74,11 +95,6 @@ body { overflow: hidden; }
 @media (hover: none) { .nr-del { opacity: 0.5; } }
 .nr-done-msg { font-size: 12px; color: rgba(134,239,172,0.9); line-height: 1.6; padding: 10px 0 4px; }
 .nr-empty { font-size: 12px; color: var(--mid); line-height: 1.7; padding: 4px 0 10px; }
-.nr-add { width: 100%; background: var(--surface2); border: 1px solid var(--border); color: var(--white);
-  font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.03em; padding: 9px 12px; margin-top: 10px;
-  outline: none; transition: border-color 0.2s; }
-.nr-add:focus { border-color: rgba(245,245,240,0.35); }
-.nr-add::placeholder { color: var(--mid); }
 .topbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
 .page-title { font-family: 'DM Serif Display', serif; font-size: 26px; font-weight: 400; display: flex; align-items: baseline; gap: 10px; }
 .page-title em { font-style: italic; opacity: 0.45; font-size: 22px; }
@@ -134,29 +150,7 @@ body { overflow: hidden; }
 .h-badge { font-family: 'Bebas Neue', sans-serif; font-size: 11px; letter-spacing: 0.12em; color: var(--mid); border: 1px solid var(--border); padding: 3px 8px; white-space: nowrap; }
 .h-badge.hot { color: var(--white); border-color: rgba(245,245,240,0.25); }
 
-/* ── TAREFAS (DASH) ── */
-.dt-row { display: flex; align-items: center; gap: 12px; padding: 11px 0; border-bottom: 1px solid var(--border); }
-.dt-row:last-child { border-bottom: none; }
-.dt-check { width: 22px; height: 22px; border: 1px solid var(--border2); display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; font-size: 11px; color: var(--bg); background: none; transition: background 0.15s, border-color 0.15s; }
-.dt-check.done { background: #86efac; border-color: #86efac; }
-.dt-check:not(.done):hover { border-color: rgba(245,245,240,0.3); }
-.dt-info { flex: 1; min-width: 0; }
-.dt-name { font-size: 13px; letter-spacing: 0.03em; }
-.dt-row.done .dt-name { color: var(--mid); text-decoration: line-through; }
-.dt-sched { font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--mid); margin-top: 3px; }
-.dt-badge { font-family: 'Bebas Neue', sans-serif; font-size: 11px; letter-spacing: 0.12em; color: var(--mid); border: 1px solid var(--border); padding: 3px 8px; white-space: nowrap; flex-shrink: 0; }
-.dt-badge.due  { color: var(--white); border-color: rgba(245,245,240,0.25); }
-.dt-badge.over { color: #fca5a5; border-color: rgba(252,165,165,0.4); }
-.dt-badge.ok   { color: #86efac; border-color: rgba(134,239,172,0.4); }
-.dt-empty { text-align: center; padding: 22px 12px; font-size: 12px; color: var(--mid); line-height: 1.8; }
-.dt-empty a { color: var(--white); }
-
-/* ── REVISAR VOCABULÁRIO (DASH) ── */
-.dr-count { font-size: 13px; letter-spacing: 0.03em; color: var(--white); margin-bottom: 8px; }
-.dr-words { font-size: 11px; letter-spacing: 0.04em; color: var(--mid); line-height: 1.9; word-break: break-word; }
-.dr-words .more { opacity: 0.55; }
-
-/* ── input de "adicionar" dos cards (contadores) ── */
+/* ── input de "adicionar" dos cards (rotina noturna · contadores) ── */
 .card-add-input {
   width: 100%; background: var(--surface2); border: 1px solid var(--border); color: var(--white);
   font-family: 'DM Mono', monospace; font-weight: 300; font-size: 12px; letter-spacing: 0.03em;
@@ -420,62 +414,52 @@ body { overflow: hidden; }
 
     </div>
 
-    <!-- GRID DE CARDS (fechar o dia · tarefas · revisão · contadores) -->
+    <!-- PENDÊNCIAS DE HOJE + ferramentas (rotina noturna · dias desde) -->
     <div class="dash-cards">
 
-      <!-- ROTINA NOTURNA (duas rotinas: I / II) -->
-      <div class="card" id="night-card">
+      <!-- PENDÊNCIAS DE HOJE — tarefas + entregas + vocabulário -->
+      <div class="card" id="today-card">
         <div class="card-hd">
-          <span class="card-title">Rotina noturna</span>
-          <span class="nr-switch" role="group" aria-label="Escolher rotina">
-            <button type="button" class="nr-rbtn" data-r="1" onclick="switchNightRoutine(1)">I</button>
-            <button type="button" class="nr-rbtn" data-r="2" onclick="switchNightRoutine(2)">II</button>
-          </span>
+          <span class="card-title">Pendências de hoje</span>
+          <span class="card-action" id="today-count"></span>
         </div>
-        <div id="nr-body"></div>
-        <form id="nr-form" autocomplete="off">
-          <input class="nr-add" id="nr-input" maxlength="80"
-                 placeholder="Adicionar à rotina — ex: separar a roupa de amanhã" />
-        </form>
+        <div id="today-body"></div>
       </div>
 
-      <!-- TAREFAS DE HOJE -->
-      <div class="card" id="tasks-card">
-        <div class="card-hd">
-          <span class="card-title">Tarefas de hoje</span>
-          <a class="card-action" href="tarefas.html">Gerenciar →</a>
-        </div>
-        <div id="dash-tasks"></div>
-      </div>
+      <div class="dash-cards-row">
 
-      <!-- FACULDADE (prazos) -->
-      <div class="card" id="faculdade-card" hidden>
-        <div class="card-hd">
-          <span class="card-title">Faculdade</span>
-          <a class="card-action" id="fac-card-action" href="faculdade.html">Gerenciar →</a>
+        <!-- ROTINA NOTURNA (duas rotinas: I / II) -->
+        <div class="card" id="night-card">
+          <div class="card-hd">
+            <span class="card-title">Rotina noturna</span>
+            <span class="nr-hd-right">
+              <span class="nr-switch" role="group" aria-label="Escolher rotina">
+                <button type="button" class="nr-rbtn" data-r="1" onclick="switchNightRoutine(1)">I</button>
+                <button type="button" class="nr-rbtn" data-r="2" onclick="switchNightRoutine(2)">II</button>
+              </span>
+              <button type="button" class="card-add-toggle" id="nr-add-btn" aria-label="Adicionar item" title="Adicionar item">+</button>
+            </span>
+          </div>
+          <div id="nr-body"></div>
+          <form id="nr-form" autocomplete="off" hidden>
+            <input class="card-add-input" id="nr-input" maxlength="80"
+                   placeholder="Novo item da rotina — ex: separar a roupa de amanhã" />
+          </form>
         </div>
-        <div id="fac-card-body"></div>
-      </div>
 
-      <!-- REVISAR VOCABULÁRIO -->
-      <div class="card" id="review-card" hidden>
-        <div class="card-hd">
-          <span class="card-title">Revisar vocabulário</span>
-          <a class="card-action" href="vocabulario.html#revisar">Revisar agora →</a>
+        <!-- CONTADORES "DIAS DESDE" -->
+        <div class="card" id="counters-card">
+          <div class="card-hd">
+            <span class="card-title">Dias desde</span>
+            <button type="button" class="card-add-toggle" id="dc-add-btn" aria-label="Novo contador" title="Novo contador">+</button>
+          </div>
+          <div id="dc-list"></div>
+          <form id="dc-form" autocomplete="off" hidden>
+            <input class="card-add-input" id="dc-input" maxlength="80"
+                   placeholder="Novo contador — ex: sem rede social até tarde" />
+          </form>
         </div>
-        <div id="dash-review"></div>
-      </div>
 
-      <!-- CONTADORES "DIAS DESDE" -->
-      <div class="card" id="counters-card">
-        <div class="card-hd">
-          <span class="card-title">Dias desde</span>
-        </div>
-        <form id="dc-form" autocomplete="off">
-          <input class="card-add-input" id="dc-input" maxlength="80"
-                 placeholder="Adicionar contador — ex: sem rede social até tarde" />
-        </form>
-        <div id="dc-list"></div>
       </div>
 
     </div>
@@ -566,11 +550,9 @@ function init() {
   renderNudge();
   renderWeeklyNudge();
   renderLevels();
-  renderDashTasks();
-  renderDashReview();
+  renderTodayCard();
   renderCountersCard();
   renderNightCard();
-  renderFaculdadeCard();
 }
 
 /* ═══════════════════════════════
@@ -1026,56 +1008,103 @@ function _taskBadge(t) {
   return { cls: '', txt: due ? 'Próx ' + _fmtISO(due) : 'Sem prazo' };
 }
 
-function renderDashTasks() {
-  const el = document.getElementById('dash-tasks');
-  if (!el || typeof Store.getTasks !== 'function') return;
-
-  const all = Store.getTasks().filter(t => !t.archived);
-  if (!all.length) {
-    el.innerHTML = '<div class="dt-empty">Nenhuma tarefa cadastrada.<br>' +
-      '<a href="tarefas.html">Criar a primeira tarefa →</a></div>';
-    return;
-  }
-
-  const seen = {}, list = [];
-  [...Store.tasksForToday(), ...all.filter(t => Store.taskStatus(t) === 'done-today')]
-    .forEach(t => { if (!seen[t.id]) { seen[t.id] = 1; list.push(t); } });
-
-  if (!list.length) {
-    el.innerHTML = '<div class="dt-empty">Nada vencendo hoje. Respira.</div>';
-    return;
-  }
-
-  const rank = st => ({ overdue: 0, due: 1, backlog: 2, upcoming: 3, 'done-today': 4, done: 5 }[st] ?? 3);
-  list.sort((a, b) => rank(Store.taskStatus(a)) - rank(Store.taskStatus(b)));
-
-  el.innerHTML = list.map(t => {
-    const st   = Store.taskStatus(t);
-    const done = st === 'done' || st === 'done-today';
-    const b    = _taskBadge(t);
-    return `<div class="dt-row ${done ? 'done' : ''}">
-      <div class="dt-check ${done ? 'done' : ''}" onclick="quickToggleTask(${t.id})" title="${done ? 'Desmarcar' : 'Concluir'}">${done ? '✓' : ''}</div>
-      <div class="dt-info">
-        <div class="dt-name">${_esc(t.title)}</div>
-        <div class="dt-sched">${_esc(_taskSchedText(t))}</div>
-      </div>
-      <div class="dt-badge ${b.cls}">${b.txt}</div>
-    </div>`;
-  }).join('');
+/* ═══════════════════════════════
+   PENDÊNCIAS DE HOJE — tarefas + entregas da faculdade + vocabulário,
+   num card só, em seções. Substitui os cards separados.
+═══════════════════════════════ */
+function _tcSec(title, href, linkTxt, inner) {
+  return `<div class="tc-section">
+    <div class="tc-sec-hd">
+      <span class="tc-sec-title">${title}</span>
+      <a class="tc-sec-link" href="${href}">${linkTxt}</a>
+    </div>${inner}</div>`;
 }
 
-/* ─ REVISAR VOCABULÁRIO ─ */
-function renderDashReview() {
-  const card = document.getElementById('review-card');
-  if (!card || typeof Store.vocabDueToday !== 'function') return;
-  const due = Store.vocabDueToday();
-  if (!due.length) { card.hidden = true; return; }
-  card.hidden = false;
-  const shown = due.slice(0, 6).map(w => _esc(w.word)).join(' · ');
-  const more  = due.length > 6 ? ` <span class="more">+${due.length - 6}</span>` : '';
-  document.getElementById('dash-review').innerHTML =
-    `<div class="dr-count">${due.length} palavra${due.length > 1 ? 's' : ''} para revisar hoje</div>` +
-    `<div class="dr-words">${shown}${more}</div>`;
+function renderTodayCard() {
+  const body = document.getElementById('today-body');
+  if (!body) return;
+  const sections = [];
+  let open = 0;
+
+  /* ── Tarefas de hoje ── */
+  if (typeof Store.getTasks === 'function') {
+    const all = Store.getTasks().filter(t => !t.archived);
+    if (all.length) {
+      const seen = {}, list = [];
+      [...Store.tasksForToday(), ...all.filter(t => Store.taskStatus(t) === 'done-today')]
+        .forEach(t => { if (!seen[t.id]) { seen[t.id] = 1; list.push(t); } });
+      const rank = st => ({ overdue: 0, due: 1, backlog: 2, upcoming: 3, 'done-today': 4, done: 5 }[st] ?? 3);
+      list.sort((a, b) => rank(Store.taskStatus(a)) - rank(Store.taskStatus(b)));
+      open += list.filter(t => { const s = Store.taskStatus(t); return s !== 'done' && s !== 'done-today'; }).length;
+
+      let inner;
+      if (!list.length) {
+        inner = '<div class="tc-line">Nada vencendo hoje. Respira.</div>';
+      } else {
+        inner = list.slice(0, 5).map(t => {
+          const st = Store.taskStatus(t);
+          const done = st === 'done' || st === 'done-today';
+          const b = _taskBadge(t);
+          const wc = b.cls === 'over' ? 'over' : (b.cls === 'due' ? 'soon' : '');
+          return `<div class="tc-row ${done ? 'done' : ''}">
+            <div class="tc-check ${done ? 'done' : ''}" onclick="quickToggleTask(${t.id})" title="${done ? 'Desmarcar' : 'Concluir'}">${done ? '✓' : ''}</div>
+            <div class="tc-info"><div class="tc-name">${_esc(t.title)}</div><div class="tc-sub">${_esc(_taskSchedText(t))}</div></div>
+            <div class="tc-when ${wc}">${b.txt}</div>
+          </div>`;
+        }).join('');
+        if (list.length > 5) inner += `<div class="tc-more">+${list.length - 5} mais</div>`;
+      }
+      sections.push(_tcSec('Tarefas', 'tarefas.html', 'Gerenciar →', inner));
+    }
+  }
+
+  /* ── Entregas da faculdade ── */
+  if (typeof Store.getStudySubjects === 'function' && Store.getStudySubjects().length) {
+    const { overdue, soon } = Store.studyUpcoming(7);
+    open += overdue.length + soon.length;
+    const shown = [...overdue, ...soon].slice(0, 4);
+    let inner;
+    if (!shown.length) {
+      inner = '<div class="tc-line">Nada vencendo nos próximos 7 dias.</div>';
+    } else {
+      inner = shown.map(a => {
+        const n = Store.studyDaysUntil(a);
+        let when, cls;
+        if (n < 0)        { when = 'atrasada'; cls = 'over'; }
+        else if (n === 0) { when = 'hoje';     cls = 'soon'; }
+        else if (n === 1) { when = 'amanhã';   cls = 'soon'; }
+        else              { when = n + ' dias'; cls = n <= 3 ? 'soon' : ''; }
+        return `<div class="tc-row">
+          <div class="tc-check" onclick="facCardToggle(${a.id})" title="Marcar entregue"></div>
+          <div class="tc-info"><div class="tc-name">${_esc(a.title)}</div><div class="tc-sub">${_esc(Store.studySubjectName(a.subjectId))}</div></div>
+          <div class="tc-when ${cls}">${when}</div>
+        </div>`;
+      }).join('');
+      const extra = overdue.length + soon.length - shown.length;
+      if (extra > 0) inner += `<div class="tc-more">+${extra} mais</div>`;
+    }
+    const title = overdue.length
+      ? `Entregas <b>· ${overdue.length} atrasada${overdue.length === 1 ? '' : 's'}</b>`
+      : 'Entregas';
+    sections.push(_tcSec(title, 'faculdade.html', 'Ver →', inner));
+  }
+
+  /* ── Vocabulário (SRS) ── */
+  if (typeof Store.vocabDueToday === 'function') {
+    const due = Store.vocabDueToday();
+    if (due.length) {
+      open += due.length;
+      const words = due.slice(0, 8).map(w => _esc(w.word)).join(' · ');
+      sections.push(_tcSec('Vocabulário', 'vocabulario.html#revisar', 'Revisar →',
+        `<div class="tc-line"><b>${due.length}</b> palavra${due.length === 1 ? '' : 's'} pra revisar` +
+        `<br><span style="opacity:.65">${words}${due.length > 8 ? ' …' : ''}</span></div>`));
+    }
+  }
+
+  document.getElementById('today-count').textContent = open ? `${open} aberta${open === 1 ? '' : 's'}` : '';
+  body.innerHTML = sections.length
+    ? sections.join('')
+    : '<div class="tc-allclear">Tudo em dia por aqui. <span>Sem tarefas, entregas ou revisões pendentes agora.</span></div>';
 }
 
 /* ─ CONTADORES "DIAS DESDE" ─ */
@@ -1127,16 +1156,33 @@ async function removeCounter(id) {
   renderCountersCard();
 }
 
+/* Abre/fecha um campo "adicionar" escondido dentro do card, e foca. */
+function wireAddToggle(btnId, formId, inputId) {
+  const btn = document.getElementById(btnId);
+  const form = document.getElementById(formId);
+  const input = document.getElementById(inputId);
+  if (!btn || !form) return;
+  btn.addEventListener('click', () => {
+    form.hidden = !form.hidden;
+    btn.classList.toggle('on', !form.hidden);
+    if (!form.hidden) input.focus(); else input.value = '';
+  });
+  input.addEventListener('keydown', e => { if (e.key === 'Escape') btn.click(); });
+}
+
 (function wireCountersForm() {
   const form = document.getElementById('dc-form');
   const input = document.getElementById('dc-input');
   if (!form) return;
+  wireAddToggle('dc-add-btn', 'dc-form', 'dc-input');
   form.addEventListener('submit', e => {
     e.preventDefault();
     const v = input.value.trim();
     if (!v) return;
     Store.addStreakCounter(v);
     input.value = '';
+    form.hidden = true;
+    document.getElementById('dc-add-btn').classList.remove('on');
     toast('Contador criado ✓');
     renderCountersCard();
   });
@@ -1155,7 +1201,7 @@ function quickToggleTask(id) {
     if (done.indexOf(localISO) !== -1) Store.uncompleteTask(id, localISO);
     else { Store.completeTask(id); toast('Feita hoje ✓'); }
   }
-  renderDashTasks();
+  renderTodayCard();
   renderStats();
   initSidebar();
 }
@@ -1201,7 +1247,7 @@ function renderNightCard() {
 function switchNightRoutine(n) {
   Store.setNightRoutineActive(n);
   const input = document.getElementById('nr-input');
-  if (input) input.placeholder = `Adicionar à rotina ${_nrRoman(n)} — ex: separar a roupa de amanhã`;
+  if (input) input.placeholder = `Novo item da rotina ${_nrRoman(n)} — ex: separar a roupa`;
   renderNightCard();
 }
 
@@ -1223,68 +1269,23 @@ async function removeNight(id, ev) {
   const form = document.getElementById('nr-form');
   const input = document.getElementById('nr-input');
   if (!form) return;
+  wireAddToggle('nr-add-btn', 'nr-form', 'nr-input');
   form.addEventListener('submit', e => {
     e.preventDefault();
     const v = input.value.trim();
     if (!v) return;
     Store.addNightHabit(v);
     input.value = '';
+    form.hidden = true;
+    document.getElementById('nr-add-btn').classList.remove('on');
     renderNightCard();
   });
 })();
 
-/* ═══════════════════════════════
-   FACULDADE — o que está vencendo (≤ 7 dias) + atrasadas
-═══════════════════════════════ */
-function renderFaculdadeCard() {
-  const card = document.getElementById('faculdade-card');
-  const body = document.getElementById('fac-card-body');
-  const actionEl = document.getElementById('fac-card-action');
-  if (!card || typeof Store.getStudySubjects !== 'function') return;
-
-  if (!Store.getStudySubjects().length) { card.hidden = true; return; }
-  card.hidden = false;
-
-  const { overdue, soon } = Store.studyUpcoming(7);
-  actionEl.classList.toggle('warn', overdue.length > 0);
-  actionEl.textContent = overdue.length
-    ? `${overdue.length} atrasada${overdue.length === 1 ? '' : 's'} →`
-    : 'Gerenciar →';
-
-  let html = '';
-  if (overdue.length) {
-    html += `<div class="fc-over">${overdue.length} entrega${overdue.length === 1 ? '' : 's'} atrasada${overdue.length === 1 ? '' : 's'}</div>`;
-  }
-
-  const shown = [...overdue, ...soon].slice(0, 4);
-  if (!shown.length) {
-    html += '<div class="fc-none">Nada vencendo nos próximos 7 dias.</div>';
-  } else {
-    html += shown.map(a => {
-      const n = Store.studyDaysUntil(a);
-      let when, cls;
-      if (n < 0)        { when = 'atrasada'; cls = 'over'; }
-      else if (n === 0) { when = 'hoje';     cls = 'soon'; }
-      else if (n === 1) { when = 'amanhã';   cls = 'soon'; }
-      else              { when = n + ' dias'; cls = n <= 3 ? 'soon' : ''; }
-      return `<div class="fc-row">
-        <div class="fc-check" onclick="facCardToggle(${a.id})" title="Marcar entregue"></div>
-        <div class="fc-info">
-          <div class="fc-title">${_esc(a.title)}</div>
-          <div class="fc-meta">${_esc(Store.studySubjectName(a.subjectId))}</div>
-        </div>
-        <div class="fc-when ${cls}">${when}</div>
-      </div>`;
-    }).join('');
-    const extra = overdue.length + soon.length - shown.length;
-    if (extra > 0) html += `<div class="fc-more">+${extra} mais</div>`;
-  }
-  body.innerHTML = html;
-}
-
+/* Marca uma entrega da faculdade como entregue direto do card "Pendências". */
 function facCardToggle(id) {
   Store.toggleStudyDone(id);
-  renderFaculdadeCard();
+  renderTodayCard();
 }
 
 /* ─ WEEKLY CHART ─ */
