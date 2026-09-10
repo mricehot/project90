@@ -68,6 +68,8 @@
 .stat-sub { font-size: 10px; letter-spacing: 0.08em; color: var(--mid); margin-top: 6px; }
 
 /* ── CARDS / SEÇÕES ── */
+.fin-cols { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 22px; align-items: start; }
+.fin-col { display: flex; flex-direction: column; gap: 22px; min-width: 0; }
 .fin-card { background: var(--surface); border: 1px solid var(--border); padding: 22px 24px; }
 .fc-hd { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
 .fc-title { font-family: 'DM Serif Display', serif; font-size: 17px; }
@@ -163,7 +165,10 @@
 .m-seg button.on { background: var(--white); color: var(--bg); border-color: var(--white); }
 .m-hint { font-size: 10px; letter-spacing: 0.04em; color: var(--mid); margin-top: 6px; }
 
-@media (max-width: 1080px) { .inv-tot { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 1080px) {
+  .inv-tot { grid-template-columns: 1fr 1fr; }
+  .fin-cols { grid-template-columns: 1fr; }
+}
 @media (max-width: 900px) {
   body { overflow: auto; }
   .app { grid-template-columns: 1fr; }
@@ -283,85 +288,97 @@
       </div>
     </div>
 
-    <!-- RECEBIMENTOS -->
-    <div class="fin-card">
-      <div class="fc-hd">
-        <span class="fc-title">Recebimentos</span>
-        <button class="fc-add" id="add-income">+ Renda extra</button>
-      </div>
-      <div class="frow">
-        <div class="frow-main">
-          <div class="frow-name">Salário</div>
-          <div class="frow-sub" id="sal-sub">recebe todo dia 5</div>
+    <div class="fin-cols">
+
+      <div class="fin-col">
+
+        <!-- RECEBIMENTOS -->
+        <div class="fin-card">
+          <div class="fc-hd">
+            <span class="fc-title">Recebimentos</span>
+            <button class="fc-add" id="add-income">+ Renda extra</button>
+          </div>
+          <div class="frow">
+            <div class="frow-main">
+              <div class="frow-name">Salário</div>
+              <div class="frow-sub" id="sal-sub">recebe todo dia 5</div>
+            </div>
+            <span class="frow-amt" id="sal-amt">R$ 0</span>
+            <div class="frow-acts" style="opacity:1">
+              <button class="fbtn" id="edit-cfg" title="Editar salário">✎</button>
+            </div>
+          </div>
+          <div id="income-list"></div>
         </div>
-        <span class="frow-amt" id="sal-amt">R$ 0</span>
-        <div class="frow-acts" style="opacity:1">
-          <button class="fbtn" id="edit-cfg" title="Editar salário">✎</button>
+
+        <!-- GASTOS FIXOS -->
+        <div class="fin-card">
+          <div class="fc-hd">
+            <span class="fc-title">Gastos fixos</span>
+            <span class="fc-meta" id="fixed-meta"></span>
+            <button class="fc-add" id="add-fixed">+ Fixo</button>
+          </div>
+          <div id="fixed-list"></div>
         </div>
-      </div>
-      <div id="income-list"></div>
-    </div>
 
-    <!-- GASTOS FIXOS -->
-    <div class="fin-card">
-      <div class="fc-hd">
-        <span class="fc-title">Gastos fixos</span>
-        <span class="fc-meta" id="fixed-meta"></span>
-        <button class="fc-add" id="add-fixed">+ Fixo</button>
-      </div>
-      <div id="fixed-list"></div>
-    </div>
+        <!-- COMPRAS PARCELADAS -->
+        <div class="fin-card">
+          <div class="fc-hd">
+            <span class="fc-title">Compras parceladas</span>
+            <span class="fc-meta" id="inst-meta"></span>
+            <button class="fc-add" id="add-inst">+ Parcelamento</button>
+          </div>
+          <div id="inst-list"></div>
+        </div>
 
-    <!-- COMPRAS PARCELADAS -->
-    <div class="fin-card">
-      <div class="fc-hd">
-        <span class="fc-title">Compras parceladas</span>
-        <span class="fc-meta" id="inst-meta"></span>
-        <button class="fc-add" id="add-inst">+ Parcelamento</button>
       </div>
-      <div id="inst-list"></div>
-    </div>
 
-    <!-- GASTOS DO MÊS -->
-    <div class="fin-card">
-      <div class="fc-hd">
-        <span class="fc-title">Gastos do mês</span>
-        <span class="fc-meta" id="exp-meta"></span>
-      </div>
-      <div class="exp-quick">
-        <input class="eq-label" id="eq-label" placeholder="Descrição do gasto" maxlength="80" />
-        <input class="eq-amt" id="eq-amt" placeholder="R$ 0,00" inputmode="decimal" />
-        <select class="eq-cat" id="eq-cat"></select>
-        <input class="eq-date" id="eq-date" type="date" />
-        <button class="eq-add" id="eq-add">Lançar</button>
-      </div>
-      <div id="exp-list"></div>
-      <div class="cat-bars" id="cat-bars" hidden></div>
-    </div>
+      <div class="fin-col">
 
-    <!-- INVESTIMENTOS -->
-    <div class="fin-card">
-      <div class="fc-hd">
-        <span class="fc-title">Investimentos <em style="font-style:italic;opacity:.45">FII</em></span>
-        <button class="fc-add" id="add-inv">+ Movimento</button>
-      </div>
-      <div class="inv-tot" id="inv-tot"></div>
-      <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:6px">
-        <span class="fc-meta">Aporte do mês</span>
-        <button class="inv-edit" id="edit-invtarget">definir meta</button>
-      </div>
-      <div class="fbar-bg"><div class="fbar-fill" id="inv-bar" style="width:0%"></div></div>
-      <div class="fc-meta" id="inv-bar-lbl" style="margin-top:5px"></div>
-      <div id="inv-list" style="margin-top:14px"></div>
-    </div>
+        <!-- GASTOS DO MÊS -->
+        <div class="fin-card">
+          <div class="fc-hd">
+            <span class="fc-title">Gastos do mês</span>
+            <span class="fc-meta" id="exp-meta"></span>
+          </div>
+          <div class="exp-quick">
+            <input class="eq-label" id="eq-label" placeholder="Descrição do gasto" maxlength="80" />
+            <input class="eq-amt" id="eq-amt" placeholder="R$ 0,00" inputmode="decimal" />
+            <select class="eq-cat" id="eq-cat"></select>
+            <input class="eq-date" id="eq-date" type="date" />
+            <button class="eq-add" id="eq-add">Lançar</button>
+          </div>
+          <div id="exp-list"></div>
+          <div class="cat-bars" id="cat-bars" hidden></div>
+        </div>
 
-    <!-- OBJETIVOS -->
-    <div class="fin-card">
-      <div class="fc-hd">
-        <span class="fc-title">Objetivos</span>
-        <button class="fc-add" id="add-goal">+ Objetivo</button>
+        <!-- INVESTIMENTOS -->
+        <div class="fin-card">
+          <div class="fc-hd">
+            <span class="fc-title">Investimentos <em style="font-style:italic;opacity:.45">FII</em></span>
+            <button class="fc-add" id="add-inv">+ Movimento</button>
+          </div>
+          <div class="inv-tot" id="inv-tot"></div>
+          <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:6px">
+            <span class="fc-meta">Aporte do mês</span>
+            <button class="inv-edit" id="edit-invtarget">definir meta</button>
+          </div>
+          <div class="fbar-bg"><div class="fbar-fill" id="inv-bar" style="width:0%"></div></div>
+          <div class="fc-meta" id="inv-bar-lbl" style="margin-top:5px"></div>
+          <div id="inv-list" style="margin-top:14px"></div>
+        </div>
+
+        <!-- OBJETIVOS -->
+        <div class="fin-card">
+          <div class="fc-hd">
+            <span class="fc-title">Objetivos</span>
+            <button class="fc-add" id="add-goal">+ Objetivo</button>
+          </div>
+          <div id="goal-list"></div>
+        </div>
+
       </div>
-      <div id="goal-list"></div>
+
     </div>
 
   </main>
