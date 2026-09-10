@@ -30,10 +30,10 @@
 
 .g4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
 .stat-card { background: var(--surface); border: 1px solid var(--border); padding: 15px 18px; }
-.stat-lbl { font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--mid); margin-bottom: 6px; }
+.stat-lbl { font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--mid); margin-bottom: 6px; }
 .stat-val { font-family: 'Bebas Neue', sans-serif; font-size: 34px; line-height: 1; }
 .stat-val.warn { color: #fca5a5; }
-.stat-sub { font-size: 9px; letter-spacing: 0.1em; color: var(--mid); margin-top: 5px; }
+.stat-sub { font-size: 10px; letter-spacing: 0.1em; color: var(--mid); margin-top: 5px; }
 
 /* ── ENTRADA RÁPIDA ── */
 .qadd { background: var(--surface); border: 1px solid var(--border2); transition: border-color 0.2s; }
@@ -54,7 +54,7 @@
 .qadd:focus-within .qadd-chips { max-height: 44px; }
 .qadd-chip {
   flex: 1; padding: 11px 8px; background: none; border: none; border-right: 1px solid var(--border);
-  color: var(--mid); font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.12em;
+  color: var(--mid); font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.12em;
   text-transform: uppercase; cursor: pointer; transition: color 0.15s, background 0.15s;
 }
 .qadd-chip:last-child { border-right: none; }
@@ -63,7 +63,7 @@
 
 /* ── GRUPOS POR DATA ── */
 .tsk-group { margin-top: 6px; }
-.group-hd { font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--mid); margin-bottom: 4px; display: flex; align-items: center; gap: 10px; }
+.group-hd { font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--mid); margin-bottom: 4px; display: flex; align-items: center; gap: 10px; }
 .group-hd::after { content: ''; flex: 1; height: 1px; background: var(--border); }
 .group-hd .gc { font-family: 'Bebas Neue', sans-serif; font-size: 15px; letter-spacing: 0.06em; color: var(--white); }
 .tsk-group.accent .group-hd,
@@ -81,7 +81,7 @@
 .tsk-check {
   width: 20px; height: 20px; flex-shrink: 0; border: 1px solid var(--border2);
   display: flex; align-items: center; justify-content: center; cursor: pointer;
-  font-size: 11px; color: transparent; background: none; margin-top: 1px;
+  font-size: 12px; color: transparent; background: none; margin-top: 1px;
   transition: background 0.18s, border-color 0.18s, color 0.18s, transform 0.1s;
 }
 .tsk-check:hover { border-color: var(--white); }
@@ -89,11 +89,11 @@
 .tsk-check.done { background: #86efac; border-color: #86efac; color: var(--bg); }
 
 .tsk-body { flex: 1; min-width: 0; }
-.tsk-title { font-size: 13.5px; letter-spacing: 0.02em; color: var(--white); line-height: 1.4; word-break: break-word; }
+.tsk-title { font-size: 14.5px; letter-spacing: 0.02em; color: var(--white); line-height: 1.4; word-break: break-word; }
 .tsk-card.done-strike .tsk-title { color: var(--mid); text-decoration: line-through; }
 .tsk-meta { display: flex; align-items: center; gap: 8px; margin-top: 5px; flex-wrap: wrap; }
 .tsk-date {
-  font-size: 10px; letter-spacing: 0.06em; color: var(--mid);
+  font-size: 11px; letter-spacing: 0.06em; color: var(--mid);
   border: 1px solid transparent; padding: 2px 5px; margin: -2px -3px; cursor: pointer;
   display: inline-flex; align-items: center; transition: border-color 0.15s, color 0.15s;
 }
@@ -102,7 +102,7 @@
 .tsk-date.due { color: var(--white); }
 .tsk-date.tsk-recur::before { content: '\21BB'; margin-right: 5px; opacity: 0.7; }
 .tsk-notes {
-  font-size: 11px; letter-spacing: 0.02em; color: var(--mid); line-height: 1.55; margin-top: 4px;
+  font-size: 12px; letter-spacing: 0.02em; color: var(--mid); line-height: 1.55; margin-top: 4px;
   white-space: pre-wrap; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
 }
 
@@ -112,7 +112,7 @@
 @media (hover: none) { .tsk-actions { opacity: 1; } }
 .tsk-btn {
   width: 28px; height: 28px; border: 1px solid transparent; background: none; color: var(--mid);
-  cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 12px;
+  cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 13px;
   transition: color 0.15s, border-color 0.15s;
 }
 .tsk-btn:hover { color: var(--white); border-color: var(--border2); }
@@ -126,18 +126,18 @@
 .dmenu button {
   display: flex; width: 100%; align-items: center; justify-content: space-between; gap: 18px;
   padding: 11px 14px; background: none; border: none; border-bottom: 1px solid var(--border);
-  color: var(--white); font-family: 'DM Mono', monospace; font-size: 12px; letter-spacing: 0.04em;
+  color: var(--white); font-family: 'DM Mono', monospace; font-size: 13px; letter-spacing: 0.04em;
   cursor: pointer; text-align: left; transition: background 0.12s;
 }
 .dmenu button:last-child { border-bottom: none; }
 .dmenu button:hover { background: rgba(245,245,240,0.05); }
-.dmenu button .k { color: var(--mid); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; }
+.dmenu button .k { color: var(--mid); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; }
 .dmenu button.rm { color: #fca5a5; }
 
 /* ── CONCLUÍDAS ── */
 .done-toggle {
   margin-top: 14px; align-self: flex-start; background: none; border: 1px solid var(--border);
-  color: var(--mid); font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.16em;
+  color: var(--mid); font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.16em;
   text-transform: uppercase; padding: 9px 16px; cursor: pointer; transition: color 0.15s, border-color 0.15s;
 }
 .done-toggle:hover { color: var(--white); border-color: var(--border2); }
@@ -146,11 +146,11 @@
 
 .empty-state { text-align: center; padding: 52px 32px; border: 1px dashed rgba(245,245,240,0.12); background: var(--surface); }
 .empty-icon { font-size: 26px; margin-bottom: 12px; opacity: 0.4; }
-.empty-sub { font-size: 12px; color: var(--mid); line-height: 1.8; }
+.empty-sub { font-size: 13px; color: var(--mid); line-height: 1.8; }
 
 .toast .toast-undo {
   margin-left: 14px; padding-left: 14px; border-left: 1px solid var(--border2); color: var(--white);
-  cursor: pointer; letter-spacing: 0.1em; text-transform: uppercase; font-size: 10px;
+  cursor: pointer; letter-spacing: 0.1em; text-transform: uppercase; font-size: 11px;
 }
 
 /* modal extras */
@@ -159,18 +159,18 @@ textarea.modal-input { resize: vertical; min-height: 56px; line-height: 1.6; }
 .m-quick[hidden] { display: none; }
 .m-quick button {
   padding: 8px 12px; background: var(--surface2); border: 1px solid var(--border2); color: var(--mid);
-  font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
+  font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
   cursor: pointer; transition: color 0.15s, border-color 0.15s, background 0.15s;
 }
 .m-quick button:hover { color: var(--white); }
 .m-quick button.on { background: var(--white); color: var(--bg); border-color: var(--white); }
 .m-radio-row { display: flex; flex-direction: column; gap: 8px; }
-.m-radio { display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--white); cursor: pointer; }
+.m-radio { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--white); cursor: pointer; }
 .m-radio input { accent-color: var(--white); }
 .m-days { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
 .m-day {
   width: 40px; padding: 8px 0; text-align: center; border: 1px solid var(--border2); background: var(--surface2);
-  color: var(--mid); font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.06em; cursor: pointer;
+  color: var(--mid); font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.06em; cursor: pointer;
   text-transform: uppercase; transition: color 0.15s, border-color 0.15s, background 0.15s;
 }
 .m-day.on { background: var(--white); color: var(--bg); border-color: var(--white); }
@@ -204,7 +204,7 @@ textarea.modal-input { resize: vertical; min-height: 56px; line-height: 1.6; }
     <div class="sb-day">
       <div class="sb-daynum" id="sb-daynum">34</div>
       <div class="sb-daylbl">de 90 dias</div>
-      <div style="display:flex;justify-content:space-between;font-size:10px;letter-spacing:0.1em;color:var(--mid);margin-top:10px">
+      <div style="display:flex;justify-content:space-between;font-size:11px;letter-spacing:0.1em;color:var(--mid);margin-top:10px">
         <span>Progresso</span><span id="sb-pct">38%</span>
       </div>
       <div class="sb-prog-bar-bg"><div class="sb-prog-bar-fill" id="sb-fill" style="width:0%"></div></div>
@@ -318,7 +318,7 @@ textarea.modal-input { resize: vertical; min-height: 56px; line-height: 1.6; }
     </div>
     <div class="modal-field m-cond" id="cond-everyN" hidden>
       <label class="modal-lbl">Repetir a cada</label>
-      <input class="modal-input" id="t-interval" type="number" min="1" max="3650" value="7" style="max-width:120px" /> <span style="font-size:11px;color:var(--mid)">dias — conta a partir da última vez que você concluir</span>
+      <input class="modal-input" id="t-interval" type="number" min="1" max="3650" value="7" style="max-width:120px" /> <span style="font-size:12px;color:var(--mid)">dias — conta a partir da última vez que você concluir</span>
     </div>
     <div class="modal-field m-cond" id="cond-weekdays" hidden>
       <label class="modal-lbl">Dias da semana</label>

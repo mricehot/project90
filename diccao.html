@@ -35,9 +35,9 @@
 /* ── STAT CARDS ── */
 .g4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
 .stat-card { background: var(--surface); border: 1px solid var(--border); padding: 20px 22px; }
-.stat-lbl { font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--mid); margin-bottom: 8px; }
+.stat-lbl { font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--mid); margin-bottom: 8px; }
 .stat-val { font-family: 'Bebas Neue', sans-serif; font-size: 40px; line-height: 1; }
-.stat-sub { font-size: 10px; letter-spacing: 0.1em; color: var(--mid); margin-top: 6px; }
+.stat-sub { font-size: 11px; letter-spacing: 0.1em; color: var(--mid); margin-top: 6px; }
 
 /* ── PRACTICE CTA BANNER ── */
 .prac-cta {
@@ -48,11 +48,11 @@
 .pc-body { flex: 1; min-width: 200px; }
 .pc-title { font-family: 'DM Serif Display', serif; font-size: 18px; font-weight: 400; margin-bottom: 4px; }
 .pc-title em { font-style: italic; opacity: 0.4; }
-.pc-sub { font-size: 11px; letter-spacing: 0.04em; color: var(--mid); line-height: 1.6; }
+.pc-sub { font-size: 12px; letter-spacing: 0.04em; color: var(--mid); line-height: 1.6; }
 .pc-controls { display: flex; gap: 10px; align-items: center; flex-shrink: 0; flex-wrap: wrap; }
 .pc-btn {
   padding: 14px 28px; background: var(--white); color: var(--bg); border: none;
-  font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase;
+  font-family: 'DM Mono', monospace; font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase;
   cursor: pointer; transition: opacity 0.2s, transform 0.15s;
 }
 .pc-btn:hover:not(:disabled) { opacity: 0.85; transform: translateY(-1px); }
@@ -60,24 +60,24 @@
 .pc-btn.done { background: rgba(134,239,172,0.12); color: #86efac; opacity: 1; cursor: default; }
 .plan-bar-bg { height: 3px; background: var(--muted); margin-top: 12px; }
 .plan-bar-fill { height: 100%; background: var(--white); transition: width 0.8s cubic-bezier(0.16,1,0.3,1); }
-.plan-meta { display: flex; justify-content: space-between; font-size: 9px; letter-spacing: 0.1em; color: var(--mid); margin-top: 5px; }
+.plan-meta { display: flex; justify-content: space-between; font-size: 10px; letter-spacing: 0.1em; color: var(--mid); margin-top: 5px; }
 .pc-controls .btn-sm:disabled { opacity: 0.3; cursor: not-allowed; }
 
 /* ── TOOLBAR ── */
 .dcc-toolbar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .dcc-search {
   flex: 1; min-width: 200px; background: var(--surface2); border: 1px solid var(--border); color: var(--white);
-  font-family: 'DM Mono', monospace; font-weight: 300; font-size: 12px; letter-spacing: 0.03em;
+  font-family: 'DM Mono', monospace; font-weight: 300; font-size: 13px; letter-spacing: 0.03em;
   padding: 11px 14px; outline: none; transition: border-color 0.2s;
 }
 .dcc-search:focus { border-color: rgba(245,245,240,0.35); }
 .dcc-search::placeholder { color: var(--mid); }
 .dcc-sort, .dcc-filter {
   background: var(--surface2); border: 1px solid var(--border); color: var(--white);
-  font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.03em;
+  font-family: 'DM Mono', monospace; font-size: 12px; letter-spacing: 0.03em;
   padding: 11px 14px; outline: none; cursor: pointer; appearance: none;
 }
-.dcc-count { font-size: 10px; letter-spacing: 0.1em; color: var(--mid); white-space: nowrap; }
+.dcc-count { font-size: 11px; letter-spacing: 0.1em; color: var(--mid); white-space: nowrap; }
 .dcc-count span { color: var(--white); }
 
 /* ── EXERCISE LIST ── */
@@ -92,16 +92,16 @@
 .ex-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 7px; }
 .ex-title { font-family: 'DM Serif Display', serif; font-size: 18px; font-weight: 400; word-break: break-word; }
 .ex-kind {
-  font-size: 8px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--mid);
+  font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--mid);
   border: 1px solid var(--border); padding: 3px 7px; white-space: nowrap;
 }
-.ex-body { font-size: 12px; letter-spacing: 0.02em; color: var(--white); line-height: 1.8; margin-bottom: 5px; }
-.ex-focus { font-size: 10px; letter-spacing: 0.06em; color: var(--mid); }
+.ex-body { font-size: 13px; letter-spacing: 0.02em; color: var(--white); line-height: 1.8; margin-bottom: 5px; }
+.ex-focus { font-size: 11px; letter-spacing: 0.06em; color: var(--mid); }
 .ex-focus::before { content: 'foco: '; }
 .ex-actions { display: flex; gap: 8px; flex-shrink: 0; }
 .ex-btn {
   width: 32px; height: 32px; border: 1px solid var(--border); background: none; color: var(--mid);
-  cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 13px;
+  cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px;
   transition: color 0.2s, border-color 0.2s;
 }
 .ex-btn:hover { color: var(--white); border-color: var(--border2); }
@@ -111,7 +111,7 @@
 .empty-state { text-align: center; padding: 56px 32px; border: 1px dashed rgba(245,245,240,0.12); background: var(--surface); }
 .empty-icon { font-size: 32px; margin-bottom: 16px; opacity: 0.4; }
 .empty-title { font-family: 'DM Serif Display', serif; font-size: 20px; font-weight: 400; margin-bottom: 8px; opacity: 0.6; }
-.empty-sub { font-size: 12px; color: var(--mid); margin-bottom: 24px; line-height: 1.8; }
+.empty-sub { font-size: 13px; color: var(--mid); margin-bottom: 24px; line-height: 1.8; }
 /* .btn-sm vem de css/components.css */
 
 textarea.modal-input { resize: vertical; min-height: 72px; line-height: 1.7; }
@@ -130,12 +130,12 @@ textarea.modal-input { resize: vertical; min-height: 72px; line-height: 1.7; }
 }
 .prac-overlay.show .prac-box { transform: scale(1); }
 .prac-topline { display: flex; justify-content: space-between; align-items: center; margin-bottom: 22px; }
-.prac-eyebrow { font-size: 9px; letter-spacing: 0.24em; text-transform: uppercase; color: var(--mid); }
+.prac-eyebrow { font-size: 10px; letter-spacing: 0.24em; text-transform: uppercase; color: var(--mid); }
 .prac-close { cursor: pointer; color: var(--mid); font-size: 16px; line-height: 1; transition: color 0.2s; }
 .prac-close:hover { color: var(--white); }
 .prac-kindrow { display: flex; gap: 8px; align-items: center; margin-bottom: 12px; flex-wrap: wrap; }
-.prac-kind-badge { font-size: 8px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--mid); border: 1px solid var(--border); padding: 3px 8px; }
-.prac-focus { font-size: 10px; letter-spacing: 0.06em; color: var(--mid); }
+.prac-kind-badge { font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--mid); border: 1px solid var(--border); padding: 3px 8px; }
+.prac-focus { font-size: 11px; letter-spacing: 0.06em; color: var(--mid); }
 .prac-text {
   font-family: 'DM Serif Display', serif; font-size: 22px; line-height: 1.7;
   color: var(--white); margin-bottom: 22px; word-break: break-word;
@@ -144,18 +144,18 @@ textarea.modal-input { resize: vertical; min-height: 72px; line-height: 1.7; }
 .prac-rec audio { height: 40px; flex: 1 1 220px; min-width: 200px; max-width: 100%; cursor: auto; }
 .prac-rec-btn {
   padding: 10px 18px; background: none; border: 1px solid var(--border2); color: var(--white);
-  font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
+  font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
   cursor: pointer; transition: border-color 0.2s, color 0.2s;
 }
 .prac-rec-btn:hover { border-color: rgba(245,245,240,0.35); }
 .prac-rec-btn[data-rec="1"] { border-color: #fca5a5; color: #fca5a5; }
-.prac-rec-hint { font-size: 10px; letter-spacing: 0.04em; color: var(--mid); line-height: 1.6; margin-bottom: 20px; }
+.prac-rec-hint { font-size: 11px; letter-spacing: 0.04em; color: var(--mid); line-height: 1.6; margin-bottom: 20px; }
 
-.prac-rate-lbl { font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--mid); margin-bottom: 10px; }
+.prac-rate-lbl { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--mid); margin-bottom: 10px; }
 .prac-rate { display: flex; gap: 8px; margin-bottom: 22px; flex-wrap: wrap; }
 .prac-rate button {
   flex: 1; min-width: 84px; padding: 12px 6px; background: var(--surface2); border: 1px solid var(--border);
-  color: var(--white); font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.04em;
+  color: var(--white); font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.04em;
   cursor: pointer; transition: border-color 0.2s, background 0.2s;
 }
 .prac-rate button:hover { border-color: rgba(245,245,240,0.35); }
@@ -163,12 +163,12 @@ textarea.modal-input { resize: vertical; min-height: 72px; line-height: 1.7; }
 
 .prac-stats-row {
   display: flex; justify-content: space-between; padding-top: 16px;
-  border-top: 1px solid var(--border); font-size: 10px; letter-spacing: 0.1em; color: var(--mid);
+  border-top: 1px solid var(--border); font-size: 11px; letter-spacing: 0.1em; color: var(--mid);
 }
 .prac-stats-row span { color: var(--white); }
 .prac-next-btn {
   width: 100%; margin-top: 18px; padding: 13px; background: var(--white); color: var(--bg); border: none;
-  font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase;
+  font-family: 'DM Mono', monospace; font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase;
   cursor: pointer; opacity: 0; pointer-events: none; transition: opacity 0.2s;
 }
 .prac-next-btn.show { opacity: 1; pointer-events: all; }
@@ -179,16 +179,16 @@ textarea.modal-input { resize: vertical; min-height: 72px; line-height: 1.7; }
 .ps-title { font-family: 'DM Serif Display', serif; font-size: 24px; margin-bottom: 4px; }
 .ps-title em { font-style: italic; opacity: 0.45; }
 .ps-score { font-family: 'Bebas Neue', sans-serif; font-size: 52px; line-height: 1; margin: 14px 0 6px; }
-.ps-sub { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--mid); margin-bottom: 26px; }
+.ps-sub { font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--mid); margin-bottom: 26px; }
 .ps-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 26px; }
 .ps-cell { border: 1px solid var(--border); padding: 12px 8px; }
 .ps-cell-val { font-family: 'Bebas Neue', sans-serif; font-size: 22px; }
-.ps-cell-lbl { font-size: 8px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--mid); margin-top: 3px; }
+.ps-cell-lbl { font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--mid); margin-top: 3px; }
 .ps-actions { display: flex; gap: 10px; }
 .ps-actions .modal-btn { flex: 1; }
 
 /* ── LEITURA EM VOZ ALTA ── */
-.rd-intro { font-size: 11px; letter-spacing: 0.04em; color: var(--mid); line-height: 1.6; margin: 0 0 14px; }
+.rd-intro { font-size: 12px; letter-spacing: 0.04em; color: var(--mid); line-height: 1.6; margin: 0 0 14px; }
 .rd-toolbar { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
 .rd-toolbar .dcc-filter { flex: 0 1 200px; }
 /* a lista fica compacta — a seção agora vem antes da biblioteca de exercícios */
@@ -203,19 +203,19 @@ textarea.modal-input { resize: vertical; min-height: 72px; line-height: 1.7; }
 }
 .rd-item:hover { border-color: rgba(245,245,240,0.25); }
 .rd-item-top { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
-.rd-item-title { font-size: 13px; letter-spacing: 0.02em; color: var(--white); }
-.rd-item-cat { font-size: 8px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--mid); border: 1px solid var(--border); padding: 2px 7px; white-space: nowrap; flex-shrink: 0; }
-.rd-item-meta { font-size: 9px; letter-spacing: 0.06em; color: var(--mid); }
+.rd-item-title { font-size: 14px; letter-spacing: 0.02em; color: var(--white); }
+.rd-item-cat { font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--mid); border: 1px solid var(--border); padding: 2px 7px; white-space: nowrap; flex-shrink: 0; }
+.rd-item-meta { font-size: 10px; letter-spacing: 0.06em; color: var(--mid); }
 .rd-item-meta .read { color: var(--green); }
 .rd-item-tools { display: flex; gap: 2px; margin-top: 2px; opacity: 0; transition: opacity 0.15s; }
 .rd-item:hover .rd-item-tools { opacity: 1; }
 @media (hover: none) { .rd-item-tools { opacity: 0.55; } }
-.rd-item-tools button { background: none; border: none; color: var(--mid); font-size: 12px; cursor: pointer; padding: 2px 5px; }
+.rd-item-tools button { background: none; border: none; color: var(--mid); font-size: 13px; cursor: pointer; padding: 2px 5px; }
 .rd-item-tools button:hover { color: var(--white); }
-.rd-empty { font-size: 12px; color: var(--mid); line-height: 1.8; padding: 12px 2px; grid-column: 1 / -1; }
+.rd-empty { font-size: 13px; color: var(--mid); line-height: 1.8; padding: 12px 2px; grid-column: 1 / -1; }
 
 /* overlay de leitura (reusa .prac-overlay / .prac-box) */
-.read-src { font-size: 10px; letter-spacing: 0.06em; color: var(--mid); margin-bottom: 14px; }
+.read-src { font-size: 11px; letter-spacing: 0.06em; color: var(--mid); margin-bottom: 14px; }
 .read-text {
   font-family: 'DM Mono', monospace; font-weight: 300; font-size: 15px; line-height: 1.95;
   color: var(--white); white-space: pre-wrap; word-break: break-word;
@@ -228,7 +228,7 @@ textarea.modal-input { resize: vertical; min-height: 72px; line-height: 1.7; }
 .read-text::-webkit-scrollbar-thumb:hover { background: rgba(245,245,240,0.30); }
 .read-done-btn {
   width: 100%; padding: 12px; background: none; border: 1px solid var(--border2); color: var(--mid);
-  font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
+  font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
   cursor: pointer; transition: color 0.2s, border-color 0.2s, background 0.2s; margin-top: 4px;
 }
 .read-done-btn:hover { color: var(--white); border-color: rgba(245,245,240,0.35); }
@@ -278,7 +278,7 @@ textarea.modal-input { resize: vertical; min-height: 72px; line-height: 1.7; }
     <div class="sb-day">
       <div class="sb-daynum" id="sb-daynum">34</div>
       <div class="sb-daylbl">de 90 dias</div>
-      <div style="display:flex;justify-content:space-between;font-size:10px;letter-spacing:0.1em;color:var(--mid);margin-top:10px">
+      <div style="display:flex;justify-content:space-between;font-size:11px;letter-spacing:0.1em;color:var(--mid);margin-top:10px">
         <span>Progresso</span><span id="sb-pct">38%</span>
       </div>
       <div class="sb-prog-bar-bg"><div class="sb-prog-bar-fill" id="sb-fill" style="width:0%"></div></div>
@@ -693,7 +693,7 @@ function renderList() {
         <div class="ex-head">
           <span class="ex-title">${escapeHtml(e.title)}</span>
           <span class="ex-kind">${escapeHtml(kindLabel(e.kind))}</span>
-          <span class="ex-date" style="font-size:9px;letter-spacing:0.1em;color:var(--mid)">${fmtDate(e.createdAt)}</span>
+          <span class="ex-date" style="font-size:10px;letter-spacing:0.1em;color:var(--mid)">${fmtDate(e.createdAt)}</span>
         </div>
         <div class="ex-body">${escapeHtml(e.body)}</div>
         ${e.focus ? `<div class="ex-focus">${escapeHtml(e.focus)}</div>` : ''}

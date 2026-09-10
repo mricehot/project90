@@ -122,7 +122,7 @@ input, textarea { cursor: text; }
 .left-center { position: relative; z-index: 2; flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 32px 0; }
 .left-big    { font-family: 'Bebas Neue', sans-serif; font-size: clamp(80px, 12vw, 140px); line-height: 0.85; letter-spacing: -0.01em; animation: flicker 4s infinite; }
 .left-sub    { font-family: 'DM Serif Display', serif; font-style: italic; font-size: 17px; color: var(--white); opacity: 0.45; margin-top: 10px; }
-.left-desc   { font-size: 12px; line-height: 1.85; color: var(--mid); margin-top: 20px; max-width: 260px; }
+.left-desc   { font-size: 13px; line-height: 1.85; color: var(--mid); margin-top: 20px; max-width: 260px; }
 .left-bottom { position: relative; z-index: 2; }
 
 .hm-mini { display: grid; grid-template-columns: repeat(13, 1fr); gap: 3px; margin-bottom: 14px; }
@@ -135,21 +135,21 @@ input, textarea { cursor: text; }
 .ls            { flex: 1; padding: 10px 0; text-align: center; border-right: 1px solid var(--border); }
 .ls:last-child { border-right: none; }
 .ls-val        { font-family: 'Bebas Neue', sans-serif; font-size: 22px; line-height: 1; }
-.ls-lbl        { font-size: 8px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--mid); margin-top: 3px; }
+.ls-lbl        { font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--mid); margin-top: 3px; }
 
 /* RIGHT */
 .login-right { background: var(--bg); padding: 48px 44px; display: flex; flex-direction: column; justify-content: center; }
 
-.form-eyebrow { font-size: 9px; letter-spacing: 0.28em; text-transform: uppercase; color: var(--mid); margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+.form-eyebrow { font-size: 10px; letter-spacing: 0.28em; text-transform: uppercase; color: var(--mid); margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
 .form-eyebrow::before { content: ''; display: inline-block; width: 16px; height: 1px; background: var(--mid); }
 .form-heading    { font-family: 'DM Serif Display', serif; font-size: clamp(24px, 3vw, 32px); font-weight: 400; line-height: 1.2; margin-bottom: 32px; }
 .form-heading em { font-style: italic; opacity: 0.4; }
 
 .field-wrap  { margin-bottom: 14px; }
-.field-lbl   { font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--mid); display: block; margin-bottom: 7px; }
+.field-lbl   { font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--mid); display: block; margin-bottom: 7px; }
 .field-input {
   width: 100%; background: var(--surface); border: 1px solid var(--border); color: var(--white);
-  font-family: 'DM Mono', monospace; font-weight: 300; font-size: 13px; letter-spacing: 0.04em;
+  font-family: 'DM Mono', monospace; font-weight: 300; font-size: 14px; letter-spacing: 0.04em;
   padding: 12px 14px; outline: none; transition: border-color 0.2s;
 }
 .field-input:focus { border-color: rgba(245,245,240,0.35); }
@@ -158,23 +158,23 @@ input, textarea { cursor: text; }
 
 .btn-pass {
   background: var(--surface); border: 1px solid var(--border); color: var(--mid);
-  padding: 12px 14px; cursor: pointer; font-family: 'DM Mono', monospace; font-size: 11px;
+  padding: 12px 14px; cursor: pointer; font-family: 'DM Mono', monospace; font-size: 12px;
   letter-spacing: 0.05em; transition: color 0.2s, border-color 0.2s; white-space: nowrap;
 }
 .btn-pass:hover { color: var(--white); border-color: var(--border2); }
 
-.forgot { text-align: right; margin-top: 6px; font-size: 10px; letter-spacing: 0.1em; color: #444; cursor: pointer; transition: color 0.2s; }
+.forgot { text-align: right; margin-top: 6px; font-size: 11px; letter-spacing: 0.1em; color: #444; cursor: pointer; transition: color 0.2s; }
 .forgot:hover { color: var(--white); }
 
-.form-error   { font-size:11px; letter-spacing:0.07em; color:#fca5a5; margin-top:8px; display:none; padding:10px 14px; border:1px solid rgba(252,165,165,0.2); background:rgba(252,165,165,0.05); }
+.form-error   { font-size:12px; letter-spacing:0.07em; color:#fca5a5; margin-top:8px; display:none; padding:10px 14px; border:1px solid rgba(252,165,165,0.2); background:rgba(252,165,165,0.05); }
 .form-error.show   { display: block; }
-.form-success { font-size:11px; letter-spacing:0.07em; color:#86efac; margin-top:8px; display:none; padding:10px 14px; border:1px solid rgba(134,239,172,0.2); background:rgba(134,239,172,0.05); }
+.form-success { font-size:12px; letter-spacing:0.07em; color:#86efac; margin-top:8px; display:none; padding:10px 14px; border:1px solid rgba(134,239,172,0.2); background:rgba(134,239,172,0.05); }
 .form-success.show { display: block; }
 
 .btn-google {
   width: 100%; margin-top: 8px; padding: 14px; background: none;
   border: 1px solid var(--border2); color: var(--white); cursor: pointer;
-  font-family: 'DM Mono', monospace; font-size: 12px; letter-spacing: 0.14em;
+  font-family: 'DM Mono', monospace; font-size: 13px; letter-spacing: 0.14em;
   text-transform: uppercase; transition: background 0.2s, border-color 0.2s, transform 0.15s;
   display: flex; align-items: center; justify-content: center; gap: 12px;
 }
@@ -182,12 +182,12 @@ input, textarea { cursor: text; }
 .btn-google:active { transform: translateY(0); }
 @keyframes pulse { 0%,100%{opacity:.4} 50%{opacity:1} }
 
-.login-divider { display: flex; align-items: center; gap: 10px; margin: 20px 0; font-size: 10px; letter-spacing: 0.15em; color: #333; }
+.login-divider { display: flex; align-items: center; gap: 10px; margin: 20px 0; font-size: 11px; letter-spacing: 0.15em; color: #333; }
 .login-divider::before, .login-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
-.signup-row { text-align: center; font-size: 11px; letter-spacing: 0.08em; color: #444; }
+.signup-row { text-align: center; font-size: 12px; letter-spacing: 0.08em; color: #444; }
 .signup-row a { color: var(--white); text-decoration: none; border-bottom: 1px solid rgba(245,245,240,0.2); padding-bottom: 1px; transition: border-color 0.2s; }
 .signup-row a:hover { border-color: var(--white); }
-.demo-hint { margin-top: 18px; padding: 10px 14px; border: 1px solid var(--border); font-size: 11px; letter-spacing: 0.06em; color: var(--mid); text-align: center; }
+.demo-hint { margin-top: 18px; padding: 10px 14px; border: 1px solid var(--border); font-size: 12px; letter-spacing: 0.06em; color: var(--mid); text-align: center; }
 .demo-hint span { color: var(--white); }
 
 @media (max-width: 720px) {
@@ -232,7 +232,7 @@ input, textarea { cursor: text; }
       <div class="form-eyebrow">Acesso</div>
       <div class="form-heading">Bem-vindo de <em>volta.</em></div>
 
-      <p style="font-size:12px;line-height:1.85;color:var(--mid);margin-bottom:32px">
+      <p style="font-size:13px;line-height:1.85;color:var(--mid);margin-bottom:32px">
         Faça login com sua conta Google para acessar seu Project 90 e continuar de onde parou.
       </p>
 
@@ -250,11 +250,11 @@ input, textarea { cursor: text; }
       </button>
 
       <div style="margin-top:32px;padding-top:24px;border-top:1px solid var(--border)">
-        <div style="font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:#333;margin-bottom:12px;text-align:center">Ao entrar você concorda com os</div>
+        <div style="font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:#333;margin-bottom:12px;text-align:center">Ao entrar você concorda com os</div>
         <div style="text-align:center">
-          <a href="index.html" style="font-size:10px;letter-spacing:.08em;color:#444;text-decoration:none;border-bottom:1px solid #333;padding-bottom:1px;transition:color .2s" onmouseover="this.style.color='var(--white)'" onmouseout="this.style.color='#444'">Termos de uso</a>
+          <a href="index.html" style="font-size:11px;letter-spacing:.08em;color:#444;text-decoration:none;border-bottom:1px solid #333;padding-bottom:1px;transition:color .2s" onmouseover="this.style.color='var(--white)'" onmouseout="this.style.color='#444'">Termos de uso</a>
           <span style="color:#333;margin:0 8px">·</span>
-          <a href="index.html" style="font-size:10px;letter-spacing:.08em;color:#444;text-decoration:none;border-bottom:1px solid #333;padding-bottom:1px;transition:color .2s" onmouseover="this.style.color='var(--white)'" onmouseout="this.style.color='#444'">Privacidade</a>
+          <a href="index.html" style="font-size:11px;letter-spacing:.08em;color:#444;text-decoration:none;border-bottom:1px solid #333;padding-bottom:1px;transition:color .2s" onmouseover="this.style.color='var(--white)'" onmouseout="this.style.color='#444'">Privacidade</a>
         </div>
       </div>
     </div>

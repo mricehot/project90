@@ -41,7 +41,7 @@
 
 /* ── LABEL ── */
 .label {
-  font-size: 10px; letter-spacing: 0.28em; text-transform: uppercase;
+  font-size: 11px; letter-spacing: 0.28em; text-transform: uppercase;
   color: var(--mid); margin-bottom: 20px;
   display: flex; align-items: center; gap: 12px;
 }
@@ -64,11 +64,11 @@
 }
 .nav-logo { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 0.14em; color: var(--white); text-decoration: none; }
 .nav-links { display: flex; gap: 36px; list-style: none; }
-.nav-links a { font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--mid); text-decoration: none; transition: color 0.2s; }
+.nav-links a { font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--mid); text-decoration: none; transition: color 0.2s; }
 .nav-links a:hover { color: var(--white); }
 .nav-cta {
   display: inline-block; padding: 10px 24px; background: var(--white); color: var(--bg);
-  font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+  font-family: 'DM Mono', monospace; font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase;
   text-decoration: none; border: none; cursor: pointer; transition: opacity 0.2s;
 }
 .nav-cta:hover { opacity: 0.82; }
@@ -76,14 +76,14 @@
 /* ── BUTTONS ── */
 .btn-primary {
   display: inline-block; padding: 15px 40px; background: var(--white); color: var(--bg);
-  font-family: 'DM Mono', monospace; font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase;
+  font-family: 'DM Mono', monospace; font-size: 13px; letter-spacing: 0.16em; text-transform: uppercase;
   text-decoration: none; border: none; cursor: pointer;
   transition: transform 0.18s, box-shadow 0.18s;
 }
 .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(245,245,240,0.1); }
 
 .btn-outline {
-  font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--mid);
+  font-size: 13px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--mid);
   text-decoration: none; transition: color 0.2s; cursor: pointer;
   display: inline-flex; align-items: center; gap: 8px; background: none; border: none;
 }
@@ -91,7 +91,7 @@
 
 .btn-sm {
   padding: 10px 20px; border: 1px solid var(--border2); background: none;
-  color: var(--mid); font-family: 'DM Mono', monospace; font-size: 11px;
+  color: var(--mid); font-family: 'DM Mono', monospace; font-size: 12px;
   letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer;
   transition: color 0.2s, border-color 0.2s, background 0.2s;
 }
@@ -101,23 +101,23 @@
 
 /* ── FORMS ── */
 .field-wrap { margin-bottom: 14px; }
-.field-lbl  { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--mid); display: block; margin-bottom: 8px; }
+.field-lbl  { font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--mid); display: block; margin-bottom: 8px; }
 .field-input {
   width: 100%; background: var(--surface); border: 1px solid rgba(245,245,240,0.1);
   color: var(--white); font-family: 'DM Mono', monospace; font-weight: 300;
-  font-size: 13px; letter-spacing: 0.05em; padding: 13px 16px; outline: none; transition: border-color 0.2s;
+  font-size: 14px; letter-spacing: 0.05em; padding: 13px 16px; outline: none; transition: border-color 0.2s;
 }
 .field-input:focus { border-color: rgba(245,245,240,0.35); }
 .field-input::placeholder { color: var(--mid); }
 
 .form-error {
-  font-size: 11px; letter-spacing: 0.08em; color: var(--red);
+  font-size: 12px; letter-spacing: 0.08em; color: var(--red);
   margin-top: 8px; display: none; padding: 10px 14px;
   border: 1px solid rgba(252,165,165,0.2); background: rgba(252,165,165,0.05);
 }
 .form-error.show { display: block; }
 .form-success {
-  font-size: 11px; letter-spacing: 0.08em; color: var(--green);
+  font-size: 12px; letter-spacing: 0.08em; color: var(--green);
   margin-top: 8px; display: none; padding: 10px 14px;
   border: 1px solid rgba(134,239,172,0.2); background: rgba(134,239,172,0.05);
 }
@@ -130,18 +130,18 @@
   flex-wrap: wrap; gap: 4px 12px;
   margin-bottom: 16px; padding-bottom: 14px; border-bottom: 1px solid var(--border);
 }
-.card-title  { font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--mid); }
-.card-action { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--mid); cursor: pointer; transition: color 0.2s;
+.card-title  { font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--mid); }
+.card-action { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--mid); cursor: pointer; transition: color 0.2s;
   /* funciona igual como <span>, <a> ou <button> */
   background: none; border: 0; padding: 0; margin: 0; font-family: inherit; text-align: inherit; }
 .card-action:hover { color: var(--white); }
 
 /* ── STAT CARD ── */
 .stat-card  { background: var(--surface); border: 1px solid var(--border); padding: 20px 22px; }
-.stat-lbl   { font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--mid); margin-bottom: 8px; }
+.stat-lbl   { font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--mid); margin-bottom: 8px; }
 .stat-val   { font-family: 'Bebas Neue', sans-serif; font-size: 44px; line-height: 1; }
-.stat-sub   { font-size: 10px; letter-spacing: 0.1em; color: var(--mid); margin-top: 6px; }
-.stat-delta { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; letter-spacing: 0.1em; margin-top: 6px; }
+.stat-sub   { font-size: 11px; letter-spacing: 0.1em; color: var(--mid); margin-top: 6px; }
+.stat-delta { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; letter-spacing: 0.1em; margin-top: 6px; }
 .stat-delta.up { color: var(--green); }
 .stat-delta.dn { color: var(--red); }
 
@@ -155,30 +155,30 @@
 }
 .sb-logo     { padding: 28px 24px 24px; border-bottom: 1px solid var(--border); }
 .sb-logomark { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 0.12em; text-decoration: none; color: var(--white); display: block; }
-.sb-logosub  { font-size: 10px; letter-spacing: 0.2em; color: var(--mid); text-transform: uppercase; margin-top: 2px; }
+.sb-logosub  { font-size: 11px; letter-spacing: 0.2em; color: var(--mid); text-transform: uppercase; margin-top: 2px; }
 
 .sb-day      { padding: 20px 24px; border-bottom: 1px solid var(--border); }
 .sb-daynum   { font-family: 'Bebas Neue', sans-serif; font-size: 56px; line-height: 1; }
-.sb-daylbl   { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--mid); margin-top: 2px; }
+.sb-daylbl   { font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--mid); margin-top: 2px; }
 .sb-prog-bar-bg   { height: 2px; background: var(--muted); border-radius: 1px; margin-top: 10px; }
 .sb-prog-bar-fill { height: 100%; background: var(--white); border-radius: 1px; transition: width 1s cubic-bezier(0.16,1,0.3,1); }
-.sb-prog-meta     { display: flex; justify-content: space-between; font-size: 10px; letter-spacing: 0.1em; color: var(--mid); margin-top: 5px; }
+.sb-prog-meta     { display: flex; justify-content: space-between; font-size: 11px; letter-spacing: 0.1em; color: var(--mid); margin-top: 5px; }
 
 .sb-nav { flex: 1; padding: 16px 0; overflow-y: auto; }
 .sb-item {
   display: flex; align-items: center; gap: 10px; padding: 10px 24px;
-  font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--mid);
+  font-size: 13px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--mid);
   cursor: pointer; transition: color 0.2s, background 0.2s;
   border-left: 2px solid transparent; text-decoration: none;
 }
 .sb-item:hover  { color: var(--white); background: rgba(245,245,240,0.03); }
 .sb-item.active { color: var(--white); border-left-color: var(--white); background: rgba(245,245,240,0.04); }
-.sb-item-icon   { font-size: 13px; width: 14px; text-align: center; }
+.sb-item-icon   { font-size: 14px; width: 14px; text-align: center; }
 
 .sb-bottom { padding: 20px 24px; border-top: 1px solid var(--border); }
 .sb-logout {
   display: flex; align-items: center; gap: 8px; cursor: pointer;
-  font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+  font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase;
   color: var(--mid); transition: color 0.2s; text-decoration: none;
 }
 .sb-logout:hover { color: var(--white); }
@@ -186,19 +186,19 @@
 .sb-streak      { display: flex; align-items: center; gap: 8px; background: var(--surface2); border: 1px solid var(--border2); padding: 10px 14px; margin-bottom: 16px; }
 .sb-streak-icon { font-size: 16px; }
 .sb-streak-val  { font-family: 'Bebas Neue', sans-serif; font-size: 20px; line-height: 1; }
-.sb-streak-lbl  { font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--mid); margin-top: 1px; }
+.sb-streak-lbl  { font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--mid); margin-top: 1px; }
 
 /* ── TOPBAR (app pages) ── */
 .topbar       { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
 .page-title   { font-family: 'DM Serif Display', serif; font-size: 26px; font-weight: 400; display: flex; align-items: baseline; gap: 10px; }
 .page-title em { font-style: italic; opacity: 0.45; font-size: 22px; }
 .topbar-right { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-.date-tag     { font-size: 11px; letter-spacing: 0.12em; color: var(--mid); }
+.date-tag     { font-size: 12px; letter-spacing: 0.12em; color: var(--mid); }
 
 /* ── TOOLTIP ── */
 .tip {
   position: fixed; background: var(--surface2); border: 1px solid var(--border2);
-  padding: 8px 12px; font-size: 10px; letter-spacing: 0.08em; color: var(--white);
+  padding: 8px 12px; font-size: 11px; letter-spacing: 0.08em; color: var(--white);
   pointer-events: none; z-index: 999; opacity: 0; transition: opacity 0.15s; white-space: nowrap;
 }
 .tip.on { opacity: 1; }
@@ -207,7 +207,7 @@
 .toast {
   position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%) translateY(16px);
   background: var(--white); color: var(--bg);
-  font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; line-height: 1.5;
+  font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; line-height: 1.5;
   padding: 12px 24px; z-index: 300; opacity: 0;
   transition: opacity 0.3s, transform 0.3s;
   max-width: min(90vw, 440px); text-align: center;
@@ -230,24 +230,24 @@
 .modal-title { font-family: 'DM Serif Display', serif; font-size: 22px; font-weight: 400; margin-bottom: 28px; }
 .modal-title em { font-style: italic; opacity: 0.4; }
 .modal-field { margin-bottom: 18px; }
-.modal-lbl   { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--mid); display: block; margin-bottom: 8px; }
+.modal-lbl   { font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--mid); display: block; margin-bottom: 8px; }
 .modal-input {
   width: 100%; background: var(--surface2); border: 1px solid var(--border); color: var(--white);
-  font-family: 'DM Mono', monospace; font-weight: 300; font-size: 13px; letter-spacing: 0.04em;
+  font-family: 'DM Mono', monospace; font-weight: 300; font-size: 14px; letter-spacing: 0.04em;
   padding: 12px 14px; outline: none; transition: border-color 0.2s;
 }
 .modal-input:focus { border-color: rgba(245,245,240,0.35); }
 .modal-input::placeholder { color: var(--mid); }
 .modal-select {
   width: 100%; background: var(--surface2); border: 1px solid var(--border); color: var(--white);
-  font-family: 'DM Mono', monospace; font-weight: 300; font-size: 13px;
+  font-family: 'DM Mono', monospace; font-weight: 300; font-size: 14px;
   padding: 12px 14px; outline: none; cursor: pointer; transition: border-color 0.2s; appearance: none;
 }
 .modal-select:focus { border-color: rgba(245,245,240,0.35); }
 .modal-select option { background: var(--surface2); }
 .modal-footer { display: flex; gap: 10px; margin-top: 28px; }
 .modal-btn {
-  flex: 1; padding: 13px; font-family: 'DM Mono', monospace; font-size: 11px;
+  flex: 1; padding: 13px; font-family: 'DM Mono', monospace; font-size: 12px;
   letter-spacing: 0.16em; text-transform: uppercase; cursor: pointer; border: none;
   transition: opacity 0.2s, transform 0.15s;
 }
@@ -266,7 +266,7 @@
 /* ── SECTION SEPARATOR ── */
 .section-sep {
   display: flex; align-items: center; gap: 12px;
-  font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--mid);
+  font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--mid);
 }
 .section-sep::before, .section-sep::after { content: ''; flex: 1; height: 1px; background: var(--border); }
 
@@ -297,7 +297,7 @@
   }
   .mobile-topbar .mt-page {
     margin-left: auto;
-    font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--mid);
+    font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--mid);
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 45vw;
   }
   .hamburger {

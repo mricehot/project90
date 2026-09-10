@@ -45,7 +45,7 @@ input, textarea { cursor: text; }
 .page-title { font-family: 'DM Serif Display', serif; font-size: 26px; font-weight: 400; display: flex; align-items: baseline; gap: 10px; }
 .page-title em { font-style: italic; opacity: 0.45; font-size: 22px; }
 .topbar-right { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-.date-tag { font-size: 11px; letter-spacing: 0.12em; color: var(--mid); }
+.date-tag { font-size: 12px; letter-spacing: 0.12em; color: var(--mid); }
 
 /* ── HABIT LIST ── */
 .habits-wrap { display: flex; flex-direction: column; gap: 12px; }
@@ -75,17 +75,17 @@ input, textarea { cursor: text; }
 .habit-name { font-size: 14px; letter-spacing: 0.03em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .habit-name.crossed { text-decoration: line-through; opacity: 0.45; }
 .habit-meta-row { display: flex; align-items: center; gap: 12px; margin-top: 4px; flex-wrap: wrap; }
-.habit-freq { font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--mid); }
-.habit-pillar { font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; padding: 2px 8px; border: 1px solid var(--border); color: var(--mid); }
+.habit-freq { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--mid); }
+.habit-pillar { font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; padding: 2px 8px; border: 1px solid var(--border); color: var(--mid); }
 
 .habit-right { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
-.streak-badge { font-family: 'Bebas Neue', sans-serif; font-size: 13px; letter-spacing: 0.1em; color: var(--mid); border: 1px solid var(--border); padding: 4px 10px; white-space: nowrap; }
+.streak-badge { font-family: 'Bebas Neue', sans-serif; font-size: 14px; letter-spacing: 0.1em; color: var(--mid); border: 1px solid var(--border); padding: 4px 10px; white-space: nowrap; }
 .streak-badge.hot { color: var(--white); border-color: rgba(245,245,240,0.25); }
 
 .habit-actions { display: flex; gap: 6px; }
 .hab-btn {
   width: 28px; height: 28px; background: none; border: 1px solid var(--border); color: var(--mid);
-  cursor: pointer; font-size: 11px;
+  cursor: pointer; font-size: 12px;
   display: flex; align-items: center; justify-content: center;
   transition: color 0.2s, border-color 0.2s;
 }
@@ -93,7 +93,7 @@ input, textarea { cursor: text; }
 .hab-btn.danger:hover { color: #fca5a5; border-color: rgba(252,165,165,0.3); }
 
 .habit-week { display: flex; align-items: center; gap: 3px; padding: 0 20px 16px; }
-.week-label { font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--mid); margin-right: 8px; }
+.week-label { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--mid); margin-right: 8px; }
 .wd { width: 22px; display: flex; flex-direction: column; align-items: center; gap: 3px; }
 .wd-day { font-size: 7px; letter-spacing: 0.1em; color: var(--mid); }
 .wd-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
@@ -104,13 +104,13 @@ input, textarea { cursor: text; }
 .wd-dot.wd-edit:hover { transform: scale(1.35); box-shadow: 0 0 0 1px var(--white); }
 
 .habit-progress { padding: 0 20px 16px; }
-.hpb-top { display: flex; justify-content: space-between; font-size: 10px; letter-spacing: 0.1em; color: var(--mid); margin-bottom: 6px; }
+.hpb-top { display: flex; justify-content: space-between; font-size: 11px; letter-spacing: 0.1em; color: var(--mid); margin-bottom: 6px; }
 .hpb-bg { height: 2px; background: var(--muted); }
 .hpb-fill { height: 100%; background: var(--white); transition: width 0.8s cubic-bezier(0.16,1,0.3,1); }
 
 .section-sep {
   display: flex; align-items: center; gap: 12px;
-  font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--mid);
+  font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--mid);
 }
 .section-sep::before, .section-sep::after { content: ''; flex: 1; height: 1px; background: var(--border); }
 
@@ -119,7 +119,7 @@ input, textarea { cursor: text; }
 .pillar-group { min-width: 0; }
 .pillar-hd { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
 .pillar-hd-name { font-family: 'Bebas Neue', sans-serif; font-size: 15px; letter-spacing: 0.12em; color: var(--white); white-space: nowrap; }
-.pillar-hd-count { font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--mid); white-space: nowrap; }
+.pillar-hd-count { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--mid); white-space: nowrap; }
 .pillar-hd-bar { flex: 1; height: 1px; background: var(--border); overflow: hidden; }
 .pillar-hd-bar > span { display: block; height: 100%; background: var(--white); transition: width 0.8s cubic-bezier(0.16,1,0.3,1); }
 
@@ -127,7 +127,7 @@ input, textarea { cursor: text; }
 .empty-state { grid-column: 1 / -1; text-align: center; padding: 64px 32px; border: 1px dashed rgba(245,245,240,0.12); background: var(--surface); }
 .empty-icon { font-size: 32px; margin-bottom: 16px; opacity: 0.4; }
 .empty-title { font-family: 'DM Serif Display', serif; font-size: 20px; font-weight: 400; margin-bottom: 8px; opacity: 0.6; }
-.empty-sub { font-size: 12px; color: var(--mid); margin-bottom: 24px; line-height: 1.8; }
+.empty-sub { font-size: 13px; color: var(--mid); margin-bottom: 24px; line-height: 1.8; }
 
 /* ── MODAL ── */
 .modal-overlay {
@@ -146,17 +146,17 @@ input, textarea { cursor: text; }
 .modal-title { font-family: 'DM Serif Display', serif; font-size: 22px; font-weight: 400; margin-bottom: 28px; }
 .modal-title em { font-style: italic; opacity: 0.4; }
 .modal-field { margin-bottom: 18px; }
-.modal-lbl { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--mid); display: block; margin-bottom: 8px; }
+.modal-lbl { font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--mid); display: block; margin-bottom: 8px; }
 .modal-input {
   width: 100%; background: var(--surface2); border: 1px solid var(--border); color: var(--white);
-  font-family: 'DM Mono', monospace; font-weight: 300; font-size: 13px; letter-spacing: 0.04em;
+  font-family: 'DM Mono', monospace; font-weight: 300; font-size: 14px; letter-spacing: 0.04em;
   padding: 12px 14px; outline: none; transition: border-color 0.2s;
 }
 .modal-input:focus { border-color: rgba(245,245,240,0.35); }
 .modal-input::placeholder { color: var(--mid); }
 .modal-select {
   width: 100%; background: var(--surface2); border: 1px solid var(--border); color: var(--white);
-  font-family: 'DM Mono', monospace; font-weight: 300; font-size: 13px;
+  font-family: 'DM Mono', monospace; font-weight: 300; font-size: 14px;
   padding: 12px 14px; outline: none; cursor: pointer; transition: border-color 0.2s; appearance: none;
 }
 .modal-select:focus { border-color: rgba(245,245,240,0.35); }
@@ -165,13 +165,13 @@ input, textarea { cursor: text; }
 .freq-day {
   aspect-ratio: 1; border: 1px solid var(--border);
   display: flex; align-items: center; justify-content: center;
-  font-size: 10px; letter-spacing: 0.08em; cursor: pointer;
+  font-size: 11px; letter-spacing: 0.08em; cursor: pointer;
   color: var(--mid); transition: background 0.18s, border-color 0.18s, color 0.18s; user-select: none;
 }
 .freq-day.on { background: var(--white); border-color: var(--white); color: var(--bg); }
 .modal-footer { display: flex; gap: 10px; margin-top: 28px; }
 .modal-btn {
-  flex: 1; padding: 13px; font-family: 'DM Mono', monospace; font-size: 11px;
+  flex: 1; padding: 13px; font-family: 'DM Mono', monospace; font-size: 12px;
   letter-spacing: 0.16em; text-transform: uppercase; cursor: pointer; border: none;
   transition: opacity 0.2s, transform 0.15s;
 }
@@ -219,7 +219,7 @@ input, textarea { cursor: text; }
     <div class="sb-day">
       <div class="sb-daynum" id="sb-daynum">34</div>
       <div class="sb-daylbl">de 90 dias</div>
-      <div style="display:flex;justify-content:space-between;font-size:10px;letter-spacing:0.1em;color:var(--mid);margin-top:10px">
+      <div style="display:flex;justify-content:space-between;font-size:11px;letter-spacing:0.1em;color:var(--mid);margin-top:10px">
         <span>Progresso</span><span id="sb-pct">38%</span>
       </div>
       <div class="sb-prog-bar-bg"><div class="sb-prog-bar-fill" id="sb-fill" style="width:0%"></div></div>
