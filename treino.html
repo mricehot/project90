@@ -316,8 +316,8 @@ function renderToday() {
     const ent = sess.entries[e.id] || {};
     const done = !!ent.done;
     const last = Store.lastTrainingWeight(e.id);
-    const ph = last != null ? fmtKg(last) : '—';
-    const cur = ent.kg;
+    // o campo já vem preenchido com a última carga — você só mexe quando progride
+    const cur = ent.kg != null ? ent.kg : last;
     let delta = '';
     if (cur != null && last != null && cur !== last) {
       const d = cur - last;
@@ -332,7 +332,7 @@ function renderToday() {
         <div class="tx-meta">${e.sets} × ${esc(e.reps)}${last != null ? ' · última ' + fmtKg(last) + ' kg' : ''}</div>
       </div>
       <div class="tx-kg-wrap">
-        <input class="tx-kg" inputmode="decimal" maxlength="6" value="${cur != null ? fmtKg(cur) : ''}" placeholder="${ph}" aria-label="carga em kg" />
+        <input class="tx-kg" inputmode="decimal" maxlength="6" value="${cur != null ? fmtKg(cur) : ''}" placeholder="kg" aria-label="carga em kg" />
         <span class="tx-kg-unit">kg</span>
       </div>
       ${delta}

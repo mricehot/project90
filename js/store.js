@@ -1178,6 +1178,12 @@ const Store = (() => {
     var row = _ensureTrainingRow(d);
     var cur = row.entries[exId] || {};
     cur.done = !cur.done;
+    // ao marcar sem ter digitado carga, carrega a última registrada (mantém a
+    // progressão): "fiz no mesmo peso da última vez" até você mudar.
+    if (cur.done && cur.kg == null) {
+      var last = lastTrainingWeight(exId, d);
+      if (last != null) cur.kg = last;
+    }
     row.entries[exId] = cur;
     _saveMirror();
     _pushTrainingDay(d);
