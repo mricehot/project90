@@ -167,6 +167,50 @@
   max-width: 60%;
 }
 .pg-empty { font-size: 12px; color: var(--mid); line-height: 1.7; padding: 8px 0; }
+.pg-cap { font-size: 9px; letter-spacing: 0.08em; color: var(--muted); text-align: right; margin-top: 4px; }
+
+/* split sugerido pela rotação (marca discreta) */
+.tr-sbtn.suggested:not(.active) { box-shadow: inset 0 -2px 0 var(--mid); }
+
+/* alimentação — cabeçalho com "marcar todas" */
+.ml-hd-right { display: inline-flex; align-items: center; gap: 12px; }
+.ml-allbtn {
+  background: none; border: none; color: var(--mid); font-family: 'DM Mono', monospace;
+  font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer;
+  transition: color 0.15s; padding: 0;
+}
+.ml-allbtn:hover { color: var(--white); }
+.ml-allbtn[hidden] { display: none; }
+
+/* layout 2 colunas no desktop */
+.tr-row { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 24px; align-items: start; }
+@media (max-width: 900px) { .tr-row { grid-template-columns: 1fr; } }
+
+/* progresso do treino de hoje */
+.tx-count { font-family: 'Bebas Neue', sans-serif; font-size: 13px; letter-spacing: 0.06em; color: var(--white); margin-left: 8px; }
+.tx-bar { height: 2px; background: var(--muted); margin: 0 0 14px; }
+.tx-bar > span { display: block; height: 100%; background: var(--white); width: 0; transition: width 0.4s cubic-bezier(0.16,1,0.3,1); }
+.tx-bar[hidden] { display: none; }
+
+/* setas de reordenar no editor de planos */
+.pe-move { display: flex; flex-direction: column; gap: 1px; flex-shrink: 0; }
+.pe-move button {
+  background: none; border: none; color: var(--mid); font-size: 9px; line-height: 1; cursor: pointer;
+  padding: 2px 4px; transition: color 0.15s;
+}
+.pe-move button:hover:not(:disabled) { color: var(--white); }
+.pe-move button:disabled { opacity: 0.25; cursor: default; }
+@media (hover: none) { .pe-move { opacity: 1; } }
+
+/* modal de editar exercício — seletor de plano */
+.exm-split { display: flex; border: 1px solid var(--border2); }
+.exm-split button {
+  flex: 1; background: none; border: none; color: var(--mid); font-family: 'Bebas Neue', sans-serif;
+  font-size: 15px; letter-spacing: 0.14em; padding: 8px 4px; cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.exm-split button + button { border-left: 1px solid var(--border2); }
+.exm-split button.active { background: var(--white); color: var(--bg); }
 
 @media (max-width: 640px) {
   .tr-main { padding: 20px; }
@@ -232,10 +276,12 @@
       </div>
     </div>
 
+    <div class="tr-row">
+
     <!-- TREINO DE HOJE -->
     <div class="card" id="today-card">
       <div class="card-hd">
-        <span class="card-title">Treino de hoje</span>
+        <span class="card-title">Treino de hoje<span class="tx-count" id="tx-count"></span></span>
         <span class="nr-hd-right" style="display:inline-flex;align-items:center;gap:10px">
           <span class="tr-switch" role="group" aria-label="Escolher treino">
             <button type="button" class="tr-sbtn" data-s="A">A</button>
@@ -244,6 +290,7 @@
           </span>
         </span>
       </div>
+      <div class="tx-bar" id="tx-bar" hidden><span id="tx-bar-fill"></span></div>
       <div id="today-body"></div>
     </div>
 
@@ -260,7 +307,7 @@
         </div>
         <form class="bw-form" id="bw-form" autocomplete="off">
           <input id="bw-input" inputmode="decimal" maxlength="6" placeholder="kg" aria-label="peso corporal em kg" />
-          <button type="submit">Registrar hoje</button>
+          <button type="submit">Salvar</button>
         </form>
         <div id="bw-wrap"></div>
       </div>
@@ -275,6 +322,10 @@
         <div id="lc-wrap"></div>
       </div>
     </div>
+
+    </div><!-- /tr-row -->
+
+    <div class="tr-row">
 
     <!-- PLANOS A/B/C -->
     <div class="card" id="plans-card">
@@ -301,7 +352,10 @@
     <div class="card" id="meals-card">
       <div class="card-hd">
         <span class="card-title">Alimentação</span>
-        <span class="card-action" id="meals-count"></span>
+        <span class="ml-hd-right">
+          <button type="button" class="ml-allbtn" id="ml-all" hidden>marcar todas</button>
+          <span class="card-action" id="meals-count"></span>
+        </span>
       </div>
       <div id="meals-body"></div>
       <form class="ml-add" id="ml-form" autocomplete="off">
@@ -311,7 +365,42 @@
       <button type="button" class="tr-seed" id="seed-meals" hidden>Usar as refeições padrão</button>
     </div>
 
+    </div><!-- /tr-row -->
+
   </main>
+</div>
+
+<!-- EDITAR EXERCÍCIO -->
+<div class="modal-overlay" id="ex-modal">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="exm-hd">
+    <div class="modal-title" id="exm-hd">Editar exercício</div>
+    <div class="modal-field">
+      <label class="modal-lbl" for="exm-name">Exercício</label>
+      <input class="modal-input" id="exm-name" maxlength="80" />
+    </div>
+    <div style="display:flex;gap:12px">
+      <div class="modal-field" style="flex:1">
+        <label class="modal-lbl" for="exm-sets">Séries</label>
+        <input class="modal-input" id="exm-sets" inputmode="numeric" maxlength="2" />
+      </div>
+      <div class="modal-field" style="flex:2">
+        <label class="modal-lbl" for="exm-reps">Faixa de reps</label>
+        <input class="modal-input" id="exm-reps" maxlength="10" />
+      </div>
+    </div>
+    <div class="modal-field">
+      <label class="modal-lbl">Plano</label>
+      <div class="exm-split" id="exm-split" role="group" aria-label="Plano">
+        <button type="button" data-s="A">A</button>
+        <button type="button" data-s="B">B</button>
+        <button type="button" data-s="C">C</button>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-btn ghost" type="button" id="exm-del">Excluir</button>
+      <button class="modal-btn primary" type="button" id="exm-save">Salvar</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -357,7 +446,11 @@ function setPlan(p) { try { localStorage.setItem(PKEY, p); } catch (e) {} render
 function renderToday() {
   const sess = Store.getTrainingSession();
   const next = Store.nextTrainingSplit();
-  document.querySelectorAll('.tr-sbtn').forEach(b => b.classList.toggle('active', b.dataset.s === sess.split));
+  document.querySelectorAll('.tr-sbtn').forEach(b => {
+    b.classList.toggle('active', b.dataset.s === sess.split);
+    b.classList.toggle('suggested', b.dataset.s === next);
+    b.title = b.dataset.s === next ? 'sugerido pela rotação' : '';
+  });
 
   const subEl = document.getElementById('tr-sub');
   const nTr = Store.trainingSessionsCount();
@@ -365,6 +458,18 @@ function renderToday() {
 
   const body = document.getElementById('today-body');
   const exs = Store.getTrainingExercises(sess.split);
+
+  const bar = document.getElementById('tx-bar');
+  const cnt = document.getElementById('tx-count');
+  const doneN = exs.filter(e => sess.entries[e.id] && sess.entries[e.id].done).length;
+  if (exs.length) {
+    cnt.textContent = `${doneN}/${exs.length}`;
+    bar.hidden = false;
+    document.getElementById('tx-bar-fill').style.width = Math.round(doneN / exs.length * 100) + '%';
+  } else {
+    cnt.textContent = '';
+    bar.hidden = true;
+  }
 
   if (!exs.length) {
     body.innerHTML = `<div class="tx-empty">O treino ${sess.split} ainda não tem exercícios.<br>Monte ele em <b>Planos A / B / C</b> abaixo.</div>`;
@@ -412,16 +517,24 @@ function renderPlans() {
   document.getElementById('plans-count').textContent =
     `A ${counts[0]} · B ${counts[1]} · C ${counts[2]}`;
 
-  const empty = counts.every(c => c === 0);
-  document.getElementById('seed-training').hidden = !empty;
-
+  const allEmpty = counts.every(c => c === 0);
+  const seedBtn = document.getElementById('seed-training');
   const list = Store.getTrainingExercises(p);
+  seedBtn.hidden = list.length > 0;
+  seedBtn.textContent = allEmpty
+    ? 'Usar um modelo pronto (A/B/C)'
+    : `Preencher o Plano ${p} com um modelo`;
+  seedBtn.dataset.scope = allEmpty ? 'all' : p;
   const body = document.getElementById('plan-body');
   if (!list.length) {
     body.innerHTML = `<div class="tx-empty">Plano ${p} vazio. Adicione os exercícios abaixo.</div>`;
   } else {
-    body.innerHTML = list.map(e => `
+    body.innerHTML = list.map((e, i) => `
       <div class="pe-row" data-id="${e.id}">
+        <span class="pe-move">
+          <button type="button" data-act="up" title="Subir" ${i === 0 ? 'disabled' : ''}>▲</button>
+          <button type="button" data-act="down" title="Descer" ${i === list.length - 1 ? 'disabled' : ''}>▼</button>
+        </span>
         <span class="pe-name">${esc(e.name)}</span>
         <span class="pe-meta">${e.sets} × ${esc(e.reps)}</span>
         <span class="pe-tools">
@@ -442,6 +555,7 @@ function renderMeals() {
   document.getElementById('seed-meals').hidden = items.length > 0;
   document.getElementById('meals-count').textContent =
     items.length ? `${done.size}/${items.length} hoje` : '';
+  document.getElementById('ml-all').hidden = !(items.length && done.size < items.length);
 
   const streakHTML = streak > 0
     ? `<div class="ml-streak">🍽 ${streak} ${streak === 1 ? 'dia' : 'dias'} de alimentação completa</div>`
@@ -502,7 +616,7 @@ function _lineChart(prev, canvas, series) {
         data: series.map(p => p.kg),
         borderColor: 'rgba(245,245,240,0.9)', borderWidth: 1.5,
         fill: true, backgroundColor: 'rgba(245,245,240,0.05)',
-        tension: 0.3, pointRadius: 3, pointBackgroundColor: '#f5f5f0',
+        tension: 0.3, pointRadius: series.length === 1 ? 5 : 3, pointBackgroundColor: '#f5f5f0',
         pointHoverRadius: 5,
       }],
     },
@@ -528,19 +642,19 @@ function renderProgress() {
       const sign = delta.kg > 0 ? '+' : '';
       d = ` · <span class="${cls}">${sign}${fmtKg(delta.kg)} kg</span> em ${delta.days} dia${delta.days === 1 ? '' : 's'}`;
     }
-    bwStat.innerHTML = `<b>${fmtKg(latest.kg)} kg</b>${d}`;
+    const ago = DAY - latest.day;
+    const when = ago <= 0 ? 'hoje' : `há ${ago} dia${ago === 1 ? '' : 's'}`;
+    bwStat.innerHTML = `<b>${fmtKg(latest.kg)} kg</b>${d} · ${when}`;
   } else {
     bwStat.textContent = '';
   }
 
-  if (series.length >= 2) {
-    bwWrap.innerHTML = '<div class="pg-chart"><canvas id="bw-canvas"></canvas></div>';
+  if (series.length >= 1) {
+    bwWrap.innerHTML = '<div class="pg-chart"><canvas id="bw-canvas"></canvas></div><div class="pg-cap">kg × dia do desafio</div>';
     bwChart = _lineChart(bwChart, document.getElementById('bw-canvas'), series);
   } else {
     if (bwChart) { bwChart.destroy(); bwChart = null; }
-    bwWrap.innerHTML = `<div class="pg-empty">${series.length === 1
-      ? 'Uma pesagem registrada. Registre em outro dia pra ver o gráfico.'
-      : 'Registre seu peso pra começar a acompanhar.'}</div>`;
+    bwWrap.innerHTML = `<div class="pg-empty">Registre seu peso pra começar a acompanhar.</div>`;
   }
 
   /* ── carga por exercício ── */
@@ -566,10 +680,22 @@ function renderProgress() {
   const exId = Number(sel.value);
   const s = Store.trainingWeightSeries(exId);
   const pr = Store.trainingExercisePR(exId);
-  lcStat.innerHTML = pr != null ? `recorde <b>${fmtKg(pr)} kg</b>` : '';
+  if (s.length) {
+    const parts = [`${s.length} ${s.length === 1 ? 'sessão' : 'sessões'}`, `recorde <b>${fmtKg(pr)} kg</b>`];
+    if (s.length >= 2) {
+      const chg = Math.round((s[s.length - 1].kg - s[0].kg) * 10) / 10;
+      if (chg !== 0) {
+        const cls = chg > 0 ? 'up' : 'dn';
+        parts.push(`<span class="${cls}">${chg > 0 ? '+' : ''}${fmtKg(chg)} kg</span>`);
+      }
+    }
+    lcStat.innerHTML = parts.join(' · ');
+  } else {
+    lcStat.textContent = '';
+  }
 
   if (s.length >= 2) {
-    lcWrap.innerHTML = '<div class="pg-chart"><canvas id="lc-canvas"></canvas></div>';
+    lcWrap.innerHTML = '<div class="pg-chart"><canvas id="lc-canvas"></canvas></div><div class="pg-cap">kg × dia do desafio</div>';
     lcChart = _lineChart(lcChart, document.getElementById('lc-canvas'), s);
   } else {
     if (lcChart) { lcChart.destroy(); lcChart = null; }
@@ -643,33 +769,87 @@ document.getElementById('pe-form').addEventListener('submit', e => {
   renderPlans(); renderToday();
 });
 
-// editar / excluir exercício
+// reordenar / editar / excluir exercício
 document.getElementById('plan-body').addEventListener('click', async e => {
   const btn = e.target.closest('[data-act]');
   if (!btn) return;
   const id = Number(btn.closest('.pe-row').dataset.id);
   const ex = Store.getTrainingExercises().find(x => x.id === id);
   if (!ex) return;
-  if (btn.dataset.act === 'del') {
+  const act = btn.dataset.act;
+  if (act === 'up' || act === 'down') {
+    Store.moveTrainingExercise(id, act === 'up' ? -1 : 1);
+    renderPlans(); renderToday();
+  } else if (act === 'del') {
     if (!await window.p90confirm(`Excluir "${ex.name}" do plano ${ex.split}?`, { okText: 'Excluir' })) return;
     Store.deleteTrainingExercise(id);
     renderPlans(); renderToday();
-  } else if (btn.dataset.act === 'edit') {
-    const name = prompt('Nome do exercício:', ex.name);
-    if (name == null) return;
-    const sets = prompt('Séries:', ex.sets);
-    if (sets == null) return;
-    const reps = prompt('Faixa de reps:', ex.reps);
-    if (reps == null) return;
-    Store.updateTrainingExercise(id, { name: name, sets: parseInt(sets, 10) || ex.sets, reps: reps });
-    renderPlans(); renderToday();
+  } else if (act === 'edit') {
+    openExModal(id);
   }
 });
 
-document.getElementById('seed-training').addEventListener('click', () => {
-  Store.seedDefaultTraining();
-  toast('Modelo A/B/C criado — ajuste como quiser');
+/* ── MINI-MODAL: EDITAR EXERCÍCIO ── */
+let exmId = null, exmSplit = 'A';
+const exModal = document.getElementById('ex-modal');
+
+function _setExmSplit(s) {
+  exmSplit = (s === 'B' || s === 'C') ? s : 'A';
+  document.querySelectorAll('#exm-split button').forEach(b => b.classList.toggle('active', b.dataset.s === exmSplit));
+}
+
+function openExModal(id) {
+  const ex = Store.getTrainingExercises().find(x => x.id === id);
+  if (!ex) return;
+  exmId = id;
+  document.getElementById('exm-name').value = ex.name;
+  document.getElementById('exm-sets').value = ex.sets;
+  document.getElementById('exm-reps').value = ex.reps;
+  _setExmSplit(ex.split);
+  exModal.classList.add('open');
+  setTimeout(() => document.getElementById('exm-name').focus(), 60);
+}
+function closeExModal() { exModal.classList.remove('open'); exmId = null; }
+
+document.querySelectorAll('#exm-split button').forEach(b => {
+  b.addEventListener('click', () => _setExmSplit(b.dataset.s));
+});
+document.getElementById('exm-save').addEventListener('click', () => {
+  if (exmId == null) return;
+  const name = document.getElementById('exm-name').value.trim();
+  if (!name) { document.getElementById('exm-name').focus(); return; }
+  Store.updateTrainingExercise(exmId, {
+    name,
+    sets: parseInt(document.getElementById('exm-sets').value, 10) || undefined,
+    reps: document.getElementById('exm-reps').value.trim() || undefined,
+    split: exmSplit,
+  });
+  closeExModal();
   renderPlans(); renderToday();
+});
+document.getElementById('exm-del').addEventListener('click', async () => {
+  if (exmId == null) return;
+  const ex = Store.getTrainingExercises().find(x => x.id === exmId);
+  if (!await window.p90confirm(`Excluir "${ex ? ex.name : ''}" do plano ${ex ? ex.split : ''}?`, { okText: 'Excluir' })) return;
+  Store.deleteTrainingExercise(exmId);
+  closeExModal();
+  renderPlans(); renderToday();
+});
+exModal.addEventListener('click', e => { if (e.target === exModal) closeExModal(); });
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && exModal.classList.contains('open')) closeExModal();
+});
+
+document.getElementById('seed-training').addEventListener('click', e => {
+  const scope = e.currentTarget.dataset.scope || 'all';
+  if (scope === 'all') {
+    Store.seedDefaultTraining();
+    toast('Modelo A/B/C criado — ajuste como quiser');
+  } else {
+    Store.seedPlanTraining(scope);
+    toast(`Plano ${scope} preenchido — ajuste como quiser`);
+  }
+  renderPlans(); renderToday(); renderProgress();
 });
 
 // alimentação: toggle + del
@@ -703,6 +883,11 @@ document.getElementById('ml-form').addEventListener('submit', e => {
 document.getElementById('seed-meals').addEventListener('click', () => {
   Store.seedDefaultMeals();
   toast('Refeições padrão adicionadas');
+  renderMeals();
+});
+
+document.getElementById('ml-all').addEventListener('click', () => {
+  Store.markAllMeals();
   renderMeals();
 });
 
