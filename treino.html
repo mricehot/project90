@@ -167,6 +167,20 @@
   max-width: 60%;
 }
 .pg-empty { font-size: 12px; color: var(--mid); line-height: 1.7; padding: 8px 0; }
+.pg-cap { font-size: 9px; letter-spacing: 0.08em; color: var(--muted); text-align: right; margin-top: 4px; }
+
+/* split sugerido pela rotação (marca discreta) */
+.tr-sbtn.suggested:not(.active) { box-shadow: inset 0 -2px 0 var(--mid); }
+
+/* alimentação — cabeçalho com "marcar todas" */
+.ml-hd-right { display: inline-flex; align-items: center; gap: 12px; }
+.ml-allbtn {
+  background: none; border: none; color: var(--mid); font-family: 'DM Mono', monospace;
+  font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer;
+  transition: color 0.15s; padding: 0;
+}
+.ml-allbtn:hover { color: var(--white); }
+.ml-allbtn[hidden] { display: none; }
 
 /* layout 2 colunas no desktop */
 .tr-row { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 24px; align-items: start; }
@@ -293,7 +307,7 @@
         </div>
         <form class="bw-form" id="bw-form" autocomplete="off">
           <input id="bw-input" inputmode="decimal" maxlength="6" placeholder="kg" aria-label="peso corporal em kg" />
-          <button type="submit">Registrar hoje</button>
+          <button type="submit">Salvar</button>
         </form>
         <div id="bw-wrap"></div>
       </div>
@@ -338,7 +352,10 @@
     <div class="card" id="meals-card">
       <div class="card-hd">
         <span class="card-title">Alimentação</span>
-        <span class="card-action" id="meals-count"></span>
+        <span class="ml-hd-right">
+          <button type="button" class="ml-allbtn" id="ml-all" hidden>marcar todas</button>
+          <span class="card-action" id="meals-count"></span>
+        </span>
       </div>
       <div id="meals-body"></div>
       <form class="ml-add" id="ml-form" autocomplete="off">
@@ -429,7 +446,11 @@ function setPlan(p) { try { localStorage.setItem(PKEY, p); } catch (e) {} render
 function renderToday() {
   const sess = Store.getTrainingSession();
   const next = Store.nextTrainingSplit();
-  document.querySelectorAll('.tr-sbtn').forEach(b => b.classList.toggle('active', b.dataset.s === sess.split));
+  document.querySelectorAll('.tr-sbtn').forEach(b => {
+    b.classList.toggle('active', b.dataset.s === sess.split);
+    b.classList.toggle('suggested', b.dataset.s === next);
+    b.title = b.dataset.s === next ? 'sugerido pela rotação' : '';
+  });
 
   const subEl = document.getElementById('tr-sub');
   const nTr = Store.trainingSessionsCount();
@@ -496,10 +517,14 @@ function renderPlans() {
   document.getElementById('plans-count').textContent =
     `A ${counts[0]} · B ${counts[1]} · C ${counts[2]}`;
 
-  const empty = counts.every(c => c === 0);
-  document.getElementById('seed-training').hidden = !empty;
-
+  const allEmpty = counts.every(c => c === 0);
+  const seedBtn = document.getElementById('seed-training');
   const list = Store.getTrainingExercises(p);
+  seedBtn.hidden = list.length > 0;
+  seedBtn.textContent = allEmpty
+    ? 'Usar um modelo pronto (A/B/C)'
+    : `Preencher o Plano ${p} com um modelo`;
+  seedBtn.dataset.scope = allEmpty ? 'all' : p;
   const body = document.getElementById('plan-body');
   if (!list.length) {
     body.innerHTML = `<div class="tx-empty">Plano ${p} vazio. Adicione os exercícios abaixo.</div>`;
@@ -530,6 +555,7 @@ function renderMeals() {
   document.getElementById('seed-meals').hidden = items.length > 0;
   document.getElementById('meals-count').textContent =
     items.length ? `${done.size}/${items.length} hoje` : '';
+  document.getElementById('ml-all').hidden = !(items.length && done.size < items.length);
 
   const streakHTML = streak > 0
     ? `<div class="ml-streak">🍽 ${streak} ${streak === 1 ? 'dia' : 'dias'} de alimentação completa</div>`
@@ -590,7 +616,7 @@ function _lineChart(prev, canvas, series) {
         data: series.map(p => p.kg),
         borderColor: 'rgba(245,245,240,0.9)', borderWidth: 1.5,
         fill: true, backgroundColor: 'rgba(245,245,240,0.05)',
-        tension: 0.3, pointRadius: 3, pointBackgroundColor: '#f5f5f0',
+        tension: 0.3, pointRadius: series.length === 1 ? 5 : 3, pointBackgroundColor: '#f5f5f0',
         pointHoverRadius: 5,
       }],
     },
@@ -616,19 +642,19 @@ function renderProgress() {
       const sign = delta.kg > 0 ? '+' : '';
       d = ` · <span class="${cls}">${sign}${fmtKg(delta.kg)} kg</span> em ${delta.days} dia${delta.days === 1 ? '' : 's'}`;
     }
-    bwStat.innerHTML = `<b>${fmtKg(latest.kg)} kg</b>${d}`;
+    const ago = DAY - latest.day;
+    const when = ago <= 0 ? 'hoje' : `há ${ago} dia${ago === 1 ? '' : 's'}`;
+    bwStat.innerHTML = `<b>${fmtKg(latest.kg)} kg</b>${d} · ${when}`;
   } else {
     bwStat.textContent = '';
   }
 
-  if (series.length >= 2) {
-    bwWrap.innerHTML = '<div class="pg-chart"><canvas id="bw-canvas"></canvas></div>';
+  if (series.length >= 1) {
+    bwWrap.innerHTML = '<div class="pg-chart"><canvas id="bw-canvas"></canvas></div><div class="pg-cap">kg × dia do desafio</div>';
     bwChart = _lineChart(bwChart, document.getElementById('bw-canvas'), series);
   } else {
     if (bwChart) { bwChart.destroy(); bwChart = null; }
-    bwWrap.innerHTML = `<div class="pg-empty">${series.length === 1
-      ? 'Uma pesagem registrada. Registre em outro dia pra ver o gráfico.'
-      : 'Registre seu peso pra começar a acompanhar.'}</div>`;
+    bwWrap.innerHTML = `<div class="pg-empty">Registre seu peso pra começar a acompanhar.</div>`;
   }
 
   /* ── carga por exercício ── */
@@ -654,10 +680,22 @@ function renderProgress() {
   const exId = Number(sel.value);
   const s = Store.trainingWeightSeries(exId);
   const pr = Store.trainingExercisePR(exId);
-  lcStat.innerHTML = pr != null ? `recorde <b>${fmtKg(pr)} kg</b>` : '';
+  if (s.length) {
+    const parts = [`${s.length} ${s.length === 1 ? 'sessão' : 'sessões'}`, `recorde <b>${fmtKg(pr)} kg</b>`];
+    if (s.length >= 2) {
+      const chg = Math.round((s[s.length - 1].kg - s[0].kg) * 10) / 10;
+      if (chg !== 0) {
+        const cls = chg > 0 ? 'up' : 'dn';
+        parts.push(`<span class="${cls}">${chg > 0 ? '+' : ''}${fmtKg(chg)} kg</span>`);
+      }
+    }
+    lcStat.innerHTML = parts.join(' · ');
+  } else {
+    lcStat.textContent = '';
+  }
 
   if (s.length >= 2) {
-    lcWrap.innerHTML = '<div class="pg-chart"><canvas id="lc-canvas"></canvas></div>';
+    lcWrap.innerHTML = '<div class="pg-chart"><canvas id="lc-canvas"></canvas></div><div class="pg-cap">kg × dia do desafio</div>';
     lcChart = _lineChart(lcChart, document.getElementById('lc-canvas'), s);
   } else {
     if (lcChart) { lcChart.destroy(); lcChart = null; }
@@ -802,10 +840,16 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape' && exModal.classList.contains('open')) closeExModal();
 });
 
-document.getElementById('seed-training').addEventListener('click', () => {
-  Store.seedDefaultTraining();
-  toast('Modelo A/B/C criado — ajuste como quiser');
-  renderPlans(); renderToday();
+document.getElementById('seed-training').addEventListener('click', e => {
+  const scope = e.currentTarget.dataset.scope || 'all';
+  if (scope === 'all') {
+    Store.seedDefaultTraining();
+    toast('Modelo A/B/C criado — ajuste como quiser');
+  } else {
+    Store.seedPlanTraining(scope);
+    toast(`Plano ${scope} preenchido — ajuste como quiser`);
+  }
+  renderPlans(); renderToday(); renderProgress();
 });
 
 // alimentação: toggle + del
@@ -839,6 +883,11 @@ document.getElementById('ml-form').addEventListener('submit', e => {
 document.getElementById('seed-meals').addEventListener('click', () => {
   Store.seedDefaultMeals();
   toast('Refeições padrão adicionadas');
+  renderMeals();
+});
+
+document.getElementById('ml-all').addEventListener('click', () => {
+  Store.markAllMeals();
   renderMeals();
 });
 

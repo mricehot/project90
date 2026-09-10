@@ -1136,26 +1136,33 @@ const Store = (() => {
     });
   }
 
-  // Modelo pronto (push/pull/legs simples) — só quando os planos estão vazios.
+  // Modelo pronto (push/pull/legs simples).
+  var TRAINING_MODEL = {
+    A: [['Supino reto', 4, '8-12'], ['Supino inclinado halteres', 3, '10-12'],
+        ['Crucifixo / crossover', 3, '12-15'], ['Tríceps testa', 3, '10-12'],
+        ['Tríceps corda', 3, '12-15']],
+    B: [['Puxada frente', 4, '8-12'], ['Remada curvada', 3, '8-12'],
+        ['Remada baixa', 3, '10-12'], ['Rosca direta', 3, '10-12'],
+        ['Rosca martelo', 3, '12-15']],
+    C: [['Agachamento livre', 4, '6-10'], ['Leg press', 3, '10-15'],
+        ['Cadeira extensora', 3, '12-15'], ['Mesa flexora', 3, '10-12'],
+        ['Elevação pélvica', 3, '10-12'], ['Desenvolvimento ombro', 3, '8-12'],
+        ['Elevação lateral', 3, '12-20']],
+  };
+
+  // Preenche um plano (A/B/C) com o modelo — só se ele estiver vazio.
+  function seedPlanTraining(split) {
+    var s = (split === 'B' || split === 'C') ? split : 'A';
+    if (getTrainingExercises(s).length) return;
+    (TRAINING_MODEL[s] || []).forEach(function (row) {
+      addTrainingExercise(s, { name: row[0], sets: row[1], reps: row[2] });
+    });
+  }
+
+  // Preenche os 3 planos — só quando todos estão vazios.
   function seedDefaultTraining() {
     if (cache.trainingExercises.length) return;
-    var model = {
-      A: [['Supino reto', 4, '8-12'], ['Supino inclinado halteres', 3, '10-12'],
-          ['Crucifixo / crossover', 3, '12-15'], ['Tríceps testa', 3, '10-12'],
-          ['Tríceps corda', 3, '12-15']],
-      B: [['Puxada frente', 4, '8-12'], ['Remada curvada', 3, '8-12'],
-          ['Remada baixa', 3, '10-12'], ['Rosca direta', 3, '10-12'],
-          ['Rosca martelo', 3, '12-15']],
-      C: [['Agachamento livre', 4, '6-10'], ['Leg press', 3, '10-15'],
-          ['Cadeira extensora', 3, '12-15'], ['Mesa flexora', 3, '10-12'],
-          ['Elevação pélvica', 3, '10-12'], ['Desenvolvimento ombro', 3, '8-12'],
-          ['Elevação lateral', 3, '12-20']],
-    };
-    ['A', 'B', 'C'].forEach(function (s) {
-      model[s].forEach(function (row) {
-        addTrainingExercise(s, { name: row[0], sets: row[1], reps: row[2] });
-      });
-    });
+    ['A', 'B', 'C'].forEach(seedPlanTraining);
   }
 
   // Split que a rotação sugere para hoje: o seguinte ao da última sessão
@@ -1381,6 +1388,16 @@ const Store = (() => {
 
   function mealsDoneCount(dayNum) {
     return getMealDay(dayNum).length;
+  }
+
+  // Marca todas as refeições do dia de uma vez.
+  function markAllMeals(dayNum) {
+    var d = dayNum == null ? getCurrentDay() : dayNum;
+    var all = cache.mealItems.map(function (m) { return m.id; });
+    if (getMealDay(d).length === all.length) return;
+    cache.mealDays[d] = all;
+    _saveMirror();
+    _pushMealDay(d);
   }
 
   // Dia com todas as refeições marcadas (só as que já existiam naquele dia).
@@ -2687,11 +2704,11 @@ const Store = (() => {
     setStudyStatus, deleteStudyActivity, studyActivityStatus, studyDaysUntil, studyUpcoming,
     getTrainingExercises, addTrainingExercise, updateTrainingExercise, deleteTrainingExercise,
     moveTrainingExercise,
-    seedDefaultTraining, nextTrainingSplit, getTrainingSession, setTrainingSplit,
+    seedDefaultTraining, seedPlanTraining, nextTrainingSplit, getTrainingSession, setTrainingSplit,
     toggleTrainingExercise, setTrainingWeight, lastTrainingWeight,
     trainingSessionsCount, trainingLoggedToday, trainingSessionComplete,
     getMealItems, addMealItem, renameMealItem, deleteMealItem, seedDefaultMeals,
-    getMealDay, toggleMeal, mealsDoneCount, mealDayComplete, mealStreak, mealsCompleteDaysCount,
+    getMealDay, toggleMeal, markAllMeals, mealsDoneCount, mealDayComplete, mealStreak, mealsCompleteDaysCount,
     getBodyWeight, setBodyWeight, bodyWeightSeries, latestBodyWeight, bodyWeightDelta,
     trainingWeightSeries, trainingExercisePR,
     // computed
