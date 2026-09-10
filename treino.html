@@ -168,6 +168,36 @@
 }
 .pg-empty { font-size: 12px; color: var(--mid); line-height: 1.7; padding: 8px 0; }
 
+/* layout 2 colunas no desktop */
+.tr-row { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 24px; align-items: start; }
+@media (max-width: 900px) { .tr-row { grid-template-columns: 1fr; } }
+
+/* progresso do treino de hoje */
+.tx-count { font-family: 'Bebas Neue', sans-serif; font-size: 13px; letter-spacing: 0.06em; color: var(--white); margin-left: 8px; }
+.tx-bar { height: 2px; background: var(--muted); margin: 0 0 14px; }
+.tx-bar > span { display: block; height: 100%; background: var(--white); width: 0; transition: width 0.4s cubic-bezier(0.16,1,0.3,1); }
+.tx-bar[hidden] { display: none; }
+
+/* setas de reordenar no editor de planos */
+.pe-move { display: flex; flex-direction: column; gap: 1px; flex-shrink: 0; }
+.pe-move button {
+  background: none; border: none; color: var(--mid); font-size: 9px; line-height: 1; cursor: pointer;
+  padding: 2px 4px; transition: color 0.15s;
+}
+.pe-move button:hover:not(:disabled) { color: var(--white); }
+.pe-move button:disabled { opacity: 0.25; cursor: default; }
+@media (hover: none) { .pe-move { opacity: 1; } }
+
+/* modal de editar exercício — seletor de plano */
+.exm-split { display: flex; border: 1px solid var(--border2); }
+.exm-split button {
+  flex: 1; background: none; border: none; color: var(--mid); font-family: 'Bebas Neue', sans-serif;
+  font-size: 15px; letter-spacing: 0.14em; padding: 8px 4px; cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.exm-split button + button { border-left: 1px solid var(--border2); }
+.exm-split button.active { background: var(--white); color: var(--bg); }
+
 @media (max-width: 640px) {
   .tr-main { padding: 20px; }
   .tx-row { flex-wrap: wrap; }
@@ -232,10 +262,12 @@
       </div>
     </div>
 
+    <div class="tr-row">
+
     <!-- TREINO DE HOJE -->
     <div class="card" id="today-card">
       <div class="card-hd">
-        <span class="card-title">Treino de hoje</span>
+        <span class="card-title">Treino de hoje<span class="tx-count" id="tx-count"></span></span>
         <span class="nr-hd-right" style="display:inline-flex;align-items:center;gap:10px">
           <span class="tr-switch" role="group" aria-label="Escolher treino">
             <button type="button" class="tr-sbtn" data-s="A">A</button>
@@ -244,6 +276,7 @@
           </span>
         </span>
       </div>
+      <div class="tx-bar" id="tx-bar" hidden><span id="tx-bar-fill"></span></div>
       <div id="today-body"></div>
     </div>
 
@@ -275,6 +308,10 @@
         <div id="lc-wrap"></div>
       </div>
     </div>
+
+    </div><!-- /tr-row -->
+
+    <div class="tr-row">
 
     <!-- PLANOS A/B/C -->
     <div class="card" id="plans-card">
@@ -311,7 +348,42 @@
       <button type="button" class="tr-seed" id="seed-meals" hidden>Usar as refeições padrão</button>
     </div>
 
+    </div><!-- /tr-row -->
+
   </main>
+</div>
+
+<!-- EDITAR EXERCÍCIO -->
+<div class="modal-overlay" id="ex-modal">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="exm-hd">
+    <div class="modal-title" id="exm-hd">Editar exercício</div>
+    <div class="modal-field">
+      <label class="modal-lbl" for="exm-name">Exercício</label>
+      <input class="modal-input" id="exm-name" maxlength="80" />
+    </div>
+    <div style="display:flex;gap:12px">
+      <div class="modal-field" style="flex:1">
+        <label class="modal-lbl" for="exm-sets">Séries</label>
+        <input class="modal-input" id="exm-sets" inputmode="numeric" maxlength="2" />
+      </div>
+      <div class="modal-field" style="flex:2">
+        <label class="modal-lbl" for="exm-reps">Faixa de reps</label>
+        <input class="modal-input" id="exm-reps" maxlength="10" />
+      </div>
+    </div>
+    <div class="modal-field">
+      <label class="modal-lbl">Plano</label>
+      <div class="exm-split" id="exm-split" role="group" aria-label="Plano">
+        <button type="button" data-s="A">A</button>
+        <button type="button" data-s="B">B</button>
+        <button type="button" data-s="C">C</button>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-btn ghost" type="button" id="exm-del">Excluir</button>
+      <button class="modal-btn primary" type="button" id="exm-save">Salvar</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -365,6 +437,18 @@ function renderToday() {
 
   const body = document.getElementById('today-body');
   const exs = Store.getTrainingExercises(sess.split);
+
+  const bar = document.getElementById('tx-bar');
+  const cnt = document.getElementById('tx-count');
+  const doneN = exs.filter(e => sess.entries[e.id] && sess.entries[e.id].done).length;
+  if (exs.length) {
+    cnt.textContent = `${doneN}/${exs.length}`;
+    bar.hidden = false;
+    document.getElementById('tx-bar-fill').style.width = Math.round(doneN / exs.length * 100) + '%';
+  } else {
+    cnt.textContent = '';
+    bar.hidden = true;
+  }
 
   if (!exs.length) {
     body.innerHTML = `<div class="tx-empty">O treino ${sess.split} ainda não tem exercícios.<br>Monte ele em <b>Planos A / B / C</b> abaixo.</div>`;
@@ -420,8 +504,12 @@ function renderPlans() {
   if (!list.length) {
     body.innerHTML = `<div class="tx-empty">Plano ${p} vazio. Adicione os exercícios abaixo.</div>`;
   } else {
-    body.innerHTML = list.map(e => `
+    body.innerHTML = list.map((e, i) => `
       <div class="pe-row" data-id="${e.id}">
+        <span class="pe-move">
+          <button type="button" data-act="up" title="Subir" ${i === 0 ? 'disabled' : ''}>▲</button>
+          <button type="button" data-act="down" title="Descer" ${i === list.length - 1 ? 'disabled' : ''}>▼</button>
+        </span>
         <span class="pe-name">${esc(e.name)}</span>
         <span class="pe-meta">${e.sets} × ${esc(e.reps)}</span>
         <span class="pe-tools">
@@ -643,27 +731,75 @@ document.getElementById('pe-form').addEventListener('submit', e => {
   renderPlans(); renderToday();
 });
 
-// editar / excluir exercício
+// reordenar / editar / excluir exercício
 document.getElementById('plan-body').addEventListener('click', async e => {
   const btn = e.target.closest('[data-act]');
   if (!btn) return;
   const id = Number(btn.closest('.pe-row').dataset.id);
   const ex = Store.getTrainingExercises().find(x => x.id === id);
   if (!ex) return;
-  if (btn.dataset.act === 'del') {
+  const act = btn.dataset.act;
+  if (act === 'up' || act === 'down') {
+    Store.moveTrainingExercise(id, act === 'up' ? -1 : 1);
+    renderPlans(); renderToday();
+  } else if (act === 'del') {
     if (!await window.p90confirm(`Excluir "${ex.name}" do plano ${ex.split}?`, { okText: 'Excluir' })) return;
     Store.deleteTrainingExercise(id);
     renderPlans(); renderToday();
-  } else if (btn.dataset.act === 'edit') {
-    const name = prompt('Nome do exercício:', ex.name);
-    if (name == null) return;
-    const sets = prompt('Séries:', ex.sets);
-    if (sets == null) return;
-    const reps = prompt('Faixa de reps:', ex.reps);
-    if (reps == null) return;
-    Store.updateTrainingExercise(id, { name: name, sets: parseInt(sets, 10) || ex.sets, reps: reps });
-    renderPlans(); renderToday();
+  } else if (act === 'edit') {
+    openExModal(id);
   }
+});
+
+/* ── MINI-MODAL: EDITAR EXERCÍCIO ── */
+let exmId = null, exmSplit = 'A';
+const exModal = document.getElementById('ex-modal');
+
+function _setExmSplit(s) {
+  exmSplit = (s === 'B' || s === 'C') ? s : 'A';
+  document.querySelectorAll('#exm-split button').forEach(b => b.classList.toggle('active', b.dataset.s === exmSplit));
+}
+
+function openExModal(id) {
+  const ex = Store.getTrainingExercises().find(x => x.id === id);
+  if (!ex) return;
+  exmId = id;
+  document.getElementById('exm-name').value = ex.name;
+  document.getElementById('exm-sets').value = ex.sets;
+  document.getElementById('exm-reps').value = ex.reps;
+  _setExmSplit(ex.split);
+  exModal.classList.add('open');
+  setTimeout(() => document.getElementById('exm-name').focus(), 60);
+}
+function closeExModal() { exModal.classList.remove('open'); exmId = null; }
+
+document.querySelectorAll('#exm-split button').forEach(b => {
+  b.addEventListener('click', () => _setExmSplit(b.dataset.s));
+});
+document.getElementById('exm-save').addEventListener('click', () => {
+  if (exmId == null) return;
+  const name = document.getElementById('exm-name').value.trim();
+  if (!name) { document.getElementById('exm-name').focus(); return; }
+  Store.updateTrainingExercise(exmId, {
+    name,
+    sets: parseInt(document.getElementById('exm-sets').value, 10) || undefined,
+    reps: document.getElementById('exm-reps').value.trim() || undefined,
+    split: exmSplit,
+  });
+  closeExModal();
+  renderPlans(); renderToday();
+});
+document.getElementById('exm-del').addEventListener('click', async () => {
+  if (exmId == null) return;
+  const ex = Store.getTrainingExercises().find(x => x.id === exmId);
+  if (!await window.p90confirm(`Excluir "${ex ? ex.name : ''}" do plano ${ex ? ex.split : ''}?`, { okText: 'Excluir' })) return;
+  Store.deleteTrainingExercise(exmId);
+  closeExModal();
+  renderPlans(); renderToday();
+});
+exModal.addEventListener('click', e => { if (e.target === exModal) closeExModal(); });
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && exModal.classList.contains('open')) closeExModal();
 });
 
 document.getElementById('seed-training').addEventListener('click', () => {

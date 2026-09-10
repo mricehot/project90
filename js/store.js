@@ -195,14 +195,20 @@ const Store = (() => {
     }
     if (Array.isArray(data.trainingExercises)) {
       cache.trainingExercises.length = 0;
-      data.trainingExercises.forEach(e => cache.trainingExercises.push({
-        id: e.id,
-        split: (e.split === 'B' || e.split === 'C') ? e.split : 'A',
-        name: e.name,
-        sets: Number(e.sets) || 3,
-        reps: e.reps || '8-12',
-        createdAt: e.createdAt,
-      }));
+      // o app_bootstrap devolve os exercícios já ordenados por (split, sort_order,
+      // id); reconstruímos um sortOrder local por posição dentro do split.
+      const _so = { A: 0, B: 0, C: 0 };
+      data.trainingExercises.forEach(e => {
+        const split = (e.split === 'B' || e.split === 'C') ? e.split : 'A';
+        cache.trainingExercises.push({
+          id: e.id, split,
+          name: e.name,
+          sets: Number(e.sets) || 3,
+          reps: e.reps || '8-12',
+          sortOrder: _so[split]++,
+          createdAt: e.createdAt,
+        });
+      });
     }
     if (data.trainingDays && typeof data.trainingDays === 'object') {
       Object.keys(cache.trainingDays).forEach(k => delete cache.trainingDays[k]);
@@ -1034,19 +1040,27 @@ const Store = (() => {
     var list = cache.trainingExercises.slice()
       .sort(function (a, b) {
         if (a.split !== b.split) return a.split < b.split ? -1 : 1;
-        return (String(a.createdAt).localeCompare(String(b.createdAt))) || (a.id - b.id);
+        return ((a.sortOrder || 0) - (b.sortOrder || 0)) || (a.id - b.id);
       });
     if (split) list = list.filter(function (e) { return e.split === split; });
     return list;
   }
 
-  function _pushTrainingExercise(e, order) {
+  function _pushTrainingExercise(e) {
     _push(async function () {
       var { error } = await window.sb.from('training_exercises').upsert({
         user_id: _uid, id: e.id, split: e.split, name: e.name,
-        sets: e.sets, reps: e.reps, sort_order: order || 0, created_at: e.createdAt,
+        sets: e.sets, reps: e.reps, sort_order: e.sortOrder || 0, created_at: e.createdAt,
       }, { onConflict: 'user_id,id' });
       if (error) throw error;
+    });
+  }
+
+  // Re-numera o sort_order de um split (0,1,2…) e sincroniza tudo.
+  function _renumberSplit(split) {
+    getTrainingExercises(split).forEach(function (e, i) {
+      if (e.sortOrder !== i) { e.sortOrder = i; }
+      _pushTrainingExercise(e);
     });
   }
 
@@ -1056,27 +1070,54 @@ const Store = (() => {
     var name = String(fields.name || '').trim();
     if (!name) return null;
     var id = (cache.trainingExercises.reduce(function (m, e) { return Math.max(m, e.id); }, 0) || 0) + 1;
+    var maxSo = cache.trainingExercises
+      .filter(function (x) { return x.split === s; })
+      .reduce(function (m, x) { return Math.max(m, x.sortOrder || 0); }, -1);
     var e = {
       id: id, split: s, name: name,
       sets: Number(fields.sets) > 0 ? Number(fields.sets) : 3,
       reps: String(fields.reps || '8-12').trim() || '8-12',
+      sortOrder: maxSo + 1,
       createdAt: new Date().toISOString(),
     };
     cache.trainingExercises.push(e);
     _saveMirror();
-    _pushTrainingExercise(e, cache.trainingExercises.filter(function (x) { return x.split === s; }).length);
+    _pushTrainingExercise(e);
     return e;
   }
 
   function updateTrainingExercise(id, fields) {
     var e = cache.trainingExercises.find(function (x) { return x.id === id; });
     if (!e) return;
+    var oldSplit = e.split;
     if (fields.name != null) e.name = String(fields.name).trim() || e.name;
     if (fields.sets != null && Number(fields.sets) > 0) e.sets = Number(fields.sets);
     if (fields.reps != null) e.reps = String(fields.reps).trim() || e.reps;
-    if (fields.split === 'A' || fields.split === 'B' || fields.split === 'C') e.split = fields.split;
+    if ((fields.split === 'A' || fields.split === 'B' || fields.split === 'C') && fields.split !== e.split) {
+      e.split = fields.split;
+      var maxSo = cache.trainingExercises
+        .filter(function (x) { return x.split === e.split && x.id !== e.id; })
+        .reduce(function (m, x) { return Math.max(m, x.sortOrder || 0); }, -1);
+      e.sortOrder = maxSo + 1;
+    }
     _saveMirror();
-    _pushTrainingExercise(e, 0);
+    _pushTrainingExercise(e);
+    if (oldSplit !== e.split) _renumberSplit(oldSplit);
+  }
+
+  // Move um exercício uma posição pra cima/baixo dentro do plano dele.
+  function moveTrainingExercise(id, dir) {
+    var e = cache.trainingExercises.find(function (x) { return x.id === id; });
+    if (!e) return;
+    var list = getTrainingExercises(e.split);
+    var i = list.findIndex(function (x) { return x.id === id; });
+    var j = i + (dir < 0 ? -1 : 1);
+    if (i === -1 || j < 0 || j >= list.length) return;
+    var a = list[i], b = list[j];
+    var tmp = a.sortOrder; a.sortOrder = b.sortOrder; b.sortOrder = tmp;
+    _saveMirror();
+    _pushTrainingExercise(a);
+    _pushTrainingExercise(b);
   }
 
   function deleteTrainingExercise(id) {
@@ -2645,6 +2686,7 @@ const Store = (() => {
     getStudyActivities, addStudyActivity, updateStudyActivity, toggleStudyDone,
     setStudyStatus, deleteStudyActivity, studyActivityStatus, studyDaysUntil, studyUpcoming,
     getTrainingExercises, addTrainingExercise, updateTrainingExercise, deleteTrainingExercise,
+    moveTrainingExercise,
     seedDefaultTraining, nextTrainingSplit, getTrainingSession, setTrainingSplit,
     toggleTrainingExercise, setTrainingWeight, lastTrainingWeight,
     trainingSessionsCount, trainingLoggedToday, trainingSessionComplete,
