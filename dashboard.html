@@ -108,8 +108,10 @@ body { overflow: hidden; }
 /* ── HEATMAP ── */
 .hm-inner { display: grid; grid-template-columns: auto 1fr; gap: 28px; align-items: start; }
 /* o calendário tem largura fixa (13×28px); num container estreito ele rola
-   localmente em vez de esticar o card. */
-.hm-cal-scroll { overflow-x: auto; min-width: 0; }
+   localmente em vez de esticar o card. padding/margin-block dão folga pro
+   anel da célula "hoje" e as bordas da primeira linha não serem cortados
+   pela borda do scroll. */
+.hm-cal-scroll { overflow-x: auto; min-width: 0; padding-block: 3px; margin-block: -3px; }
 .hm-grid {
   display: grid;
   grid-template-columns: repeat(13, 28px);
