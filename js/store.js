@@ -653,6 +653,34 @@ const Store = (() => {
     return changed;
   }
 
+  // "Ler a Bíblia" (core_key = ler_biblia) não precisa ser marcado à mão: todo
+  // dia-calendário com uma leitura do plano marcada (bibleDays[*].doneDate) vira
+  // 'done' no histórico. O dia do plano (1..365) não importa — o que conta é a
+  // data em que foi lido, convertida para o dia do desafio. Só adiciona 'done';
+  // nunca remove. Devolve true se mudou algo.
+  function _reconcileBibleHabit() {
+    const h = cache.habits.find(x => x.coreKey === 'ler_biblia');
+    if (!h) return false;
+    const startISO = String(cache.meta.startDate || '').slice(0, 10);
+    if (!startISO) return false;
+    if (!Array.isArray(h.history)) h.history = [];
+    const startBase = new Date(startISO + 'T00:00:00').getTime();
+    const hStart = (h.createdDay || 1) - 1;
+    let changed = false;
+    Object.keys(cache.bibleDays).forEach(k => {
+      const rec = cache.bibleDays[k];
+      const dd  = rec && rec.doneDate;
+      if (!dd) return;
+      const dayIdx = Math.round((new Date(String(dd).slice(0, 10) + 'T00:00:00').getTime() - startBase) / 86400000);
+      const idx = dayIdx - hStart;
+      if (idx < 0) return;
+      while (h.history.length <= idx) h.history.push('miss');
+      if (h.history[idx] !== 'done') { h.history[idx] = 'done'; changed = true; }
+    });
+    if (changed) _recalcStreak(h);
+    return changed;
+  }
+
   // Upsert de todos os hábitos no Supabase (usado quando roll-forward /
   // reconcile mexeram no cache fora de um saveHabits explícito).
   function _persistHabits() {
@@ -724,10 +752,11 @@ const Store = (() => {
       const dirty2 = _reconcileJournalHabit();
       const dirty3 = _reconcileSpeechHabit();
       const dirty4 = _reconcileTrainingHabit();
+      const dirty5 = _reconcileBibleHabit();
       _saveMirror();
       _ready = true;
       window.dispatchEvent(new Event('p90:synced'));
-      if (dirty || dirty2 || dirty3 || dirty4) _persistHabits();
+      if (dirty || dirty2 || dirty3 || dirty4 || dirty5) _persistHabits();
     })();
 
     return _readyPromise;
@@ -2134,7 +2163,11 @@ const Store = (() => {
     } else {
       delete cache.bibleDays[dayNum];
     }
+    // Marcar uma leitura também marca o hábito "Ler a Bíblia" do dia (add-only:
+    // desmarcar a leitura não desmarca o hábito, igual aos outros core habits).
+    const habitChanged = done && _reconcileBibleHabit();
     _saveMirror();
+    if (habitChanged) _persistHabits();
     _push(async () => {
       if (done) {
         const { error } = await window.sb.from('bible_days').upsert({
