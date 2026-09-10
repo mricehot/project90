@@ -465,7 +465,8 @@ const Store = (() => {
     });
   }
 
-  // Apaga todo o progresso e recomeça do zero (chama a RPC reset_progress).
+  // Zera só os hábitos + a sequência deles e reinicia o calendário no dia 1
+  // (chama a RPC reset_progress). Diário, tarefas, treino etc. ficam intactos.
   async function resetProgress() {
     try { await _readyPromise; } catch (e) {}
     if (!window.sb || !_uid) throw new Error('sem sessão');
@@ -507,12 +508,15 @@ const Store = (() => {
       '<div style="background:var(--surface,#111);border:1px solid var(--border2,rgba(245,245,240,.16));' +
       'max-width:440px;width:100%;padding:36px 40px;">' +
         '<div style="font-family:\'DM Serif Display\',serif;font-size:24px;color:var(--white,#f5f5f0);margin-bottom:16px;">' +
-          'Resetar tudo?' +
+          'Resetar hábitos?' +
         '</div>' +
         '<p style="font-size:12px;line-height:1.9;color:var(--mid,#999);margin-bottom:8px;">' +
-          'Isso apaga <b style="color:var(--white,#f5f5f0)">todo o seu progresso</b> — hábitos, ' +
-          'histórico, entradas do diário, revisões semanais, vocabulário, dicção, plano da Bíblia, tarefas, banco de provas, contadores e conquistas — e reinicia ' +
-          'o desafio no dia 1. Os hábitos fixos voltam ao estado inicial.' +
+          'Isso zera <b style="color:var(--white,#f5f5f0)">os hábitos e a sequência deles</b> ' +
+          'e reinicia o calendário no dia 1. Os hábitos fixos voltam ao estado inicial.' +
+        '</p>' +
+        '<p style="font-size:12px;line-height:1.9;color:var(--mid,#999);margin-bottom:8px;">' +
+          'Diário, tarefas, treino, vocabulário, dicção, Bíblia, conquistas e o restante ' +
+          '<b style="color:var(--white,#f5f5f0)">não são afetados</b>.' +
         '</p>' +
         '<p style="font-size:11px;letter-spacing:.06em;color:var(--red,#fca5a5);margin-bottom:24px;">' +
           'Esta ação não pode ser desfeita.' +
@@ -524,7 +528,7 @@ const Store = (() => {
             'border:1px solid var(--border2,rgba(245,245,240,.16));color:var(--mid,#999);">Cancelar</button>' +
           '<button id="p90-reset-confirm" style="flex:1;padding:12px;font-family:inherit;font-size:11px;' +
             'letter-spacing:.14em;text-transform:uppercase;cursor:pointer;border:none;' +
-            'background:var(--red,#fca5a5);color:#080808;">Sim, apagar tudo</button>' +
+            'background:var(--red,#fca5a5);color:#080808;">Sim, resetar</button>' +
         '</div>' +
       '</div>';
 
@@ -545,7 +549,7 @@ const Store = (() => {
       } catch (err) {
         console.error('[Project 90] reset_progress falhou:', err);
         confirm.disabled = false;
-        confirm.textContent = 'Sim, apagar tudo';
+        confirm.textContent = 'Sim, resetar';
         const el = ov.querySelector('#p90-reset-err');
         el.textContent = 'Não foi possível resetar agora. Tente de novo.';
         el.style.display = 'block';
@@ -593,10 +597,11 @@ const Store = (() => {
     if (!h) return false;
     if (!Array.isArray(h.history)) h.history = [];
     const start = (h.createdDay || 1) - 1;
+    const today = getCurrentDay();
     let changed = false;
     Object.keys(cache.journal).forEach(k => {
       const dayNum = Number(k);
-      if (!dayNum) return;
+      if (!dayNum || dayNum > today) return;   // não marca dia que ainda não aconteceu (ex.: após reset do calendário)
       const idx = (dayNum - 1) - start;
       if (idx < 0) return;
       while (h.history.length <= idx) h.history.push('miss');
@@ -614,10 +619,11 @@ const Store = (() => {
     if (!h) return false;
     if (!Array.isArray(h.history)) h.history = [];
     const start = (h.createdDay || 1) - 1;
+    const today = getCurrentDay();
     let changed = false;
     Object.keys(cache.speechDays).forEach(k => {
       const dayNum = Number(k);
-      if (!dayNum || !cache.speechDays[k] || !cache.speechDays[k].done) return;
+      if (!dayNum || dayNum > today || !cache.speechDays[k] || !cache.speechDays[k].done) return;
       const idx = (dayNum - 1) - start;
       if (idx < 0) return;
       while (h.history.length <= idx) h.history.push('miss');
@@ -636,10 +642,11 @@ const Store = (() => {
     if (!h) return false;
     if (!Array.isArray(h.history)) h.history = [];
     const start = (h.createdDay || 1) - 1;
+    const today = getCurrentDay();
     let changed = false;
     Object.keys(cache.trainingDays).forEach(k => {
       const dayNum = Number(k);
-      if (!dayNum) return;
+      if (!dayNum || dayNum > today) return;
       const sess = cache.trainingDays[k];
       const entries = (sess && sess.entries) || {};
       const anyDone = Object.keys(entries).some(id => entries[id] && entries[id].done);
@@ -666,12 +673,14 @@ const Store = (() => {
     if (!Array.isArray(h.history)) h.history = [];
     const startBase = new Date(startISO + 'T00:00:00').getTime();
     const hStart = (h.createdDay || 1) - 1;
+    const today = getCurrentDay();
     let changed = false;
     Object.keys(cache.bibleDays).forEach(k => {
       const rec = cache.bibleDays[k];
       const dd  = rec && rec.doneDate;
       if (!dd) return;
       const dayIdx = Math.round((new Date(String(dd).slice(0, 10) + 'T00:00:00').getTime() - startBase) / 86400000);
+      if (dayIdx + 1 > today) return;   // leitura anterior ao dia 1 do calendário atual
       const idx = dayIdx - hStart;
       if (idx < 0) return;
       while (h.history.length <= idx) h.history.push('miss');
