@@ -127,6 +127,29 @@
 .bib-row:hover { background: rgba(245,245,240,0.02); }
 .bib-row.read .bib-ref { color: var(--mid); text-decoration: line-through; }
 .bib-row.current { background: rgba(245,245,240,0.05); }
+
+/* ── AGRUPAMENTO POR LIVRO ── */
+.bk-group { border-bottom: 1px solid var(--border); }
+.bk-group.open { background: rgba(245,245,240,0.015); }
+.bk-head {
+  width: 100%; display: flex; align-items: center; gap: 12px; padding: 13px 14px;
+  background: none; border: none; cursor: pointer; text-align: left; color: var(--white);
+  font-family: 'DM Mono', monospace; transition: background 0.15s;
+}
+.bk-head:hover { background: rgba(245,245,240,0.03); }
+.bk-chev { flex-shrink: 0; width: 10px; font-size: 10px; color: var(--mid); transition: transform 0.2s; }
+.bk-group.open .bk-chev { transform: rotate(90deg); }
+.bk-name { flex: 1; min-width: 0; font-size: 13px; letter-spacing: 0.03em; }
+.bk-days { flex-shrink: 0; font-size: 10px; letter-spacing: 0.1em; color: var(--mid); }
+.bk-prog { flex-shrink: 0; width: 54px; height: 2px; background: var(--muted); }
+.bk-prog-fill { display: block; height: 100%; background: var(--white); transition: width 0.6s cubic-bezier(0.16,1,0.3,1); }
+.bk-read { flex-shrink: 0; min-width: 40px; text-align: right; font-family: 'Bebas Neue', sans-serif; font-size: 13px; color: var(--mid); }
+.bk-group.all-read .bk-read { color: #86efac; }
+.bk-group.all-read .bk-prog-fill { background: #86efac; }
+.bk-body { display: none; }
+.bk-group.open .bk-body { display: block; }
+.bk-body .bib-row { padding-left: 38px; }
+.bk-body .bib-row:last-child { border-bottom: none; }
 .bib-check {
   width: 20px; height: 20px; flex-shrink: 0; border: 1px solid var(--border2);
   display: flex; align-items: center; justify-content: center; cursor: pointer;
@@ -234,7 +257,7 @@
 
     <div class="today-card">
       <div class="tc-body">
-        <div class="tc-eyebrow">Próxima leitura</div>
+        <div class="tc-eyebrow">Leitura de hoje</div>
         <div class="tc-ref" id="tc-ref">—</div>
         <div class="tc-day" id="tc-day">Dia 1 de 365</div>
         <div class="bib-bar-bg"><div class="bib-bar-fill" id="bib-bar" style="width:0%"></div></div>
@@ -337,6 +360,55 @@ const PLAN_TOTAL = PLAN.length || 365;
 
 let onlyUnread = false;
 
+/* ── AGRUPAMENTO POR LIVRO ── */
+// bookState[key] = 'open' | 'closed'. Sem entrada = padrão (aberto só se
+// contém a leitura atual). Guarda a escolha do usuário entre sessões.
+let bookState;
+try { bookState = JSON.parse(localStorage.getItem('p90_bib_books') || '{}') || {}; }
+catch (e) { bookState = {}; }
+function saveBookState() {
+  try { localStorage.setItem('p90_bib_books', JSON.stringify(bookState)); } catch (e) {}
+}
+function isBookOpen(key, hasCur) {
+  const s = bookState[key];
+  if (s === 'open') return true;
+  if (s === 'closed') return false;
+  return !!hasCur;
+}
+
+// Nome do livro no início da referência: prefixo numérico opcional + palavra.
+// "Gênesis 1–2" → "Gênesis" · "1 Coríntios 1–4" → "1 Coríntios"
+function bookOf(r) {
+  const m = String(r == null ? '' : r).trim().match(/^(\d+)?\s*([A-Za-zÀ-ÿ]+)/);
+  if (!m) return String(r);
+  return (m[1] ? m[1] + ' ' : '') + m[2];
+}
+
+// Agrupa dias consecutivos do mesmo livro. Cada grupo: { book, items:[planEntry] }.
+let _groupCache = null;
+function buildGroups() {
+  if (_groupCache) return _groupCache;
+  const groups = [];
+  PLAN.forEach(it => {
+    const bk = bookOf(it.r);
+    const last = groups[groups.length - 1];
+    if (last && last.book === bk) last.items.push(it);
+    else groups.push({ book: bk, items: [it] });
+  });
+  _groupCache = groups;
+  return groups;
+}
+function bookKey(gi) { return gi + ':' + buildGroups()[gi].book; }
+
+function toggleBook(gi) {
+  const g = buildGroups()[gi];
+  const key = bookKey(gi);
+  const hasCur = g.items.some(it => it.d === Store.bibleNextDay());
+  bookState[key] = isBookOpen(key, hasCur) ? 'closed' : 'open';
+  saveBookState();
+  render();
+}
+
 function initSidebar() {
   const pct = Math.round(DAY / DAYS * 100);
   document.getElementById('sb-daynum').textContent = DAY;
@@ -358,6 +430,16 @@ function init() {
   renderBiblePassages();
 }
 
+function rowHTML(it, days, next) {
+  const isRead = !!days[it.d];
+  const isCur  = !isRead && it.d === next;
+  return `<div class="bib-row${isRead ? ' read' : ''}${isCur ? ' current' : ''}" id="brow-${it.d}">
+    <button class="bib-check" onclick="toggleDay(${it.d})">${isRead ? '✓' : ''}</button>
+    <span class="bib-daynum">${it.d}</span>
+    <span class="bib-ref">${it.r}</span>
+  </div>`;
+}
+
 function render() {
   const days   = Store.getBibleDays();
   const read   = Store.bibleReadCount();
@@ -371,10 +453,21 @@ function render() {
   document.getElementById('sc-streak').textContent  = Store.bibleStreak();
   document.getElementById('sc-cur').textContent     = done ? '✓' : next;
 
+  const groups = buildGroups();
+
   document.getElementById('tc-ref').textContent = done ? 'Plano concluído' : refFor(next);
-  document.getElementById('tc-day').textContent = done
-    ? `${PLAN_TOTAL} de ${PLAN_TOTAL} dias lidos`
-    : `Dia ${next} de ${PLAN_TOTAL}`;
+  let tcDay;
+  if (done) {
+    tcDay = `${PLAN_TOTAL} de ${PLAN_TOTAL} dias lidos`;
+  } else {
+    tcDay = `Dia ${next} de ${PLAN_TOTAL}`;
+    const gi = groups.findIndex(g => g.items.some(it => it.d === next));
+    if (gi >= 0 && groups[gi].items.length > 1) {
+      const pos = groups[gi].items.findIndex(it => it.d === next) + 1;
+      tcDay += ` · ${groups[gi].book} ${pos}/${groups[gi].items.length}`;
+    }
+  }
+  document.getElementById('tc-day').textContent = tcDay;
 
   const btn = document.getElementById('tc-btn');
   if (done) {
@@ -389,16 +482,31 @@ function render() {
   setTimeout(() => { document.getElementById('bib-bar').style.width = pct + '%'; }, 150);
 
   const list = document.getElementById('bib-list');
-  const rows = PLAN.filter(it => !onlyUnread || !days[it.d]).map(it => {
-    const isRead = !!days[it.d];
-    const isCur  = !isRead && it.d === next;
-    return `<div class="bib-row${isRead ? ' read' : ''}${isCur ? ' current' : ''}" id="brow-${it.d}">
-      <button class="bib-check" onclick="toggleDay(${it.d})">${isRead ? '✓' : ''}</button>
-      <span class="bib-daynum">${it.d}</span>
-      <span class="bib-ref">${it.r}</span>
+  const html = groups.map((g, gi) => {
+    const items = onlyUnread ? g.items.filter(it => !days[it.d]) : g.items;
+    if (!items.length) return '';
+
+    // livro de 1 dia → linha simples, sem cabeçalho
+    if (g.items.length === 1) return rowHTML(g.items[0], days, next);
+
+    const readN     = g.items.filter(it => days[it.d]).length;
+    const allRead   = readN === g.items.length;
+    const hasCur    = g.items.some(it => it.d === next);
+    const isOpen    = onlyUnread || isBookOpen(gi + ':' + g.book, hasCur);
+    const bodyHTML  = isOpen ? items.map(it => rowHTML(it, days, next)).join('') : '';
+
+    return `<div class="bk-group${isOpen ? ' open' : ''}${allRead ? ' all-read' : ''}">
+      <button class="bk-head" onclick="toggleBook(${gi})">
+        <span class="bk-chev">▸</span>
+        <span class="bk-name">${g.book}</span>
+        <span class="bk-days">${g.items.length} dias</span>
+        <span class="bk-prog"><span class="bk-prog-fill" style="width:${Math.round(readN / g.items.length * 100)}%"></span></span>
+        <span class="bk-read">${readN}/${g.items.length}</span>
+      </button>
+      <div class="bk-body">${bodyHTML}</div>
     </div>`;
   }).join('');
-  list.innerHTML = rows || '<div style="padding:32px;text-align:center;font-size:12px;color:var(--mid)">Tudo lido ✓</div>';
+  list.innerHTML = html || '<div style="padding:32px;text-align:center;font-size:12px;color:var(--mid)">Tudo lido ✓</div>';
 }
 
 function toggleDay(d) {
@@ -416,8 +524,18 @@ function markToday() {
 }
 
 function jumpToCurrent() {
-  const el = document.getElementById('brow-' + Store.bibleNextDay());
-  if (el) el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  const next = Store.bibleNextDay();
+  const groups = buildGroups();
+  const gi = groups.findIndex(g => g.items.some(it => it.d === next));
+  if (gi >= 0 && groups[gi].items.length > 1) {
+    bookState[gi + ':' + groups[gi].book] = 'open';
+    saveBookState();
+    render();
+  }
+  requestAnimationFrame(() => {
+    const el = document.getElementById('brow-' + next);
+    if (el) el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  });
 }
 
 document.getElementById('tc-btn').addEventListener('click', markToday);
