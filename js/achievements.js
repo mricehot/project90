@@ -33,6 +33,8 @@ window.P90_ACHIEVEMENTS = [
       { id:'reader',       icon:'📚', name:'Leitor voraz',       points:200, target:21,  req:'21× "Ler"',            desc:'Concluiu o hábito fixo "Ler" 21 vezes.' },
       { id:'zen',          icon:'🧘', name:'Mente zen',          points:150, target:21,  req:'21× "Meditar / refletir"', desc:'Concluiu o hábito fixo "Meditar / refletir" 21 vezes.' },
       { id:'bible_reader', icon:'📖', name:'Palavra diária',     points:250, target:30,  req:'30× "Ler a Bíblia"',   desc:'Concluiu o hábito fixo "Ler a Bíblia" 30 vezes.' },
+      { id:'hydrated',     icon:'💧', name:'Hidratação',         points:200, target:25,  req:'25× "Beber água"',     desc:'Bateu a meta de hidratação (2 L) em 25 dias do desafio.' },
+      { id:'hydro_streak', icon:'🌊', name:'Sempre hidratado',   points:250, target:30,  req:'30 dias seguidos "Beber água"', desc:'Manteve o hábito fixo "Beber água" por 30 dias seguidos, sem falhar.' },
     ],
   },
   {
