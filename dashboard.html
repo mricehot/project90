@@ -106,11 +106,21 @@ body { overflow: hidden; }
 .app { position: relative; z-index: 1; }
 
 /* ── HEATMAP ── */
+.hm-inner { display: grid; grid-template-columns: auto 1fr; gap: 28px; align-items: start; }
+/* o calendário tem largura fixa (13×28px); num container estreito ele rola
+   localmente em vez de esticar o card. */
+.hm-cal-scroll { overflow-x: auto; min-width: 0; }
 .hm-grid {
   display: grid;
   grid-template-columns: repeat(13, 28px);
   grid-template-rows:    repeat(7, 28px);
   gap: 3px;
+}
+.hm-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  flex-wrap: wrap; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border); }
+@media (max-width: 640px) {
+  .hm-inner { grid-template-columns: 1fr; gap: 20px; }
+  .hm-legend { flex-wrap: wrap; }
 }
 .hcell { width: 28px; height: 28px; border-radius: 3px; cursor: pointer; transition: background 0.3s ease, opacity 0.15s; }
 .hcell:hover   { opacity: 0.7; }
@@ -277,6 +287,7 @@ body { overflow: hidden; }
 }
 
 /* ── RESPONSIVE ── */
+/* (.g21/.g2 empilham em ≤1180px — regra em css/components.css) */
 @media (max-width: 900px) {
   body { overflow: auto; }
   .app { grid-template-columns: 1fr; }
@@ -385,15 +396,15 @@ body { overflow: hidden; }
           <span class="card-action" id="hm-done-lbl">—</span>
         </div>
 
-        <div style="display:grid;grid-template-columns:auto 1fr;gap:28px;align-items:start">
-          <div class="hm-grid" id="hm-grid"></div>
+        <div class="hm-inner">
+          <div class="hm-cal-scroll"><div class="hm-grid" id="hm-grid"></div></div>
           <div>
             <div style="font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--mid);margin-bottom:14px">Consistência geral</div>
             <div id="consist-list"></div>
           </div>
         </div>
 
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:14px;padding-top:12px;border-top:1px solid var(--border)">
+        <div class="hm-foot">
           <div class="hm-legend">
             <div class="leg-item"><div class="leg-dot" style="background:var(--white)"></div>Perfeito</div>
             <div class="leg-item"><div class="leg-dot" style="background:rgba(245,245,240,0.35)"></div>Parcial</div>

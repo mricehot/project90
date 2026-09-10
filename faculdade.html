@@ -183,7 +183,7 @@
 .fac-viewbtn.active { background: var(--white); color: var(--bg); }
 
 /* kanban */
-#fac-kanban { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; align-items: start; }
+#fac-kanban { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; align-items: start; }
 .kb-col {
   background: var(--surface); border: 1px solid var(--border); display: flex; flex-direction: column;
   min-height: 140px; transition: border-color 0.15s, background 0.15s;
@@ -255,8 +255,12 @@ textarea.modal-input { resize: vertical; min-height: 60px; line-height: 1.6; fon
   .g3 { grid-template-columns: 1fr 1fr; }
   .fac-qa { flex-wrap: wrap; }
   .fac-qa-title { flex-basis: 100%; }
-  #fac-kanban { display: flex; overflow-x: auto; }
-  .kb-col { min-width: 80vw; flex-shrink: 0; }
+  /* kanban empilha as 3 colunas (antes rolava de lado e só cabia uma) */
+  #fac-kanban { grid-template-columns: 1fr; }
+  .kb-col-body { max-height: none; }
+}
+@media (max-width: 460px) {
+  .g3 { grid-template-columns: 1fr; }
 }
 
 </style>
