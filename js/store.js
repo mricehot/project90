@@ -49,6 +49,10 @@ const Store = (() => {
       nightRoutine:  {},
       studySubjects:   [],
       studyActivities: [],
+      trainingExercises: [],
+      trainingDays:      {},   // { [dayNum]: { split, entries: { [exId]: { done, kg } } } }
+      mealItems:         [],
+      mealDays:          {},   // { [dayNum]: [itemId, ...] }
     };
   }
 
@@ -186,6 +190,40 @@ const Store = (() => {
           link: a.link || null, notes: a.notes || null,
           createdAt: a.createdAt,
         });
+      });
+    }
+    if (Array.isArray(data.trainingExercises)) {
+      cache.trainingExercises.length = 0;
+      data.trainingExercises.forEach(e => cache.trainingExercises.push({
+        id: e.id,
+        split: (e.split === 'B' || e.split === 'C') ? e.split : 'A',
+        name: e.name,
+        sets: Number(e.sets) || 3,
+        reps: e.reps || '8-12',
+        createdAt: e.createdAt,
+      }));
+    }
+    if (data.trainingDays && typeof data.trainingDays === 'object') {
+      Object.keys(cache.trainingDays).forEach(k => delete cache.trainingDays[k]);
+      Object.keys(data.trainingDays).forEach(k => {
+        const v = data.trainingDays[k] || {};
+        cache.trainingDays[k] = {
+          split: (v.split === 'B' || v.split === 'C') ? v.split : 'A',
+          entries: (v.entries && typeof v.entries === 'object') ? v.entries : {},
+        };
+      });
+    }
+    if (Array.isArray(data.mealItems)) {
+      cache.mealItems.length = 0;
+      data.mealItems.forEach(m => cache.mealItems.push({
+        id: m.id, label: m.label, createdAt: m.createdAt,
+      }));
+    }
+    if (data.mealDays && typeof data.mealDays === 'object') {
+      Object.keys(cache.mealDays).forEach(k => delete cache.mealDays[k]);
+      Object.keys(data.mealDays).forEach(k => {
+        const v = data.mealDays[k];
+        cache.mealDays[k] = Array.isArray(v) ? v.slice() : [];
       });
     }
   }
@@ -546,6 +584,32 @@ const Store = (() => {
     return changed;
   }
 
+  // "Exercitar-se" (core_key = exercitar) ganha um 'done' automático em todo
+  // dia do desafio com uma sessão de treino registrada (>= 1 exercício
+  // marcado). Só adiciona 'done'; a marcação manual (corrida, etc.) segue
+  // valendo. Devolve true se mudou algo.
+  function _reconcileTrainingHabit() {
+    const h = cache.habits.find(x => x.coreKey === 'exercitar');
+    if (!h) return false;
+    if (!Array.isArray(h.history)) h.history = [];
+    const start = (h.createdDay || 1) - 1;
+    let changed = false;
+    Object.keys(cache.trainingDays).forEach(k => {
+      const dayNum = Number(k);
+      if (!dayNum) return;
+      const sess = cache.trainingDays[k];
+      const entries = (sess && sess.entries) || {};
+      const anyDone = Object.keys(entries).some(id => entries[id] && entries[id].done);
+      if (!anyDone) return;
+      const idx = (dayNum - 1) - start;
+      if (idx < 0) return;
+      while (h.history.length <= idx) h.history.push('miss');
+      if (h.history[idx] !== 'done') { h.history[idx] = 'done'; changed = true; }
+    });
+    if (changed) _recalcStreak(h);
+    return changed;
+  }
+
   // Upsert de todos os hábitos no Supabase (usado quando roll-forward /
   // reconcile mexeram no cache fora de um saveHabits explícito).
   function _persistHabits() {
@@ -616,10 +680,11 @@ const Store = (() => {
       const dirty = _rollForward();
       const dirty2 = _reconcileJournalHabit();
       const dirty3 = _reconcileSpeechHabit();
+      const dirty4 = _reconcileTrainingHabit();
       _saveMirror();
       _ready = true;
       window.dispatchEvent(new Event('p90:synced'));
-      if (dirty || dirty2 || dirty3) _persistHabits();
+      if (dirty || dirty2 || dirty3 || dirty4) _persistHabits();
     })();
 
     return _readyPromise;
@@ -946,6 +1011,358 @@ const Store = (() => {
     if (!nightRoutineComplete(d)) d -= 1;   // a noite de hoje ainda pode estar aberta
     let n = 0;
     while (d >= 1 && nightRoutineComplete(d)) { n++; d--; }
+    return n;
+  }
+
+  /* ──────────────────────────────────────────
+     TREINO (musculação A/B/C)
+     cache.trainingExercises: [{ id, split, name, sets, reps, createdAt }]
+     cache.trainingDays: { [dayNum]: { split, entries: { [exId]: { done, kg } } } }
+     Rotação automática A → B → C → A; carga (kg) registrada por sessão.
+  ────────────────────────────────────────── */
+  var TRAINING_SPLITS = ['A', 'B', 'C'];
+
+  function getTrainingExercises(split) {
+    var list = cache.trainingExercises.slice()
+      .sort(function (a, b) {
+        if (a.split !== b.split) return a.split < b.split ? -1 : 1;
+        return (String(a.createdAt).localeCompare(String(b.createdAt))) || (a.id - b.id);
+      });
+    if (split) list = list.filter(function (e) { return e.split === split; });
+    return list;
+  }
+
+  function _pushTrainingExercise(e, order) {
+    _push(async function () {
+      var { error } = await window.sb.from('training_exercises').upsert({
+        user_id: _uid, id: e.id, split: e.split, name: e.name,
+        sets: e.sets, reps: e.reps, sort_order: order || 0, created_at: e.createdAt,
+      }, { onConflict: 'user_id,id' });
+      if (error) throw error;
+    });
+  }
+
+  function addTrainingExercise(split, fields) {
+    fields = fields || {};
+    var s = (split === 'B' || split === 'C') ? split : 'A';
+    var name = String(fields.name || '').trim();
+    if (!name) return null;
+    var id = (cache.trainingExercises.reduce(function (m, e) { return Math.max(m, e.id); }, 0) || 0) + 1;
+    var e = {
+      id: id, split: s, name: name,
+      sets: Number(fields.sets) > 0 ? Number(fields.sets) : 3,
+      reps: String(fields.reps || '8-12').trim() || '8-12',
+      createdAt: new Date().toISOString(),
+    };
+    cache.trainingExercises.push(e);
+    _saveMirror();
+    _pushTrainingExercise(e, cache.trainingExercises.filter(function (x) { return x.split === s; }).length);
+    return e;
+  }
+
+  function updateTrainingExercise(id, fields) {
+    var e = cache.trainingExercises.find(function (x) { return x.id === id; });
+    if (!e) return;
+    if (fields.name != null) e.name = String(fields.name).trim() || e.name;
+    if (fields.sets != null && Number(fields.sets) > 0) e.sets = Number(fields.sets);
+    if (fields.reps != null) e.reps = String(fields.reps).trim() || e.reps;
+    if (fields.split === 'A' || fields.split === 'B' || fields.split === 'C') e.split = fields.split;
+    _saveMirror();
+    _pushTrainingExercise(e, 0);
+  }
+
+  function deleteTrainingExercise(id) {
+    var idx = cache.trainingExercises.findIndex(function (x) { return x.id === id; });
+    if (idx === -1) return;
+    cache.trainingExercises.splice(idx, 1);
+    Object.keys(cache.trainingDays).forEach(function (k) {
+      var ent = cache.trainingDays[k] && cache.trainingDays[k].entries;
+      if (ent && ent[id]) { delete ent[id]; _pushTrainingDay(k); }
+    });
+    _saveMirror();
+    _push(async function () {
+      var { error } = await window.sb.from('training_exercises')
+        .delete().eq('user_id', _uid).eq('id', id);
+      if (error) throw error;
+    });
+  }
+
+  // Modelo pronto (push/pull/legs simples) — só quando os planos estão vazios.
+  function seedDefaultTraining() {
+    if (cache.trainingExercises.length) return;
+    var model = {
+      A: [['Supino reto', 4, '8-12'], ['Supino inclinado halteres', 3, '10-12'],
+          ['Crucifixo / crossover', 3, '12-15'], ['Tríceps testa', 3, '10-12'],
+          ['Tríceps corda', 3, '12-15']],
+      B: [['Puxada frente', 4, '8-12'], ['Remada curvada', 3, '8-12'],
+          ['Remada baixa', 3, '10-12'], ['Rosca direta', 3, '10-12'],
+          ['Rosca martelo', 3, '12-15']],
+      C: [['Agachamento livre', 4, '6-10'], ['Leg press', 3, '10-15'],
+          ['Cadeira extensora', 3, '12-15'], ['Mesa flexora', 3, '10-12'],
+          ['Elevação pélvica', 3, '10-12'], ['Desenvolvimento ombro', 3, '8-12'],
+          ['Elevação lateral', 3, '12-20']],
+    };
+    ['A', 'B', 'C'].forEach(function (s) {
+      model[s].forEach(function (row) {
+        addTrainingExercise(s, { name: row[0], sets: row[1], reps: row[2] });
+      });
+    });
+  }
+
+  // Split que a rotação sugere para hoje: o seguinte ao da última sessão
+  // registrada (>= 1 exercício marcado). Sem sessões → A.
+  function nextTrainingSplit() {
+    var last = null, lastDay = 0;
+    Object.keys(cache.trainingDays).forEach(function (k) {
+      var d = Number(k), sess = cache.trainingDays[k];
+      if (!d || d > getCurrentDay()) return;
+      var ent = (sess && sess.entries) || {};
+      var anyDone = Object.keys(ent).some(function (id) { return ent[id] && ent[id].done; });
+      if (anyDone && d > lastDay) { lastDay = d; last = sess.split; }
+    });
+    if (!last) return 'A';
+    var i = TRAINING_SPLITS.indexOf(last);
+    return TRAINING_SPLITS[(i + 1) % 3];
+  }
+
+  function _trainingRow(dayNum) {
+    var r = cache.trainingDays[dayNum];
+    if (r && typeof r === 'object') {
+      return { split: (r.split === 'B' || r.split === 'C') ? r.split : 'A',
+               entries: r.entries || {} };
+    }
+    return null;
+  }
+
+  // Sessão de um dia. Para hoje sem registro: split = o sugerido pela rotação.
+  function getTrainingSession(dayNum) {
+    var d = dayNum == null ? getCurrentDay() : dayNum;
+    var row = _trainingRow(d);
+    if (row) return { split: row.split, entries: row.entries };
+    return { split: d === getCurrentDay() ? nextTrainingSplit() : 'A', entries: {} };
+  }
+
+  function _pushTrainingDay(dayNum) {
+    var sess = getTrainingSession(Number(dayNum));
+    _push(async function () {
+      var { error } = await window.sb.from('training_days').upsert({
+        user_id: _uid, day_num: Number(dayNum),
+        split: sess.split, entries: sess.entries,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'user_id,day_num' });
+      if (error) throw error;
+    });
+  }
+
+  function _ensureTrainingRow(dayNum) {
+    var d = Number(dayNum);
+    if (!cache.trainingDays[d]) {
+      cache.trainingDays[d] = { split: getTrainingSession(d).split, entries: {} };
+    }
+    return cache.trainingDays[d];
+  }
+
+  function setTrainingSplit(split, dayNum) {
+    var s = (split === 'B' || split === 'C') ? split : 'A';
+    var d = dayNum == null ? getCurrentDay() : dayNum;
+    var row = _ensureTrainingRow(d);
+    if (row.split === s) return s;
+    row.split = s;
+    _saveMirror();
+    _pushTrainingDay(d);
+    return s;
+  }
+
+  function toggleTrainingExercise(exId, dayNum) {
+    var d = dayNum == null ? getCurrentDay() : dayNum;
+    var row = _ensureTrainingRow(d);
+    var cur = row.entries[exId] || {};
+    cur.done = !cur.done;
+    // ao marcar sem ter digitado carga, carrega a última registrada (mantém a
+    // progressão): "fiz no mesmo peso da última vez" até você mudar.
+    if (cur.done && cur.kg == null) {
+      var last = lastTrainingWeight(exId, d);
+      if (last != null) cur.kg = last;
+    }
+    row.entries[exId] = cur;
+    _saveMirror();
+    _pushTrainingDay(d);
+    if (_reconcileTrainingHabit()) _persistHabits();
+    return !!cur.done;
+  }
+
+  function setTrainingWeight(exId, kg, dayNum) {
+    var d = dayNum == null ? getCurrentDay() : dayNum;
+    var row = _ensureTrainingRow(d);
+    var cur = row.entries[exId] || {};
+    var n = parseFloat(String(kg).replace(',', '.'));
+    cur.kg = (isFinite(n) && n >= 0) ? n : null;
+    row.entries[exId] = cur;
+    _saveMirror();
+    _pushTrainingDay(d);
+  }
+
+  // Última carga registrada de um exercício antes de `beforeDay` (default hoje).
+  function lastTrainingWeight(exId, beforeDay) {
+    var lim = beforeDay == null ? getCurrentDay() : beforeDay;
+    var best = null, bestDay = 0;
+    Object.keys(cache.trainingDays).forEach(function (k) {
+      var d = Number(k);
+      if (!d || d >= lim) return;
+      var ent = cache.trainingDays[k] && cache.trainingDays[k].entries;
+      var e = ent && ent[exId];
+      if (e && e.kg != null && d > bestDay) { bestDay = d; best = e.kg; }
+    });
+    return best;
+  }
+
+  // Nº de dias com sessão registrada (>= 1 exercício marcado).
+  function trainingSessionsCount() {
+    return Object.keys(cache.trainingDays).filter(function (k) {
+      var ent = cache.trainingDays[k] && cache.trainingDays[k].entries;
+      return ent && Object.keys(ent).some(function (id) { return ent[id] && ent[id].done; });
+    }).length;
+  }
+
+  function trainingLoggedToday() {
+    var ent = cache.trainingDays[getCurrentDay()] && cache.trainingDays[getCurrentDay()].entries;
+    return !!(ent && Object.keys(ent).some(function (id) { return ent[id] && ent[id].done; }));
+  }
+
+  // Sessão do dia "completa": todos os exercícios do split marcados.
+  function trainingSessionComplete(dayNum) {
+    var d = dayNum == null ? getCurrentDay() : dayNum;
+    var sess = getTrainingSession(d);
+    var exs = getTrainingExercises(sess.split);
+    if (!exs.length) return false;
+    return exs.every(function (e) { return sess.entries[e.id] && sess.entries[e.id].done; });
+  }
+
+  /* ──────────────────────────────────────────
+     ALIMENTAÇÃO — checklist de refeições fixas (foco hipertrofia)
+     cache.mealItems: [{ id, label, createdAt }]
+     cache.mealDays: { [dayNum]: [itemId, ...] }   — zera todo dia
+  ────────────────────────────────────────── */
+  function getMealItems() {
+    return cache.mealItems.slice().sort(function (a, b) {
+      return (String(a.createdAt).localeCompare(String(b.createdAt))) || (a.id - b.id);
+    });
+  }
+
+  function _pushMealItem(m, order) {
+    _push(async function () {
+      var { error } = await window.sb.from('meal_items').upsert({
+        user_id: _uid, id: m.id, label: m.label,
+        sort_order: order || 0, created_at: m.createdAt,
+      }, { onConflict: 'user_id,id' });
+      if (error) throw error;
+    });
+  }
+
+  function addMealItem(label) {
+    var t = String(label || '').trim();
+    if (!t) return null;
+    var id = (cache.mealItems.reduce(function (m, x) { return Math.max(m, x.id); }, 0) || 0) + 1;
+    var m = { id: id, label: t, createdAt: new Date().toISOString() };
+    cache.mealItems.push(m);
+    _saveMirror();
+    _pushMealItem(m, cache.mealItems.length);
+    return m;
+  }
+
+  function renameMealItem(id, label) {
+    var m = cache.mealItems.find(function (x) { return x.id === id; });
+    if (!m) return;
+    m.label = String(label || '').trim() || m.label;
+    _saveMirror();
+    _pushMealItem(m, 0);
+  }
+
+  function deleteMealItem(id) {
+    var idx = cache.mealItems.findIndex(function (x) { return x.id === id; });
+    if (idx === -1) return;
+    cache.mealItems.splice(idx, 1);
+    Object.keys(cache.mealDays).forEach(function (k) {
+      var arr = cache.mealDays[k];
+      if (!Array.isArray(arr)) return;
+      var i = arr.indexOf(id);
+      if (i !== -1) { arr.splice(i, 1); _pushMealDay(k); }
+    });
+    _saveMirror();
+    _push(async function () {
+      var { error } = await window.sb.from('meal_items')
+        .delete().eq('user_id', _uid).eq('id', id);
+      if (error) throw error;
+    });
+  }
+
+  function seedDefaultMeals() {
+    if (cache.mealItems.length) return;
+    ['Café da manhã', 'Lanche da manhã', 'Almoço', 'Lanche da tarde', 'Jantar', 'Ceia']
+      .forEach(function (l) { addMealItem(l); });
+  }
+
+  function getMealDay(dayNum) {
+    var d = dayNum == null ? getCurrentDay() : dayNum;
+    var arr = cache.mealDays[d];
+    return Array.isArray(arr) ? arr.slice() : [];
+  }
+
+  function _pushMealDay(dayNum) {
+    var arr = cache.mealDays[dayNum] || [];
+    _push(async function () {
+      var { error } = await window.sb.from('meal_days').upsert({
+        user_id: _uid, day_num: Number(dayNum),
+        done_ids: arr, updated_at: new Date().toISOString(),
+      }, { onConflict: 'user_id,day_num' });
+      if (error) throw error;
+    });
+  }
+
+  function toggleMeal(itemId, dayNum) {
+    var d = dayNum == null ? getCurrentDay() : dayNum;
+    var arr = Array.isArray(cache.mealDays[d]) ? cache.mealDays[d].slice() : [];
+    var i = arr.indexOf(itemId);
+    if (i === -1) arr.push(itemId); else arr.splice(i, 1);
+    cache.mealDays[d] = arr;
+    _saveMirror();
+    _pushMealDay(d);
+    return i === -1;
+  }
+
+  function mealsDoneCount(dayNum) {
+    return getMealDay(dayNum).length;
+  }
+
+  // Dia com todas as refeições marcadas (só as que já existiam naquele dia).
+  function mealDayComplete(dayNum) {
+    var d = dayNum == null ? getCurrentDay() : dayNum;
+    var items = cache.mealItems;
+    if (!items.length) return false;
+    var done = new Set(getMealDay(d));
+    if (!done.size) return false;
+    var dayDate = _dayDateISO(d);
+    var applicable = dayDate
+      ? items.filter(function (m) { return String(m.createdAt).slice(0, 10) <= dayDate; })
+      : items;
+    if (!applicable.length) return false;
+    return applicable.every(function (m) { return done.has(m.id); });
+  }
+
+  // Dias seguidos com todas as refeições (terminando hoje ou ontem).
+  function mealStreak() {
+    if (!cache.mealItems.length) return 0;
+    var d = getCurrentDay();
+    if (!mealDayComplete(d)) d -= 1;
+    var n = 0;
+    while (d >= 1 && mealDayComplete(d)) { n++; d--; }
+    return n;
+  }
+
+  // Total de dias com todas as refeições marcadas (pra conquista).
+  function mealsCompleteDaysCount() {
+    var n = 0;
+    for (var d = 1; d <= getCurrentDay(); d++) if (mealDayComplete(d)) n++;
     return n;
   }
 
@@ -2036,6 +2453,8 @@ const Store = (() => {
       bible_reader: countForKey('ler_biblia'),
       hydrated:     countForKey('beber_agua'),
       hydro_streak: streakForKey('beber_agua'),
+      lifter:       trainingSessionsCount(),
+      full_plate:   mealsCompleteDaysCount(),
       first_entry:  Math.min(1, journalEntries),
       journal7:     journalStreak,
       journal30:    journalEntries,
@@ -2138,6 +2557,12 @@ const Store = (() => {
     setStudySubjectArchived, deleteStudySubject,
     getStudyActivities, addStudyActivity, updateStudyActivity, toggleStudyDone,
     setStudyStatus, deleteStudyActivity, studyActivityStatus, studyDaysUntil, studyUpcoming,
+    getTrainingExercises, addTrainingExercise, updateTrainingExercise, deleteTrainingExercise,
+    seedDefaultTraining, nextTrainingSplit, getTrainingSession, setTrainingSplit,
+    toggleTrainingExercise, setTrainingWeight, lastTrainingWeight,
+    trainingSessionsCount, trainingLoggedToday, trainingSessionComplete,
+    getMealItems, addMealItem, renameMealItem, deleteMealItem, seedDefaultMeals,
+    getMealDay, toggleMeal, mealsDoneCount, mealDayComplete, mealStreak, mealsCompleteDaysCount,
     // computed
     habitVal, scheduledOn, dayCompletionPct, maxStreak, countDays,
     allHabitsDone, currentStreak, computeAchievementProgress, computeLevels,

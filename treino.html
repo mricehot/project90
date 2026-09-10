@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#080808">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Project 90">
+<title>Project 90 — Treino</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/components.css">
+<script src="js/supabase-config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase.js"></script>
+<script src="js/store.js"></script>
+<script src="js/achievements.js"></script>
+<style>
+.tr-main {
+  padding: 28px 32px; overflow-y: auto; height: 100vh;
+  display: flex; flex-direction: column; gap: 24px;
+}
+.page-title { font-family: 'DM Serif Display', serif; font-size: 26px; font-weight: 400; display: flex; align-items: baseline; gap: 10px; }
+.page-title em { font-style: italic; opacity: 0.45; font-size: 22px; }
+.tr-sub { font-size: 11px; letter-spacing: 0.1em; color: var(--mid); margin-top: 6px; }
+
+/* seletor de split A/B/C (estilo do I/II da rotina noturna) */
+.tr-switch { display: inline-flex; border: 1px solid var(--border2); flex-shrink: 0; }
+.tr-sbtn {
+  background: none; border: none; color: var(--mid); font-family: 'Bebas Neue', sans-serif;
+  font-size: 15px; letter-spacing: 0.14em; padding: 3px 14px; cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.tr-sbtn + .tr-sbtn { border-left: 1px solid var(--border2); }
+.tr-sbtn.active { background: var(--white); color: var(--bg); }
+.tr-hint { font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--mid); margin-left: 10px; }
+
+/* linha de exercício no treino de hoje */
+.tx-row { display: flex; align-items: center; gap: 12px; padding: 11px 0; border-bottom: 1px solid var(--border); }
+.tx-row:last-child { border-bottom: none; }
+.tx-check {
+  width: 20px; height: 20px; border: 1px solid var(--border2); flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; font-size: 11px;
+  color: var(--white); cursor: pointer; transition: background 0.15s;
+}
+.tx-row.done .tx-check { background: var(--white); color: var(--bg); border-color: var(--white); }
+.tx-info { flex: 1; min-width: 0; }
+.tx-name { font-size: 13px; letter-spacing: 0.02em; }
+.tx-row.done .tx-name { color: var(--mid); text-decoration: line-through; }
+.tx-meta { font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--mid); margin-top: 3px; }
+.tx-kg-wrap { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.tx-kg {
+  width: 62px; background: var(--surface2); border: 1px solid var(--border); color: var(--white);
+  font-family: 'DM Mono', monospace; font-size: 12px; text-align: right;
+  padding: 7px 8px; outline: none; transition: border-color 0.2s;
+}
+.tx-kg:focus { border-color: rgba(245,245,240,0.35); }
+.tx-kg::placeholder { color: var(--muted); }
+.tx-kg-unit { font-size: 10px; letter-spacing: 0.08em; color: var(--mid); }
+.tx-delta { font-size: 10px; letter-spacing: 0.04em; white-space: nowrap; min-width: 40px; text-align: right; }
+.tx-delta.up { color: var(--green); }
+.tx-delta.dn { color: var(--red); }
+.tx-done-msg { font-size: 12px; color: rgba(134,239,172,0.9); line-height: 1.6; padding: 12px 0 2px; }
+.tx-empty { font-size: 12px; color: var(--mid); line-height: 1.7; padding: 8px 0; }
+
+/* editor dos planos */
+.plan-tabs { display: inline-flex; border: 1px solid var(--border2); margin-bottom: 14px; }
+.plan-tab {
+  background: none; border: none; color: var(--mid); font-family: 'DM Mono', monospace;
+  font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; padding: 8px 16px; cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.plan-tab + .plan-tab { border-left: 1px solid var(--border2); }
+.plan-tab.active { background: var(--white); color: var(--bg); }
+.pe-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.pe-row:last-of-type { border-bottom: none; }
+.pe-name { flex: 1; min-width: 0; font-size: 13px; letter-spacing: 0.02em; }
+.pe-meta { font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--mid); white-space: nowrap; }
+.pe-tools { display: flex; gap: 2px; flex-shrink: 0; opacity: 0; transition: opacity 0.15s; }
+.pe-row:hover .pe-tools { opacity: 1; }
+@media (hover: none) { .pe-tools { opacity: 0.6; } }
+.pe-tools button { background: none; border: none; color: var(--mid); font-size: 12px; cursor: pointer; padding: 2px 5px; transition: color 0.15s; }
+.pe-tools button:hover { color: var(--white); }
+.pe-add { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+.pe-add input {
+  background: var(--surface2); border: 1px solid var(--border); color: var(--white);
+  font-family: 'DM Mono', monospace; font-size: 12px; padding: 8px 10px; outline: none; transition: border-color 0.2s;
+}
+.pe-add input:focus { border-color: rgba(245,245,240,0.35); }
+.pe-add input::placeholder { color: var(--mid); }
+.pe-add-name { flex: 1; min-width: 140px; }
+.pe-add-sets { width: 56px; text-align: center; }
+.pe-add-reps { width: 76px; text-align: center; }
+.pe-add button {
+  background: none; border: 1px solid var(--border2); color: var(--mid); font-family: 'DM Mono', monospace;
+  font-size: 12px; letter-spacing: 0.1em; padding: 0 16px; cursor: pointer; transition: color 0.2s, border-color 0.2s;
+}
+.pe-add button:hover { color: var(--white); border-color: rgba(245,245,240,0.35); }
+
+.tr-seed {
+  background: none; border: 1px solid var(--border2); color: var(--mid); font-family: 'DM Mono', monospace;
+  font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; padding: 9px 16px; cursor: pointer;
+  transition: color 0.2s, border-color 0.2s; margin-top: 12px;
+}
+.tr-seed:hover { color: var(--white); border-color: rgba(245,245,240,0.35); }
+
+/* alimentação */
+.ml-streak { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--mid); padding: 2px 0 12px; }
+.ml-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); cursor: pointer; }
+.ml-row:last-of-type { border-bottom: none; }
+.ml-check {
+  width: 18px; height: 18px; border: 1px solid var(--border2); flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; font-size: 11px; color: var(--white); transition: background 0.15s;
+}
+.ml-row.done .ml-check { background: var(--white); color: var(--bg); border-color: var(--white); }
+.ml-label { flex: 1; min-width: 0; font-size: 13px; letter-spacing: 0.02em; }
+.ml-row.done .ml-label { color: var(--mid); text-decoration: line-through; }
+.ml-del { background: none; border: none; color: var(--mid); font-size: 13px; cursor: pointer; padding: 2px 4px; opacity: 0; transition: opacity 0.15s, color 0.15s; flex-shrink: 0; }
+.ml-row:hover .ml-del { opacity: 1; }
+.ml-del:hover { color: var(--white); }
+@media (hover: none) { .ml-del { opacity: 0.5; } }
+.ml-done-msg { font-size: 12px; color: rgba(134,239,172,0.9); line-height: 1.6; padding: 10px 0 2px; }
+.ml-empty { font-size: 12px; color: var(--mid); line-height: 1.7; padding: 4px 0; }
+.ml-add { display: flex; gap: 8px; margin-top: 12px; }
+.ml-add input {
+  flex: 1; background: var(--surface2); border: 1px solid var(--border); color: var(--white);
+  font-family: 'DM Mono', monospace; font-size: 12px; padding: 8px 10px; outline: none; transition: border-color 0.2s;
+}
+.ml-add input:focus { border-color: rgba(245,245,240,0.35); }
+.ml-add input::placeholder { color: var(--mid); }
+.ml-add button {
+  background: none; border: 1px solid var(--border2); color: var(--mid); font-family: 'DM Mono', monospace;
+  font-size: 12px; letter-spacing: 0.1em; padding: 0 16px; cursor: pointer; transition: color 0.2s, border-color 0.2s;
+}
+.ml-add button:hover { color: var(--white); border-color: rgba(245,245,240,0.35); }
+
+@media (max-width: 640px) {
+  .tr-main { padding: 20px; }
+  .tx-row { flex-wrap: wrap; }
+  .tx-info { flex-basis: 100%; order: -1; }
+}
+</style>
+</head>
+<body>
+
+<div id="cur"></div>
+<div id="cur-ring"></div>
+<div class="toast" id="toast"></div>
+
+<div class="app">
+
+  <aside class="sidebar">
+    <div class="sb-logo">
+      <a href="index.html" class="sb-logomark">Project 90</a>
+      <div class="sb-logosub">Transformação pessoal</div>
+    </div>
+    <div class="sb-day">
+      <div class="sb-daynum" id="sb-daynum">34</div>
+      <div class="sb-daylbl">de 90 dias</div>
+      <div style="display:flex;justify-content:space-between;font-size:10px;letter-spacing:0.1em;color:var(--mid);margin-top:10px">
+        <span>Progresso</span><span id="sb-pct">38%</span>
+      </div>
+      <div class="sb-prog-bar-bg"><div class="sb-prog-bar-fill" id="sb-fill" style="width:0%"></div></div>
+      <div class="sb-prog-meta"><span id="sb-days-left">56 restantes</span><span id="sb-pct2">38%</span></div>
+    </div>
+    <nav class="sb-nav">
+      <a class="sb-item" href="dashboard.html"><span class="sb-item-icon">◈</span> Dashboard</a>
+      <a class="sb-item" href="habitos.html"><span class="sb-item-icon">◉</span> Hábitos</a>
+      <a class="sb-item" href="metricas.html"><span class="sb-item-icon">△</span> Métricas</a>
+      <a class="sb-item" href="diario.html"><span class="sb-item-icon">◻</span> Diário</a>
+      <a class="sb-item" href="vocabulario.html"><span class="sb-item-icon">▤</span> Vocabulário</a>
+      <a class="sb-item" href="diccao.html"><span class="sb-item-icon">◗</span> Dicção</a>
+      <a class="sb-item" href="biblia.html"><span class="sb-item-icon">✝</span> Bíblia</a>
+      <a class="sb-item" href="tarefas.html"><span class="sb-item-icon">✓</span> Tarefas</a>
+      <a class="sb-item" href="faculdade.html"><span class="sb-item-icon">▦</span> Faculdade</a>
+      <a class="sb-item" href="treino.html"><span class="sb-item-icon">◲</span> Treino</a>
+      <a class="sb-item" href="conquistas.html"><span class="sb-item-icon">◆</span> Conquistas</a>
+    </nav>
+    <div class="sb-bottom">
+      <div class="sb-streak">
+        <span class="sb-streak-icon">🔥</span>
+        <div>
+          <div class="sb-streak-val" id="sb-streak-val">12</div>
+          <div class="sb-streak-lbl">Dias seguidos</div>
+        </div>
+      </div>
+      <a href="login.html" class="sb-logout">← Sair</a>
+    </div>
+  </aside>
+
+  <main class="tr-main">
+
+    <div class="topbar">
+      <div>
+        <div class="page-title">Treino <em>&amp; hipertrofia.</em></div>
+        <div class="tr-sub" id="tr-sub">—</div>
+      </div>
+    </div>
+
+    <!-- TREINO DE HOJE -->
+    <div class="card" id="today-card">
+      <div class="card-hd">
+        <span class="card-title">Treino de hoje</span>
+        <span class="nr-hd-right" style="display:inline-flex;align-items:center;gap:10px">
+          <span class="tr-switch" role="group" aria-label="Escolher treino">
+            <button type="button" class="tr-sbtn" data-s="A">A</button>
+            <button type="button" class="tr-sbtn" data-s="B">B</button>
+            <button type="button" class="tr-sbtn" data-s="C">C</button>
+          </span>
+        </span>
+      </div>
+      <div id="today-body"></div>
+    </div>
+
+    <!-- PLANOS A/B/C -->
+    <div class="card" id="plans-card">
+      <div class="card-hd">
+        <span class="card-title">Planos A / B / C</span>
+        <span class="card-action" id="plans-count"></span>
+      </div>
+      <div class="plan-tabs" role="group" aria-label="Editar plano">
+        <button type="button" class="plan-tab" data-p="A">Plano A</button>
+        <button type="button" class="plan-tab" data-p="B">Plano B</button>
+        <button type="button" class="plan-tab" data-p="C">Plano C</button>
+      </div>
+      <div id="plan-body"></div>
+      <form class="pe-add" id="pe-form" autocomplete="off">
+        <input class="pe-add-name" id="pe-name" maxlength="80" placeholder="Exercício — ex: Supino reto" />
+        <input class="pe-add-sets" id="pe-sets" inputmode="numeric" maxlength="2" placeholder="séries" title="séries" />
+        <input class="pe-add-reps" id="pe-reps" maxlength="10" placeholder="reps" title="faixa de reps" />
+        <button type="submit">+ adicionar</button>
+      </form>
+      <button type="button" class="tr-seed" id="seed-training" hidden>Usar um modelo pronto (A/B/C)</button>
+    </div>
+
+    <!-- ALIMENTAÇÃO -->
+    <div class="card" id="meals-card">
+      <div class="card-hd">
+        <span class="card-title">Alimentação</span>
+        <span class="card-action" id="meals-count"></span>
+      </div>
+      <div id="meals-body"></div>
+      <form class="ml-add" id="ml-form" autocomplete="off">
+        <input id="ml-input" maxlength="60" placeholder="Nova refeição — ex: Ceia" />
+        <button type="submit">+</button>
+      </form>
+      <button type="button" class="tr-seed" id="seed-meals" hidden>Usar as refeições padrão</button>
+    </div>
+
+  </main>
+</div>
+
+<script>
+/* ── CURSOR ── */
+(function() {
+  const cur = document.getElementById('cur'), ring = document.getElementById('cur-ring');
+  let mx=0,my=0,rx=0,ry=0;
+  document.addEventListener('mousemove', e => { mx=e.clientX; my=e.clientY; cur.style.transform=`translate(${mx-3}px,${my-3}px)`; });
+  (function tick(){ rx+=(mx-rx-15)*0.1; ry+=(my-ry-15)*0.1; ring.style.transform=`translate(${rx}px,${ry}px)`; requestAnimationFrame(tick); })();
+})();
+
+let toastTimer;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
+}
+function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function fmtKg(n){ return (Math.round(n * 10) / 10).toString().replace('.', ','); }
+
+const DAY  = Store.getCurrentDay();
+const DAYS = Store.getTotalDays();
+
+function initSidebar() {
+  const pct = Math.round(DAY / DAYS * 100);
+  document.getElementById('sb-daynum').textContent = DAY;
+  document.getElementById('sb-pct').textContent = pct + '%';
+  document.getElementById('sb-pct2').textContent = pct + '%';
+  document.getElementById('sb-days-left').textContent = (DAYS - DAY) + ' restantes';
+  document.getElementById('sb-streak-val').textContent = Store.currentStreak(Store.getHabits(), DAY);
+  setTimeout(() => { document.getElementById('sb-fill').style.width = pct + '%'; }, 400);
+}
+
+/* ── estado local: qual plano está sendo editado ── */
+const PKEY = 'p90_tr_plan';
+function curPlan() {
+  try { const v = localStorage.getItem(PKEY); return (v === 'B' || v === 'C') ? v : 'A'; } catch (e) { return 'A'; }
+}
+function setPlan(p) { try { localStorage.setItem(PKEY, p); } catch (e) {} renderPlans(); }
+
+/* ══ TREINO DE HOJE ══ */
+function renderToday() {
+  const sess = Store.getTrainingSession();
+  const next = Store.nextTrainingSplit();
+  document.querySelectorAll('.tr-sbtn').forEach(b => b.classList.toggle('active', b.dataset.s === sess.split));
+
+  const subEl = document.getElementById('tr-sub');
+  const nTr = Store.trainingSessionsCount();
+  subEl.textContent = `${nTr} ${nTr === 1 ? 'treino registrado' : 'treinos registrados'} · rotação sugere ${next}`;
+
+  const body = document.getElementById('today-body');
+  const exs = Store.getTrainingExercises(sess.split);
+
+  if (!exs.length) {
+    body.innerHTML = `<div class="tx-empty">O treino ${sess.split} ainda não tem exercícios.<br>Monte ele em <b>Planos A / B / C</b> abaixo.</div>`;
+    return;
+  }
+
+  const rows = exs.map(e => {
+    const ent = sess.entries[e.id] || {};
+    const done = !!ent.done;
+    const last = Store.lastTrainingWeight(e.id);
+    // o campo já vem preenchido com a última carga — você só mexe quando progride
+    const cur = ent.kg != null ? ent.kg : last;
+    let delta = '';
+    if (cur != null && last != null && cur !== last) {
+      const d = cur - last;
+      delta = `<span class="tx-delta ${d > 0 ? 'up' : 'dn'}">${d > 0 ? '↑ +' : '↓ '}${fmtKg(Math.abs(d))} kg</span>`;
+    } else {
+      delta = `<span class="tx-delta"></span>`;
+    }
+    return `<div class="tx-row ${done ? 'done' : ''}" data-id="${e.id}">
+      <div class="tx-check" data-act="check">${done ? '✓' : ''}</div>
+      <div class="tx-info">
+        <div class="tx-name">${esc(e.name)}</div>
+        <div class="tx-meta">${e.sets} × ${esc(e.reps)}${last != null ? ' · última ' + fmtKg(last) + ' kg' : ''}</div>
+      </div>
+      <div class="tx-kg-wrap">
+        <input class="tx-kg" inputmode="decimal" maxlength="6" value="${cur != null ? fmtKg(cur) : ''}" placeholder="kg" aria-label="carga em kg" />
+        <span class="tx-kg-unit">kg</span>
+      </div>
+      ${delta}
+    </div>`;
+  }).join('');
+
+  const allDone = exs.every(e => sess.entries[e.id] && sess.entries[e.id].done);
+  body.innerHTML = rows +
+    (allDone ? `<div class="tx-done-msg">Treino ${sess.split} concluído. "Exercitar-se" marcado no dia.</div>` : '');
+}
+
+/* ══ PLANOS A/B/C ══ */
+function renderPlans() {
+  const p = curPlan();
+  document.querySelectorAll('.plan-tab').forEach(b => b.classList.toggle('active', b.dataset.p === p));
+
+  const counts = ['A', 'B', 'C'].map(s => Store.getTrainingExercises(s).length);
+  document.getElementById('plans-count').textContent =
+    `A ${counts[0]} · B ${counts[1]} · C ${counts[2]}`;
+
+  const empty = counts.every(c => c === 0);
+  document.getElementById('seed-training').hidden = !empty;
+
+  const list = Store.getTrainingExercises(p);
+  const body = document.getElementById('plan-body');
+  if (!list.length) {
+    body.innerHTML = `<div class="tx-empty">Plano ${p} vazio. Adicione os exercícios abaixo.</div>`;
+  } else {
+    body.innerHTML = list.map(e => `
+      <div class="pe-row" data-id="${e.id}">
+        <span class="pe-name">${esc(e.name)}</span>
+        <span class="pe-meta">${e.sets} × ${esc(e.reps)}</span>
+        <span class="pe-tools">
+          <button type="button" data-act="edit" title="Editar">✎</button>
+          <button type="button" data-act="del" title="Excluir">✕</button>
+        </span>
+      </div>`).join('');
+  }
+}
+
+/* ══ ALIMENTAÇÃO ══ */
+function renderMeals() {
+  const items = Store.getMealItems();
+  const done = new Set(Store.getMealDay());
+  const streak = Store.mealStreak();
+  const body = document.getElementById('meals-body');
+
+  document.getElementById('seed-meals').hidden = items.length > 0;
+  document.getElementById('meals-count').textContent =
+    items.length ? `${done.size}/${items.length} hoje` : '';
+
+  const streakHTML = streak > 0
+    ? `<div class="ml-streak">🍽 ${streak} ${streak === 1 ? 'dia' : 'dias'} de alimentação completa</div>`
+    : '';
+
+  if (!items.length) {
+    body.innerHTML = `<div class="ml-empty">Monte sua lista de refeições do dia (foco hipertrofia).<br>Ela zera toda madrugada.</div>`;
+    return;
+  }
+
+  const allDone = Store.mealDayComplete();
+  body.innerHTML = streakHTML + items.map(m => `
+    <div class="ml-row ${done.has(m.id) ? 'done' : ''}" data-id="${m.id}">
+      <span class="ml-check">${done.has(m.id) ? '✓' : ''}</span>
+      <span class="ml-label">${esc(m.label)}</span>
+      <button class="ml-del" type="button" data-act="del" title="Remover">✕</button>
+    </div>`).join('') +
+    (allDone ? `<div class="ml-done-msg">Todas as refeições do dia marcadas.</div>` : '');
+}
+
+function renderAll() { renderToday(); renderPlans(); renderMeals(); }
+
+/* ── HANDLERS ── */
+
+// split selector
+document.querySelectorAll('.tr-sbtn').forEach(b => {
+  b.addEventListener('click', () => { Store.setTrainingSplit(b.dataset.s); renderToday(); });
+});
+
+// treino de hoje: check + carga
+document.getElementById('today-body').addEventListener('click', e => {
+  const chk = e.target.closest('[data-act="check"]');
+  if (!chk) return;
+  const row = chk.closest('.tx-row');
+  Store.toggleTrainingExercise(Number(row.dataset.id));
+  renderToday();
+  initSidebar();
+});
+document.getElementById('today-body').addEventListener('change', e => {
+  const inp = e.target.closest('.tx-kg');
+  if (!inp) return;
+  const row = inp.closest('.tx-row');
+  Store.setTrainingWeight(Number(row.dataset.id), inp.value);
+  renderToday();
+});
+
+// tabs dos planos
+document.querySelectorAll('.plan-tab').forEach(b => {
+  b.addEventListener('click', () => setPlan(b.dataset.p));
+});
+
+// add exercício
+document.getElementById('pe-form').addEventListener('submit', e => {
+  e.preventDefault();
+  const name = document.getElementById('pe-name');
+  const sets = document.getElementById('pe-sets');
+  const reps = document.getElementById('pe-reps');
+  const v = name.value.trim();
+  if (!v) return;
+  Store.addTrainingExercise(curPlan(), {
+    name: v,
+    sets: parseInt(sets.value, 10) || 3,
+    reps: reps.value.trim() || '8-12',
+  });
+  name.value = ''; sets.value = ''; reps.value = '';
+  name.focus();
+  renderPlans(); renderToday();
+});
+
+// editar / excluir exercício
+document.getElementById('plan-body').addEventListener('click', async e => {
+  const btn = e.target.closest('[data-act]');
+  if (!btn) return;
+  const id = Number(btn.closest('.pe-row').dataset.id);
+  const ex = Store.getTrainingExercises().find(x => x.id === id);
+  if (!ex) return;
+  if (btn.dataset.act === 'del') {
+    if (!await window.p90confirm(`Excluir "${ex.name}" do plano ${ex.split}?`, { okText: 'Excluir' })) return;
+    Store.deleteTrainingExercise(id);
+    renderPlans(); renderToday();
+  } else if (btn.dataset.act === 'edit') {
+    const name = prompt('Nome do exercício:', ex.name);
+    if (name == null) return;
+    const sets = prompt('Séries:', ex.sets);
+    if (sets == null) return;
+    const reps = prompt('Faixa de reps:', ex.reps);
+    if (reps == null) return;
+    Store.updateTrainingExercise(id, { name: name, sets: parseInt(sets, 10) || ex.sets, reps: reps });
+    renderPlans(); renderToday();
+  }
+});
+
+document.getElementById('seed-training').addEventListener('click', () => {
+  Store.seedDefaultTraining();
+  toast('Modelo A/B/C criado — ajuste como quiser');
+  renderPlans(); renderToday();
+});
+
+// alimentação: toggle + del
+document.getElementById('meals-body').addEventListener('click', async e => {
+  const del = e.target.closest('[data-act="del"]');
+  const row = e.target.closest('.ml-row');
+  if (!row) return;
+  const id = Number(row.dataset.id);
+  if (del) {
+    e.stopPropagation();
+    const m = Store.getMealItems().find(x => x.id === id);
+    if (!await window.p90confirm(`Remover "${m ? m.label : ''}" da lista?`, { okText: 'Remover' })) return;
+    Store.deleteMealItem(id);
+    renderMeals();
+    return;
+  }
+  Store.toggleMeal(id);
+  renderMeals();
+});
+
+document.getElementById('ml-form').addEventListener('submit', e => {
+  e.preventDefault();
+  const inp = document.getElementById('ml-input');
+  const v = inp.value.trim();
+  if (!v) return;
+  Store.addMealItem(v);
+  inp.value = ''; inp.focus();
+  renderMeals();
+});
+
+document.getElementById('seed-meals').addEventListener('click', () => {
+  Store.seedDefaultMeals();
+  toast('Refeições padrão adicionadas');
+  renderMeals();
+});
+
+/* ── INIT ── */
+function init() { initSidebar(); renderAll(); }
+window.addEventListener('p90:synced', init);
+init();
+
+/* ── fundo (grade sutil) ── */
+(function(){
+  const canvas=document.createElement('canvas');
+  canvas.style.cssText='position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;';
+  document.body.insertBefore(canvas,document.body.firstChild);
+  const ctx=canvas.getContext('2d'),SIZE=80;
+  let W,H,cols,rows,nodes,t=0;
+  function resize(){W=canvas.width=window.innerWidth;H=canvas.height=window.innerHeight;cols=Math.ceil(W/SIZE)+2;rows=Math.ceil(H/SIZE)+2;nodes=[];for(let r=0;r<rows;r++)for(let c=0;c<cols;c++)nodes.push({phase:Math.random()*Math.PI*2});}
+  function draw(){ctx.clearRect(0,0,W,H);ctx.lineWidth=.4;const offX=(t*6)%SIZE,offY=(t*3)%SIZE;for(let c=0;c<cols;c++){const x=c*SIZE-offX,w=.5+.5*Math.sin(t*.4+c*.35);ctx.strokeStyle='rgba(245,245,240,'+(0.006+w*0.012)+')';ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}for(let r=0;r<rows;r++){const y=r*SIZE-offY,w=.5+.5*Math.sin(t*.35+r*.4+1.2);ctx.strokeStyle='rgba(245,245,240,'+(0.006+w*0.012)+')';ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){const nd=nodes[r*cols+c],x=c*SIZE-offX,y=r*SIZE-offY,p=.5+.5*Math.sin(t*.7+nd.phase);ctx.beginPath();ctx.arc(x,y,.5+p*.9,0,Math.PI*2);ctx.fillStyle='rgba(245,245,240,'+(p*0.07)+')';ctx.fill();}const grd=ctx.createRadialGradient(W*.65,H*.5,0,W*.65,H*.5,Math.max(W,H)*.75);grd.addColorStop(0,'rgba(8,8,8,0)');grd.addColorStop(.6,'rgba(8,8,8,0)');grd.addColorStop(1,'rgba(8,8,8,.7)');ctx.fillStyle=grd;ctx.fillRect(0,0,W,H);t+=.006;requestAnimationFrame(draw);}
+  window.addEventListener('resize',resize);resize();if (!matchMedia('(prefers-reduced-motion: reduce)').matches) draw();
+})();
+</script>
+<script src="js/pwa.js"></script>
+</body>
+</html>

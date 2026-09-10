@@ -35,6 +35,8 @@ window.P90_ACHIEVEMENTS = [
       { id:'bible_reader', icon:'📖', name:'Palavra diária',     points:250, target:30,  req:'30× "Ler a Bíblia"',   desc:'Concluiu o hábito fixo "Ler a Bíblia" 30 vezes.' },
       { id:'hydrated',     icon:'💧', name:'Hidratação',         points:200, target:25,  req:'25× "Beber água"',     desc:'Bateu a meta de hidratação (2 L) em 25 dias do desafio.' },
       { id:'hydro_streak', icon:'🌊', name:'Sempre hidratado',   points:250, target:30,  req:'30 dias seguidos "Beber água"', desc:'Manteve o hábito fixo "Beber água" por 30 dias seguidos, sem falhar.' },
+      { id:'lifter',       icon:'🏋️', name:'Puxa ferro',         points:250, target:24,  req:'24 sessões de treino',  desc:'Registrou 24 treinos de musculação (rotação A/B/C).' },
+      { id:'full_plate',   icon:'🍽️', name:'Prato cheio',        points:250, target:30,  req:'30 dias de alimentação completa', desc:'Marcou todas as refeições do dia em 30 dias do desafio.' },
     ],
   },
   {
