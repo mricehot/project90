@@ -65,6 +65,7 @@ const Store = (() => {
         expenses:     [],   // { id, spentOn, ym, label, amount, category, createdAt }
         investments:  [],   // { id, kind:'aporte'|'dividendo', onDate, ym, ticker, amount, quantity, createdAt }
         goals:        [],   // { id, label, target, saved, monthlyPlan, deadline, done, createdAt }
+        snapshots:    {},   // { [ym]: portfolioValue } — histórico do valor da carteira
       },
     };
   }
@@ -315,6 +316,10 @@ const Store = (() => {
         monthlyPlan: num(g.monthlyPlan), deadline: g.deadline ? String(g.deadline).slice(0, 10) : null,
         done: !!g.done, createdAt: g.createdAt,
       }));
+      if (fin.snapshots && typeof fin.snapshots === 'object') {
+        Object.keys(cache.finance.snapshots).forEach(k => delete cache.finance.snapshots[k]);
+        Object.keys(fin.snapshots).forEach(k => { cache.finance.snapshots[k] = num(fin.snapshots[k]); });
+      }
     }
   }
 
@@ -3028,9 +3033,11 @@ const Store = (() => {
     if (patch.monthlySalary != null) c.monthlySalary = _money(patch.monthlySalary);
     if (patch.salaryDay != null)     c.salaryDay = Math.min(28, Math.max(1, parseInt(patch.salaryDay, 10) || 5));
     if (patch.investTarget != null)  c.investTarget = _money(patch.investTarget);
+    let snapValue = null;
     if (patch.portfolioValue != null) {
       c.portfolioValue = _money(patch.portfolioValue);
       c.portfolioUpdatedAt = _localDate(0);
+      snapValue = c.portfolioValue;
     }
     c.updatedAt = new Date().toISOString();
     _saveMirror();
@@ -3040,6 +3047,30 @@ const Store = (() => {
         invest_target: c.investTarget, portfolio_value: c.portfolioValue,
         portfolio_updated_at: c.portfolioUpdatedAt, updated_at: c.updatedAt,
       }, { onConflict: 'user_id' });
+      if (error) throw error;
+    });
+    // atualizar a carteira grava o mês corrente no histórico do patrimônio
+    if (snapValue != null) setFinSnapshot(finYm(), snapValue);
+  }
+
+  /* ── histórico do patrimônio (fin_snapshots) ── */
+  function getFinSnapshots() { return cache.finance.snapshots; }
+  function setFinSnapshot(ym, value) {
+    const v = _money(value);
+    cache.finance.snapshots[ym] = v;
+    _saveMirror();
+    _push(async () => {
+      const { error } = await window.sb.from('fin_snapshots').upsert({
+        user_id: _uid, ym, portfolio_value: v, updated_at: new Date().toISOString(),
+      }, { onConflict: 'user_id,ym' });
+      if (error) throw error;
+    });
+  }
+  function deleteFinSnapshot(ym) {
+    delete cache.finance.snapshots[ym];
+    _saveMirror();
+    _push(async () => {
+      const { error } = await window.sb.from('fin_snapshots').delete().eq('user_id', _uid).eq('ym', ym);
       if (error) throw error;
     });
   }
@@ -3366,6 +3397,65 @@ const Store = (() => {
     };
   }
 
+  /* ── séries mensais pra gráficos ── */
+  // Menor e maior ym com QUALQUER lançamento financeiro (fallback: mês atual).
+  function _finRange() {
+    const fin = cache.finance;
+    const yms = []
+      .concat(fin.income.map(x => x.ym))
+      .concat(fin.fixedPaid.map(x => x.ym))
+      .concat(fin.installments.map(x => x.firstYm))
+      .concat(fin.expenses.map(x => x.ym))
+      .concat(fin.investments.map(x => x.ym))
+      .concat(Object.keys(fin.snapshots))
+      .filter(Boolean);
+    const cur = finYm();
+    if (!yms.length) return { from: cur, to: cur };
+    yms.sort();
+    return { from: yms[0], to: (yms[yms.length - 1] > cur ? yms[yms.length - 1] : cur) };
+  }
+  function _finMonths(maxN) {
+    const r = _finRange();
+    const out = [];
+    let ym = r.from;
+    for (let i = 0; i < 600 && ym <= r.to; i++) { out.push(ym); ym = finYmAdd(ym, 1); }
+    return maxN && out.length > maxN ? out.slice(out.length - maxN) : out;
+  }
+
+  // Patrimônio: valor da carteira por mês. Só os meses efetivamente
+  // registrados têm valor; o resto fica null (o gráfico liga os pontos).
+  function finPortfolioSeries(maxN) {
+    const snaps = cache.finance.snapshots;
+    return _finMonths(maxN).map(ym => ({
+      ym, value: snaps[ym] != null ? _money(snaps[ym]) : null,
+    }));
+  }
+  // Aportes acumulados (custo) por mês.
+  function finAporteCumSeries(maxN) {
+    const months = _finMonths(maxN);
+    const ap = cache.finance.investments.filter(v => v.kind === 'aporte');
+    let cum = 0;
+    return months.map(ym => {
+      cum = _money(cum + _sum(ap.filter(v => v.ym === ym), v => v.amount));
+      return { ym, value: cum };
+    });
+  }
+  // Renda × saída × sobra por mês.
+  function finFlowSeries(maxN) {
+    return _finMonths(maxN).map(ym => {
+      const s = finMonthSummary(ym);
+      return { ym, income: s.income, outflow: s.outflow, surplus: s.surplus, dividends: s.dividendsTotal };
+    });
+  }
+  // Sobra acumulada (quanto sobrou no total, mês a mês).
+  function finSurplusCumSeries(maxN) {
+    let cum = 0;
+    return _finMonths(maxN).map(ym => {
+      cum = _money(cum + finMonthSummary(ym).surplus);
+      return { ym, value: cum };
+    });
+  }
+
   /* ──────────────────────────────────────────
      PUBLIC API
   ────────────────────────────────────────── */
@@ -3421,6 +3511,8 @@ const Store = (() => {
     addFinInvestment, deleteFinInvestment, finInvestTotals,
     addFinGoal, updateFinGoal, deleteFinGoal, finGoalForecast,
     finMonthSummary,
+    getFinSnapshots, setFinSnapshot, deleteFinSnapshot,
+    finPortfolioSeries, finAporteCumSeries, finFlowSeries, finSurplusCumSeries,
     // computed
     habitVal, scheduledOn, dayCompletionPct, maxStreak, countDays,
     allHabitsDone, currentStreak, computeAchievementProgress, computeLevels,
