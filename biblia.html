@@ -23,7 +23,56 @@
 <script src="js/bible-plan.js"></script>
 <style>
 
-.bib-main { padding: 32px 36px; overflow-y: auto; display: flex; flex-direction: column; gap: 26px; }
+.bib-main {
+  display: grid; grid-template-columns: 1fr 300px; grid-template-rows: auto 1fr;
+  height: 100vh; overflow: hidden;
+}
+.bib-main > .topbar { grid-column: 1 / -1; padding: 30px 36px 16px; border-bottom: 1px solid var(--border); }
+.bib-body {
+  grid-column: 1; grid-row: 2; overflow-y: auto; padding: 26px 36px;
+  display: flex; flex-direction: column; gap: 26px;
+}
+
+/* ── PAINEL LATERAL — passagens marcantes ── */
+.bib-rail {
+  grid-column: 2; grid-row: 2; border-left: 1px solid var(--border); background: var(--surface);
+  display: flex; flex-direction: column; overflow: hidden;
+}
+.bib-rail-hd {
+  padding: 18px 20px 14px; border-bottom: 1px solid var(--border);
+  font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--mid);
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+}
+.bib-rail-add {
+  background: none; border: 1px solid var(--border2); color: var(--mid);
+  width: 22px; height: 22px; font-size: 14px; line-height: 1; cursor: pointer; flex-shrink: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  transition: color 0.15s, border-color 0.15s;
+}
+.bib-rail-add:hover { color: var(--white); border-color: rgba(245,245,240,0.35); }
+.bib-rail-list { flex: 1; overflow-y: auto; }
+.bp-item { padding: 14px 20px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.15s; }
+.bp-item:hover { background: rgba(245,245,240,0.04); }
+.bp-ref { font-size: 12px; letter-spacing: 0.03em; color: var(--white); }
+.bp-preview {
+  font-size: 10px; line-height: 1.6; color: var(--mid); margin-top: 5px;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; word-break: break-word;
+}
+.bib-rail-empty { padding: 16px 20px; font-size: 11px; color: var(--mid); line-height: 1.7; }
+
+/* ── MODAL — leitura da passagem ── */
+.bpv-ref { font-family: 'DM Serif Display', serif; font-size: 24px; color: var(--white); }
+.bpv-text {
+  font-family: 'DM Serif Display', serif; font-size: 16px; line-height: 1.8; color: var(--white);
+  white-space: pre-wrap; word-break: break-word;
+  padding: 16px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); margin: 16px 0;
+  max-height: 40vh; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--muted) transparent;
+}
+.bpv-msg-lbl { font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--mid); margin-bottom: 6px; }
+.bpv-msg { font-size: 13px; line-height: 1.85; color: rgba(245,245,240,0.82); white-space: pre-wrap; word-break: break-word; }
+.bpf-row { display: flex; gap: 12px; }
+.bpf-row .modal-field { flex: 1; }
+.bpf-row .modal-field.book { flex: 2; }
 
 .topbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
 .page-title { font-family: 'DM Serif Display', serif; font-size: 26px; font-weight: 400; display: flex; align-items: baseline; gap: 10px; }
@@ -88,10 +137,14 @@
 .bib-row.current .bib-daynum { color: var(--white); }
 .bib-ref { font-size: 12.5px; letter-spacing: 0.02em; color: var(--white); }
 
+@media (max-width: 1080px) { .bib-main { grid-template-columns: 1fr 240px; } }
 @media (max-width: 900px) {
   body { overflow: auto; }
   .app { grid-template-columns: 1fr; }
-  .bib-main { padding: 20px; }
+  .bib-main { display: block; height: auto; overflow: visible; }
+  .bib-main > .topbar { padding: 20px; }
+  .bib-body { padding: 20px; }
+  .bib-rail { display: none; }
   .g4 { grid-template-columns: 1fr 1fr; }
   .tc-ref { font-size: 24px; }
 }
@@ -154,6 +207,8 @@
       <div class="page-title">Bíblia <em>em um ano.</em></div>
     </div>
 
+    <div class="bib-body">
+
     <div class="g4">
       <div class="stat-card">
         <div class="stat-lbl">Lidos</div>
@@ -196,7 +251,65 @@
 
     <div class="bib-list" id="bib-list"></div>
 
+    </div><!-- /.bib-body -->
+
+    <aside class="bib-rail">
+      <div class="bib-rail-hd">
+        <span>Passagens marcantes</span>
+        <button class="bib-rail-add" id="bp-add" title="Adicionar passagem">+</button>
+      </div>
+      <div class="bib-rail-list" id="bp-rail-list"></div>
+    </aside>
+
   </main>
+</div>
+
+<!-- ── MODAL: leitura da passagem ── -->
+<div class="modal-overlay" id="bp-view">
+  <div class="modal">
+    <div class="bpv-ref" id="bpv-ref">—</div>
+    <div class="bpv-text" id="bpv-text"></div>
+    <div class="bpv-msg-lbl">Mensagem</div>
+    <div class="bpv-msg" id="bpv-msg"></div>
+    <div class="modal-footer">
+      <button class="modal-btn ghost" id="bpv-del">Excluir</button>
+      <button class="modal-btn ghost" id="bpv-edit">Editar</button>
+      <button class="modal-btn primary" id="bpv-close">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── MODAL: adicionar / editar passagem ── -->
+<div class="modal-overlay" id="bp-form">
+  <div class="modal">
+    <div class="modal-title" id="bpf-title">Nova <em>passagem</em></div>
+    <div class="bpf-row">
+      <div class="modal-field book">
+        <label class="modal-lbl" for="bpf-book">Livro</label>
+        <input class="modal-input" id="bpf-book" type="text" placeholder="João" maxlength="60" />
+      </div>
+      <div class="modal-field">
+        <label class="modal-lbl" for="bpf-chapter">Capítulo</label>
+        <input class="modal-input" id="bpf-chapter" type="text" placeholder="3" maxlength="12" />
+      </div>
+      <div class="modal-field">
+        <label class="modal-lbl" for="bpf-verse">Versículo</label>
+        <input class="modal-input" id="bpf-verse" type="text" placeholder="16" maxlength="24" />
+      </div>
+    </div>
+    <div class="modal-field">
+      <label class="modal-lbl" for="bpf-text">Texto</label>
+      <textarea class="modal-input" id="bpf-text" rows="5" maxlength="8000" placeholder="Porque Deus amou o mundo de tal maneira…"></textarea>
+    </div>
+    <div class="modal-field">
+      <label class="modal-lbl" for="bpf-message">Mensagem que o texto passa</label>
+      <textarea class="modal-input" id="bpf-message" rows="4" maxlength="4000" placeholder="O que essa passagem significa pra você"></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-btn ghost" id="bpf-cancel">Cancelar</button>
+      <button class="modal-btn primary" id="bpf-save">Salvar</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -242,6 +355,7 @@ function refFor(d) {
 function init() {
   initSidebar();
   render();
+  renderBiblePassages();
 }
 
 function render() {
@@ -310,6 +424,113 @@ document.getElementById('tc-btn').addEventListener('click', markToday);
 document.getElementById('bib-jump').addEventListener('click', jumpToCurrent);
 document.getElementById('bib-only-unread').addEventListener('change', function () {
   onlyUnread = this.checked; render();
+});
+
+/* ── PASSAGENS MARCANTES ── */
+const bpView  = document.getElementById('bp-view');
+const bpForm  = document.getElementById('bp-form');
+let bpCurrent = null;   // id em visualização
+let bpEditing = null;   // id em edição (null = nova)
+
+function bpRefLabel(p) {
+  const ref = [p.book, [p.chapter, p.verse].filter(Boolean).join(':')].filter(Boolean).join(' ').trim();
+  return ref || 'Passagem';
+}
+
+function renderBiblePassages() {
+  const list = document.getElementById('bp-rail-list');
+  const items = Store.getBiblePassages();
+  if (!items.length) {
+    list.innerHTML = '<div class="bib-rail-empty">Nenhuma passagem salva. Guarde aqui os versículos que mais te marcaram.</div>';
+    return;
+  }
+  list.innerHTML = items.map(p => `
+    <div class="bp-item" onclick="openBpView(${p.id})">
+      <div class="bp-ref">${esc(bpRefLabel(p))}</div>
+      <div class="bp-preview">${esc(p.text || p.message || '')}</div>
+    </div>`).join('');
+}
+
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => (
+    { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+  ));
+}
+
+function openBpView(id) {
+  const p = Store.getBiblePassages().find(x => x.id === id);
+  if (!p) return;
+  bpCurrent = id;
+  document.getElementById('bpv-ref').textContent  = bpRefLabel(p);
+  document.getElementById('bpv-text').textContent = p.text || '—';
+  document.getElementById('bpv-msg').textContent  = p.message || '—';
+  bpView.classList.add('open');
+}
+function closeBpView() { bpView.classList.remove('open'); bpCurrent = null; }
+
+function openBpForm(id) {
+  bpEditing = id || null;
+  const p = id ? Store.getBiblePassages().find(x => x.id === id) : null;
+  document.getElementById('bpf-title').innerHTML = p ? 'Editar <em>passagem</em>' : 'Nova <em>passagem</em>';
+  document.getElementById('bpf-book').value    = p ? p.book : '';
+  document.getElementById('bpf-chapter').value = p ? p.chapter : '';
+  document.getElementById('bpf-verse').value   = p ? p.verse : '';
+  document.getElementById('bpf-text').value    = p ? p.text : '';
+  document.getElementById('bpf-message').value = p ? p.message : '';
+  bpForm.classList.add('open');
+  setTimeout(() => document.getElementById('bpf-book').focus(), 60);
+}
+function closeBpForm() { bpForm.classList.remove('open'); bpEditing = null; }
+
+function saveBpForm() {
+  const fields = {
+    book:    document.getElementById('bpf-book').value.trim(),
+    chapter: document.getElementById('bpf-chapter').value.trim(),
+    verse:   document.getElementById('bpf-verse').value.trim(),
+    text:    document.getElementById('bpf-text').value.trim(),
+    message: document.getElementById('bpf-message').value.trim(),
+  };
+  if (!fields.book && !fields.text) {
+    toast('Informe ao menos o livro ou o texto');
+    return;
+  }
+  if (bpEditing) {
+    Store.updateBiblePassage(bpEditing, fields);
+    toast('Passagem atualizada ✓');
+  } else {
+    Store.addBiblePassage(fields);
+    toast('Passagem salva ✓');
+  }
+  closeBpForm();
+  renderBiblePassages();
+}
+
+document.getElementById('bp-add').addEventListener('click', () => openBpForm());
+document.getElementById('bpf-save').addEventListener('click', saveBpForm);
+document.getElementById('bpf-cancel').addEventListener('click', closeBpForm);
+document.getElementById('bpv-close').addEventListener('click', closeBpView);
+document.getElementById('bpv-edit').addEventListener('click', () => {
+  const id = bpCurrent;
+  closeBpView();
+  openBpForm(id);
+});
+document.getElementById('bpv-del').addEventListener('click', async () => {
+  if (bpCurrent == null) return;
+  const ok = await window.p90confirm('Excluir esta passagem?', { okText: 'Excluir', danger: true });
+  if (!ok) return;
+  Store.deleteBiblePassage(bpCurrent);
+  closeBpView();
+  renderBiblePassages();
+  toast('Passagem excluída');
+});
+
+[bpView, bpForm].forEach(ov => ov.addEventListener('click', e => {
+  if (e.target === ov) ov.classList.remove('open');
+}));
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return;
+  if (bpForm.classList.contains('open')) closeBpForm();
+  else if (bpView.classList.contains('open')) closeBpView();
 });
 
 window.addEventListener('p90:synced', init);

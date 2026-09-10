@@ -42,6 +42,7 @@ const Store = (() => {
       speechDays:    {},
       readingTexts:  [],
       bibleDays:     {},
+      biblePassages: [],
       tasks:         [],
       taskDone:      {},
       wins:          [],
@@ -139,6 +140,15 @@ const Store = (() => {
     if (data.bibleDays && typeof data.bibleDays === 'object') {
       Object.keys(cache.bibleDays).forEach(k => delete cache.bibleDays[k]);
       Object.assign(cache.bibleDays, data.bibleDays);
+    }
+    if (Array.isArray(data.biblePassages)) {
+      cache.biblePassages.length = 0;
+      data.biblePassages.forEach(p => cache.biblePassages.push({
+        id: p.id,
+        book: p.book || '', chapter: p.chapter || '', verse: p.verse || '',
+        text: p.text || '', message: p.message || '',
+        createdAt: p.createdAt || p.created_at || new Date().toISOString(),
+      }));
     }
     if (Array.isArray(data.tasks)) {
       cache.tasks.length = 0;
@@ -2026,6 +2036,70 @@ const Store = (() => {
   function getBibleDays() { return cache.bibleDays; }
   function bibleReadCount() { return Object.keys(cache.bibleDays).length; }
 
+  /* ──────────────────────────────────────────
+     PASSAGENS BÍBLICAS MARCANTES (painel lateral da página Bíblia)
+     cache.biblePassages: [{ id, book, chapter, verse, text, message, createdAt }]
+  ────────────────────────────────────────── */
+  function getBiblePassages() { return cache.biblePassages; }
+
+  function _biblePassageRow(p) {
+    return {
+      id: p.id, user_id: _uid,
+      book: p.book || '', chapter: p.chapter || '', verse: p.verse || '',
+      text: p.text || '', message: p.message || '', created_at: p.createdAt,
+    };
+  }
+
+  function addBiblePassage(fields) {
+    fields = fields || {};
+    var book = String(fields.book || '').trim();
+    var text = String(fields.text || '').trim();
+    if (!book && !text) return null;
+    var id = (cache.biblePassages.reduce(function (m, p) { return Math.max(m, p.id); }, 0) || 0) + 1;
+    var row = {
+      id: id, book: book,
+      chapter: String(fields.chapter || '').trim(),
+      verse: String(fields.verse || '').trim(),
+      text: text,
+      message: String(fields.message || '').trim(),
+      createdAt: new Date().toISOString(),
+    };
+    cache.biblePassages.push(row);
+    _saveMirror();
+    _push(async function () {
+      var { error } = await window.sb.from('bible_passages').upsert(_biblePassageRow(row), { onConflict: 'user_id,id' });
+      if (error) throw error;
+    });
+    return row;
+  }
+
+  function updateBiblePassage(id, patch) {
+    var p = cache.biblePassages.find(function (x) { return x.id === id; });
+    if (!p) return;
+    if (patch.book != null)    p.book = String(patch.book).trim();
+    if (patch.chapter != null) p.chapter = String(patch.chapter).trim();
+    if (patch.verse != null)   p.verse = String(patch.verse).trim();
+    if (patch.text != null)    p.text = String(patch.text).trim();
+    if (patch.message != null) p.message = String(patch.message).trim();
+    _saveMirror();
+    _push(async function () {
+      var { error } = await window.sb.from('bible_passages').update({
+        book: p.book, chapter: p.chapter, verse: p.verse, text: p.text, message: p.message,
+      }).eq('user_id', _uid).eq('id', id);
+      if (error) throw error;
+    });
+  }
+
+  function deleteBiblePassage(id) {
+    var idx = cache.biblePassages.findIndex(function (x) { return x.id === id; });
+    if (idx !== -1) cache.biblePassages.splice(idx, 1);
+    _saveMirror();
+    _push(async function () {
+      var { error } = await window.sb.from('bible_passages').delete().eq('user_id', _uid).eq('id', id);
+      if (error) throw error;
+    });
+  }
+
   // Primeiro dia do plano ainda não lido (1..N). N+1 se já leu tudo.
   function bibleNextDay() {
     const total = getBiblePlan().length || 365;
@@ -2821,6 +2895,7 @@ const Store = (() => {
     speechPerDay, speechPlanForDay, getSpeechDays, getSpeechDay, saveSpeechDay,
     speechDaysDone, speechDayStreak,
     getBiblePlan, getBibleDays, setBibleReading, bibleReadCount, bibleNextDay, bibleStreak,
+    getBiblePassages, addBiblePassage, updateBiblePassage, deleteBiblePassage,
     getTasks, getTaskDone, taskLastDone, addTask, updateTask, deleteTask, setTaskArchived,
     completeTask, uncompleteTask, taskNextDue, taskStatus, tasksForToday, taskStreak, taskDoneTotal,
     getWins, winsCount, addWin, deleteWin,
