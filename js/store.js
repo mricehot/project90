@@ -56,6 +56,16 @@ const Store = (() => {
       mealItems:         [],
       mealDays:          {},   // { [dayNum]: [itemId, ...] }
       bodyWeights:       {},   // { [dayNum]: kg }
+      finance: {
+        config:       { monthlySalary: 0, salaryDay: 5, investTarget: 0, portfolioValue: 0, portfolioUpdatedAt: null, updatedAt: null },
+        income:       [],   // extras: { id, ym, label, amount, receivedOn, createdAt }
+        fixed:        [],   // { id, label, amount, dueDay, category, active, createdAt }
+        fixedPaid:    [],   // { fixedId, ym, paidOn, amount }
+        installments: [],   // { id, label, total, nInstallments, firstYm, installmentAmount, category, createdAt }
+        expenses:     [],   // { id, spentOn, ym, label, amount, category, createdAt }
+        investments:  [],   // { id, kind:'aporte'|'dividendo', onDate, ym, ticker, amount, quantity, createdAt }
+        goals:        [],   // { id, label, target, saved, monthlyPlan, deadline, done, createdAt }
+      },
     };
   }
 
@@ -254,6 +264,57 @@ const Store = (() => {
         const n = parseFloat(data.bodyWeights[k]);
         if (isFinite(n) && n > 0) cache.bodyWeights[k] = n;
       });
+    }
+    if (data.finance && typeof data.finance === 'object') {
+      const fin = data.finance;
+      const num = v => { const n = parseFloat(v); return isFinite(n) ? n : 0; };
+      if (fin.config && typeof fin.config === 'object') {
+        Object.assign(cache.finance.config, {
+          monthlySalary: num(fin.config.monthlySalary),
+          salaryDay: parseInt(fin.config.salaryDay, 10) || 5,
+          investTarget: num(fin.config.investTarget),
+          portfolioValue: num(fin.config.portfolioValue),
+          portfolioUpdatedAt: fin.config.portfolioUpdatedAt ? String(fin.config.portfolioUpdatedAt).slice(0, 10) : null,
+          updatedAt: fin.config.updatedAt || null,
+        });
+      }
+      const _rebuild = (key, mapFn) => {
+        if (!Array.isArray(fin[key])) return;
+        cache.finance[key].length = 0;
+        fin[key].forEach(x => cache.finance[key].push(mapFn(x)));
+      };
+      _rebuild('income', i => ({
+        id: i.id, ym: i.ym, label: i.label || '', amount: num(i.amount),
+        receivedOn: i.receivedOn ? String(i.receivedOn).slice(0, 10) : null, createdAt: i.createdAt,
+      }));
+      _rebuild('fixed', f => ({
+        id: f.id, label: f.label || '', amount: num(f.amount),
+        dueDay: parseInt(f.dueDay, 10) || 1, category: f.category || 'Outros',
+        active: f.active !== false, createdAt: f.createdAt,
+      }));
+      _rebuild('fixedPaid', p => ({
+        fixedId: p.fixedId, ym: p.ym,
+        paidOn: p.paidOn ? String(p.paidOn).slice(0, 10) : null, amount: num(p.amount),
+      }));
+      _rebuild('installments', n => ({
+        id: n.id, label: n.label || '', total: num(n.total),
+        nInstallments: parseInt(n.nInstallments, 10) || 1, firstYm: n.firstYm,
+        installmentAmount: num(n.installmentAmount), category: n.category || 'Compras', createdAt: n.createdAt,
+      }));
+      _rebuild('expenses', e => ({
+        id: e.id, spentOn: String(e.spentOn || '').slice(0, 10), ym: e.ym,
+        label: e.label || '', amount: num(e.amount), category: e.category || 'Outros', createdAt: e.createdAt,
+      }));
+      _rebuild('investments', v => ({
+        id: v.id, kind: v.kind === 'dividendo' ? 'dividendo' : 'aporte',
+        onDate: String(v.onDate || '').slice(0, 10), ym: v.ym, ticker: v.ticker || '',
+        amount: num(v.amount), quantity: num(v.quantity), createdAt: v.createdAt,
+      }));
+      _rebuild('goals', g => ({
+        id: g.id, label: g.label || '', target: num(g.target), saved: num(g.saved),
+        monthlyPlan: num(g.monthlyPlan), deadline: g.deadline ? String(g.deadline).slice(0, 10) : null,
+        done: !!g.done, createdAt: g.createdAt,
+      }));
     }
   }
 
@@ -2928,6 +2989,384 @@ const Store = (() => {
   }
 
   /* ──────────────────────────────────────────
+     FINANCEIRO — controle mensal (página financeiro.html)
+     Ciclo = mês do calendário. cache.finance.* — ver _emptyCache.
+  ────────────────────────────────────────── */
+  function _money(n) { const x = Math.round((parseFloat(n) || 0) * 100) / 100; return isFinite(x) ? x : 0; }
+  function _sum(arr, f) { return _money(arr.reduce((s, x) => s + (f ? f(x) : x), 0)); }
+
+  function finYm(dateStr) {
+    const d = dateStr ? new Date(dateStr + 'T00:00:00') : new Date();
+    if (isNaN(d)) return _localDate(0).slice(0, 7);
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+  }
+  function finYmAdd(ym, n) {
+    const [y, m] = String(ym).split('-').map(Number);
+    const d = new Date(y, (m - 1) + n, 1);
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+  }
+  function finYmDiff(a, b) {   // meses de a até b (b - a)
+    const [ay, am] = String(a).split('-').map(Number);
+    const [by, bm] = String(b).split('-').map(Number);
+    return (by - ay) * 12 + (bm - am);
+  }
+  function finYmLabel(ym) {
+    const [y, m] = String(ym).split('-').map(Number);
+    const M = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+               'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+    return (M[m - 1] || '?') + ' ' + y;
+  }
+  const FIN_CATEGORIES = ['Moradia', 'Alimentação', 'Transporte', 'Saúde', 'Lazer',
+                          'Assinaturas', 'Compras', 'Educação', 'Dívidas', 'Outros'];
+  function finCategories() { return FIN_CATEGORIES.slice(); }
+
+  function getFinance() { return cache.finance; }
+  function finConfig()  { return cache.finance.config; }
+
+  function setFinConfig(patch) {
+    const c = cache.finance.config;
+    if (patch.monthlySalary != null) c.monthlySalary = _money(patch.monthlySalary);
+    if (patch.salaryDay != null)     c.salaryDay = Math.min(28, Math.max(1, parseInt(patch.salaryDay, 10) || 5));
+    if (patch.investTarget != null)  c.investTarget = _money(patch.investTarget);
+    if (patch.portfolioValue != null) {
+      c.portfolioValue = _money(patch.portfolioValue);
+      c.portfolioUpdatedAt = _localDate(0);
+    }
+    c.updatedAt = new Date().toISOString();
+    _saveMirror();
+    _push(async () => {
+      const { error } = await window.sb.from('fin_config').upsert({
+        user_id: _uid, monthly_salary: c.monthlySalary, salary_day: c.salaryDay,
+        invest_target: c.investTarget, portfolio_value: c.portfolioValue,
+        portfolio_updated_at: c.portfolioUpdatedAt, updated_at: c.updatedAt,
+      }, { onConflict: 'user_id' });
+      if (error) throw error;
+    });
+  }
+
+  function _finNextId(arr) { return (arr.reduce((m, x) => Math.max(m, x.id), 0) || 0) + 1; }
+  function _finPush(table, row) {
+    _push(async () => {
+      const { error } = await window.sb.from(table).upsert(row, { onConflict: 'user_id,id' });
+      if (error) throw error;
+    });
+  }
+  function _finDel(table, id) {
+    _push(async () => {
+      const { error } = await window.sb.from(table).delete().eq('user_id', _uid).eq('id', id);
+      if (error) throw error;
+    });
+  }
+
+  /* ── recebimentos extras ── */
+  function addFinIncome(f) {
+    const row = {
+      id: _finNextId(cache.finance.income),
+      ym: f.ym || finYm(f.receivedOn),
+      label: (f.label || '').trim(),
+      amount: _money(f.amount),
+      receivedOn: f.receivedOn || _localDate(0),
+      createdAt: new Date().toISOString(),
+    };
+    cache.finance.income.push(row);
+    _saveMirror();
+    _finPush('fin_income', {
+      id: row.id, user_id: _uid, ym: row.ym, label: row.label,
+      amount: row.amount, received_on: row.receivedOn, created_at: row.createdAt,
+    });
+    return row;
+  }
+  function deleteFinIncome(id) {
+    const i = cache.finance.income.findIndex(x => x.id === id);
+    if (i !== -1) cache.finance.income.splice(i, 1);
+    _saveMirror(); _finDel('fin_income', id);
+  }
+
+  /* ── gastos fixos (molde) ── */
+  function addFinFixed(f) {
+    const row = {
+      id: _finNextId(cache.finance.fixed),
+      label: (f.label || '').trim(),
+      amount: _money(f.amount),
+      dueDay: Math.min(28, Math.max(1, parseInt(f.dueDay, 10) || 1)),
+      category: f.category || 'Outros',
+      active: true,
+      createdAt: new Date().toISOString(),
+    };
+    cache.finance.fixed.push(row);
+    _saveMirror();
+    _finPush('fin_fixed', {
+      id: row.id, user_id: _uid, label: row.label, amount: row.amount,
+      due_day: row.dueDay, category: row.category, active: true, created_at: row.createdAt,
+    });
+    return row;
+  }
+  function updateFinFixed(id, patch) {
+    const f = cache.finance.fixed.find(x => x.id === id);
+    if (!f) return;
+    if (patch.label != null)    f.label = String(patch.label).trim();
+    if (patch.amount != null)   f.amount = _money(patch.amount);
+    if (patch.dueDay != null)   f.dueDay = Math.min(28, Math.max(1, parseInt(patch.dueDay, 10) || 1));
+    if (patch.category != null) f.category = patch.category;
+    if (patch.active != null)   f.active = !!patch.active;
+    _saveMirror();
+    _push(async () => {
+      const { error } = await window.sb.from('fin_fixed').update({
+        label: f.label, amount: f.amount, due_day: f.dueDay, category: f.category, active: f.active,
+      }).eq('user_id', _uid).eq('id', id);
+      if (error) throw error;
+    });
+  }
+  function deleteFinFixed(id) {
+    const i = cache.finance.fixed.findIndex(x => x.id === id);
+    if (i !== -1) cache.finance.fixed.splice(i, 1);
+    cache.finance.fixedPaid = cache.finance.fixedPaid.filter(p => p.fixedId !== id);
+    _saveMirror();
+    _push(async () => {
+      const { error: e1 } = await window.sb.from('fin_fixed_paid').delete().eq('user_id', _uid).eq('fixed_id', id);
+      if (e1) throw e1;
+      const { error: e2 } = await window.sb.from('fin_fixed').delete().eq('user_id', _uid).eq('id', id);
+      if (e2) throw e2;
+    });
+  }
+  function finFixedPaidMark(fixedId, ym) {
+    return cache.finance.fixedPaid.find(p => p.fixedId === fixedId && p.ym === ym) || null;
+  }
+  function setFinFixedPaid(fixedId, ym, paid, amount) {
+    const arr = cache.finance.fixedPaid;
+    const idx = arr.findIndex(p => p.fixedId === fixedId && p.ym === ym);
+    if (paid) {
+      const f = cache.finance.fixed.find(x => x.id === fixedId);
+      const row = { fixedId, ym, paidOn: _localDate(0), amount: _money(amount != null ? amount : (f ? f.amount : 0)) };
+      if (idx === -1) arr.push(row); else arr[idx] = row;
+      _saveMirror();
+      _push(async () => {
+        const { error } = await window.sb.from('fin_fixed_paid').upsert({
+          user_id: _uid, fixed_id: fixedId, ym, paid_on: row.paidOn, amount: row.amount,
+        }, { onConflict: 'user_id,fixed_id,ym' });
+        if (error) throw error;
+      });
+    } else {
+      if (idx !== -1) arr.splice(idx, 1);
+      _saveMirror();
+      _push(async () => {
+        const { error } = await window.sb.from('fin_fixed_paid').delete()
+          .eq('user_id', _uid).eq('fixed_id', fixedId).eq('ym', ym);
+        if (error) throw error;
+      });
+    }
+  }
+
+  /* ── compras parceladas ── */
+  function addFinInstallment(f) {
+    const total = _money(f.total);
+    const n = Math.max(1, parseInt(f.nInstallments, 10) || 1);
+    const row = {
+      id: _finNextId(cache.finance.installments),
+      label: (f.label || '').trim(),
+      total, nInstallments: n,
+      firstYm: f.firstYm || finYm(),
+      installmentAmount: _money(total / n),
+      category: f.category || 'Compras',
+      createdAt: new Date().toISOString(),
+    };
+    cache.finance.installments.push(row);
+    _saveMirror();
+    _finPush('fin_installments', {
+      id: row.id, user_id: _uid, label: row.label, total: row.total,
+      n_installments: row.nInstallments, first_ym: row.firstYm,
+      installment_amount: row.installmentAmount, category: row.category, created_at: row.createdAt,
+    });
+    return row;
+  }
+  function deleteFinInstallment(id) {
+    const i = cache.finance.installments.findIndex(x => x.id === id);
+    if (i !== -1) cache.finance.installments.splice(i, 1);
+    _saveMirror(); _finDel('fin_installments', id);
+  }
+  // Situação de uma compra parcelada num mês.
+  function finInstallmentAt(inst, ym) {
+    const k = finYmDiff(inst.firstYm, ym);          // 0 = primeira parcela
+    const activeThisMonth = k >= 0 && k < inst.nInstallments;
+    const paidSoFar = Math.min(inst.nInstallments, Math.max(0, finYmDiff(inst.firstYm, ym) + (activeThisMonth ? 1 : (k >= inst.nInstallments ? inst.nInstallments : 0))));
+    const parcelaNum = activeThisMonth ? k + 1 : (k < 0 ? 0 : inst.nInstallments);
+    const done = k >= inst.nInstallments;
+    const balanceLeft = _money(inst.installmentAmount * Math.max(0, inst.nInstallments - parcelaNum));
+    return { activeThisMonth, parcelaNum, done, balanceLeft, amount: inst.installmentAmount };
+  }
+
+  /* ── gastos esporádicos ── */
+  function addFinExpense(f) {
+    const spentOn = f.spentOn || _localDate(0);
+    const row = {
+      id: _finNextId(cache.finance.expenses),
+      spentOn, ym: finYm(spentOn),
+      label: (f.label || '').trim(),
+      amount: _money(f.amount),
+      category: f.category || 'Outros',
+      createdAt: new Date().toISOString(),
+    };
+    cache.finance.expenses.unshift(row);
+    _saveMirror();
+    _finPush('fin_expenses', {
+      id: row.id, user_id: _uid, spent_on: row.spentOn, ym: row.ym,
+      label: row.label, amount: row.amount, category: row.category, created_at: row.createdAt,
+    });
+    return row;
+  }
+  function updateFinExpense(id, patch) {
+    const e = cache.finance.expenses.find(x => x.id === id);
+    if (!e) return;
+    if (patch.label != null)    e.label = String(patch.label).trim();
+    if (patch.amount != null)   e.amount = _money(patch.amount);
+    if (patch.category != null) e.category = patch.category;
+    if (patch.spentOn != null)  { e.spentOn = String(patch.spentOn).slice(0, 10); e.ym = finYm(e.spentOn); }
+    _saveMirror();
+    _push(async () => {
+      const { error } = await window.sb.from('fin_expenses').update({
+        label: e.label, amount: e.amount, category: e.category, spent_on: e.spentOn, ym: e.ym,
+      }).eq('user_id', _uid).eq('id', id);
+      if (error) throw error;
+    });
+  }
+  function deleteFinExpense(id) {
+    const i = cache.finance.expenses.findIndex(x => x.id === id);
+    if (i !== -1) cache.finance.expenses.splice(i, 1);
+    _saveMirror(); _finDel('fin_expenses', id);
+  }
+
+  /* ── investimentos (FII) ── */
+  function addFinInvestment(f) {
+    const onDate = f.onDate || _localDate(0);
+    const row = {
+      id: _finNextId(cache.finance.investments),
+      kind: f.kind === 'dividendo' ? 'dividendo' : 'aporte',
+      onDate, ym: finYm(onDate),
+      ticker: (f.ticker || '').trim().toUpperCase(),
+      amount: _money(f.amount),
+      quantity: _money(f.quantity),
+      createdAt: new Date().toISOString(),
+    };
+    cache.finance.investments.unshift(row);
+    _saveMirror();
+    _finPush('fin_investments', {
+      id: row.id, user_id: _uid, kind: row.kind, on_date: row.onDate, ym: row.ym,
+      ticker: row.ticker, amount: row.amount, quantity: row.quantity, created_at: row.createdAt,
+    });
+    return row;
+  }
+  function deleteFinInvestment(id) {
+    const i = cache.finance.investments.findIndex(x => x.id === id);
+    if (i !== -1) cache.finance.investments.splice(i, 1);
+    _saveMirror(); _finDel('fin_investments', id);
+  }
+  function finInvestTotals() {
+    const inv = cache.finance.investments;
+    const aportado  = _sum(inv.filter(v => v.kind === 'aporte'), v => v.amount);
+    const dividendos = _sum(inv.filter(v => v.kind === 'dividendo'), v => v.amount);
+    const carteira  = _money(cache.finance.config.portfolioValue);
+    const ganho     = _money(carteira + dividendos - aportado);
+    const yieldOnCost = aportado > 0 ? Math.round(dividendos / aportado * 1000) / 10 : 0;
+    return { aportado, dividendos, carteira, ganho, yieldOnCost };
+  }
+
+  /* ── objetivos ── */
+  function addFinGoal(f) {
+    const row = {
+      id: _finNextId(cache.finance.goals),
+      label: (f.label || '').trim(),
+      target: _money(f.target),
+      saved: _money(f.saved),
+      monthlyPlan: _money(f.monthlyPlan),
+      deadline: f.deadline || null,
+      done: false,
+      createdAt: new Date().toISOString(),
+    };
+    cache.finance.goals.push(row);
+    _saveMirror();
+    _finPush('fin_goals', {
+      id: row.id, user_id: _uid, label: row.label, target: row.target, saved: row.saved,
+      monthly_plan: row.monthlyPlan, deadline: row.deadline, done: false, created_at: row.createdAt,
+    });
+    return row;
+  }
+  function updateFinGoal(id, patch) {
+    const g = cache.finance.goals.find(x => x.id === id);
+    if (!g) return;
+    if (patch.label != null)       g.label = String(patch.label).trim();
+    if (patch.target != null)      g.target = _money(patch.target);
+    if (patch.saved != null)       g.saved = _money(patch.saved);
+    if (patch.monthlyPlan != null) g.monthlyPlan = _money(patch.monthlyPlan);
+    if (patch.deadline !== undefined) g.deadline = patch.deadline || null;
+    g.done = g.target > 0 && g.saved >= g.target;
+    _saveMirror();
+    _push(async () => {
+      const { error } = await window.sb.from('fin_goals').update({
+        label: g.label, target: g.target, saved: g.saved, monthly_plan: g.monthlyPlan,
+        deadline: g.deadline, done: g.done,
+      }).eq('user_id', _uid).eq('id', id);
+      if (error) throw error;
+    });
+  }
+  function deleteFinGoal(id) {
+    const i = cache.finance.goals.findIndex(x => x.id === id);
+    if (i !== -1) cache.finance.goals.splice(i, 1);
+    _saveMirror(); _finDel('fin_goals', id);
+  }
+  // Previsão: ritmo = plano mensal do objetivo, ou a sobra média informada.
+  function finGoalForecast(goal, fallbackRate) {
+    const falta = _money(goal.target - goal.saved);
+    if (falta <= 0) return { pct: 100, monthsLeft: 0, etaYm: null, rate: 0 };
+    const rate = goal.monthlyPlan > 0 ? goal.monthlyPlan : Math.max(0, _money(fallbackRate || 0));
+    const pct = goal.target > 0 ? Math.min(100, Math.round(goal.saved / goal.target * 100)) : 0;
+    if (rate <= 0) return { pct, monthsLeft: null, etaYm: null, rate: 0 };
+    const monthsLeft = Math.ceil(falta / rate);
+    return { pct, monthsLeft, etaYm: finYmAdd(finYm(), monthsLeft), rate };
+  }
+
+  /* ── resumo do mês ── */
+  function finMonthSummary(ym) {
+    ym = ym || finYm();
+    const fin = cache.finance;
+    const salary  = _money(fin.config.monthlySalary);
+    const extras  = _sum(fin.income.filter(i => i.ym === ym), i => i.amount);
+    const income  = _money(salary + extras);
+
+    const fixedActive   = fin.fixed.filter(f => f.active);
+    const fixedTotal    = _sum(fixedActive, f => f.amount);
+    const paidMarks     = fin.fixedPaid.filter(p => p.ym === ym);
+    const fixedPaidTotal = _sum(paidMarks, p => p.amount);
+    const fixedPaidCount = paidMarks.length;
+    const fixedPending   = _money(fixedTotal - _sum(fixedActive.filter(f => paidMarks.some(p => p.fixedId === f.id)), f => f.amount));
+
+    const installmentsTotal = _sum(
+      fin.installments.filter(n => finInstallmentAt(n, ym).activeThisMonth),
+      n => n.installmentAmount
+    );
+
+    const monthExpenses = fin.expenses.filter(e => e.ym === ym);
+    const expensesTotal = _sum(monthExpenses, e => e.amount);
+    const byCat = {};
+    monthExpenses.forEach(e => { byCat[e.category || 'Outros'] = _money((byCat[e.category || 'Outros'] || 0) + e.amount); });
+
+    const investedTotal  = _sum(fin.investments.filter(v => v.ym === ym && v.kind === 'aporte'), v => v.amount);
+    const dividendsTotal = _sum(fin.investments.filter(v => v.ym === ym && v.kind === 'dividendo'), v => v.amount);
+
+    const committed = _money(fixedTotal + installmentsTotal);
+    const outflow   = _money(fixedTotal + installmentsTotal + expensesTotal + investedTotal);
+    const surplus   = _money(income + dividendsTotal - outflow);
+    const savingsRate = income > 0 ? Math.round(surplus / income * 100) : 0;
+
+    return {
+      ym, salary, extras, income,
+      fixedTotal, fixedPaidTotal, fixedPaidCount, fixedActiveCount: fixedActive.length, fixedPending,
+      installmentsTotal, expensesTotal, byCat,
+      investedTotal, dividendsTotal,
+      committed, outflow, surplus, savingsRate,
+    };
+  }
+
+  /* ──────────────────────────────────────────
      PUBLIC API
   ────────────────────────────────────────── */
   return {
@@ -2972,6 +3411,16 @@ const Store = (() => {
     getMealDay, toggleMeal, markAllMeals, mealsDoneCount, mealDayComplete, mealStreak, mealsCompleteDaysCount,
     getBodyWeight, setBodyWeight, bodyWeightSeries, latestBodyWeight, bodyWeightDelta,
     trainingWeightSeries, trainingExercisePR,
+    // financeiro
+    getFinance, finConfig, setFinConfig, finCategories,
+    finYm, finYmAdd, finYmDiff, finYmLabel,
+    addFinIncome, deleteFinIncome,
+    addFinFixed, updateFinFixed, deleteFinFixed, finFixedPaidMark, setFinFixedPaid,
+    addFinInstallment, deleteFinInstallment, finInstallmentAt,
+    addFinExpense, updateFinExpense, deleteFinExpense,
+    addFinInvestment, deleteFinInvestment, finInvestTotals,
+    addFinGoal, updateFinGoal, deleteFinGoal, finGoalForecast,
+    finMonthSummary,
     // computed
     habitVal, scheduledOn, dayCompletionPct, maxStreak, countDays,
     allHabitsDone, currentStreak, computeAchievementProgress, computeLevels,
