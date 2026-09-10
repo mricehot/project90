@@ -191,7 +191,12 @@ textarea.modal-input { resize: vertical; min-height: 72px; line-height: 1.7; }
 .rd-intro { font-size: 11px; letter-spacing: 0.04em; color: var(--mid); line-height: 1.6; margin: 0 0 14px; }
 .rd-toolbar { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
 .rd-toolbar .dcc-filter { flex: 0 1 200px; }
-.rd-list { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+/* a lista fica compacta — a seção agora vem antes da biblioteca de exercícios */
+.rd-list {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+  max-height: 296px; overflow-y: auto; padding-right: 4px;
+  scrollbar-width: thin; scrollbar-color: var(--muted) transparent;
+}
 .rd-item {
   border: 1px solid var(--border); background: var(--surface2); padding: 14px 16px; cursor: pointer;
   display: flex; flex-direction: column; gap: 6px; transition: border-color 0.15s, background 0.15s;
@@ -214,9 +219,13 @@ textarea.modal-input { resize: vertical; min-height: 72px; line-height: 1.7; }
 .read-text {
   font-family: 'DM Mono', monospace; font-weight: 300; font-size: 15px; line-height: 1.95;
   color: var(--white); white-space: pre-wrap; word-break: break-word;
-  max-height: 46vh; overflow-y: auto; padding-right: 4px; margin-bottom: 20px;
+  max-height: 56vh; overflow-y: auto; padding-right: 8px; margin-bottom: 18px;
   scrollbar-width: thin; scrollbar-color: var(--muted) transparent;
+  border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); padding-top: 14px;
 }
+.read-text::-webkit-scrollbar { width: 8px; }
+.read-text::-webkit-scrollbar-thumb { background: var(--muted); }
+.read-text::-webkit-scrollbar-thumb:hover { background: rgba(245,245,240,0.30); }
 .read-done-btn {
   width: 100%; padding: 12px; background: none; border: 1px solid var(--border2); color: var(--mid);
   font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
@@ -224,6 +233,7 @@ textarea.modal-input { resize: vertical; min-height: 72px; line-height: 1.7; }
 }
 .read-done-btn:hover { color: var(--white); border-color: rgba(245,245,240,0.35); }
 .read-done-btn.on { border-color: #86efac; background: rgba(134,239,172,0.1); color: #86efac; }
+#rd-body { max-height: 42vh; overflow-y: auto; line-height: 1.75; }
 
 /* ── RESPONSIVE ── */
 @media (max-width: 900px) {
@@ -352,21 +362,6 @@ textarea.modal-input { resize: vertical; min-height: 72px; line-height: 1.7; }
       </div>
     </div>
 
-    <!-- TOOLBAR -->
-    <div class="dcc-toolbar">
-      <input class="dcc-search" id="dcc-search" placeholder="Pesquisar exercício…" />
-      <select class="dcc-filter" id="dcc-filter"><option value="">Todos os tipos</option></select>
-      <select class="dcc-sort" id="dcc-sort">
-        <option value="recent">Mais recentes</option>
-        <option value="az">A → Z</option>
-        <option value="za">Z → A</option>
-      </select>
-      <span class="dcc-count" id="dcc-count"><span>0</span> exercícios</span>
-    </div>
-
-    <!-- EXERCISE LIST -->
-    <div class="ex-list" id="ex-list"></div>
-
     <!-- LEITURA EM VOZ ALTA -->
     <div class="card" id="reading-card">
       <div class="card-hd">
@@ -381,6 +376,21 @@ textarea.modal-input { resize: vertical; min-height: 72px; line-height: 1.7; }
       </div>
       <div class="rd-list" id="rd-list"></div>
     </div>
+
+    <!-- TOOLBAR -->
+    <div class="dcc-toolbar">
+      <input class="dcc-search" id="dcc-search" placeholder="Pesquisar exercício…" />
+      <select class="dcc-filter" id="dcc-filter"><option value="">Todos os tipos</option></select>
+      <select class="dcc-sort" id="dcc-sort">
+        <option value="recent">Mais recentes</option>
+        <option value="az">A → Z</option>
+        <option value="za">Z → A</option>
+      </select>
+      <span class="dcc-count" id="dcc-count"><span>0</span> exercícios</span>
+    </div>
+
+    <!-- EXERCISE LIST -->
+    <div class="ex-list" id="ex-list"></div>
 
   </main>
 </div>
@@ -436,7 +446,7 @@ textarea.modal-input { resize: vertical; min-height: 72px; line-height: 1.7; }
     </div>
     <div class="modal-field">
       <label class="modal-lbl">Texto para ler em voz alta</label>
-      <textarea class="modal-input" id="rd-body" rows="8" placeholder="Cole aqui o texto…" maxlength="4000"></textarea>
+      <textarea class="modal-input" id="rd-body" rows="10" placeholder="Cole aqui o texto — pode ser uma página inteira." maxlength="20000"></textarea>
     </div>
     <div class="modal-field">
       <label class="modal-lbl">Fonte (opcional)</label>
@@ -1085,7 +1095,13 @@ function renderReading() {
   const fresh = DEFAULT_READING.filter(t => !have.has(t.title.trim().toLowerCase()));
   document.getElementById('btn-load-reading').hidden = fresh.length === 0;
 
-  const list = rdFilter ? all.filter(t => t.category === rdFilter) : all;
+  // não lidos primeiro; dentro de cada grupo, os mais recentes no topo
+  const list = (rdFilter ? all.filter(t => t.category === rdFilter) : all.slice())
+    .sort((a, b) => {
+      const ar = a.lastReadDay != null ? 1 : 0, br = b.lastReadDay != null ? 1 : 0;
+      if (ar !== br) return ar - br;
+      return String(b.createdAt).localeCompare(String(a.createdAt));
+    });
   const wrap = document.getElementById('rd-list');
   if (!list.length) {
     wrap.innerHTML = `<div class="rd-empty">${all.length

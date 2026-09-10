@@ -310,5 +310,44 @@ Por último, prenda o fundo com os preguinhos menores e verifique se a estrutura
 `Ao sentir um tremor forte, mantenha a calma e não corra para as escadas nem para o elevador. Se estiver dentro de casa, agache-se ao lado de um móvel resistente, proteja a cabeça e o pescoço com os braços e afaste-se de janelas e objetos altos.
 
 Permaneça nessa posição até o movimento parar por completo. Só então saia com cuidado, evitando fios soltos e vidros no chão. Do lado de fora, dirija-se a uma área aberta, longe de muros, postes e árvores, e aguarde novas instruções.`
+  },
+
+  /* ── TEXTOS LONGOS (uma página inteira) ── */
+  {
+    title: 'O Alienista — abertura',
+    category: 'prosa',
+    source: 'Machado de Assis, 1882',
+    body:
+`As crônicas da vila de Itaguaí dizem que em tempos remotos vivera ali um certo médico, o doutor Simão Bacamarte, filho da nobreza da terra e o maior dos médicos do Brasil, de Portugal e das Espanhas. Estudara em Coimbra e Pádua. Aos trinta e quatro anos regressou ao Brasil, não podendo el-rei alcançar dele que ficasse em Coimbra, regendo a universidade, ou em Lisboa, expedindo os negócios da monarquia.
+
+— A ciência, disse ele a Sua Majestade, é o meu emprego único; Itaguaí é o meu universo.
+
+Dito isto, meteu-se em Itaguaí, e entregou-se de corpo e alma ao estudo da ciência, alternando as curas com a leitura, e demonstrando os teoremas com cataplasmas. Aos quarenta anos casou com Dona Evarista da Costa e Mascarenhas, senhora de vinte e cinco anos, viúva de um juiz de fora, e não bonita nem simpática. Um dos tios dela, caçador de pacas perante o Eterno, e não menos franco, admirou-se de semelhante escolha, e disse-lho. Simão Bacamarte explicou-lhe que Dona Evarista reunia condições fisiológicas e anatômicas de primeira ordem, digeria com facilidade, dormia regularmente, tinha bom pulso e excelente vista; estava assim apta para dar-lhe filhos robustos, sãos e inteligentes.`
+  },
+  {
+    title: 'Carta a quem começa',
+    category: 'discurso',
+    source: 'texto original',
+    body:
+`Você vai começar uma coisa nova amanhã, e é natural sentir aquele frio na barriga. Quero te dizer três coisas antes disso, porque são as que eu gostaria de ter ouvido no meu lugar.
+
+A primeira: ninguém que faz algo bem feito começou sabendo. O que parece talento, de perto, quase sempre é repetição. A pessoa que você admira já errou centenas de vezes onde ninguém viu, em silêncio, sem plateia. O caminho dela não foi mais curto; foi só mais teimoso.
+
+A segunda: os dias ruins fazem parte do plano, não são a prova de que o plano falhou. Vai ter semana em que nada rende, em que você relê o que fez e tem vontade de apagar tudo. Não apague. Feche o caderno, durma, e volte no dia seguinte. O progresso raramente aparece no dia em que a gente mais precisa dele; ele se acumula por baixo e um dia transborda.
+
+A terceira: compare-se apenas com quem você era ontem. O ritmo dos outros não é o seu, e a linha de chegada deles não fica no mesmo lugar. Corra o percurso que você ensaiou, no passo que você aguenta manter, e confie nele até o fim.
+
+Respira fundo. Você já sabe mais do que sabia quando decidiu tentar. Amanhã é só o primeiro dia em que isso vai aparecer.`
+  },
+  {
+    title: 'A voz que a gente esquece',
+    category: 'noticia',
+    source: 'texto original',
+    body:
+`Passamos o dia falando e quase nunca ouvimos a própria voz de fora. Ela sai da boca, volta pelos ossos do crânio e chega ao ouvido já modificada, mais grave e mais cheia do que os outros escutam. Por isso, quase todo mundo estranha a gravação da própria voz na primeira vez: aquilo parece de outra pessoa, mas é exatamente o que o mundo ouve.
+
+Fonoaudiólogos e professores de teatro dizem que gravar-se lendo em voz alta é um dos exercícios mais simples e mais reveladores para quem quer falar melhor. A gravação não mente sobre a pressa, sobre as palavras engolidas no fim da frase, sobre a respiração curta que corta o sentido no meio. Ao ouvir de novo, com calma, a pessoa percebe padrões que jamais notaria ao vivo, no calor da conversa.
+
+O método costuma ser modesto: escolher um texto de uma página, ler devagar, gravar, ouvir uma vez inteira sem julgar, e só então marcar dois ou três pontos para melhorar na leitura seguinte. Nada de tentar corrigir tudo de uma vez. Segundo os especialistas, a melhora vem da repetição espaçada, não do esforço de um dia. Em algumas semanas, quem mantém o hábito relata pausas mais firmes, frases mais inteiras e menos cansaço ao falar por muito tempo.`
   }
 ];
