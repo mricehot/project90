@@ -35,6 +35,17 @@ body { overflow: hidden; }
 @media (max-width: 720px) { .dash-cards-row { grid-template-columns: 1fr; } }
 
 /* ── PENDÊNCIAS DE HOJE ── */
+.tc-summary { display: flex; align-items: center; gap: 14px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+.tc-ring { flex-shrink: 0; }
+.tc-summary-main { font-size: 12px; letter-spacing: 0.03em; color: var(--white); }
+.tc-summary-sub { font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--mid); margin-top: 4px; }
+.tc-summary + .tc-section { margin-top: 16px; }
+.tc-done-wrap { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 8px; }
+.tc-done-wrap.flush { border-top: none; margin-top: 12px; padding-top: 0; }
+.tc-done { display: flex; align-items: center; gap: 9px; }
+.tc-done-c { color: var(--green); flex-shrink: 0; font-size: 11px; }
+.tc-done-t { color: var(--mid); text-transform: uppercase; letter-spacing: 0.14em; font-size: 9px; }
+.tc-done-x { color: var(--mid); opacity: 0.65; font-size: 10px; letter-spacing: 0.04em; }
 .tc-section + .tc-section { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--border); }
 .tc-sec-hd { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
 .tc-sec-title { font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--mid); }
@@ -1034,10 +1045,25 @@ function _tcSec(title, href, linkTxt, inner) {
     </div>${inner}</div>`;
 }
 
+// Anel de progresso do card (SVG, mesmo estilo do de Métricas).
+function _dayRing(pct, size) {
+  const r = (size - 6) / 2, cx = size / 2, cy = size / 2;
+  const circ = 2 * Math.PI * r, off = circ - (pct / 100) * circ;
+  const done = pct >= 100;
+  return `<svg class="tc-ring" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="rgba(245,245,240,0.1)" stroke-width="2"/>
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${done ? 'var(--green)' : 'rgba(245,245,240,0.85)'}" stroke-width="2"
+      stroke-dasharray="${circ.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}"
+      stroke-linecap="square" transform="rotate(-90 ${cx} ${cy})"/>
+    <text x="${cx}" y="${cy + 1}" text-anchor="middle" dominant-baseline="middle"
+      font-family="Bebas Neue" font-size="12" fill="${done ? 'var(--green)' : '#f5f5f0'}">${pct}%</text>
+  </svg>`;
+}
+
 function renderTodayCard() {
   const body = document.getElementById('today-body');
   if (!body) return;
-  const sections = [];
+  const secs = [];   // { title, href, link, inner, status: 'overdue'|'pending'|'done', doneTxt }
   let open = 0;
 
   /* ── Tarefas de hoje ── */
@@ -1049,7 +1075,9 @@ function renderTodayCard() {
         .forEach(t => { if (!seen[t.id]) { seen[t.id] = 1; list.push(t); } });
       const rank = st => ({ overdue: 0, due: 1, backlog: 2, upcoming: 3, 'done-today': 4, done: 5 }[st] ?? 3);
       list.sort((a, b) => rank(Store.taskStatus(a)) - rank(Store.taskStatus(b)));
-      open += list.filter(t => { const s = Store.taskStatus(t); return s !== 'done' && s !== 'done-today'; }).length;
+      const pend = list.filter(t => { const s = Store.taskStatus(t); return s !== 'done' && s !== 'done-today'; });
+      open += pend.length;
+      const anyOver = list.some(t => Store.taskStatus(t) === 'overdue');
 
       let inner;
       if (!list.length) {
@@ -1068,7 +1096,11 @@ function renderTodayCard() {
         }).join('');
         if (list.length > 5) inner += `<div class="tc-more">+${list.length - 5} mais</div>`;
       }
-      sections.push(_tcSec('Tarefas', 'tarefas.html', 'Gerenciar →', inner));
+      secs.push({
+        title: 'Tarefas', href: 'tarefas.html', link: 'Gerenciar →', inner,
+        status: pend.length ? (anyOver ? 'overdue' : 'pending') : 'done',
+        doneTxt: list.length ? 'tudo feito' : 'nada hoje',
+      });
     }
   }
 
@@ -1100,18 +1132,27 @@ function renderTodayCard() {
     const title = overdue.length
       ? `Entregas <b>· ${overdue.length} atrasada${overdue.length === 1 ? '' : 's'}</b>`
       : 'Entregas';
-    sections.push(_tcSec(title, 'faculdade.html', 'Ver →', inner));
+    secs.push({
+      title, href: 'faculdade.html', link: 'Ver →', inner,
+      status: overdue.length ? 'overdue' : (soon.length ? 'pending' : 'done'),
+      doneTxt: 'nada em 7 dias',
+    });
   }
 
   /* ── Vocabulário (SRS) ── */
-  if (typeof Store.vocabDueToday === 'function') {
+  if (typeof Store.vocabDueToday === 'function' && Store.getVocabWords && Store.getVocabWords().length) {
     const due = Store.vocabDueToday();
     if (due.length) {
       open += due.length;
       const words = due.slice(0, 8).map(w => _esc(w.word)).join(' · ');
-      sections.push(_tcSec('Vocabulário', 'vocabulario.html#revisar', 'Revisar →',
-        `<div class="tc-line"><b>${due.length}</b> palavra${due.length === 1 ? '' : 's'} pra revisar` +
-        `<br><span style="opacity:.65">${words}${due.length > 8 ? ' …' : ''}</span></div>`));
+      secs.push({
+        title: 'Vocabulário', href: 'vocabulario.html#revisar', link: 'Revisar →',
+        inner: `<div class="tc-line"><b>${due.length}</b> palavra${due.length === 1 ? '' : 's'} pra revisar` +
+               `<br><span style="opacity:.65">${words}${due.length > 8 ? ' …' : ''}</span></div>`,
+        status: 'pending', doneTxt: 'revisado',
+      });
+    } else {
+      secs.push({ title: 'Vocabulário', href: 'vocabulario.html', link: 'Ver →', inner: '', status: 'done', doneTxt: 'revisado' });
     }
   }
 
@@ -1120,39 +1161,70 @@ function renderTodayCard() {
     const split = Store.nextTrainingSplit();
     const logged = Store.trainingLoggedToday();
     const nEx = Store.getTrainingExercises(split).length;
-    let inner;
+    let inner, status;
     if (logged) {
-      inner = '<div class="tc-line">Treino de hoje registrado. Bom trabalho.</div>';
+      inner = ''; status = 'done';
     } else if (!nEx) {
       inner = `<div class="tc-line">Rotação sugere o treino <b>${split}</b>, mas ele está vazio.</div>`;
+      status = 'done';
     } else {
       open += 1;
       inner = `<div class="tc-line">Treino <b>${split}</b> hoje` +
               `<br><span style="opacity:.65">${nEx} exercício${nEx === 1 ? '' : 's'} · rotação A/B/C</span></div>`;
+      status = 'pending';
     }
-    sections.push(_tcSec('Treino', 'treino.html', 'Abrir →', inner));
+    secs.push({ title: 'Treino', href: 'treino.html', link: 'Abrir →', inner, status, doneTxt: logged ? 'registrado' : 'sem exercícios' });
   }
 
   /* ── Alimentação ── */
   if (typeof Store.getMealItems === 'function' && Store.getMealItems().length) {
     const items = Store.getMealItems();
-    const done  = Store.mealsDoneCount();
-    const left  = items.length - done;
-    let inner;
+    const doneN = Store.mealsDoneCount();
+    const left  = items.length - doneN;
+    let inner, status;
     if (left <= 0) {
-      inner = '<div class="tc-line">Todas as refeições do dia marcadas.</div>';
+      inner = ''; status = 'done';
     } else {
       open += left;
-      inner = `<div class="tc-line"><b>${done}/${items.length}</b> refeições marcadas hoje` +
+      inner = `<div class="tc-line"><b>${doneN}/${items.length}</b> refeições marcadas hoje` +
               `<br><span style="opacity:.65">falta${left === 1 ? '' : 'm'} ${left}</span></div>`;
+      status = 'pending';
     }
-    sections.push(_tcSec('Alimentação', 'treino.html', 'Marcar →', inner));
+    secs.push({ title: 'Alimentação', href: 'treino.html', link: 'Marcar →', inner, status, doneTxt: `${doneN}/${items.length}` });
   }
 
   document.getElementById('today-count').textContent = open ? `${open} aberta${open === 1 ? '' : 's'}` : '';
-  body.innerHTML = sections.length
-    ? sections.join('')
-    : '<div class="tc-allclear">Tudo em dia por aqui. <span>Sem tarefas, entregas ou revisões pendentes agora.</span></div>';
+
+  if (!secs.length) {
+    body.innerHTML = '<div class="tc-allclear">Tudo em dia por aqui. <span>Sem tarefas, entregas ou revisões pendentes agora.</span></div>';
+    return;
+  }
+
+  const rank = { overdue: 0, pending: 1, done: 2 };
+  secs.sort((a, b) => rank[a.status] - rank[b.status]);   // sort estável no V8 → mantém a ordem natural dentro de cada grupo
+  const active = secs.filter(s => s.status !== 'done');
+  const done   = secs.filter(s => s.status === 'done');
+
+  const pct = Math.round(done.length / secs.length * 100);
+  let html = `<div class="tc-summary">
+    ${_dayRing(pct, 46)}
+    <div>
+      <div class="tc-summary-main">${done.length} de ${secs.length} área${secs.length === 1 ? '' : 's'} em dia</div>
+      <div class="tc-summary-sub">${open ? open + ' pendência' + (open === 1 ? '' : 's') + ' agora' : 'sem pendências agora'}</div>
+    </div>
+  </div>`;
+
+  html += active.map(s => _tcSec(s.title, s.href, s.link, s.inner)).join('');
+
+  if (done.length) {
+    html += `<div class="tc-done-wrap${active.length ? '' : ' flush'}">` +
+      done.map(s => `<div class="tc-done"><span class="tc-done-c">✓</span>` +
+        `<span class="tc-done-t">${String(s.title).replace(/<[^>]+>/g, '')}</span>` +
+        `<span class="tc-done-x">${s.doneTxt}</span></div>`).join('') +
+      `</div>`;
+  }
+
+  body.innerHTML = html;
 }
 
 /* ─ CONTADORES "DIAS DESDE" ─ */
