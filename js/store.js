@@ -2034,6 +2034,8 @@ const Store = (() => {
       reader:       countForKey('ler'),
       zen:          countForKey('meditar'),
       bible_reader: countForKey('ler_biblia'),
+      hydrated:     countForKey('beber_agua'),
+      hydro_streak: streakForKey('beber_agua'),
       first_entry:  Math.min(1, journalEntries),
       journal7:     journalStreak,
       journal30:    journalEntries,
