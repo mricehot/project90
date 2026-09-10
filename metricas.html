@@ -13,6 +13,11 @@
 <title>Project 90 — Métricas</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<!-- folhas compartilhadas: tokens/reset/cursor/scrollbar/keyframes + sidebar,
+     cards, topbar, mobile-nav. O <style> abaixo mantém só o que é próprio
+     desta página. -->
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/components.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script src="js/supabase-config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -20,148 +25,12 @@
 <script src="js/store.js"></script>
 <script src="js/achievements.js"></script>
 <style>
-/* ── RESET ── */
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-/* barra de rolagem — segue o tema (espelha css/base.css) */
-* { scrollbar-width: thin; scrollbar-color: var(--muted) transparent; }
-::-webkit-scrollbar { width: 8px; height: 8px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--muted); }
-::-webkit-scrollbar-thumb:hover  { background: rgba(245,245,240,0.30); }
-::-webkit-scrollbar-thumb:active { background: rgba(245,245,240,0.45); }
-::-webkit-scrollbar-corner { background: transparent; }
-html { transition: scrollbar-color 0.4s ease; }
-html.sb-scrolling, html.sb-scrolling * { scrollbar-color: var(--white) transparent; }
-html.sb-scrolling::-webkit-scrollbar-thumb,
-html.sb-scrolling ::-webkit-scrollbar-thumb { background: var(--white); }
-
-/* ── TOKENS ── */
-:root {
-  --bg:       #080808;
-  --surface:  #111111;
-  --surface2: #181818;
-  --border:   rgba(245,245,240,0.08);
-  --border2:  rgba(245,245,240,0.16);
-  --white:    #f5f5f0;
-  --mid:      #7d7d7d;
-  --muted:    #2a2a2a;
-  --green:    #86efac;
-  --red:      #fca5a5;
-}
-
-html { scroll-behavior: smooth; }
-body {
-  background: var(--bg); color: var(--white);
-  font-family: 'DM Mono', monospace; font-weight: 300;
-  -webkit-font-smoothing: antialiased; overflow: hidden;
-}
-input, textarea { cursor: text; }
-
-/* Esta página é self-contained (não linka base/components.css), então
-   espelha aqui: foco de teclado, cursor customizado, movimento reduzido. */
-:focus-visible { outline: 2px solid var(--white); outline-offset: 2px; }
-.ptab.active:focus-visible { outline-color: var(--bg); outline-offset: -4px; }
-.sb-item:focus-visible { outline-offset: -2px; }
-
-#cur, #cur-ring { display: none; }
-@media (hover: hover) and (pointer: fine) {
-  body { cursor: none; }
-  #cur {
-    display: block; width: 6px; height: 6px; background: var(--white); border-radius: 50%;
-    position: fixed; top: 0; left: 0; pointer-events: none; z-index: 9999;
-    mix-blend-mode: difference; will-change: transform;
-  }
-  #cur-ring {
-    display: block; width: 30px; height: 30px; border: 1px solid rgba(245,245,240,0.3); border-radius: 50%;
-    position: fixed; top: 0; left: 0; pointer-events: none; z-index: 9998;
-    mix-blend-mode: difference; will-change: transform;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: 0.01ms !important; animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important; scroll-behavior: auto !important;
-  }
-}
-
-/* ── APP SHELL ── */
-.app { display: grid; grid-template-columns: 220px 1fr; height: 100vh; }
-
-/* ── SIDEBAR ── */
-.sidebar {
-  background: var(--surface); border-right: 1px solid var(--border);
-  display: flex; flex-direction: column; height: 100vh; overflow: hidden;
-}
-.sb-logo     { padding: 28px 24px 24px; border-bottom: 1px solid var(--border); }
-.sb-logomark { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 0.12em; text-decoration: none; color: var(--white); display: block; }
-.sb-logosub  { font-size: 10px; letter-spacing: 0.2em; color: var(--mid); text-transform: uppercase; margin-top: 2px; }
-.sb-day      { padding: 20px 24px; border-bottom: 1px solid var(--border); }
-.sb-daynum   { font-family: 'Bebas Neue', sans-serif; font-size: 56px; line-height: 1; }
-.sb-daylbl   { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--mid); margin-top: 2px; }
-.sb-prog-bar-bg   { height: 2px; background: var(--muted); border-radius: 1px; margin-top: 10px; }
-.sb-prog-bar-fill { height: 100%; background: var(--white); border-radius: 1px; transition: width 1s cubic-bezier(0.16,1,0.3,1); }
-.sb-prog-meta     { display: flex; justify-content: space-between; font-size: 10px; letter-spacing: 0.1em; color: var(--mid); margin-top: 5px; }
-.sb-nav { flex: 1; padding: 16px 0; overflow-y: auto; }
-.sb-item {
-  display: flex; align-items: center; gap: 10px; padding: 10px 24px;
-  font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--mid);
-  cursor: pointer; transition: color 0.2s, background 0.2s;
-  border-left: 2px solid transparent; text-decoration: none;
-}
-.sb-item:hover  { color: var(--white); background: rgba(245,245,240,0.03); }
-.sb-item.active { color: var(--white); border-left-color: var(--white); background: rgba(245,245,240,0.04); }
-.sb-item-icon   { font-size: 13px; width: 14px; text-align: center; }
-.sb-bottom { padding: 20px 24px; border-top: 1px solid var(--border); }
-.sb-logout {
-  display: flex; align-items: center; gap: 8px; cursor: pointer;
-  font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
-  color: var(--mid); transition: color 0.2s; text-decoration: none;
-}
-.sb-logout:hover { color: var(--white); }
-.sb-streak      { display: flex; align-items: center; gap: 8px; background: var(--surface2); border: 1px solid var(--border2); padding: 10px 14px; margin-bottom: 16px; }
-.sb-streak-icon { font-size: 16px; }
-.sb-streak-val  { font-family: 'Bebas Neue', sans-serif; font-size: 20px; line-height: 1; }
-.sb-streak-lbl  { font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--mid); margin-top: 1px; }
-
-/* ── GRID ── */
-.g2  { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-.g4  { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
-.g21 { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; }
-
-/* ── TOPBAR ── */
-.topbar       { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
-.page-title   { font-family: 'DM Serif Display', serif; font-size: 26px; font-weight: 400; display: flex; align-items: baseline; gap: 10px; }
-.page-title em { font-style: italic; opacity: 0.45; font-size: 22px; }
-.topbar-right { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-.date-tag     { font-size: 11px; letter-spacing: 0.12em; color: var(--mid); }
-
-/* ── CARDS ── */
-.card { background: var(--surface); border: 1px solid var(--border); padding: 22px 24px; }
-.card-hd {
-  display: flex; align-items: center; justify-content: space-between;
-  margin-bottom: 16px; padding-bottom: 14px; border-bottom: 1px solid var(--border);
-}
-.card-title  { font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--mid); }
-.card-action { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--mid); }
-
-/* ── STAT CARDS ── */
-.stat-card { background: var(--surface); border: 1px solid var(--border); padding: 20px 22px; }
-.stat-lbl  { font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--mid); margin-bottom: 8px; }
-.stat-val  { font-family: 'Bebas Neue', sans-serif; font-size: 44px; line-height: 1; }
-.stat-sub  { font-size: 10px; letter-spacing: 0.1em; color: var(--mid); margin-top: 6px; }
-.stat-delta { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; letter-spacing: 0.1em; margin-top: 6px; }
-.stat-delta.up { color: var(--green); }
-.stat-delta.dn { color: var(--red); }
-
-/* ── TOOLTIP ── */
-.tip {
-  position: fixed; background: var(--surface2); border: 1px solid var(--border2);
-  padding: 8px 12px; font-size: 10px; letter-spacing: 0.08em; color: var(--white);
-  pointer-events: none; z-index: 999; opacity: 0; transition: opacity 0.15s; white-space: nowrap;
-}
-.tip.on { opacity: 1; }
+/* Tokens, reset, cursor, scrollbar, foco de teclado, movimento reduzido,
+   .app / .sidebar / .sb-*, .topbar / .page-title, .card, .stat-card, .tip,
+   grid helpers (.g2/.g4/.g21) e a barra + drawer mobile agora vêm de
+   css/base.css + css/components.css. Aqui fica só o que é próprio de Métricas.
+   `overflow: hidden` no body trava a rolagem do shell de altura fixa. */
+body { overflow: hidden; }
 
 /* ── PERIOD TABS ── */
 .period-tabs { display: flex; gap: 2px; }
@@ -223,57 +92,10 @@ input, textarea { cursor: text; }
 .radial-wrap { display: flex; flex-direction: column; align-items: center; gap: 10px; }
 .radial-lbl  { font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--mid); }
 
-/* ── RESPONSIVE ── */
-.mobile-topbar   { display: none; }
-.sidebar-backdrop { display: none; }
+/* ── RESPONSIVE — só o que difere de css/components.css ──
+   (shell mobile, barra + drawer, quebra dos grids e do .g4 já vêm de lá) */
 @media (max-width: 900px) {
-  body { overflow: auto; }
-  .app { grid-template-columns: 1fr; }
   .met-main { padding: 20px; }
-  .g4  { grid-template-columns: 1fr 1fr; }
-  .g2, .g21 { grid-template-columns: 1fr; }
-
-  /* ── MOBILE NAV (barra + drawer) — página self-contained, precisa da
-     mesma regra de css/components.css. Os `display:none` base estão logo
-     depois do fechamento deste @media. ── */
-  body { overflow: auto; }
-  body.nav-open { overflow: hidden; }
-  body .app { display: block; height: auto; min-height: 100vh; }
-  .app > main, .app > .met-main { height: auto; overflow: visible; }
-  .mobile-topbar {
-    display: flex; align-items: center; gap: 14px;
-    position: sticky; top: 0; z-index: 90; padding: 11px 16px;
-    background: var(--surface); border-bottom: 1px solid var(--border);
-  }
-  .mobile-topbar .mt-logo {
-    font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 0.12em;
-    color: var(--white); text-decoration: none;
-  }
-  .mobile-topbar .mt-page {
-    margin-left: auto; font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase;
-    color: var(--mid); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 45vw;
-  }
-  .hamburger {
-    display: flex; align-items: center; justify-content: center;
-    width: 34px; height: 34px; flex-shrink: 0; padding: 0;
-    background: none; border: 1px solid var(--border2); color: var(--white);
-    font-size: 15px; line-height: 1; cursor: pointer; transition: border-color 0.2s;
-  }
-  .hamburger:hover { border-color: rgba(245,245,240,0.35); }
-  .app > .sidebar {
-    display: flex; position: fixed; top: 0; left: 0; bottom: 0;
-    width: 264px; max-width: 82vw; height: 100%; overflow-y: auto; z-index: 1001;
-    transform: translateX(-100%); transition: transform 0.28s cubic-bezier(0.16,1,0.3,1);
-  }
-  .app > .sidebar.open { transform: translateX(0); }
-  .sidebar-backdrop {
-    display: block; position: fixed; inset: 0; z-index: 1000;
-    background: rgba(8,8,8,0.6); opacity: 0; pointer-events: none; transition: opacity 0.28s;
-  }
-  .sidebar-backdrop.show { opacity: 1; pointer-events: auto; }
-}
-@media (max-width: 520px) {
-  .g4 { grid-template-columns: 1fr; }
 }
 </style>
 </head>

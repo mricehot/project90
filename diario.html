@@ -13,122 +13,20 @@
 <title>Project 90 — Diário</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<!-- folhas compartilhadas: tokens/reset/cursor/scrollbar/keyframes + sidebar,
+     botões, toast, .app shell e a barra + drawer mobile. O <style> abaixo
+     mantém só o que é próprio do Diário. -->
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/components.css">
 <style>
-/* ── RESET ── */
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+/* Reset, tokens, cursor, scrollbar, foco de teclado, movimento reduzido,
+   .app / .sidebar / .sb-*, .btn-sm, .toast e a barra + drawer mobile agora
+   vêm de css/base.css + css/components.css. `overflow: hidden` no body trava
+   a rolagem do shell de altura fixa. */
+body { overflow: hidden; }
 
-/* barra de rolagem — segue o tema (espelha css/base.css) */
-* { scrollbar-width: thin; scrollbar-color: var(--muted) transparent; }
-::-webkit-scrollbar { width: 8px; height: 8px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--muted); }
-::-webkit-scrollbar-thumb:hover  { background: rgba(245,245,240,0.30); }
-::-webkit-scrollbar-thumb:active { background: rgba(245,245,240,0.45); }
-::-webkit-scrollbar-corner { background: transparent; }
-html { transition: scrollbar-color 0.4s ease; }
-html.sb-scrolling, html.sb-scrolling * { scrollbar-color: var(--white) transparent; }
-html.sb-scrolling::-webkit-scrollbar-thumb,
-html.sb-scrolling ::-webkit-scrollbar-thumb { background: var(--white); }
-
-/* ── TOKENS ── */
-:root {
-  --bg:       #080808;
-  --surface:  #111111;
-  --surface2: #181818;
-  --border:   rgba(245,245,240,0.08);
-  --border2:  rgba(245,245,240,0.16);
-  --white:    #f5f5f0;
-  --mid:      #7d7d7d;
-  --muted:    #2a2a2a;
-  --green:    #86efac;
-  --red:      #fca5a5;
-}
-
-html { scroll-behavior: smooth; }
-body {
-  background: var(--bg); color: var(--white);
-  font-family: 'DM Mono', monospace; font-weight: 300;
-  -webkit-font-smoothing: antialiased; overflow: hidden;
-}
-input, textarea { cursor: text; }
-
-/* Esta página é self-contained (não linka base/components.css), então
-   espelha aqui: foco de teclado, cursor customizado, movimento reduzido. */
-:focus-visible { outline: 2px solid var(--white); outline-offset: 2px; }
-.btn-sm.primary:focus-visible, .jm-btn.primary:focus-visible { outline-color: var(--bg); outline-offset: -4px; }
-.sb-item:focus-visible { outline-offset: -2px; }
-
-#cur, #cur-ring { display: none; }
-@media (hover: hover) and (pointer: fine) {
-  body { cursor: none; }
-  #cur {
-    display: block; width: 6px; height: 6px; background: var(--white); border-radius: 50%;
-    position: fixed; top: 0; left: 0; pointer-events: none; z-index: 9999;
-    mix-blend-mode: difference; will-change: transform;
-  }
-  #cur-ring {
-    display: block; width: 30px; height: 30px; border: 1px solid rgba(245,245,240,0.3); border-radius: 50%;
-    position: fixed; top: 0; left: 0; pointer-events: none; z-index: 9998;
-    mix-blend-mode: difference; will-change: transform;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: 0.01ms !important; animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important; scroll-behavior: auto !important;
-  }
-}
-
-/* ── TOAST ── */
-.toast {
-  position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%) translateY(16px);
-  background: var(--white); color: var(--bg);
-  font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; line-height: 1.5;
-  padding: 12px 24px; z-index: 300; opacity: 0;
-  transition: opacity 0.3s, transform 0.3s;
-  max-width: min(90vw, 440px); text-align: center;
-}
-.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-
-/* ── APP SHELL ── */
-.app { display: grid; grid-template-columns: 220px 1fr; height: 100vh; }
-
-/* ── SIDEBAR ── */
-.sidebar {
-  background: var(--surface); border-right: 1px solid var(--border);
-  display: flex; flex-direction: column; height: 100vh; overflow: hidden;
-}
-.sb-logo     { padding: 28px 24px 24px; border-bottom: 1px solid var(--border); }
-.sb-logomark { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 0.12em; text-decoration: none; color: var(--white); display: block; }
-.sb-logosub  { font-size: 10px; letter-spacing: 0.2em; color: var(--mid); text-transform: uppercase; margin-top: 2px; }
-.sb-day      { padding: 20px 24px; border-bottom: 1px solid var(--border); }
-.sb-daynum   { font-family: 'Bebas Neue', sans-serif; font-size: 56px; line-height: 1; }
-.sb-daylbl   { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--mid); margin-top: 2px; }
-.sb-prog-bar-bg   { height: 2px; background: var(--muted); border-radius: 1px; margin-top: 10px; }
-.sb-prog-bar-fill { height: 100%; background: var(--white); border-radius: 1px; transition: width 1s cubic-bezier(0.16,1,0.3,1); }
-.sb-prog-meta     { display: flex; justify-content: space-between; font-size: 10px; letter-spacing: 0.1em; color: var(--mid); margin-top: 5px; }
-.sb-nav { flex: 1; padding: 16px 0; overflow-y: auto; }
-.sb-item {
-  display: flex; align-items: center; gap: 10px; padding: 10px 24px;
-  font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--mid);
-  cursor: pointer; transition: color 0.2s, background 0.2s;
-  border-left: 2px solid transparent; text-decoration: none;
-}
-.sb-item:hover  { color: var(--white); background: rgba(245,245,240,0.03); }
-.sb-item.active { color: var(--white); border-left-color: var(--white); background: rgba(245,245,240,0.04); }
-.sb-item-icon   { font-size: 13px; width: 14px; text-align: center; }
-.sb-bottom { padding: 20px 24px; border-top: 1px solid var(--border); }
-.sb-logout {
-  display: flex; align-items: center; gap: 8px; cursor: pointer;
-  font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
-  color: var(--mid); transition: color 0.2s; text-decoration: none;
-}
-.sb-logout:hover { color: var(--white); }
-.sb-streak      { display: flex; align-items: center; gap: 8px; background: var(--surface2); border: 1px solid var(--border2); padding: 10px 14px; margin-bottom: 16px; }
-.sb-streak-icon { font-size: 16px; }
-.sb-streak-val  { font-family: 'Bebas Neue', sans-serif; font-size: 20px; line-height: 1; }
-.sb-streak-lbl  { font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--mid); margin-top: 1px; }
+/* contorno interno escuro no foco de botões claros próprios do diário */
+.jm-btn.primary:focus-visible { outline-color: var(--bg); outline-offset: -4px; }
 
 /* ── DIA MAIN LAYOUT ── */
 .dia-main {
@@ -163,17 +61,6 @@ input, textarea { cursor: text; }
 .day-nav-btn:disabled { opacity: 0.25; cursor: default; }
 .day-nav-lbl { font-size: 11px; letter-spacing: 0.1em; color: var(--mid); min-width: 80px; text-align: center; }
 
-/* ── BUTTONS ── (self-contained; espelha css/components.css) */
-.btn-sm {
-  padding: 10px 20px; border: 1px solid var(--border2); background: none;
-  color: var(--mid); font-family: 'DM Mono', monospace; font-size: 11px;
-  letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer;
-  transition: color 0.2s, border-color 0.2s, background 0.2s;
-}
-.btn-sm:hover { color: var(--white); border-color: rgba(245,245,240,0.3); }
-.btn-sm.primary { background: var(--white); color: var(--bg); border-color: var(--white); }
-.btn-sm.primary:hover { background: rgba(245,245,240,0.88); color: var(--bg); }
-
 /* ── UNSAVED DOT ── */
 .unsaved-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(245,245,240,0.4); display: none; flex-shrink: 0; }
 .unsaved-dot.visible { display: block; }
@@ -192,9 +79,13 @@ input, textarea { cursor: text; }
   padding: 20px 22px; margin-bottom: 28px;
 }
 .wr-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 4px; }
+.wr-head-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
 .wr-title { font-family: 'DM Serif Display', serif; font-size: 18px; color: var(--white); }
 .wr-sub   { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--mid); margin-top: 4px; }
 .wr-sub.pending { color: #fca5a5; }
+/* botão de recolher — só aparece no mobile, onde a revisão empurrava a
+   entrada do dia pra baixo da dobra */
+.wr-toggle { display: none; }
 .wr-select {
   background: var(--surface); border: 1px solid var(--border2); color: var(--white);
   font-family: 'DM Mono', monospace; font-size: 11px; padding: 6px 10px; outline: none; cursor: pointer;
@@ -421,52 +312,26 @@ input, textarea { cursor: text; }
   .dia-main { grid-template-columns: 1fr; }
   .sidebar-col { display: none; }
   .editor-col { border-right: none; }
-}
 
-/* ── APP Z-INDEX ── */
-.app,.dia-main,.met-main,.hab-main,.con-main{position:relative;z-index:1;}
-
-/* ── MOBILE NAV (barra + drawer) — esta página é self-contained, então
-   precisa da mesma regra que vive em css/components.css ── */
-.mobile-topbar   { display: none; }
-.sidebar-backdrop { display: none; }
-@media (max-width: 900px) {
-  body { overflow: auto; }
-  body.nav-open { overflow: hidden; }
-  body .app { display: block; height: auto; min-height: 100vh; }
-  .app > main, .app > .dia-main { height: auto; overflow: visible; }
-  .mobile-topbar {
-    display: flex; align-items: center; gap: 14px;
-    position: sticky; top: 0; z-index: 90; padding: 11px 16px;
-    background: var(--surface); border-bottom: 1px solid var(--border);
-  }
-  .mobile-topbar .mt-logo {
-    font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 0.12em;
-    color: var(--white); text-decoration: none;
-  }
-  .mobile-topbar .mt-page {
-    margin-left: auto; font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase;
-    color: var(--mid); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 45vw;
-  }
-  .hamburger {
+  /* revisão semanal recolhida por padrão: o cabeçalho (com "pendente" em
+     coral) fica visível e a entrada do dia sobe pra dobra. */
+  .wr-toggle {
     display: flex; align-items: center; justify-content: center;
-    width: 34px; height: 34px; flex-shrink: 0; padding: 0;
-    background: none; border: 1px solid var(--border2); color: var(--white);
-    font-size: 15px; line-height: 1; cursor: pointer; transition: border-color 0.2s;
+    width: 28px; height: 28px; flex-shrink: 0;
+    background: none; border: 1px solid var(--border2); color: var(--mid);
+    font-size: 12px; cursor: pointer; transition: color 0.2s, border-color 0.2s;
   }
-  .hamburger:hover { border-color: rgba(245,245,240,0.35); }
-  .app > .sidebar {
-    display: flex; position: fixed; top: 0; left: 0; bottom: 0;
-    width: 264px; max-width: 82vw; height: 100%; overflow-y: auto; z-index: 1001;
-    transform: translateX(-100%); transition: transform 0.28s cubic-bezier(0.16,1,0.3,1);
-  }
-  .app > .sidebar.open { transform: translateX(0); }
-  .sidebar-backdrop {
-    display: block; position: fixed; inset: 0; z-index: 1000;
-    background: rgba(8,8,8,0.6); opacity: 0; pointer-events: none; transition: opacity 0.28s;
-  }
-  .sidebar-backdrop.show { opacity: 1; pointer-events: auto; }
+  .wr-toggle:hover { color: var(--white); border-color: rgba(245,245,240,0.3); }
+  .week-review .wr-body { display: none; }
+  .week-review.wr-open .wr-body { display: block; }
+  /* cabeçalho empilha: título/subtítulo em cima, seletor + toggle embaixo */
+  .wr-head { flex-wrap: wrap; }
+  .wr-head-right { width: 100%; justify-content: space-between; }
+  .wr-head-right .wr-select { flex: 1; }
 }
+
+/* ── APP Z-INDEX — o editor precisa de contexto próprio p/ o drawer mobile ── */
+.app, .dia-main { position: relative; z-index: 1; }
 
 </style>
 </head>
@@ -546,9 +411,12 @@ input, textarea { cursor: text; }
             <div class="wr-title">Revisão semanal</div>
             <div class="wr-sub" id="wr-sub">—</div>
           </div>
-          <select class="wr-select" id="wr-week"></select>
+          <div class="wr-head-right">
+            <select class="wr-select" id="wr-week"></select>
+            <button type="button" class="wr-toggle" id="wr-toggle" aria-expanded="false" aria-controls="wr-body" title="Mostrar / ocultar">▾</button>
+          </div>
         </div>
-        <div class="wr-body">
+        <div class="wr-body" id="wr-body">
           <div class="prompt-block">
             <div class="prompt-lbl">O que funcionou nesta semana</div>
             <textarea class="j-field" id="wr-wins" rows="2" maxlength="600" placeholder="Onde você foi consistente, o que ganhou tração..."></textarea>
@@ -751,6 +619,20 @@ function renderWeeklyReview() {
   var weeks = Math.floor(DAY / 7);            // semanas totalmente no passado
   if (weeks < 1) { box.hidden = true; return; }
   box.hidden = false;
+
+  // toggle de recolher (só tem efeito no mobile, via CSS). Abre direto se
+  // veio do atalho "fazer revisão" do dashboard.
+  var wrToggle = document.getElementById('wr-toggle');
+  if (wrToggle && !wrToggle.dataset.wired) {
+    wrToggle.dataset.wired = '1';
+    if (location.hash === '#revisao') box.classList.add('wr-open');
+    wrToggle.textContent = box.classList.contains('wr-open') ? '▴' : '▾';
+    wrToggle.addEventListener('click', function () {
+      var open = box.classList.toggle('wr-open');
+      wrToggle.textContent = open ? '▴' : '▾';
+      wrToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+  }
 
   var reviews = Store.getWeeklyReviews();
 

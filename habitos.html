@@ -496,7 +496,7 @@ function habitCardHTML(h) {
     const jsDay   = i === 6 ? 0 : i + 1;
     const isToday = jsDay === today;
     const isPast  = jsDay < today || (today === 0 && jsDay > 0);
-    const inFreq  = h.freq.includes(i);
+    const inFreq  = (h.freq || []).includes(i);
     let dotCls = '', clickIdx = -1;
     if (inFreq) {
       if (isToday) {
@@ -552,6 +552,7 @@ function habitCardHTML(h) {
 }
 
 function freqLabel(freq) {
+  if (!freq || !freq.length) return 'Sem dias definidos';
   if (freq.length === 7) return 'Todos os dias';
   if (freq.length === 5 && !freq.includes(5) && !freq.includes(6)) return 'Dias úteis';
   if (freq.length === 2 && freq.includes(5) && freq.includes(6)) return 'Fins de semana';

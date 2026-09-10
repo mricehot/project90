@@ -30,11 +30,14 @@
 .section      { padding: clamp(72px, 10vw, 120px) var(--gut); }
 .section-center { text-align: center; }
 
-/* ── GRID HELPERS ── */
-.g2  { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-.g3  { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
-.g4  { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
-.g21 { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; }
+/* ── GRID HELPERS ──
+   minmax(0,…) nas colunas fracionárias: sem isso, uma faixa não encolhe
+   abaixo do conteúdo (ex: heatmap rígido) e o container rola de lado nas
+   larguras intermediárias. */
+.g2  { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 16px; }
+.g3  { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 16px; }
+.g4  { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 16px; }
+.g21 { display: grid; grid-template-columns: minmax(0,2fr) minmax(0,1fr); gap: 16px; }
 
 /* ── LABEL ── */
 .label {
@@ -124,6 +127,7 @@
 .card { background: var(--surface); border: 1px solid var(--border); padding: 22px 24px; }
 .card-hd {
   display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 4px 12px;
   margin-bottom: 16px; padding-bottom: 14px; border-bottom: 1px solid var(--border);
 }
 .card-title  { font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--mid); }
@@ -328,4 +332,10 @@
 }
 @media (max-width: 520px) {
   .g4 { grid-template-columns: 1fr; }
+}
+/* heatmap+lista e pares de gráficos precisam de ~1200px pra caber lado a
+   lado; abaixo disso empilham (antes só quebravam em 900 e o miolo rolava
+   de lado na faixa ~900–1300). */
+@media (max-width: 1180px) {
+  .g2, .g21 { grid-template-columns: 1fr; }
 }
