@@ -190,10 +190,35 @@
 
 /* ── TOPBAR (app pages) ── */
 .topbar       { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
-.page-title   { font-family: 'DM Serif Display', serif; font-size: 26px; font-weight: 400; display: flex; align-items: baseline; gap: 10px; }
+.page-title   { font-family: 'DM Serif Display', serif; font-size: 26px; font-weight: 400; display: flex; align-items: baseline; gap: 10px; position: relative; overflow: hidden; }
 .page-title em { font-style: italic; opacity: 0.45; font-size: 22px; }
 .topbar-right { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .date-tag     { font-size: 12px; letter-spacing: 0.12em; color: var(--mid); }
+
+/* ── RAIO — um brilho minimalista atravessa o título ao abrir a página.
+   Uma barra estreita (não o background inteiro) entra fora da caixa à
+   esquerda e sai fora à direita — geometria simples, sem sobra visível
+   no fim. Blend "screen": não muda a cor de repouso do texto, só soma o
+   traço de luz de passagem. Uma vez só (reduced-motion em base.css já
+   encolhe a duração pra quem pediu menos animação). ── */
+.page-title::after {
+  content: '';
+  position: absolute; top: 0; bottom: 0;
+  left: -40%; width: 35%;
+  background: linear-gradient(100deg,
+    transparent 0%,
+    rgba(245,245,240,0.5) 45%,
+    rgba(245,245,240,0.95) 50%,
+    rgba(245,245,240,0.5) 55%,
+    transparent 100%);
+  mix-blend-mode: screen;
+  pointer-events: none;
+  animation: p90-raio 1.8s cubic-bezier(0.16,1,0.3,1) 0.4s 1 both;
+}
+@keyframes p90-raio {
+  from { left: -40%; }
+  to   { left: 105%; }
+}
 
 /* ── TOOLTIP ── */
 .tip {
