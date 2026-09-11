@@ -66,6 +66,7 @@ const Store = (() => {
         investments:  [],   // { id, kind:'aporte'|'dividendo', onDate, ym, ticker, amount, quantity, createdAt }
         goals:        [],   // { id, label, target, saved, monthlyPlan, deadline, done, createdAt }
         snapshots:    {},   // { [ym]: portfolioValue } — histórico do valor da carteira
+        holdings:     [],   // { ticker, cotas, price, priceUpdatedAt } — posição em cada FII
       },
     };
   }
@@ -269,6 +270,11 @@ const Store = (() => {
     if (data.finance && typeof data.finance === 'object') {
       const fin = data.finance;
       const num = v => { const n = parseFloat(v); return isFinite(n) ? n : 0; };
+      // espelho antigo (localStorage) pode não ter chaves novas — garante todas
+      const _fe = _emptyCache().finance;
+      Object.keys(_fe).forEach(k => {
+        if (cache.finance[k] == null) cache.finance[k] = Array.isArray(_fe[k]) ? [] : (typeof _fe[k] === 'object' ? {} : _fe[k]);
+      });
       if (fin.config && typeof fin.config === 'object') {
         Object.assign(cache.finance.config, {
           monthlySalary: num(fin.config.monthlySalary),
@@ -320,6 +326,11 @@ const Store = (() => {
         Object.keys(cache.finance.snapshots).forEach(k => delete cache.finance.snapshots[k]);
         Object.keys(fin.snapshots).forEach(k => { cache.finance.snapshots[k] = num(fin.snapshots[k]); });
       }
+      _rebuild('holdings', h => ({
+        ticker: String(h.ticker || '').toUpperCase(),
+        cotas: num(h.cotas), price: num(h.price),
+        priceUpdatedAt: h.priceUpdatedAt ? String(h.priceUpdatedAt).slice(0, 10) : null,
+      }));
     }
   }
 
@@ -3284,6 +3295,14 @@ const Store = (() => {
       id: row.id, user_id: _uid, kind: row.kind, on_date: row.onDate, ym: row.ym,
       ticker: row.ticker, amount: row.amount, quantity: row.quantity, created_at: row.createdAt,
     });
+    // um aporte com ticker soma cotas na posição do fundo (e grava o preço se veio)
+    if (row.kind === 'aporte' && row.ticker && (row.quantity > 0 || f.price > 0)) {
+      const cur = _finHolding(row.ticker);
+      const patch = {};
+      if (row.quantity > 0) patch.cotas = _money((cur ? cur.cotas : 0) + row.quantity);
+      if (f.price > 0)      patch.price = _money(f.price);
+      upsertFinHolding(row.ticker, patch);
+    }
     return row;
   }
   function deleteFinInvestment(id) {
@@ -3295,10 +3314,73 @@ const Store = (() => {
     const inv = cache.finance.investments;
     const aportado  = _sum(inv.filter(v => v.kind === 'aporte'), v => v.amount);
     const dividendos = _sum(inv.filter(v => v.kind === 'dividendo'), v => v.amount);
-    const carteira  = _money(cache.finance.config.portfolioValue);
+    const carteira  = finPortfolioValue();
     const ganho     = _money(carteira + dividendos - aportado);
     const yieldOnCost = aportado > 0 ? Math.round(dividendos / aportado * 1000) / 10 : 0;
-    return { aportado, dividendos, carteira, ganho, yieldOnCost };
+    const byTicker  = finHoldingsAllocation();
+    const tracked   = byTicker.length > 0;
+    return { aportado, dividendos, carteira, ganho, yieldOnCost, byTicker, tracked };
+  }
+
+  /* ── posições em FII (cotas × preço) ── */
+  function getFinHoldings() {
+    if (!Array.isArray(cache.finance.holdings)) cache.finance.holdings = [];
+    return cache.finance.holdings;
+  }
+  function _finHolding(ticker) {
+    const t = String(ticker || '').toUpperCase();
+    return getFinHoldings().find(h => h.ticker === t) || null;
+  }
+  // Patrimônio: Σ cotas×preço se há posições; senão o valor digitado no config.
+  function finHoldingsValue() {
+    return _sum(getFinHoldings(), h => _money(h.cotas * h.price));
+  }
+  function finPortfolioValue() {
+    return getFinHoldings().length ? finHoldingsValue() : _money(cache.finance.config.portfolioValue);
+  }
+  function finHoldingsAllocation() {
+    const total = finHoldingsValue();
+    return getFinHoldings()
+      .map(h => ({
+        ticker: h.ticker, cotas: h.cotas, price: h.price,
+        value: _money(h.cotas * h.price),
+        priceUpdatedAt: h.priceUpdatedAt,
+      }))
+      .map(x => ({ ...x, pct: total > 0 ? Math.round(x.value / total * 100) : 0 }))
+      .sort((a, b) => b.value - a.value);
+  }
+  // Alinha o snapshot do mês corrente ao valor atual da carteira (cotas×preço).
+  function _syncFinSnapshot() {
+    if (getFinHoldings().length) setFinSnapshot(finYm(), finPortfolioValue());
+  }
+  function upsertFinHolding(ticker, patch) {
+    const t = String(ticker || '').trim().toUpperCase();
+    if (!t) return;
+    let h = _finHolding(t);
+    if (!h) { h = { ticker: t, cotas: 0, price: 0, priceUpdatedAt: null }; getFinHoldings().push(h); }
+    if (patch.cotas != null) h.cotas = _money(patch.cotas);
+    if (patch.price != null) { h.price = _money(patch.price); h.priceUpdatedAt = _localDate(0); }
+    _saveMirror();
+    _push(async () => {
+      const { error } = await window.sb.from('fin_holdings').upsert({
+        user_id: _uid, ticker: t, cotas: h.cotas, price: h.price,
+        price_updated_at: h.priceUpdatedAt,
+      }, { onConflict: 'user_id,ticker' });
+      if (error) throw error;
+    });
+    _syncFinSnapshot();
+  }
+  function deleteFinHolding(ticker) {
+    const t = String(ticker || '').toUpperCase();
+    const arr = getFinHoldings();
+    const i = arr.findIndex(h => h.ticker === t);
+    if (i !== -1) arr.splice(i, 1);
+    _saveMirror();
+    _push(async () => {
+      const { error } = await window.sb.from('fin_holdings').delete().eq('user_id', _uid).eq('ticker', t);
+      if (error) throw error;
+    });
+    _syncFinSnapshot();
   }
 
   /* ── objetivos ── */
@@ -3509,6 +3591,8 @@ const Store = (() => {
     addFinInstallment, deleteFinInstallment, finInstallmentAt,
     addFinExpense, updateFinExpense, deleteFinExpense,
     addFinInvestment, deleteFinInvestment, finInvestTotals,
+    getFinHoldings, upsertFinHolding, deleteFinHolding,
+    finHoldingsValue, finPortfolioValue, finHoldingsAllocation,
     addFinGoal, updateFinGoal, deleteFinGoal, finGoalForecast,
     finMonthSummary,
     getFinSnapshots, setFinSnapshot, deleteFinSnapshot,

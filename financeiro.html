@@ -160,6 +160,29 @@
 .inv-edit { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--mid); cursor: pointer; background: none; border: none; }
 .inv-edit:hover { color: var(--white); }
 
+/* ── posições por fundo ── */
+.hold-list { display: flex; flex-direction: column; }
+.hold-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+.hold-row:last-child { border-bottom: none; }
+.hold-tk { font-family: 'DM Mono', monospace; font-size: 12px; letter-spacing: 0.04em; color: var(--white); width: 74px; flex-shrink: 0; }
+.hold-mid { flex: 1; min-width: 0; font-size: 10px; letter-spacing: 0.03em; color: var(--mid); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hold-warn { color: var(--red); font-weight: 400; }
+.hold-bar { width: 60px; height: 3px; background: var(--surface2); flex-shrink: 0; }
+.hold-bar > span { display: block; height: 100%; background: #86efac; }
+.hold-val { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--white); width: 92px; text-align: right; flex-shrink: 0; }
+.hold-foot { font-size: 10px; letter-spacing: 0.04em; color: var(--mid); margin: 8px 0 2px; }
+.lnk { background: none; border: none; color: var(--white); text-decoration: underline; cursor: pointer; font: inherit; padding: 0; }
+
+/* ── modal de preços ── */
+.price-row { display: flex; gap: 8px; align-items: flex-end; margin-bottom: 10px; }
+.price-row .pr-tk { width: 96px; flex-shrink: 0; }
+.price-row .pr-cotas { width: 84px; flex-shrink: 0; }
+.price-row .pr-price { flex: 1; min-width: 70px; }
+.price-row .pr-val { width: 96px; flex-shrink: 0; text-align: right; font-family: 'DM Mono', monospace; font-size: 12px; color: var(--white); padding-bottom: 12px; }
+.price-row .pr-del { background: none; border: 1px solid transparent; color: var(--mid); cursor: pointer; padding: 0 6px 12px; font-size: 13px; }
+.price-row .pr-del:hover { color: var(--red); }
+#pr-list .modal-lbl { font-size: 9px; margin-bottom: 5px; }
+
 /* ── MODAL EXTRAS ── */
 .m-row { display: flex; gap: 12px; }
 .m-row .modal-field { flex: 1; }
@@ -387,10 +410,12 @@
         <div class="fin-card">
           <div class="fc-hd">
             <span class="fc-title">Investimentos <em style="font-style:italic;opacity:.45">FII</em></span>
+            <button class="fc-add" id="upd-prices">Atualizar preços</button>
             <button class="fc-add" id="add-inv">+ Movimento</button>
           </div>
           <div class="inv-tot" id="inv-tot"></div>
-          <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:6px">
+          <div id="inv-holdings"></div>
+          <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin:6px 0 6px">
             <span class="fc-meta">Aporte do mês</span>
             <button class="inv-edit" id="edit-invtarget">definir meta</button>
           </div>
@@ -553,6 +578,19 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="m-prices">
+  <div class="modal">
+    <div class="modal-title">Preços <em>das cotas</em></div>
+    <div class="m-hint" style="margin-bottom:14px">Atualize o preço atual de cada fundo — a carteira é recalculada por cotas × preço. Pegue o preço no seu app da corretora ou num site de FIIs.</div>
+    <div id="pr-list"></div>
+    <button class="fc-add" id="pr-add" style="margin-top:2px">+ Adicionar fundo</button>
+    <div class="modal-footer">
+      <button class="modal-btn ghost" data-close="m-prices">Cancelar</button>
+      <button class="modal-btn primary" id="pr-save">Salvar</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="m-inv">
   <div class="modal">
     <div class="modal-title">Movimento <em>de FII</em></div>
@@ -573,16 +611,21 @@
         <input class="modal-input" id="iv-amt" inputmode="decimal" placeholder="0,00" />
       </div>
     </div>
-    <div class="m-row">
+    <div class="m-row" id="iv-cotas-row">
       <div class="modal-field">
-        <label class="modal-lbl" for="iv-qty">Cotas <span style="opacity:.5">(opcional)</span></label>
+        <label class="modal-lbl" for="iv-qty">Cotas</label>
         <input class="modal-input" id="iv-qty" inputmode="decimal" placeholder="0" />
       </div>
       <div class="modal-field">
-        <label class="modal-lbl" for="iv-date">Data</label>
-        <input class="modal-input" id="iv-date" type="date" />
+        <label class="modal-lbl" for="iv-price">Preço da cota (R$)</label>
+        <input class="modal-input" id="iv-price" inputmode="decimal" placeholder="0,00" />
       </div>
     </div>
+    <div class="modal-field">
+      <label class="modal-lbl" for="iv-date">Data</label>
+      <input class="modal-input" id="iv-date" type="date" />
+    </div>
+    <div class="m-hint" id="iv-hint">O aporte soma essas cotas na sua posição do fundo.</div>
     <div class="modal-footer">
       <button class="modal-btn ghost" data-close="m-inv">Cancelar</button>
       <button class="modal-btn primary" id="iv-save">Registrar</button>
@@ -971,6 +1014,23 @@ function renderInvest(s) {
     <div><b class="in">${fmtBRL0(t.dividendos)}</b><span>Dividendos</span></div>
     <div><b class="${t.ganho < 0 ? 'neg' : 'in'}">${t.ganho >= 0 ? '+' : ''}${fmtBRL0(t.ganho)}</b><span>Ganho${t.yieldOnCost ? ' · ' + t.yieldOnCost + '% YoC' : ''}</span></div>`;
 
+  const hd = document.getElementById('inv-holdings');
+  if (t.tracked) {
+    const stale = t.byTicker.some(h => !h.priceUpdatedAt || h.price <= 0);
+    hd.innerHTML = `<div class="hold-list">` + t.byTicker.map(h => `
+      <div class="hold-row">
+        <span class="hold-tk">${esc(h.ticker)}</span>
+        <span class="hold-mid">${h.cotas.toLocaleString('pt-BR')} cota${h.cotas === 1 ? '' : 's'} × ${fmtBRL(h.price)}${h.priceUpdatedAt ? '' : ' <b class="hold-warn">preço?</b>'}</span>
+        <span class="hold-bar"><span style="width:${h.pct}%"></span></span>
+        <span class="hold-val">${fmtBRL0(h.value)}</span>
+      </div>`).join('') + `</div>
+      <div class="hold-foot">Carteira calculada por cotas × preço${stale ? ' — <button class="lnk" id="hd-fix">atualize os preços</button>' : ''}</div>`;
+    const fx = document.getElementById('hd-fix');
+    if (fx) fx.addEventListener('click', openPrices);
+  } else {
+    hd.innerHTML = '';
+  }
+
   const target = cfg.investTarget;
   const pct = target > 0 ? Math.min(100, Math.round(s.investedTotal / target * 100)) : (s.investedTotal > 0 ? 100 : 0);
   document.getElementById('inv-bar').style.width = pct + '%';
@@ -1161,9 +1221,7 @@ document.getElementById('eq-add').addEventListener('click', doQuickExpense);
 
 /* investimento */
 document.getElementById('add-inv').addEventListener('click', () => {
-  document.getElementById('iv-ticker').value = '';
-  document.getElementById('iv-amt').value = '';
-  document.getElementById('iv-qty').value = '';
+  ['iv-ticker', 'iv-amt', 'iv-qty', 'iv-price'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('iv-date').value = isCurrentYm() ? todayISO() : YM + '-01';
   setInvKind('aporte');
   openM('m-inv');
@@ -1173,6 +1231,9 @@ let invKind = 'aporte';
 function setInvKind(k) {
   invKind = k;
   document.querySelectorAll('#iv-kind button').forEach(b => b.classList.toggle('on', b.dataset.k === k));
+  const isAporte = k === 'aporte';
+  document.getElementById('iv-cotas-row').hidden = !isAporte;
+  document.getElementById('iv-hint').hidden = !isAporte;
 }
 document.querySelectorAll('#iv-kind button').forEach(b => b.addEventListener('click', () => setInvKind(b.dataset.k)));
 document.getElementById('iv-save').addEventListener('click', () => {
@@ -1183,9 +1244,77 @@ document.getElementById('iv-save').addEventListener('click', () => {
     ticker: document.getElementById('iv-ticker').value,
     amount: amt,
     quantity: parseMoney(document.getElementById('iv-qty').value),
+    price: parseMoney(document.getElementById('iv-price').value),
     onDate: document.getElementById('iv-date').value || todayISO(),
   });
   closeM('m-inv'); toast('Movimento registrado ✓'); renderAll();
+});
+
+/* preços das cotas */
+document.getElementById('upd-prices').addEventListener('click', openPrices);
+function priceRowHTML(h, i) {
+  return `<div class="price-row" data-i="${i}">
+    <div class="modal-field pr-tk">
+      <label class="modal-lbl">Fundo</label>
+      <input class="modal-input" data-f="ticker" value="${esc(h.ticker || '')}" placeholder="MXRF11" maxlength="12" />
+    </div>
+    <div class="modal-field pr-cotas">
+      <label class="modal-lbl">Cotas</label>
+      <input class="modal-input" data-f="cotas" inputmode="decimal" value="${h.cotas || ''}" placeholder="0" />
+    </div>
+    <div class="modal-field pr-price">
+      <label class="modal-lbl">Preço (R$)</label>
+      <input class="modal-input" data-f="price" inputmode="decimal" value="${h.price ? String(h.price).replace('.', ',') : ''}" placeholder="0,00" />
+    </div>
+    <span class="pr-val" data-r="val">${fmtBRL0((h.cotas || 0) * (h.price || 0))}</span>
+    <button class="pr-del" data-r="del" title="Remover">✕</button>
+  </div>`;
+}
+function renderPriceRows(rows) {
+  const wrap = document.getElementById('pr-list');
+  wrap.innerHTML = rows.map(priceRowHTML).join('');
+  wrap.querySelectorAll('.price-row').forEach(row => {
+    const recalc = () => {
+      const c = parseMoney(row.querySelector('[data-f="cotas"]').value);
+      const p = parseMoney(row.querySelector('[data-f="price"]').value);
+      row.querySelector('[data-r="val"]').textContent = fmtBRL0(c * p);
+    };
+    row.querySelectorAll('input').forEach(inp => inp.addEventListener('input', recalc));
+    row.querySelector('[data-r="del"]').addEventListener('click', () => { row.remove(); });
+  });
+}
+function openPrices() {
+  const hs = Store.getFinHoldings().map(h => ({ ticker: h.ticker, cotas: h.cotas, price: h.price }));
+  if (!hs.length) hs.push({ ticker: '', cotas: 0, price: 0 });
+  renderPriceRows(hs);
+  openM('m-prices');
+}
+document.getElementById('pr-add').addEventListener('click', () => {
+  const wrap = document.getElementById('pr-list');
+  wrap.insertAdjacentHTML('beforeend', priceRowHTML({ ticker: '', cotas: 0, price: 0 }, wrap.children.length));
+  renderPriceRows([...wrap.querySelectorAll('.price-row')].map(r => ({
+    ticker: r.querySelector('[data-f="ticker"]').value,
+    cotas: parseMoney(r.querySelector('[data-f="cotas"]').value),
+    price: parseMoney(r.querySelector('[data-f="price"]').value),
+  })));
+  wrap.lastElementChild.querySelector('[data-f="ticker"]').focus();
+});
+document.getElementById('pr-save').addEventListener('click', () => {
+  const rows = [...document.querySelectorAll('#pr-list .price-row')].map(r => ({
+    ticker: r.querySelector('[data-f="ticker"]').value.trim().toUpperCase(),
+    cotas: parseMoney(r.querySelector('[data-f="cotas"]').value),
+    price: parseMoney(r.querySelector('[data-f="price"]').value),
+  })).filter(r => r.ticker);
+  const seen = new Set();
+  const keep = new Set();
+  rows.forEach(r => {
+    if (seen.has(r.ticker)) return;
+    seen.add(r.ticker); keep.add(r.ticker);
+    Store.upsertFinHolding(r.ticker, { cotas: r.cotas, price: r.price });
+  });
+  // fundos removidos da lista
+  Store.getFinHoldings().slice().forEach(h => { if (!keep.has(h.ticker)) Store.deleteFinHolding(h.ticker); });
+  closeM('m-prices'); toast('Preços atualizados ✓'); renderAll();
 });
 
 /* objetivo */
@@ -1266,6 +1395,12 @@ function init() {
   fillCategorySelects();
   document.getElementById('eq-cat').value = 'Alimentação';
   document.getElementById('eq-date').value = todayISO();
+  // se há posições, o patrimônio do mês corrente = cotas × preço
+  const hs = Store.getFinHoldings();
+  if (hs.length) {
+    const v = Store.finPortfolioValue();
+    if (Store.getFinSnapshots()[Store.finYm()] !== v) Store.setFinSnapshot(Store.finYm(), v);
+  }
   renderAll();
 }
 
