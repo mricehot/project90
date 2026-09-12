@@ -75,6 +75,7 @@ const Store = (() => {
       },
       dailyPriorities: {},   // { [dayNum]: [{text, done}, ...] } — até 3, ritual de manhã
       shoppingItems: [],    // { id, label, bought, createdAt } — lista de compras do mercado
+      studyReflections: {}, // { [dayNum]: { topicIdx, q1, q2, q3, free } } — Conhecimento/Reflexões
     };
   }
 
@@ -423,6 +424,10 @@ const Store = (() => {
       data.shoppingItems.forEach(it => cache.shoppingItems.push({
         id: it.id, label: it.label || '', bought: !!it.bought, createdAt: it.createdAt,
       }));
+    }
+    if (data.studyReflections && typeof data.studyReflections === 'object') {
+      Object.keys(cache.studyReflections).forEach(k => delete cache.studyReflections[k]);
+      Object.assign(cache.studyReflections, data.studyReflections);
     }
   }
 
@@ -3910,6 +3915,29 @@ const Store = (() => {
   }
 
   /* ──────────────────────────────────────────
+     REFLEXÕES (Conhecimento) — um tema de filosofia/psicologia por dia
+     (js/study-topics.js), com um formulário de perguntas fixas + reflexão
+     livre. Guardado por dia, igual ao diário — não é tocado por
+     reset_progress().
+       cache.studyReflections: { [dayNum]: { topicIdx, q1, q2, q3, free } }
+  ────────────────────────────────────────── */
+  function getStudyReflections() { return cache.studyReflections; }
+  function getStudyReflection(dayNum) { return cache.studyReflections[dayNum] || null; }
+  function saveStudyReflection(dayNum, data) {
+    cache.studyReflections[dayNum] = data;
+    _saveMirror();
+    _push(async () => {
+      const e = data || {};
+      const { error } = await window.sb.from('study_reflections').upsert({
+        user_id: _uid, day_num: Number(dayNum), topic_idx: e.topicIdx || 0,
+        q1: e.q1 ?? null, q2: e.q2 ?? null, q3: e.q3 ?? null, free: e.free ?? null,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'user_id,day_num' });
+      if (error) throw error;
+    });
+  }
+
+  /* ──────────────────────────────────────────
      PUBLIC API
   ────────────────────────────────────────── */
   return {
@@ -3976,6 +4004,8 @@ const Store = (() => {
     getDayPriorities, setDayPriorities, toggleDayPriority, dayPrioritiesStreak,
     // lista de compras
     getShoppingItems, addShoppingItem, toggleShoppingItem, deleteShoppingItem, clearBoughtShoppingItems,
+    // reflexões (conhecimento)
+    getStudyReflections, getStudyReflection, saveStudyReflection,
     // computed
     habitVal, scheduledOn, dayCompletionPct, maxStreak, countDays,
     allHabitsDone, currentStreak, computeAchievementProgress, computeLevels,

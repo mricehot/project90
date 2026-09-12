@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#080808">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Project 90">
+<title>Project 90 — Reflexões</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/components.css">
+<script src="js/supabase-config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase.js"></script>
+<script src="js/store.js"></script>
+<script src="js/achievements.js"></script>
+<script src="js/study-topics.js"></script>
+<style>
+body { overflow: hidden; }
+
+/* ── LAYOUT PRINCIPAL — igual Bíblia/Diário: 2 colunas de altura fixa,
+   cada uma rola por conta própria ── */
+.refl-main { display: grid; grid-template-columns: 1fr 300px; grid-template-rows: auto 1fr; height: 100vh; overflow: hidden; }
+.refl-main > .topbar { grid-column: 1 / -1; padding: 30px 36px 16px; border-bottom: 1px solid var(--border); }
+.refl-body { grid-column: 1; grid-row: 2; overflow-y: auto; padding: 26px 36px; display: flex; flex-direction: column; gap: 26px; }
+
+/* ── TEMA DE HOJE ── */
+.today-card { background: var(--surface); border: 1px solid var(--border2); padding: 26px 30px; }
+.tc-eyebrow { font-size: 10px; letter-spacing: 0.24em; text-transform: uppercase; color: var(--mid); margin-bottom: 8px; }
+.tc-topic { font-family: 'DM Serif Display', serif; font-style: italic; font-size: 25px; line-height: 1.35; color: var(--white); }
+.tc-day { font-size: 12px; letter-spacing: 0.06em; color: var(--mid); margin-top: 10px; }
+
+/* ── FORMULÁRIO DE REFLEXÃO ── */
+.refl-form { background: var(--surface); border: 1px solid var(--border); padding: 26px 30px; display: flex; flex-direction: column; gap: 22px; }
+.prompt-block { display: flex; flex-direction: column; gap: 10px; }
+.prompt-lbl {
+  font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--mid);
+  display: flex; align-items: center; gap: 10px;
+}
+.prompt-lbl::before { content: ''; display: inline-block; width: 14px; height: 1px; background: var(--mid); }
+.rq-field {
+  width: 100%; background: var(--surface2); border: 1px solid var(--border);
+  color: var(--white); font-family: 'DM Mono', monospace; font-weight: 300;
+  font-size: 13px; letter-spacing: 0.04em; line-height: 1.85;
+  padding: 14px 16px; resize: none; outline: none;
+  transition: border-color 0.2s, background 0.2s; min-height: 76px;
+}
+.rq-field:focus { border-color: rgba(245,245,240,0.2); background: rgba(245,245,240,0.02); }
+.rq-field::placeholder { color: var(--mid); }
+
+.save-bar { display: flex; align-items: center; gap: 12px; padding-top: 4px; border-top: 1px solid var(--border); padding-top: 20px; }
+.save-status { font-size: 11px; letter-spacing: 0.1em; color: var(--mid); flex: 1; }
+.save-status.saved   { color: var(--green); }
+.save-status.unsaved { color: rgba(245,245,240,0.4); }
+
+/* ── SIDEBAR DIREITA — temas já estudados ── */
+.refl-rail {
+  grid-column: 2; grid-row: 2; border-left: 1px solid var(--border); background: var(--surface);
+  display: flex; flex-direction: column; overflow: hidden;
+}
+.refl-rail-hd {
+  padding: 18px 20px 14px; border-bottom: 1px solid var(--border);
+  font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--mid);
+}
+.refl-rail-list { flex: 1; overflow-y: auto; }
+.refl-item { padding: 14px 20px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.15s; }
+.refl-item:hover { background: rgba(245,245,240,0.04); }
+.ri-top { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.ri-day { font-family: 'Bebas Neue', sans-serif; font-size: 15px; color: var(--white); }
+.ri-date { font-size: 10px; letter-spacing: 0.1em; color: var(--mid); }
+.ri-topic {
+  font-size: 12px; letter-spacing: 0.02em; color: rgba(245,245,240,0.7); line-height: 1.5; margin-top: 4px;
+  overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+}
+.refl-rail-empty { padding: 32px 20px; text-align: center; font-size: 12px; color: var(--mid); line-height: 1.7; }
+
+/* ── MODAL — leitura de um tema já estudado ── */
+.rv-meta { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--mid); margin-bottom: 18px; }
+.rv-section { margin-bottom: 20px; }
+.rv-section:last-child { margin-bottom: 0; }
+.rv-lbl { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--mid); margin-bottom: 8px; }
+.rv-text {
+  font-family: 'DM Mono', monospace; font-weight: 300; font-size: 13.5px; line-height: 1.9;
+  color: var(--white); letter-spacing: 0.03em; white-space: pre-wrap; word-break: break-word;
+}
+.rv-empty { text-align: center; color: var(--mid); font-size: 13px; padding: 16px 0; }
+
+@media (max-width: 1080px) { .refl-main { grid-template-columns: 1fr 260px; } }
+@media (max-width: 900px) {
+  body { overflow: auto; }
+  .app { grid-template-columns: 1fr; }
+  .refl-main { display: block; height: auto; overflow: visible; }
+  .refl-main > .topbar { padding: 20px; }
+  .refl-body { padding: 20px; }
+  .refl-rail { display: none; }
+}
+@media (max-width: 640px) { .g3 { grid-template-columns: 1fr; } }
+
+.app,.refl-main{position:relative;z-index:1;}
+</style>
+</head>
+<body>
+
+<div id="cur"></div>
+<div id="cur-ring"></div>
+<div class="toast" id="toast"></div>
+
+<div class="app">
+
+  <aside class="sidebar">
+    <div class="sb-logo">
+      <a href="index.html" class="sb-logomark">Project 90</a>
+      <div class="sb-logosub">Transformação pessoal</div>
+    </div>
+    <div class="sb-day">
+      <div class="sb-daynum" id="sb-daynum">34</div>
+      <div class="sb-daylbl">de 90 dias</div>
+      <div style="display:flex;justify-content:space-between;font-size:10px;letter-spacing:0.1em;color:var(--mid);margin-top:10px">
+        <span>Progresso</span><span id="sb-pct">38%</span>
+      </div>
+      <div class="sb-prog-bar-bg"><div class="sb-prog-bar-fill" id="sb-fill" style="width:0%"></div></div>
+      <div class="sb-prog-meta"><span id="sb-days-left">56 restantes</span><span id="sb-pct2">38%</span></div>
+    </div>
+    <nav class="sb-nav">
+      <a class="sb-item" href="dashboard.html"><span class="sb-item-icon">◈</span> Dashboard</a>
+      <a class="sb-item" href="pendencias.html"><span class="sb-item-icon">⚑</span> Pendências</a>
+      <a class="sb-item" href="habitos.html"><span class="sb-item-icon">◉</span> Hábitos</a>
+      <a class="sb-item" href="metricas.html"><span class="sb-item-icon">△</span> Métricas</a>
+      <a class="sb-item" href="diario.html"><span class="sb-item-icon">◻</span> Diário</a>
+      <details class="sb-group" open>
+        <summary class="sb-group-toggle has-active"><span class="sb-item-icon">✦</span> Conhecimento<span class="sb-group-caret">›</span></summary>
+        <a class="sb-item sb-subitem" href="vocabulario.html"><span class="sb-item-icon">▤</span> Vocabulário</a>
+        <a class="sb-item sb-subitem" href="biblioteca.html"><span class="sb-item-icon">❐</span> Biblioteca</a>
+        <a class="sb-item sb-subitem active" href="reflexoes.html"><span class="sb-item-icon">☯</span> Reflexões</a>
+      </details>
+      <a class="sb-item" href="diccao.html"><span class="sb-item-icon">◗</span> Dicção</a>
+      <a class="sb-item" href="biblia.html"><span class="sb-item-icon">✝</span> Bíblia</a>
+      <a class="sb-item" href="tarefas.html"><span class="sb-item-icon">✓</span> Tarefas</a>
+      <a class="sb-item" href="faculdade.html"><span class="sb-item-icon">▦</span> Faculdade</a>
+      <a class="sb-item" href="treino.html"><span class="sb-item-icon">◲</span> Treino</a>
+      <a class="sb-item" href="financeiro.html"><span class="sb-item-icon">◫</span> Financeiro</a>
+      <a class="sb-item" href="conquistas.html"><span class="sb-item-icon">◆</span> Conquistas</a>
+    </nav>
+    <div class="sb-bottom">
+      <div class="sb-streak">
+        <span class="sb-streak-icon">🔥</span>
+        <div>
+          <div class="sb-streak-val" id="sb-streak-val">12</div>
+          <div class="sb-streak-lbl">Dias seguidos</div>
+        </div>
+      </div>
+      <a href="login.html" class="sb-logout">← Sair</a>
+    </div>
+  </aside>
+
+  <main class="refl-main">
+
+    <div class="topbar">
+      <div class="page-title">Reflexões <em>filosofia, psicologia e você.</em></div>
+    </div>
+
+    <div class="refl-body">
+
+      <div class="g3">
+        <div class="stat-card">
+          <div class="stat-lbl">Estudados</div>
+          <div class="stat-val" id="st-count">0</div>
+          <div class="stat-sub">temas com reflexão</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-lbl">Sequência</div>
+          <div class="stat-val" id="st-streak">0</div>
+          <div class="stat-sub">dias seguidos</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-lbl">Tema de hoje</div>
+          <div class="stat-val" id="st-topic" style="font-size:28px">1/1000</div>
+          <div class="stat-sub">na lista</div>
+        </div>
+      </div>
+
+      <div class="today-card">
+        <div class="tc-eyebrow">Tema de hoje</div>
+        <div class="tc-topic" id="tc-topic">—</div>
+        <div class="tc-day" id="tc-day">Dia 1 do desafio</div>
+      </div>
+
+      <div class="refl-form">
+        <div class="prompt-block">
+          <div class="prompt-lbl">O que esse tema significa para você</div>
+          <textarea class="rq-field" id="f-q1" rows="3" maxlength="800" placeholder="Escreva o que vier à cabeça sobre o tema de hoje..."></textarea>
+        </div>
+        <div class="prompt-block">
+          <div class="prompt-lbl">Como ele aparece na sua vida ou nas suas decisões recentes</div>
+          <textarea class="rq-field" id="f-q2" rows="3" maxlength="800" placeholder="Um exemplo concreto, recente, onde isso apareceu..."></textarea>
+        </div>
+        <div class="prompt-block">
+          <div class="prompt-lbl">Que dúvida ou contraponto esse tema levanta</div>
+          <textarea class="rq-field" id="f-q3" rows="3" maxlength="800" placeholder="O que você não tem certeza, ou discorda..."></textarea>
+        </div>
+        <div class="prompt-block">
+          <div class="prompt-lbl">Reflexão livre</div>
+          <textarea class="rq-field" id="f-free" rows="4" maxlength="1200" placeholder="Espaço livre para qualquer outra coisa sobre o tema..."></textarea>
+        </div>
+        <div class="save-bar">
+          <div class="save-status" id="save-status">Ainda não respondido hoje</div>
+          <button class="btn-sm primary" id="btn-save">Salvar reflexão</button>
+        </div>
+      </div>
+
+    </div>
+
+    <aside class="refl-rail">
+      <div class="refl-rail-hd">Temas estudados</div>
+      <div class="refl-rail-list" id="refl-rail-list"></div>
+    </aside>
+
+  </main>
+</div>
+
+<!-- MODAL: leitura de um tema já estudado -->
+<div class="modal-overlay" id="rv-overlay">
+  <div class="modal">
+    <div class="modal-title" id="rv-topic">—</div>
+    <div class="rv-meta" id="rv-meta"></div>
+    <div id="rv-body"></div>
+    <div class="modal-footer">
+      <button class="modal-btn primary" id="rv-close">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ── CURSOR ── */
+(function () {
+  const cur = document.getElementById('cur'), ring = document.getElementById('cur-ring');
+  let mx = 0, my = 0, rx = 0, ry = 0;
+  document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; cur.style.transform = `translate(${mx - 3}px,${my - 3}px)`; });
+  (function tick() { rx += (mx - rx - 15) * 0.1; ry += (my - ry - 15) * 0.1; ring.style.transform = `translate(${rx}px,${ry}px)`; requestAnimationFrame(tick); })();
+})();
+
+let toastTimer;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
+}
+
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+const DAY  = Store.getCurrentDay();
+const DAYS = Store.getTotalDays();
+const START_DATE = Store.getStartDate();
+const TOPICS = window.P90_STUDY_TOPICS || [];
+
+const MONTHS_ABR = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+const DAYS_PT    = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+
+function dayToDate(n) { const d = new Date(START_DATE); d.setDate(d.getDate() + (n - 1)); return d; }
+function fmtDateShort(d) { return d.getDate() + ' ' + MONTHS_ABR[d.getMonth()]; }
+
+/* Tema do dia: escolhido de forma determinística pelo nº do dia, igual à
+   "Pergunta do dia" do Diário — ver js/study-topics.js. */
+function topicIdxForDay(n) { return TOPICS.length ? (Math.max(1, n) - 1) % TOPICS.length : 0; }
+function topicForDay(n)    { return TOPICS.length ? TOPICS[topicIdxForDay(n)] : 'Nenhum tema cadastrado ainda.'; }
+
+function initSidebar() {
+  const pct = Math.round(DAY / DAYS * 100);
+  document.getElementById('sb-daynum').textContent = DAY;
+  document.getElementById('sb-pct').textContent = pct + '%';
+  document.getElementById('sb-pct2').textContent = pct + '%';
+  document.getElementById('sb-days-left').textContent = (DAYS - DAY) + ' restantes';
+  document.getElementById('sb-streak-val').textContent = Store.currentStreak(Store.getHabits(), DAY);
+  setTimeout(() => { document.getElementById('sb-fill').style.width = pct + '%'; }, 400);
+}
+
+let isDirty = false;
+
+function setDirty(dirty) {
+  isDirty = dirty;
+  const st = document.getElementById('save-status');
+  if (dirty) {
+    st.textContent = 'Alterações não salvas';
+    st.className = 'save-status unsaved';
+  } else {
+    const has = !!Store.getStudyReflection(DAY);
+    st.textContent = has ? '✓ Salvo' : 'Ainda não respondido hoje';
+    st.className = has ? 'save-status saved' : 'save-status';
+  }
+}
+
+function loadToday() {
+  document.getElementById('tc-topic').textContent = topicForDay(DAY);
+  document.getElementById('tc-day').textContent = 'Dia ' + DAY + ' do desafio';
+
+  const existing = Store.getStudyReflection(DAY) || {};
+  document.getElementById('f-q1').value   = existing.q1   || '';
+  document.getElementById('f-q2').value   = existing.q2   || '';
+  document.getElementById('f-q3').value   = existing.q3   || '';
+  document.getElementById('f-free').value = existing.free || '';
+  setDirty(false);
+}
+
+['f-q1', 'f-q2', 'f-q3', 'f-free'].forEach(id => {
+  document.getElementById(id).addEventListener('input', () => setDirty(true));
+});
+
+function saveToday() {
+  const data = {
+    topicIdx: topicIdxForDay(DAY),
+    q1:   document.getElementById('f-q1').value.trim(),
+    q2:   document.getElementById('f-q2').value.trim(),
+    q3:   document.getElementById('f-q3').value.trim(),
+    free: document.getElementById('f-free').value.trim(),
+  };
+  if (!data.q1 && !data.q2 && !data.q3 && !data.free) { toast('Escreva algo antes de salvar'); return; }
+  Store.saveStudyReflection(DAY, data);
+  setDirty(false);
+  renderStats();
+  renderRail();
+  toast('Reflexão salva ✓');
+}
+document.getElementById('btn-save').addEventListener('click', saveToday);
+
+function renderStats() {
+  const all = Store.getStudyReflections();
+  const days = Object.keys(all).map(Number);
+  document.getElementById('st-count').textContent = days.length;
+  document.getElementById('st-topic').textContent = (topicIdxForDay(DAY) + 1) + '/' + TOPICS.length;
+
+  const hasEntry = d => !!all[d];
+  let streak = 0, d = DAY;
+  if (hasEntry(d)) { streak++; d--; } else { d--; }
+  while (d >= 1 && hasEntry(d)) { streak++; d--; }
+  document.getElementById('st-streak').textContent = streak;
+}
+
+function renderRail() {
+  const all = Store.getStudyReflections();
+  const days = Object.keys(all).map(Number).sort((a, b) => b - a);
+  const el = document.getElementById('refl-rail-list');
+  if (!days.length) {
+    el.innerHTML = '<div class="refl-rail-empty">Nenhum tema estudado ainda. Responda o tema de hoje pra começar.</div>';
+    return;
+  }
+  el.innerHTML = days.map(n => {
+    const d = dayToDate(n);
+    const topic = TOPICS[all[n].topicIdx] || '—';
+    return `<div class="refl-item" onclick="openView(${n})">
+      <div class="ri-top"><span class="ri-day">Dia ${n}</span><span class="ri-date">${fmtDateShort(d)} · ${DAYS_PT[d.getDay()]}</span></div>
+      <div class="ri-topic">${esc(topic)}</div>
+    </div>`;
+  }).join('');
+}
+
+function openView(n) {
+  const e = Store.getStudyReflection(n);
+  if (!e) return;
+  const d = dayToDate(n);
+  document.getElementById('rv-topic').textContent = TOPICS[e.topicIdx] || '—';
+  document.getElementById('rv-meta').textContent = 'Dia ' + n + ' · ' + DAYS_PT[d.getDay()] + ', ' + fmtDateShort(d);
+
+  const sections = [
+    ['O que esse tema significa para você', e.q1],
+    ['Como ele aparece na sua vida ou nas suas decisões recentes', e.q2],
+    ['Que dúvida ou contraponto esse tema levanta', e.q3],
+    ['Reflexão livre', e.free],
+  ].filter(s => s[1]);
+
+  document.getElementById('rv-body').innerHTML = sections.length
+    ? sections.map(s => `<div class="rv-section"><div class="rv-lbl">${esc(s[0])}</div><div class="rv-text">${esc(s[1])}</div></div>`).join('')
+    : '<div class="rv-empty">Sem respostas registradas nesse dia.</div>';
+
+  document.getElementById('rv-overlay').classList.add('open');
+}
+document.getElementById('rv-close').addEventListener('click', () => {
+  document.getElementById('rv-overlay').classList.remove('open');
+});
+document.getElementById('rv-overlay').addEventListener('click', e => {
+  if (e.target.id === 'rv-overlay') e.currentTarget.classList.remove('open');
+});
+
+window.addEventListener('beforeunload', e => {
+  if (isDirty) { e.preventDefault(); e.returnValue = ''; }
+});
+
+initSidebar();
+loadToday();
+renderStats();
+renderRail();
+window.addEventListener('p90:synced', () => { initSidebar(); loadToday(); renderStats(); renderRail(); });
+</script>
+<script src="js/pwa.js"></script>
+</body>
+</html>
