@@ -439,7 +439,7 @@ function rowHTML(it, days, next) {
   const isRead = !!days[it.d];
   const isCur  = !isRead && it.d === next;
   return `<div class="bib-row${isRead ? ' read' : ''}${isCur ? ' current' : ''}" id="brow-${it.d}">
-    <button class="bib-check" onclick="toggleDay(${it.d})">${isRead ? '✓' : ''}</button>
+    <button class="bib-check" onclick="toggleDay(${it.d})" title="${isRead ? 'Desmarcar' : 'Marcar como lido'}">${isRead ? '✓' : ''}</button>
     <span class="bib-daynum">${it.d}</span>
     <span class="bib-ref">${it.r}</span>
   </div>`;

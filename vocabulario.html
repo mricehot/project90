@@ -903,7 +903,7 @@ function renderQuizQuestion() {
   document.getElementById('quiz-box').innerHTML = `
     <div class="quiz-topline">
       <span class="quiz-eyebrow">Pergunta ${quizIdx + 1} / ${ROUND_LEN}</span>
-      <span class="quiz-close" onclick="closeQuiz()">✕</span>
+      <span class="quiz-close" onclick="closeQuiz()" title="Fechar">✕</span>
     </div>
     <div class="quiz-word">${escapeHtml(w.word)}</div>
     <div class="quiz-prompt">Qual é o significado desta palavra?</div>
@@ -1008,7 +1008,7 @@ function closeReview() {
 function _rvTopline() {
   return `<div class="quiz-topline">
       <span class="quiz-eyebrow">Revisão ${Math.min(rvIdx + 1, rvQueue.length)} / ${rvQueue.length}</span>
-      <span class="quiz-close" onclick="closeReview()">✕</span>
+      <span class="quiz-close" onclick="closeReview()" title="Fechar">✕</span>
     </div>`;
 }
 function _rvProgress() {

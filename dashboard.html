@@ -130,9 +130,9 @@ body { overflow: hidden; }
 
 /* ── LISTA DE COMPRAS ── */
 .shop-empty { font-size: 13px; color: var(--mid); line-height: 1.7; padding: 4px 0 10px; }
-.shop-add-row { display: flex; gap: 8px; align-items: center; margin: 4px 0 14px; }
-.shop-add-row .card-add-input { flex: 1; width: auto; margin: 0; }
-.shop-add-row button { flex-shrink: 0; }
+.card-add-row { display: flex; gap: 8px; align-items: center; margin: 4px 0 14px; }
+.card-add-row .card-add-input { flex: 1; width: auto; margin: 0; }
+.card-add-row button { flex-shrink: 0; }
 .shop-clear {
   background: none; border: none; color: var(--mid); font-family: 'DM Mono', monospace;
   font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer;
@@ -514,9 +514,10 @@ body { overflow: hidden; }
             </span>
           </div>
           <div id="nr-body"></div>
-          <form id="nr-form" autocomplete="off" hidden>
+          <form id="nr-form" autocomplete="off" hidden class="card-add-row">
             <input class="card-add-input" id="nr-input" maxlength="80"
                    placeholder="Novo item da rotina — ex: separar a roupa de amanhã" />
+            <button type="submit" class="btn-sm primary">Adicionar</button>
           </form>
         </div>
 
@@ -527,9 +528,10 @@ body { overflow: hidden; }
             <button type="button" class="card-add-toggle" id="dc-add-btn" aria-label="Novo contador" title="Novo contador">+</button>
           </div>
           <div id="dc-list"></div>
-          <form id="dc-form" autocomplete="off" hidden>
+          <form id="dc-form" autocomplete="off" hidden class="card-add-row">
             <input class="card-add-input" id="dc-input" maxlength="80"
                    placeholder="Novo contador — ex: sem rede social até tarde" />
+            <button type="submit" class="btn-sm primary">Adicionar</button>
           </form>
         </div>
 
@@ -540,7 +542,7 @@ body { overflow: hidden; }
             <button type="button" class="card-add-toggle" id="shop-add-btn" aria-label="Novo item" title="Novo item">+</button>
           </div>
           <div id="shop-body"></div>
-          <form id="shop-form" autocomplete="off" hidden class="shop-add-row">
+          <form id="shop-form" autocomplete="off" hidden class="card-add-row">
             <input class="card-add-input" id="shop-input" maxlength="80"
                    placeholder="Novo item — ex: leite, ovos, café" />
             <button type="submit" class="btn-sm primary">Adicionar</button>
@@ -1020,7 +1022,7 @@ function renderHabits() {
   }
   document.getElementById('habits-list').innerHTML = habits.map(h => `
     <div class="h-row">
-      <div class="h-check ${h.done?'done':''}" onclick="toggleHabit(${h.id})">${h.done?'✓':''}</div>
+      <div class="h-check ${h.done?'done':''}" onclick="toggleHabit(${h.id})" title="${h.done?'Desmarcar':'Concluir'}">${h.done?'✓':''}</div>
       <div class="h-info">
         <div class="h-name" style="${h.done?'opacity:0.5;text-decoration:line-through':''}">${h.name}</div>
         <div class="h-meta">Máx: ${h.max}d</div>
