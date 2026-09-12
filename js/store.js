@@ -74,6 +74,7 @@ const Store = (() => {
         goals: {},   // { [year]: targetBooks } — meta de livros lidos no ano
       },
       dailyPriorities: {},   // { [dayNum]: [{text, done}, ...] } — até 3, ritual de manhã
+      shoppingItems: [],    // { id, label, bought, createdAt } — lista de compras do mercado
     };
   }
 
@@ -413,8 +414,15 @@ const Store = (() => {
         const arr = Array.isArray(data.dailyPriorities[k]) ? data.dailyPriorities[k] : [];
         cache.dailyPriorities[k] = arr.slice(0, 3).map(it => ({
           text: String((it && it.text) || ''), done: !!(it && it.done),
+          taskId: it && it.taskId != null ? Number(it.taskId) : null,
         }));
       });
+    }
+    if (Array.isArray(data.shoppingItems)) {
+      cache.shoppingItems.length = 0;
+      data.shoppingItems.forEach(it => cache.shoppingItems.push({
+        id: it.id, label: it.label || '', bought: !!it.bought, createdAt: it.createdAt,
+      }));
     }
   }
 
@@ -3798,7 +3806,11 @@ const Store = (() => {
 
   /* ──────────────────────────────────────────
      PRIORIDADES DO DIA (Top 3) — card no Dashboard.
-     cache.dailyPriorities[dayNum] = [{text, done}, ...] até 3 slots fixos.
+     cache.dailyPriorities[dayNum] = [{text, done, taskId}, ...] até 3 slots
+     fixos. taskId (opcional) vincula o slot a uma tarefa real de Tarefas —
+     o texto passa a espelhar o título dela e concluir/desmarcar o slot
+     também conclui/desmarca a tarefa (feito no caller, em dashboard.html,
+     que já tem acesso a completeTask/uncompleteTask).
   ────────────────────────────────────────── */
   function getDayPriorities(dayNum) {
     const arr = cache.dailyPriorities[dayNum];
@@ -3809,7 +3821,10 @@ const Store = (() => {
     const clean = [0, 1, 2].map(i => {
       const it = items[i] || {};
       const text = String(it.text || '').trim();
-      return { text, done: text ? !!it.done : false };
+      return {
+        text, done: text ? !!it.done : false,
+        taskId: text && it.taskId != null ? Number(it.taskId) : null,
+      };
     });
     cache.dailyPriorities[dayNum] = clean;
     _saveMirror();
@@ -3825,6 +3840,73 @@ const Store = (() => {
     if (!items[idx] || !items[idx].text) return;
     items[idx] = { ...items[idx], done: !items[idx].done };
     setDayPriorities(dayNum, items);
+  }
+  // Dias seguidos com prioridades batidas: hoje só entra na contagem se já
+  // bateu tudo que foi preenchido; senão a contagem começa em ontem (hoje
+  // ainda não "fechou", não deve zerar a sequência antes da hora).
+  function dayPrioritiesStreak(dayNum) {
+    const allDone = d => {
+      const items = getDayPriorities(d).filter(it => it.text);
+      return items.length > 0 && items.every(it => it.done);
+    };
+    let count = 0, d = dayNum;
+    if (allDone(d)) { count++; d--; }
+    else { d--; }
+    while (d >= 1 && allDone(d)) { count++; d--; }
+    return count;
+  }
+
+  /* ──────────────────────────────────────────
+     LISTA DE COMPRAS — card no Dashboard.
+     Lista persistente (não é por dia): vai crescendo, marca o que já
+     comprou, limpa os marcados depois da ida ao mercado.
+  ────────────────────────────────────────── */
+  function getShoppingItems() { return cache.shoppingItems; }
+  function addShoppingItem(label) {
+    const t = String(label || '').trim();
+    if (!t) return null;
+    const id = (cache.shoppingItems.reduce((m, x) => Math.max(m, x.id), 0) || 0) + 1;
+    const row = { id, label: t, bought: false, createdAt: new Date().toISOString() };
+    cache.shoppingItems.push(row);
+    _saveMirror();
+    _push(async () => {
+      const { error } = await window.sb.from('shopping_items').upsert({
+        id: row.id, user_id: _uid, label: row.label, bought: false, created_at: row.createdAt,
+      }, { onConflict: 'user_id,id' });
+      if (error) throw error;
+    });
+    return row;
+  }
+  function toggleShoppingItem(id) {
+    const it = cache.shoppingItems.find(x => x.id === id);
+    if (!it) return;
+    it.bought = !it.bought;
+    _saveMirror();
+    _push(async () => {
+      const { error } = await window.sb.from('shopping_items').update({ bought: it.bought }).eq('user_id', _uid).eq('id', id);
+      if (error) throw error;
+    });
+  }
+  function deleteShoppingItem(id) {
+    const i = cache.shoppingItems.findIndex(x => x.id === id);
+    if (i !== -1) cache.shoppingItems.splice(i, 1);
+    _saveMirror();
+    _push(async () => {
+      const { error } = await window.sb.from('shopping_items').delete().eq('user_id', _uid).eq('id', id);
+      if (error) throw error;
+    });
+  }
+  function clearBoughtShoppingItems() {
+    const boughtIds = cache.shoppingItems.filter(x => x.bought).map(x => x.id);
+    if (!boughtIds.length) return;
+    for (let i = cache.shoppingItems.length - 1; i >= 0; i--) {
+      if (cache.shoppingItems[i].bought) cache.shoppingItems.splice(i, 1);
+    }
+    _saveMirror();
+    _push(async () => {
+      const { error } = await window.sb.from('shopping_items').delete().eq('user_id', _uid).in('id', boughtIds);
+      if (error) throw error;
+    });
   }
 
   /* ──────────────────────────────────────────
@@ -3891,7 +3973,9 @@ const Store = (() => {
     addLibBook, updateLibBook, setLibStatus, deleteLibBook,
     libGoalForYear, setLibGoal, libBooksReadInYear, libGoalProgress, libStats,
     // prioridades do dia
-    getDayPriorities, setDayPriorities, toggleDayPriority,
+    getDayPriorities, setDayPriorities, toggleDayPriority, dayPrioritiesStreak,
+    // lista de compras
+    getShoppingItems, addShoppingItem, toggleShoppingItem, deleteShoppingItem, clearBoughtShoppingItems,
     // computed
     habitVal, scheduledOn, dayCompletionPct, maxStreak, countDays,
     allHabitsDone, currentStreak, computeAchievementProgress, computeLevels,
