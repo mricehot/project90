@@ -495,7 +495,7 @@ function renderToday() {
       delta = `<span class="tx-delta"></span>`;
     }
     return `<div class="tx-row ${done ? 'done' : ''}" data-id="${e.id}">
-      <div class="tx-check" data-act="check">${done ? '✓' : ''}</div>
+      <div class="tx-check" data-act="check" title="${done ? 'Desmarcar' : 'Concluir'}">${done ? '✓' : ''}</div>
       <div class="tx-info">
         <div class="tx-name">${esc(e.name)}</div>
         <div class="tx-meta">${e.sets} × ${esc(e.reps)}${last != null ? ' · última ' + fmtKg(last) + ' kg' : ''}</div>

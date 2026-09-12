@@ -956,7 +956,7 @@ function renderSessExercise() {
   document.getElementById('prac-box').innerHTML = `
     <div class="prac-topline">
       <span class="prac-eyebrow">${eyebrow}</span>
-      <span class="prac-close" onclick="closePractice()">✕</span>
+      <span class="prac-close" onclick="closePractice()" title="Fechar">✕</span>
     </div>
     <div class="prac-kindrow">
       <span class="prac-kind-badge">${escapeHtml(kindLabel(e.kind))}</span>
@@ -1146,7 +1146,7 @@ function openRead(id) {
   document.getElementById('read-box').innerHTML = `
     <div class="prac-topline">
       <span class="prac-eyebrow">Leitura em voz alta</span>
-      <span class="prac-close" onclick="closeRead()">✕</span>
+      <span class="prac-close" onclick="closeRead()" title="Fechar">✕</span>
     </div>
     <div class="prac-kindrow">
       <span class="prac-kind-badge">${rdCatLabel(t.category)}</span>
