@@ -27,45 +27,6 @@ body { overflow: hidden; }
 /* ── MAIN AREA ── */
 .dash-main { padding: 32px 36px; overflow-y: auto; display: flex; flex-direction: column; gap: 28px; }
 
-.dash-cards-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; align-items: start; }
-@media (max-width: 1080px) { .dash-cards-row { grid-template-columns: 1fr 1fr; } }
-@media (max-width: 720px) { .dash-cards-row { grid-template-columns: 1fr; } }
-
-/* ── PENDÊNCIAS DE HOJE ── */
-.tc-summary { display: flex; align-items: center; gap: 14px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
-.tc-ring { flex-shrink: 0; }
-.tc-summary-main { font-size: 13px; letter-spacing: 0.03em; color: var(--white); }
-.tc-summary-sub { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--mid); margin-top: 4px; }
-.tc-summary + .tc-section { margin-top: 16px; }
-.tc-done-wrap { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 8px; }
-.tc-done-wrap.flush { border-top: none; margin-top: 12px; padding-top: 0; }
-.tc-done { display: flex; align-items: center; gap: 9px; }
-.tc-done-c { color: var(--green); flex-shrink: 0; font-size: 12px; }
-.tc-done-t { color: var(--mid); text-transform: uppercase; letter-spacing: 0.14em; font-size: 10px; }
-.tc-done-x { color: var(--mid); opacity: 0.65; font-size: 11px; letter-spacing: 0.04em; }
-.tc-section + .tc-section { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--border); }
-.tc-sec-hd { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
-.tc-sec-title { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--mid); }
-.tc-sec-title b { color: var(--red); font-weight: 400; }
-.tc-sec-link { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--mid); text-decoration: none; white-space: nowrap; }
-.tc-sec-link:hover { color: var(--white); }
-.tc-row { display: flex; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--border); }
-.tc-row:last-child { border-bottom: none; }
-.tc-check { width: 20px; height: 20px; border: 1px solid var(--border2); flex-shrink: 0; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 12px; color: var(--bg); background: none; transition: background 0.15s, border-color 0.15s; }
-.tc-check.done { background: var(--green); border-color: var(--green); }
-.tc-check:not(.done):hover { border-color: rgba(245,245,240,0.3); }
-.tc-info { flex: 1; min-width: 0; }
-.tc-name { font-size: 13.5px; letter-spacing: 0.02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.tc-row.done .tc-name { color: var(--mid); text-decoration: line-through; }
-.tc-sub { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--mid); margin-top: 3px; }
-.tc-when { font-size: 11px; letter-spacing: 0.06em; white-space: nowrap; flex-shrink: 0; color: var(--mid); }
-.tc-when.soon { color: var(--white); }
-.tc-when.over { color: var(--red); }
-.tc-line { font-size: 13px; color: var(--mid); line-height: 1.7; }
-.tc-line b { color: var(--white); font-weight: 400; }
-.tc-more { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--mid); margin-top: 8px; }
-.tc-allclear { font-size: 14px; color: var(--white); line-height: 1.7; padding: 8px 0 4px; }
-.tc-allclear span { color: var(--mid); font-size: 12px; display: block; margin-top: 4px; letter-spacing: 0.02em; }
 
 /* botão "+" que revela o campo de adicionar (rotina noturna · dias desde) */
 .card-add-toggle {
@@ -118,7 +79,7 @@ body { overflow: hidden; }
 .dash-group-caret { font-size: 13px; color: var(--mid); transition: transform 0.2s; flex-shrink: 0; }
 .dash-group[open] .dash-group-caret { transform: rotate(90deg); }
 .dash-group[open] .dash-group-toggle { border-bottom: 1px solid var(--border); }
-.dash-group-grid { padding: 22px 24px; }
+.dash-group > .card { border: none; background: none; margin: 4px 20px 20px; padding: 0; }
 
 /* ── PRIORIDADES DO DIA (TOP 3) ── */
 .pri-row { display: flex; align-items: center; gap: 10px; padding: 9px 2px; border-bottom: 1px solid var(--border); }
@@ -140,17 +101,9 @@ body { overflow: hidden; }
 @media (hover: none) { .pri-link { opacity: 0.7; } }
 .pri-link.linked { color: var(--white); border-color: var(--border2); }
 
-/* ── LISTA DE COMPRAS ── */
-.shop-empty { font-size: 13px; color: var(--mid); line-height: 1.7; padding: 4px 0 10px; }
 .card-add-row { display: flex; gap: 8px; align-items: center; margin: 4px 0 14px; }
 .card-add-row .card-add-input { flex: 1; width: auto; margin: 0; }
 .card-add-row button { flex-shrink: 0; }
-.shop-clear {
-  background: none; border: none; color: var(--mid); font-family: 'DM Mono', monospace;
-  font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer;
-  padding: 8px 0 0; text-decoration: underline; text-underline-offset: 2px;
-}
-.shop-clear:hover { color: var(--white); }
 
 .topbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
 .page-title { font-family: 'DM Serif Display', serif; font-size: 26px; font-weight: 400; display: flex; align-items: baseline; gap: 10px; }
@@ -231,7 +184,11 @@ body { overflow: hidden; }
 /* (removido: card + modal do "Banco de provas" — poluía o dashboard.
    Tabela `wins` e Store.getWins/addWin/deleteWin seguem no código, sem UI.) */
 
-/* ── CONTADORES "DIAS DESDE" (DASH) ── */
+/* ── CONTADORES "DIAS DESDE" (DASH) ──
+   Card ocupa a largura toda no fim da página — lista em 2 colunas
+   pra não sobrar espaço vazio. */
+#dc-list { display: grid; grid-template-columns: 1fr; column-gap: 40px; }
+@media (min-width: 900px) { #dc-list { grid-template-columns: 1fr 1fr; } }
 .dc-row { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); }
 .dc-row:last-child { border-bottom: none; }
 .dc-info { flex: 1; min-width: 0; }
@@ -390,6 +347,7 @@ body { overflow: hidden; }
 
     <nav class="sb-nav">
       <a class="sb-item active" href="dashboard.html"><span class="sb-item-icon">◈</span> Dashboard</a>
+      <a class="sb-item" href="pendencias.html"><span class="sb-item-icon">⚑</span> Pendências</a>
       <a class="sb-item" href="habitos.html"><span class="sb-item-icon">◉</span> Hábitos</a>
       <a class="sb-item" href="metricas.html"><span class="sb-item-icon">△</span> Métricas</a>
       <a class="sb-item" href="diario.html"><span class="sb-item-icon">◻</span> Diário</a>
@@ -490,87 +448,42 @@ body { overflow: hidden; }
 
     </div>
 
-    <!-- IMPORTANTE (recolhível — prioridades do dia + pendências) -->
+    <!-- IMPORTANTE (recolhível — prioridades do dia) -->
     <details class="dash-group" id="important-group">
       <summary class="dash-group-toggle">
         <span class="dash-group-title">⚠ Importante</span>
         <span class="dash-group-badge" id="important-badge"></span>
         <span class="dash-group-caret">›</span>
       </summary>
-      <div class="g21 dash-group-grid">
 
-        <!-- PENDÊNCIAS DE HOJE — tarefas + entregas + vocabulário -->
-        <div class="card" id="today-card">
-          <div class="card-hd">
-            <span class="card-title">Pendências de hoje</span>
-            <span class="card-action" id="today-count"></span>
-          </div>
-          <div id="today-body"></div>
+      <!-- PRIORIDADES DO DIA (TOP 3) -->
+      <div class="card" id="priorities-card">
+        <div class="card-hd">
+          <span class="card-title">Prioridades do dia <span class="h-badge hot" id="pri-streak" style="margin-left:8px"></span></span>
+          <span class="card-action" id="pri-count"></span>
         </div>
-
-        <!-- PRIORIDADES DO DIA (TOP 3) -->
-        <div class="card" id="priorities-card">
-          <div class="card-hd">
-            <span class="card-title">Prioridades do dia <span class="h-badge hot" id="pri-streak" style="margin-left:8px"></span></span>
-            <span class="card-action" id="pri-count"></span>
-          </div>
-          <div id="pri-body"></div>
-        </div>
-
+        <div id="pri-body"></div>
       </div>
     </details>
 
-    <!-- FERRAMENTAS (rotina noturna · dias desde · lista de compras) -->
-    <div class="dash-cards-row">
-
-      <!-- ROTINA NOTURNA (duas rotinas: I / II) -->
-      <div class="card" id="night-card">
-        <div class="card-hd">
-          <span class="card-title">Rotina noturna</span>
-          <span class="nr-hd-right">
-            <span class="nr-switch" role="group" aria-label="Escolher rotina">
-              <button type="button" class="nr-rbtn" data-r="1" onclick="switchNightRoutine(1)">I</button>
-              <button type="button" class="nr-rbtn" data-r="2" onclick="switchNightRoutine(2)">II</button>
-            </span>
-            <button type="button" class="card-add-toggle" id="nr-add-btn" aria-label="Adicionar item" title="Adicionar item">+</button>
+    <!-- ROTINA NOTURNA (duas rotinas: I / II) -->
+    <div class="card" id="night-card">
+      <div class="card-hd">
+        <span class="card-title">Rotina noturna</span>
+        <span class="nr-hd-right">
+          <span class="nr-switch" role="group" aria-label="Escolher rotina">
+            <button type="button" class="nr-rbtn" data-r="1" onclick="switchNightRoutine(1)">I</button>
+            <button type="button" class="nr-rbtn" data-r="2" onclick="switchNightRoutine(2)">II</button>
           </span>
-        </div>
-        <div id="nr-body"></div>
-        <form id="nr-form" autocomplete="off" hidden class="card-add-row">
-          <input class="card-add-input" id="nr-input" maxlength="80"
-                 placeholder="Novo item da rotina — ex: separar a roupa de amanhã" />
-          <button type="submit" class="btn-sm primary">Adicionar</button>
-        </form>
+          <button type="button" class="card-add-toggle" id="nr-add-btn" aria-label="Adicionar item" title="Adicionar item">+</button>
+        </span>
       </div>
-
-      <!-- CONTADORES "DIAS DESDE" -->
-      <div class="card" id="counters-card">
-        <div class="card-hd">
-          <span class="card-title">Dias desde</span>
-          <button type="button" class="card-add-toggle" id="dc-add-btn" aria-label="Novo contador" title="Novo contador">+</button>
-        </div>
-        <div id="dc-list"></div>
-        <form id="dc-form" autocomplete="off" hidden class="card-add-row">
-          <input class="card-add-input" id="dc-input" maxlength="80"
-                 placeholder="Novo contador — ex: sem rede social até tarde" />
-          <button type="submit" class="btn-sm primary">Adicionar</button>
-        </form>
-      </div>
-
-      <!-- LISTA DE COMPRAS -->
-      <div class="card" id="shop-card">
-        <div class="card-hd">
-          <span class="card-title">Lista de compras</span>
-          <button type="button" class="card-add-toggle" id="shop-add-btn" aria-label="Novo item" title="Novo item">+</button>
-        </div>
-        <div id="shop-body"></div>
-        <form id="shop-form" autocomplete="off" hidden class="card-add-row">
-          <input class="card-add-input" id="shop-input" maxlength="80"
-                 placeholder="Novo item — ex: leite, ovos, café" />
-          <button type="submit" class="btn-sm primary">Adicionar</button>
-        </form>
-      </div>
-
+      <div id="nr-body"></div>
+      <form id="nr-form" autocomplete="off" hidden class="card-add-row">
+        <input class="card-add-input" id="nr-input" maxlength="80"
+               placeholder="Novo item da rotina — ex: separar a roupa de amanhã" />
+        <button type="submit" class="btn-sm primary">Adicionar</button>
+      </form>
     </div>
 
     <!-- CHARTS -->
@@ -583,6 +496,20 @@ body { overflow: hidden; }
         <div class="card-hd"><span class="card-title">Evolução — 90 dias</span><span class="card-action">Acumulado</span></div>
         <div class="chart-wrap"><canvas id="progress-chart"></canvas></div>
       </div>
+    </div>
+
+    <!-- CONTADORES "DIAS DESDE" -->
+    <div class="card" id="counters-card">
+      <div class="card-hd">
+        <span class="card-title">Dias desde</span>
+        <button type="button" class="card-add-toggle" id="dc-add-btn" aria-label="Novo contador" title="Novo contador">+</button>
+      </div>
+      <div id="dc-list"></div>
+      <form id="dc-form" autocomplete="off" hidden class="card-add-row">
+        <input class="card-add-input" id="dc-input" maxlength="80"
+               placeholder="Novo contador — ex: sem rede social até tarde" />
+        <button type="submit" class="btn-sm primary">Adicionar</button>
+      </form>
     </div>
 
   </main>
@@ -660,10 +587,8 @@ function init() {
   renderWeeklyNudge();
   renderLevels();
   renderPrioritiesCard();
-  renderTodayCard();
   renderCountersCard();
   renderNightCard();
-  renderShoppingCard();
 }
 
 /* ═══════════════════════════════
@@ -1096,41 +1021,6 @@ function _esc(s) {
   return String(s == null ? '' : s).replace(/[&<>"']/g, c =>
     ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
 }
-function _fmtISO(iso) {
-  if (!iso) return '';
-  const d = new Date(iso + 'T00:00:00');
-  return d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
-}
-function _taskSchedText(t) {
-  const DOW = ['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];
-  if (t.sched === 'once')   return t.anchor ? 'Vence ' + _fmtISO(t.anchor) : 'Sem prazo';
-  if (t.sched === 'everyN') return 'A cada ' + (t.intervalDays || 1) + (t.intervalDays === 1 ? ' dia' : ' dias');
-  const ds = (t.weekdays || []).slice().sort((a, b) => a - b).map(d => DOW[d]);
-  return ds.length ? ds.join(' · ') : 'Toda semana';
-}
-function _taskBadge(t) {
-  const s = Store.taskStatus(t);
-  if (s === 'overdue')    return { cls: 'over', txt: 'Atrasada' };
-  if (s === 'due')        return { cls: 'due',  txt: 'Hoje' };
-  if (s === 'done-today') return { cls: 'ok',   txt: 'Feita' };
-  if (s === 'done')       return { cls: 'ok',   txt: 'Concluída' };
-  if (s === 'backlog')    return { cls: '',     txt: 'Sem prazo' };
-  const due = Store.taskNextDue(t);
-  return { cls: '', txt: due ? 'Próx ' + _fmtISO(due) : 'Sem prazo' };
-}
-
-/* ═══════════════════════════════
-   PENDÊNCIAS DE HOJE — tarefas + entregas da faculdade + vocabulário,
-   num card só, em seções. Substitui os cards separados.
-═══════════════════════════════ */
-function _tcSec(title, href, linkTxt, inner) {
-  return `<div class="tc-section">
-    <div class="tc-sec-hd">
-      <span class="tc-sec-title">${title}</span>
-      <a class="tc-sec-link" href="${href}">${linkTxt}</a>
-    </div>${inner}</div>`;
-}
-
 /* ═══════════════════════════════
    PRIORIDADES DO DIA (TOP 3)
 ═══════════════════════════════ */
@@ -1149,8 +1039,8 @@ function _priTaskOptions(selectedId) {
   return '<option value="">— texto livre —</option>' +
     tasks.map(t => `<option value="${t.id}" ${t.id === selectedId ? 'selected' : ''}>${_esc(t.title)}</option>`).join('');
 }
-// Badge do grupo "Importante" (some quando fechado) — lê os contadores já
-// prontos de #pri-count/#today-count em vez de recalcular tudo de novo.
+// Badge do grupo "Importante" (some quando fechado) — lê o contador já
+// pronto de #pri-count em vez de recalcular tudo de novo.
 function renderImportantBadge() {
   const badge = document.getElementById('important-badge');
   if (!badge) return;
@@ -1158,9 +1048,7 @@ function renderImportantBadge() {
   let priOpen = 0;
   const m = priText.match(/^(\d+)\/(\d+)$/);
   if (m) priOpen = Math.max(0, Number(m[2]) - Number(m[1]));
-  const todayOpen = parseInt((document.getElementById('today-count') || {}).textContent, 10) || 0;
-  const total = priOpen + todayOpen;
-  badge.textContent = total ? `${total} pendência${total === 1 ? '' : 's'}` : 'tudo em dia';
+  badge.textContent = priOpen ? `${priOpen} pendência${priOpen === 1 ? '' : 's'}` : 'tudo em dia';
 }
 
 function renderPrioritiesCard() {
@@ -1239,8 +1127,8 @@ function linkPriorityTask(idx, taskIdStr) {
   renderPrioritiesCard();
 }
 // Concluir/desmarcar um slot vinculado também conclui/desmarca a tarefa de
-// verdade (mesma lógica do quickToggleTask, sem o toast pra não duplicar
-// feedback com o checkbox da própria prioridade).
+// verdade, sem toast pra não duplicar feedback com o checkbox da própria
+// prioridade.
 function togglePriority(idx) {
   const it = Store.getDayPriorities(DAY)[idx];
   if (it && it.taskId) {
@@ -1254,223 +1142,11 @@ function togglePriority(idx) {
       } else {
         if (!it.done) Store.completeTask(t.id); else if (done.indexOf(localISO) !== -1) Store.uncompleteTask(t.id, localISO);
       }
-      renderTodayCard();
       renderStats();
     }
   }
   Store.toggleDayPriority(DAY, idx);
   renderPrioritiesCard();
-}
-
-// Anel de progresso do card (SVG, mesmo estilo do de Métricas).
-function _dayRing(pct, size) {
-  const r = (size - 6) / 2, cx = size / 2, cy = size / 2;
-  const circ = 2 * Math.PI * r, off = circ - (pct / 100) * circ;
-  const done = pct >= 100;
-  return `<svg class="tc-ring" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
-    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="rgba(245,245,240,0.1)" stroke-width="2"/>
-    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${done ? 'var(--green)' : 'rgba(245,245,240,0.85)'}" stroke-width="2"
-      stroke-dasharray="${circ.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}"
-      stroke-linecap="square" transform="rotate(-90 ${cx} ${cy})"/>
-    <text x="${cx}" y="${cy + 1}" text-anchor="middle" dominant-baseline="middle"
-      font-family="Bebas Neue" font-size="12" fill="${done ? 'var(--green)' : '#f5f5f0'}">${pct}%</text>
-  </svg>`;
-}
-
-function renderTodayCard() {
-  const body = document.getElementById('today-body');
-  if (!body) return;
-  const secs = [];   // { title, href, link, inner, status: 'overdue'|'pending'|'done', doneTxt }
-  let open = 0;
-
-  /* ── Tarefas de hoje ── */
-  if (typeof Store.getTasks === 'function') {
-    const all = Store.getTasks().filter(t => !t.archived);
-    if (all.length) {
-      const seen = {}, list = [];
-      [...Store.tasksForToday(), ...all.filter(t => Store.taskStatus(t) === 'done-today')]
-        .forEach(t => { if (!seen[t.id]) { seen[t.id] = 1; list.push(t); } });
-      const rank = st => ({ overdue: 0, due: 1, backlog: 2, upcoming: 3, 'done-today': 4, done: 5 }[st] ?? 3);
-      list.sort((a, b) => rank(Store.taskStatus(a)) - rank(Store.taskStatus(b)));
-      const pend = list.filter(t => { const s = Store.taskStatus(t); return s !== 'done' && s !== 'done-today'; });
-      open += pend.length;
-      const anyOver = list.some(t => Store.taskStatus(t) === 'overdue');
-
-      let inner;
-      if (!list.length) {
-        inner = '<div class="tc-line">Nada vencendo hoje. Respira.</div>';
-      } else {
-        inner = list.slice(0, 5).map(t => {
-          const st = Store.taskStatus(t);
-          const done = st === 'done' || st === 'done-today';
-          const b = _taskBadge(t);
-          const wc = b.cls === 'over' ? 'over' : (b.cls === 'due' ? 'soon' : '');
-          return `<div class="tc-row ${done ? 'done' : ''}">
-            <div class="tc-check ${done ? 'done' : ''}" onclick="quickToggleTask(${t.id})" title="${done ? 'Desmarcar' : 'Concluir'}">${done ? '✓' : ''}</div>
-            <div class="tc-info"><div class="tc-name">${_esc(t.title)}</div><div class="tc-sub">${_esc(_taskSchedText(t))}</div></div>
-            <div class="tc-when ${wc}">${b.txt}</div>
-          </div>`;
-        }).join('');
-        if (list.length > 5) inner += `<div class="tc-more">+${list.length - 5} mais</div>`;
-      }
-      secs.push({
-        title: 'Tarefas', href: 'tarefas.html', link: 'Gerenciar →', inner,
-        status: pend.length ? (anyOver ? 'overdue' : 'pending') : 'done',
-        doneTxt: list.length ? 'tudo feito' : 'nada hoje',
-      });
-    }
-  }
-
-  /* ── Entregas da faculdade ── */
-  if (typeof Store.getStudySubjects === 'function' && Store.getStudySubjects().length) {
-    const { overdue, soon } = Store.studyUpcoming(7);
-    open += overdue.length + soon.length;
-    const shown = [...overdue, ...soon].slice(0, 4);
-    let inner;
-    if (!shown.length) {
-      inner = '<div class="tc-line">Nada vencendo nos próximos 7 dias.</div>';
-    } else {
-      inner = shown.map(a => {
-        const n = Store.studyDaysUntil(a);
-        let when, cls;
-        if (n < 0)        { when = 'atrasada'; cls = 'over'; }
-        else if (n === 0) { when = 'hoje';     cls = 'soon'; }
-        else if (n === 1) { when = 'amanhã';   cls = 'soon'; }
-        else              { when = n + ' dias'; cls = n <= 3 ? 'soon' : ''; }
-        return `<div class="tc-row">
-          <div class="tc-check" onclick="facCardToggle(${a.id})" title="Marcar entregue"></div>
-          <div class="tc-info"><div class="tc-name">${_esc(a.title)}</div><div class="tc-sub">${_esc(Store.studySubjectName(a.subjectId))}</div></div>
-          <div class="tc-when ${cls}">${when}</div>
-        </div>`;
-      }).join('');
-      const extra = overdue.length + soon.length - shown.length;
-      if (extra > 0) inner += `<div class="tc-more">+${extra} mais</div>`;
-    }
-    const title = overdue.length
-      ? `Entregas <b>· ${overdue.length} atrasada${overdue.length === 1 ? '' : 's'}</b>`
-      : 'Entregas';
-    secs.push({
-      title, href: 'faculdade.html', link: 'Ver →', inner,
-      status: overdue.length ? 'overdue' : (soon.length ? 'pending' : 'done'),
-      doneTxt: 'nada em 7 dias',
-    });
-  }
-
-  /* ── Vocabulário (SRS) ── */
-  if (typeof Store.vocabDueToday === 'function' && Store.getVocabWords && Store.getVocabWords().length) {
-    const due = Store.vocabDueToday();
-    if (due.length) {
-      open += due.length;
-      const words = due.slice(0, 8).map(w => _esc(w.word)).join(' · ');
-      secs.push({
-        title: 'Vocabulário', href: 'vocabulario.html#revisar', link: 'Revisar →',
-        inner: `<div class="tc-line"><b>${due.length}</b> palavra${due.length === 1 ? '' : 's'} pra revisar` +
-               `<br><span style="opacity:.65">${words}${due.length > 8 ? ' …' : ''}</span></div>`,
-        status: 'pending', doneTxt: 'revisado',
-      });
-    } else {
-      secs.push({ title: 'Vocabulário', href: 'vocabulario.html', link: 'Ver →', inner: '', status: 'done', doneTxt: 'revisado' });
-    }
-  }
-
-  /* ── Treino de hoje ── */
-  if (typeof Store.getTrainingExercises === 'function' && Store.getTrainingExercises().length) {
-    const split = Store.nextTrainingSplit();
-    const logged = Store.trainingLoggedToday();
-    const nEx = Store.getTrainingExercises(split).length;
-    let inner, status;
-    if (logged) {
-      inner = ''; status = 'done';
-    } else if (!nEx) {
-      inner = `<div class="tc-line">Rotação sugere o treino <b>${split}</b>, mas ele está vazio.</div>`;
-      status = 'done';
-    } else {
-      open += 1;
-      inner = `<div class="tc-line">Treino <b>${split}</b> hoje` +
-              `<br><span style="opacity:.65">${nEx} exercício${nEx === 1 ? '' : 's'} · rotação A/B/C</span></div>`;
-      status = 'pending';
-    }
-    secs.push({ title: 'Treino', href: 'treino.html', link: 'Abrir →', inner, status, doneTxt: logged ? 'registrado' : 'sem exercícios' });
-  }
-
-  /* ── Alimentação ── */
-  if (typeof Store.getMealItems === 'function' && Store.getMealItems().length) {
-    const items = Store.getMealItems();
-    const doneN = Store.mealsDoneCount();
-    const left  = items.length - doneN;
-    let inner, status;
-    if (left <= 0) {
-      inner = ''; status = 'done';
-    } else {
-      open += left;
-      inner = `<div class="tc-line"><b>${doneN}/${items.length}</b> refeições marcadas hoje` +
-              `<br><span style="opacity:.65">falta${left === 1 ? '' : 'm'} ${left}</span></div>`;
-      status = 'pending';
-    }
-    secs.push({ title: 'Alimentação', href: 'treino.html', link: 'Marcar →', inner, status, doneTxt: `${doneN}/${items.length}` });
-  }
-
-  /* ── Contas fixas vencendo hoje (ou já atrasadas no mês) ── */
-  if (typeof Store.getFinance === 'function' && Store.getFinance().fixed.length) {
-    const todayDate = new Date().getDate();
-    const ym = Store.finYm();
-    const due = Store.getFinance().fixed
-      .filter(f => f.active && f.dueDay <= todayDate && !Store.finFixedPaidMark(f.id, ym))
-      .sort((a, b) => a.dueDay - b.dueDay);
-    if (due.length) {
-      open += due.length;
-      const anyOver = due.some(f => f.dueDay < todayDate);
-      const inner = due.slice(0, 4).map(f => {
-        const over = f.dueDay < todayDate;
-        return `<div class="tc-row">
-          <div class="tc-check" onclick="quickPayFixed(${f.id})" title="Marcar pago"></div>
-          <div class="tc-info"><div class="tc-name">${_esc(f.label)}</div><div class="tc-sub">R$ ${Math.round(f.amount).toLocaleString('pt-BR')}</div></div>
-          <div class="tc-when ${over ? 'over' : 'soon'}">${over ? 'venceu dia ' + f.dueDay : 'vence hoje'}</div>
-        </div>`;
-      }).join('') + (due.length > 4 ? `<div class="tc-more">+${due.length - 4} mais</div>` : '');
-      secs.push({
-        title: anyOver ? 'Financeiro <b>· atrasado</b>' : 'Financeiro',
-        href: 'financeiro.html', link: 'Abrir →', inner,
-        status: anyOver ? 'overdue' : 'pending', doneTxt: 'contas em dia',
-      });
-    } else {
-      secs.push({ title: 'Financeiro', href: 'financeiro.html', link: 'Ver →', inner: '', status: 'done', doneTxt: 'contas em dia' });
-    }
-  }
-
-  document.getElementById('today-count').textContent = open ? `${open} aberta${open === 1 ? '' : 's'}` : '';
-  renderImportantBadge();
-
-  if (!secs.length) {
-    body.innerHTML = '<div class="tc-allclear">Tudo em dia por aqui. <span>Sem tarefas, entregas ou revisões pendentes agora.</span></div>';
-    return;
-  }
-
-  const rank = { overdue: 0, pending: 1, done: 2 };
-  secs.sort((a, b) => rank[a.status] - rank[b.status]);   // sort estável no V8 → mantém a ordem natural dentro de cada grupo
-  const active = secs.filter(s => s.status !== 'done');
-  const done   = secs.filter(s => s.status === 'done');
-
-  const pct = Math.round(done.length / secs.length * 100);
-  let html = `<div class="tc-summary">
-    ${_dayRing(pct, 46)}
-    <div>
-      <div class="tc-summary-main">${done.length} de ${secs.length} área${secs.length === 1 ? '' : 's'} em dia</div>
-      <div class="tc-summary-sub">${open ? open + ' pendência' + (open === 1 ? '' : 's') + ' agora' : 'sem pendências agora'}</div>
-    </div>
-  </div>`;
-
-  html += active.map(s => _tcSec(s.title, s.href, s.link, s.inner)).join('');
-
-  if (done.length) {
-    html += `<div class="tc-done-wrap${active.length ? '' : ' flush'}">` +
-      done.map(s => `<div class="tc-done"><span class="tc-done-c">✓</span>` +
-        `<span class="tc-done-t">${String(s.title).replace(/<[^>]+>/g, '')}</span>` +
-        `<span class="tc-done-x">${s.doneTxt}</span></div>`).join('') +
-      `</div>`;
-  }
-
-  body.innerHTML = html;
 }
 
 /* ─ CONTADORES "DIAS DESDE" ─ */
@@ -1527,51 +1203,6 @@ function removeCounter(id) {
   });
 }
 
-/* ─ LISTA DE COMPRAS ─ */
-function renderShoppingCard() {
-  const body = document.getElementById('shop-body');
-  if (!body || typeof Store.getShoppingItems !== 'function') return;
-  const list = Store.getShoppingItems();
-  if (!list.length) {
-    body.innerHTML = `<div class="shop-empty">Lista vazia.<br>Adicione o que precisa comprar no próximo mercado.</div>`;
-    return;
-  }
-  const sorted = list.slice().sort((a, b) => (a.bought === b.bought) ? 0 : (a.bought ? 1 : -1));
-  const anyBought = sorted.some(it => it.bought);
-  body.innerHTML = sorted.map(it => `
-    <div class="nr-row ${it.bought ? 'done' : ''}" onclick="toggleShopItem(${it.id})">
-      <div class="nr-check ${it.bought ? 'done' : ''}">${it.bought ? '✓' : ''}</div>
-      <div class="nr-label">${_esc(it.label)}</div>
-      <button class="nr-del" title="Excluir" onclick="event.stopPropagation(); removeShopItem(${it.id})">✕</button>
-    </div>`).join('') +
-    (anyBought ? '<button type="button" class="shop-clear" onclick="clearBoughtShop()">limpar comprados</button>' : '');
-}
-function toggleShopItem(id) {
-  Store.toggleShoppingItem(id);
-  renderShoppingCard();
-}
-function removeShopItem(id) {
-  const it = Store.getShoppingItems().find(x => x.id === id);
-  if (!it) return;
-  const snapshot = { ...it };
-  Store.deleteShoppingItem(id);
-  renderShoppingCard();
-  window.p90toastUndo(`"${snapshot.label}" removido`, () => {
-    Store.addShoppingItem(snapshot.label);
-    if (snapshot.bought) {
-      const added = Store.getShoppingItems().find(x => x.label === snapshot.label && !x.bought);
-      if (added) Store.toggleShoppingItem(added.id);
-    }
-    renderShoppingCard();
-  });
-}
-function clearBoughtShop() {
-  const n = Store.getShoppingItems().filter(x => x.bought).length;
-  Store.clearBoughtShoppingItems();
-  renderShoppingCard();
-  toast(`${n} item${n === 1 ? '' : 's'} comprado${n === 1 ? '' : 's'} removido${n === 1 ? '' : 's'} da lista`);
-}
-
 /* Abre/fecha um campo "adicionar" escondido dentro do card, e foca. */
 function wireAddToggle(btnId, formId, inputId) {
   const btn = document.getElementById(btnId);
@@ -1603,48 +1234,6 @@ function wireAddToggle(btnId, formId, inputId) {
     renderCountersCard();
   });
 })();
-
-(function wireShoppingForm() {
-  const form = document.getElementById('shop-form');
-  const input = document.getElementById('shop-input');
-  if (!form) return;
-  wireAddToggle('shop-add-btn', 'shop-form', 'shop-input');
-  form.addEventListener('submit', e => {
-    e.preventDefault();
-    const v = input.value.trim();
-    if (!v) return;
-    Store.addShoppingItem(v);
-    input.value = '';
-    input.focus();
-    renderShoppingCard();
-  });
-})();
-
-function quickToggleTask(id) {
-  const t = Store.getTasks().find(x => x.id === id);
-  if (!t) return;
-  const done = Store.getTaskDone(id) || [];
-  const now = new Date();
-  const localISO = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
-  if (t.sched === 'once') {
-    if (done.length) Store.uncompleteTask(id, done[done.length - 1]);
-    else { Store.completeTask(id); toast('Tarefa concluída ✓'); }
-  } else {
-    if (done.indexOf(localISO) !== -1) Store.uncompleteTask(id, localISO);
-    else { Store.completeTask(id); toast('Feita hoje ✓'); }
-  }
-  renderTodayCard();
-  renderStats();
-  initSidebar();
-}
-
-function quickPayFixed(id) {
-  const f = Store.getFinance().fixed.find(x => x.id === id);
-  if (!f) return;
-  Store.setFinFixedPaid(id, Store.finYm(), true);
-  toast(`"${f.label}" marcado como pago ✓`);
-  renderTodayCard();
-}
 
 /* ═══════════════════════════════
    ROTINA NOTURNA — checklist de antes de dormir (zera toda noite)
@@ -1726,12 +1315,6 @@ function removeNight(id, ev) {
     renderNightCard();
   });
 })();
-
-/* Marca uma entrega da faculdade como entregue direto do card "Pendências". */
-function facCardToggle(id) {
-  Store.toggleStudyDone(id);
-  renderTodayCard();
-}
 
 /* ─ WEEKLY CHART ─ */
 function renderWeeklyChart() {
