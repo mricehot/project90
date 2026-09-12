@@ -68,6 +68,11 @@ const Store = (() => {
         snapshots:    {},   // { [ym]: portfolioValue } — histórico do valor da carteira
         holdings:     [],   // { ticker, cotas, price, priceUpdatedAt } — posição em cada FII
       },
+      library: {
+        books: [],   // { id, title, author, genre, coverUrl, status:'quero_ler'|'lendo'|'lido', rating,
+                     //   currentPage, totalPages, notes, startedOn, finishedOn, createdAt }
+        goals: {},   // { [year]: targetBooks } — meta de livros lidos no ano
+      },
     };
   }
 
@@ -331,6 +336,32 @@ const Store = (() => {
         cotas: num(h.cotas), price: num(h.price),
         priceUpdatedAt: h.priceUpdatedAt ? String(h.priceUpdatedAt).slice(0, 10) : null,
       }));
+    }
+    if (data.library && typeof data.library === 'object') {
+      const lib = data.library;
+      const _le = _emptyCache().library;
+      Object.keys(_le).forEach(k => {
+        if (cache.library[k] == null) cache.library[k] = Array.isArray(_le[k]) ? [] : (typeof _le[k] === 'object' ? {} : _le[k]);
+      });
+      if (Array.isArray(lib.books)) {
+        cache.library.books.length = 0;
+        lib.books.forEach(b => cache.library.books.push({
+          id: b.id, title: b.title || '', author: b.author || '', genre: b.genre || '',
+          coverUrl: b.coverUrl || '',
+          status: (b.status === 'lendo' || b.status === 'lido') ? b.status : 'quero_ler',
+          rating: b.rating != null ? parseInt(b.rating, 10) : null,
+          currentPage: parseInt(b.currentPage, 10) || 0,
+          totalPages: b.totalPages != null ? (parseInt(b.totalPages, 10) || null) : null,
+          notes: b.notes || '',
+          startedOn: b.startedOn ? String(b.startedOn).slice(0, 10) : null,
+          finishedOn: b.finishedOn ? String(b.finishedOn).slice(0, 10) : null,
+          createdAt: b.createdAt,
+        }));
+      }
+      if (lib.goals && typeof lib.goals === 'object') {
+        Object.keys(cache.library.goals).forEach(k => delete cache.library.goals[k]);
+        Object.keys(lib.goals).forEach(k => { cache.library.goals[k] = parseInt(lib.goals[k], 10) || 0; });
+      }
     }
   }
 
@@ -3539,6 +3570,155 @@ const Store = (() => {
   }
 
   /* ──────────────────────────────────────────
+     BIBLIOTECA — registro de livros lidos (página biblioteca.html)
+     cache.library.* — ver _emptyCache.
+  ────────────────────────────────────────── */
+  const LIB_GENRES = ['Ficção', 'Não-ficção', 'Autoajuda', 'Negócios', 'Tecnologia',
+                       'Biografia', 'História', 'Filosofia', 'Religião', 'Outros'];
+  function libGenres() { return LIB_GENRES.slice(); }
+
+  function _libNextId(arr) { return (arr.reduce((m, x) => Math.max(m, x.id), 0) || 0) + 1; }
+  function _libPush(table, row) {
+    _push(async () => {
+      const { error } = await window.sb.from(table).upsert(row, { onConflict: 'user_id,id' });
+      if (error) throw error;
+    });
+  }
+  function _libDel(table, id) {
+    _push(async () => {
+      const { error } = await window.sb.from(table).delete().eq('user_id', _uid).eq('id', id);
+      if (error) throw error;
+    });
+  }
+
+  function getLibrary() { return cache.library; }
+  function getLibBooks() { return cache.library.books; }
+
+  function addLibBook(f) {
+    const status = (f.status === 'lendo' || f.status === 'lido') ? f.status : 'quero_ler';
+    const today = _localDate(0);
+    const row = {
+      id: _libNextId(cache.library.books),
+      title: (f.title || '').trim(),
+      author: (f.author || '').trim(),
+      genre: f.genre || '',
+      coverUrl: (f.coverUrl || '').trim(),
+      status,
+      rating: f.rating != null ? Math.min(5, Math.max(1, parseInt(f.rating, 10) || 0)) || null : null,
+      currentPage: Math.max(0, parseInt(f.currentPage, 10) || 0),
+      totalPages: f.totalPages != null ? (Math.max(0, parseInt(f.totalPages, 10)) || null) : null,
+      notes: f.notes || '',
+      startedOn: status !== 'quero_ler' ? (f.startedOn || today) : null,
+      finishedOn: status === 'lido' ? (f.finishedOn || today) : null,
+      createdAt: new Date().toISOString(),
+    };
+    cache.library.books.unshift(row);
+    _saveMirror();
+    _libPush('lib_books', {
+      id: row.id, user_id: _uid, title: row.title, author: row.author, genre: row.genre || null,
+      cover_url: row.coverUrl || null,
+      status: row.status, rating: row.rating, current_page: row.currentPage, total_pages: row.totalPages,
+      notes: row.notes || null, started_on: row.startedOn, finished_on: row.finishedOn, created_at: row.createdAt,
+    });
+    return row;
+  }
+
+  function updateLibBook(id, patch) {
+    const b = cache.library.books.find(x => x.id === id);
+    if (!b) return;
+    if (patch.title != null)       b.title = String(patch.title).trim();
+    if (patch.author != null)      b.author = String(patch.author).trim();
+    if (patch.genre != null)       b.genre = patch.genre;
+    if (patch.coverUrl != null)    b.coverUrl = String(patch.coverUrl).trim();
+    if (patch.rating !== undefined) b.rating = patch.rating != null ? Math.min(5, Math.max(1, parseInt(patch.rating, 10) || 0)) || null : null;
+    if (patch.currentPage != null) b.currentPage = Math.max(0, parseInt(patch.currentPage, 10) || 0);
+    if (patch.totalPages !== undefined) b.totalPages = patch.totalPages != null ? (Math.max(0, parseInt(patch.totalPages, 10)) || null) : null;
+    if (patch.notes != null)       b.notes = patch.notes;
+    if (patch.status != null && patch.status !== b.status) setLibStatus(id, patch.status, true);
+    _saveMirror();
+    _push(async () => {
+      const { error } = await window.sb.from('lib_books').update({
+        title: b.title, author: b.author, genre: b.genre || null, cover_url: b.coverUrl || null, rating: b.rating,
+        current_page: b.currentPage, total_pages: b.totalPages, notes: b.notes || null,
+        started_on: b.startedOn, finished_on: b.finishedOn, status: b.status,
+      }).eq('user_id', _uid).eq('id', id);
+      if (error) throw error;
+    });
+    return b;
+  }
+
+  // Muda o status e ajusta datas/página automaticamente: "lendo" grava início
+  // (se ainda não tinha), "lido" grava fim e completa a página atual.
+  function setLibStatus(id, status, _skipSave) {
+    const b = cache.library.books.find(x => x.id === id);
+    if (!b || (b.status === status && !_skipSave)) return;
+    const today = _localDate(0);
+    b.status = status;
+    if (status !== 'quero_ler' && !b.startedOn) b.startedOn = today;
+    if (status === 'lido') {
+      if (!b.finishedOn) b.finishedOn = today;
+      if (b.totalPages) b.currentPage = b.totalPages;
+    } else {
+      b.finishedOn = null;
+    }
+    if (!_skipSave) {
+      _saveMirror();
+      _push(async () => {
+        const { error } = await window.sb.from('lib_books').update({
+          status: b.status, started_on: b.startedOn, finished_on: b.finishedOn, current_page: b.currentPage,
+        }).eq('user_id', _uid).eq('id', id);
+        if (error) throw error;
+      });
+    }
+    return b;
+  }
+
+  function deleteLibBook(id) {
+    const i = cache.library.books.findIndex(x => x.id === id);
+    if (i !== -1) cache.library.books.splice(i, 1);
+    _saveMirror(); _libDel('lib_books', id);
+  }
+
+  /* ── meta anual de leitura ── */
+  function libGoalForYear(year) { return cache.library.goals[year] || 0; }
+  function setLibGoal(year, target) {
+    const t = Math.max(0, parseInt(target, 10) || 0);
+    cache.library.goals[year] = t;
+    _saveMirror();
+    _push(async () => {
+      const { error } = await window.sb.from('lib_goals').upsert({
+        user_id: _uid, year, target: t,
+      }, { onConflict: 'user_id,year' });
+      if (error) throw error;
+    });
+  }
+  function libBooksReadInYear(year) {
+    return cache.library.books.filter(b => b.status === 'lido' && b.finishedOn && b.finishedOn.slice(0, 4) === String(year)).length;
+  }
+  function libGoalProgress(year) {
+    const target = libGoalForYear(year);
+    const read = libBooksReadInYear(year);
+    return { target, read, pct: target > 0 ? Math.min(100, Math.round(read / target * 100)) : 0 };
+  }
+
+  /* ── estatísticas ── */
+  function libStats() {
+    const books = cache.library.books;
+    const lidos = books.filter(b => b.status === 'lido');
+    const rated = lidos.filter(b => b.rating != null);
+    const avgRating = rated.length ? Math.round(rated.reduce((s, b) => s + b.rating, 0) / rated.length * 10) / 10 : 0;
+    const byGenre = {};
+    lidos.forEach(b => { const g = b.genre || 'Outros'; byGenre[g] = (byGenre[g] || 0) + 1; });
+    return {
+      totalRead: lidos.length,
+      reading: books.filter(b => b.status === 'lendo'),
+      wantToRead: books.filter(b => b.status === 'quero_ler').length,
+      avgRating, byGenre,
+      pagesRead: lidos.reduce((s, b) => s + (b.totalPages || b.currentPage || 0), 0),
+    };
+  }
+
+  /* ──────────────────────────────────────────
      PUBLIC API
   ────────────────────────────────────────── */
   return {
@@ -3597,6 +3777,10 @@ const Store = (() => {
     finMonthSummary,
     getFinSnapshots, setFinSnapshot, deleteFinSnapshot,
     finPortfolioSeries, finAporteCumSeries, finFlowSeries, finSurplusCumSeries,
+    // biblioteca
+    getLibrary, getLibBooks, libGenres,
+    addLibBook, updateLibBook, setLibStatus, deleteLibBook,
+    libGoalForYear, setLibGoal, libBooksReadInYear, libGoalProgress, libStats,
     // computed
     habitVal, scheduledOn, dayCompletionPct, maxStreak, countDays,
     allHabitsDone, currentStreak, computeAchievementProgress, computeLevels,
