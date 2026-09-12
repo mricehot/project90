@@ -175,6 +175,21 @@
 .sb-item.active { color: var(--white); border-left-color: var(--white); background: rgba(245,245,240,0.04); }
 .sb-item-icon   { font-size: 14px; width: 14px; text-align: center; }
 
+/* ── GRUPO DE NAV (ex.: Conhecimento) — <details>/<summary> nativo, sem JS ── */
+.sb-group-toggle {
+  display: flex; align-items: center; gap: 10px; padding: 10px 24px;
+  font-size: 13px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--mid);
+  cursor: pointer; transition: color 0.2s, background 0.2s;
+  border-left: 2px solid transparent; list-style: none;
+}
+.sb-group-toggle::-webkit-details-marker { display: none; }
+.sb-group-toggle::marker { content: ''; }
+.sb-group-toggle:hover { color: var(--white); background: rgba(245,245,240,0.03); }
+.sb-group-toggle.has-active { color: var(--white); border-left-color: var(--white); background: rgba(245,245,240,0.04); }
+.sb-group-caret { margin-left: auto; font-size: 13px; opacity: 0.5; transition: transform 0.2s; }
+.sb-group[open] > .sb-group-toggle .sb-group-caret { transform: rotate(90deg); }
+.sb-subitem { padding-left: 46px; }
+
 .sb-bottom { padding: 20px 24px; border-top: 1px solid var(--border); }
 .sb-logout {
   display: flex; align-items: center; gap: 8px; cursor: pointer;
