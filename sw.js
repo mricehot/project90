@@ -7,18 +7,18 @@
 ═══════════════════════════════════════════════ */
 importScripts('js/idb.js');
 
-const CACHE = 'p90-shell-v31';
+const CACHE = 'p90-shell-v32';
 const FONTS = 'p90-fonts-v1';
 
 const ASSETS = [
   './',
   'index.html', 'login.html',
   'dashboard.html', 'pendencias.html', 'habitos.html', 'metricas.html', 'diario.html', 'conquistas.html',
-  'vocabulario.html', 'diccao.html', 'biblia.html', 'tarefas.html', 'faculdade.html', 'treino.html', 'financeiro.html', 'biblioteca.html',
+  'vocabulario.html', 'diccao.html', 'biblia.html', 'tarefas.html', 'faculdade.html', 'treino.html', 'financeiro.html', 'biblioteca.html', 'reflexoes.html',
   'css/base.css', 'css/components.css',
   'js/store.js', 'js/ui.js', 'js/achievements.js', 'js/quotes.js',
   'js/supabase.js', 'js/supabase-config.js', 'js/speech-library.js', 'js/reading-texts.js',
-  'js/bible-plan.js', 'js/journal-prompts.js', 'js/pwa.js', 'js/idb.js',
+  'js/bible-plan.js', 'js/journal-prompts.js', 'js/study-topics.js', 'js/pwa.js', 'js/idb.js',
   'manifest.webmanifest',
   'icons/icon-192.png', 'icons/icon-512.png',
 ];
