@@ -118,6 +118,14 @@ body { overflow: hidden; }
 .pri-input::placeholder { color: var(--mid); }
 .pri-row.done .pri-input { color: var(--mid); text-decoration: line-through; }
 .pri-done-msg { font-size: 13px; color: rgba(134,239,172,0.9); line-height: 1.6; padding: 10px 0 4px; }
+.pri-link {
+  flex-shrink: 0; max-width: 108px; background: var(--surface2); border: 1px solid var(--border);
+  color: var(--mid); font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.02em;
+  padding: 5px 6px; outline: none; opacity: 0; transition: opacity 0.15s; cursor: pointer;
+}
+.pri-row:hover .pri-link, .pri-link:focus, .pri-link.linked { opacity: 1; }
+@media (hover: none) { .pri-link { opacity: 0.7; } }
+.pri-link.linked { color: var(--white); border-color: var(--border2); }
 .topbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
 .page-title { font-family: 'DM Serif Display', serif; font-size: 26px; font-weight: 400; display: flex; align-items: baseline; gap: 10px; }
 .page-title em { font-style: italic; opacity: 0.45; font-size: 22px; }
@@ -459,7 +467,7 @@ body { overflow: hidden; }
     <!-- PRIORIDADES DO DIA (TOP 3) -->
     <div class="card" id="priorities-card">
       <div class="card-hd">
-        <span class="card-title">Prioridades do dia</span>
+        <span class="card-title">Prioridades do dia <span class="h-badge hot" id="pri-streak" style="margin-left:8px"></span></span>
         <span class="card-action" id="pri-count"></span>
       </div>
       <div id="pri-body"></div>
@@ -1075,20 +1083,39 @@ function _tcSec(title, href, linkTxt, inner) {
 /* ═══════════════════════════════
    PRIORIDADES DO DIA (TOP 3)
 ═══════════════════════════════ */
+function _renderPriStreak() {
+  const el = document.getElementById('pri-streak');
+  if (!el) return;
+  const streak = Store.dayPrioritiesStreak(DAY);
+  el.textContent = streak > 0 ? `🔥 ${streak}` : '';
+  el.hidden = streak <= 0;
+}
+// Tarefas pra vincular a um slot: só as ativas, mais urgentes primeiro.
+function _priTaskOptions(selectedId) {
+  const rank = st => ({ overdue: 0, due: 1, backlog: 2, upcoming: 3, 'done-today': 4, done: 5 }[st] ?? 3);
+  const tasks = Store.getTasks().filter(t => !t.archived)
+    .slice().sort((a, b) => rank(Store.taskStatus(a)) - rank(Store.taskStatus(b)));
+  return '<option value="">— texto livre —</option>' +
+    tasks.map(t => `<option value="${t.id}" ${t.id === selectedId ? 'selected' : ''}>${_esc(t.title)}</option>`).join('');
+}
 function renderPrioritiesCard() {
   const body = document.getElementById('pri-body');
   if (!body) return;
   const items = Store.getDayPriorities(DAY);
-  const slots = [0, 1, 2].map(i => items[i] || { text: '', done: false });
+  const slots = [0, 1, 2].map(i => items[i] || { text: '', done: false, taskId: null });
   const filled = slots.filter(s => s.text);
   const doneCount = filled.filter(s => s.done).length;
   document.getElementById('pri-count').textContent = filled.length ? `${doneCount}/${filled.length}` : '';
+  _renderPriStreak();
 
   body.innerHTML = slots.map((s, i) => `
     <div class="pri-row ${s.done ? 'done' : ''}">
       <div class="nr-check ${s.done ? 'done' : ''}" onclick="togglePriority(${i})" title="${s.done ? 'Desmarcar' : 'Concluir'}">${s.done ? '✓' : ''}</div>
-      <input class="pri-input" data-idx="${i}" value="${_esc(s.text)}" maxlength="120"
+      <input class="pri-input" data-idx="${i}" value="${_esc(s.text)}" maxlength="120" ${s.taskId ? 'readonly' : ''}
              placeholder="Prioridade ${i + 1}${i === 0 ? ' — o que mais importa hoje?' : ''}" />
+      <select class="pri-link ${s.taskId ? 'linked' : ''}" data-idx="${i}" title="Vincular a uma tarefa existente">
+        ${_priTaskOptions(s.taskId)}
+      </select>
     </div>`).join('') +
     (filled.length && doneCount === filled.length
       ? '<div class="pri-done-msg">Prioridades do dia batidas ✓</div>' : '');
@@ -1097,14 +1124,17 @@ function renderPrioritiesCard() {
     inp.addEventListener('keydown', e => { if (e.key === 'Enter') inp.blur(); });
     inp.addEventListener('blur', () => savePriorityText(Number(inp.dataset.idx), inp.value));
   });
+  body.querySelectorAll('.pri-link').forEach(sel => {
+    sel.addEventListener('change', () => linkPriorityTask(Number(sel.dataset.idx), sel.value));
+  });
 }
 // Salva só o texto do slot sem reconstruir o card inteiro: um innerHTML novo
 // destruiria o <input> que acabou de receber foco via Tab (o navegador não
 // tem como restaurar o foco num elemento recriado), quebrando o fluxo de
 // preencher as 3 prioridades em sequência.
 function savePriorityText(idx, text) {
-  const items = [0, 1, 2].map(i => Store.getDayPriorities(DAY)[i] || { text: '', done: false });
-  items[idx] = { text: text.trim(), done: items[idx].done };
+  const items = [0, 1, 2].map(i => Store.getDayPriorities(DAY)[i] || { text: '', done: false, taskId: null });
+  items[idx] = { text: text.trim(), done: items[idx].done, taskId: items[idx].taskId };
   Store.setDayPriorities(DAY, items);
 
   const saved = Store.getDayPriorities(DAY)[idx];
@@ -1118,6 +1148,7 @@ function savePriorityText(idx, text) {
   const filled = [0, 1, 2].map(i => Store.getDayPriorities(DAY)[i]).filter(s => s && s.text);
   const doneCount = filled.filter(s => s.done).length;
   document.getElementById('pri-count').textContent = filled.length ? `${doneCount}/${filled.length}` : '';
+  _renderPriStreak();
 
   const body = document.getElementById('pri-body');
   const existingMsg = body.querySelector('.pri-done-msg');
@@ -1125,7 +1156,41 @@ function savePriorityText(idx, text) {
   if (allDone && !existingMsg) body.insertAdjacentHTML('beforeend', '<div class="pri-done-msg">Prioridades do dia batidas ✓</div>');
   else if (!allDone && existingMsg) existingMsg.remove();
 }
+// Vincula (ou desvincula, value='') um slot a uma tarefa real de Tarefas —
+// o texto passa a espelhar o título dela.
+function linkPriorityTask(idx, taskIdStr) {
+  const items = [0, 1, 2].map(i => Store.getDayPriorities(DAY)[i] || { text: '', done: false, taskId: null });
+  if (!taskIdStr) {
+    items[idx] = { text: items[idx].text, done: items[idx].done, taskId: null };
+  } else {
+    const t = Store.getTasks().find(x => x.id === Number(taskIdStr));
+    if (!t) return;
+    const st = Store.taskStatus(t);
+    items[idx] = { text: t.title, done: st === 'done' || st === 'done-today', taskId: t.id };
+  }
+  Store.setDayPriorities(DAY, items);
+  renderPrioritiesCard();
+}
+// Concluir/desmarcar um slot vinculado também conclui/desmarca a tarefa de
+// verdade (mesma lógica do quickToggleTask, sem o toast pra não duplicar
+// feedback com o checkbox da própria prioridade).
 function togglePriority(idx) {
+  const it = Store.getDayPriorities(DAY)[idx];
+  if (it && it.taskId) {
+    const t = Store.getTasks().find(x => x.id === it.taskId);
+    if (t) {
+      const done = Store.getTaskDone(t.id) || [];
+      const now = new Date();
+      const localISO = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+      if (t.sched === 'once') {
+        if (!it.done) Store.completeTask(t.id); else if (done.length) Store.uncompleteTask(t.id, done[done.length - 1]);
+      } else {
+        if (!it.done) Store.completeTask(t.id); else if (done.indexOf(localISO) !== -1) Store.uncompleteTask(t.id, localISO);
+      }
+      renderTodayCard();
+      renderStats();
+    }
+  }
   Store.toggleDayPriority(DAY, idx);
   renderPrioritiesCard();
 }

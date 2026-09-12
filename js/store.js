@@ -413,6 +413,7 @@ const Store = (() => {
         const arr = Array.isArray(data.dailyPriorities[k]) ? data.dailyPriorities[k] : [];
         cache.dailyPriorities[k] = arr.slice(0, 3).map(it => ({
           text: String((it && it.text) || ''), done: !!(it && it.done),
+          taskId: it && it.taskId != null ? Number(it.taskId) : null,
         }));
       });
     }
@@ -3798,7 +3799,11 @@ const Store = (() => {
 
   /* ──────────────────────────────────────────
      PRIORIDADES DO DIA (Top 3) — card no Dashboard.
-     cache.dailyPriorities[dayNum] = [{text, done}, ...] até 3 slots fixos.
+     cache.dailyPriorities[dayNum] = [{text, done, taskId}, ...] até 3 slots
+     fixos. taskId (opcional) vincula o slot a uma tarefa real de Tarefas —
+     o texto passa a espelhar o título dela e concluir/desmarcar o slot
+     também conclui/desmarca a tarefa (feito no caller, em dashboard.html,
+     que já tem acesso a completeTask/uncompleteTask).
   ────────────────────────────────────────── */
   function getDayPriorities(dayNum) {
     const arr = cache.dailyPriorities[dayNum];
@@ -3809,7 +3814,10 @@ const Store = (() => {
     const clean = [0, 1, 2].map(i => {
       const it = items[i] || {};
       const text = String(it.text || '').trim();
-      return { text, done: text ? !!it.done : false };
+      return {
+        text, done: text ? !!it.done : false,
+        taskId: text && it.taskId != null ? Number(it.taskId) : null,
+      };
     });
     cache.dailyPriorities[dayNum] = clean;
     _saveMirror();
@@ -3825,6 +3833,20 @@ const Store = (() => {
     if (!items[idx] || !items[idx].text) return;
     items[idx] = { ...items[idx], done: !items[idx].done };
     setDayPriorities(dayNum, items);
+  }
+  // Dias seguidos com prioridades batidas: hoje só entra na contagem se já
+  // bateu tudo que foi preenchido; senão a contagem começa em ontem (hoje
+  // ainda não "fechou", não deve zerar a sequência antes da hora).
+  function dayPrioritiesStreak(dayNum) {
+    const allDone = d => {
+      const items = getDayPriorities(d).filter(it => it.text);
+      return items.length > 0 && items.every(it => it.done);
+    };
+    let count = 0, d = dayNum;
+    if (allDone(d)) { count++; d--; }
+    else { d--; }
+    while (d >= 1 && allDone(d)) { count++; d--; }
+    return count;
   }
 
   /* ──────────────────────────────────────────
@@ -3891,7 +3913,7 @@ const Store = (() => {
     addLibBook, updateLibBook, setLibStatus, deleteLibBook,
     libGoalForYear, setLibGoal, libBooksReadInYear, libGoalProgress, libStats,
     // prioridades do dia
-    getDayPriorities, setDayPriorities, toggleDayPriority,
+    getDayPriorities, setDayPriorities, toggleDayPriority, dayPrioritiesStreak,
     // computed
     habitVal, scheduledOn, dayCompletionPct, maxStreak, countDays,
     allHabitsDone, currentStreak, computeAchievementProgress, computeLevels,
