@@ -31,7 +31,8 @@ body { overflow: hidden; }
    Multi-column (não grid) pra não deixar buraco quando as alturas diferem
    ou quando um card está oculto — os cards fluem preenchendo a coluna. */
 .dash-cards { display: flex; flex-direction: column; gap: 16px; }
-.dash-cards-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+.dash-cards-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; align-items: start; }
+@media (max-width: 1080px) { .dash-cards-row { grid-template-columns: 1fr 1fr; } }
 @media (max-width: 720px) { .dash-cards-row { grid-template-columns: 1fr; } }
 
 /* ── PENDÊNCIAS DE HOJE ── */
@@ -126,6 +127,16 @@ body { overflow: hidden; }
 .pri-row:hover .pri-link, .pri-link:focus, .pri-link.linked { opacity: 1; }
 @media (hover: none) { .pri-link { opacity: 0.7; } }
 .pri-link.linked { color: var(--white); border-color: var(--border2); }
+
+/* ── LISTA DE COMPRAS ── */
+.shop-empty { font-size: 13px; color: var(--mid); line-height: 1.7; padding: 4px 0 10px; }
+.shop-clear {
+  background: none; border: none; color: var(--mid); font-family: 'DM Mono', monospace;
+  font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer;
+  padding: 8px 0 0; text-decoration: underline; text-underline-offset: 2px;
+}
+.shop-clear:hover { color: var(--white); }
+
 .topbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
 .page-title { font-family: 'DM Serif Display', serif; font-size: 26px; font-weight: 400; display: flex; align-items: baseline; gap: 10px; }
 .page-title em { font-style: italic; opacity: 0.45; font-size: 22px; }
@@ -519,6 +530,19 @@ body { overflow: hidden; }
           </form>
         </div>
 
+        <!-- LISTA DE COMPRAS -->
+        <div class="card" id="shop-card">
+          <div class="card-hd">
+            <span class="card-title">Lista de compras</span>
+            <button type="button" class="card-add-toggle" id="shop-add-btn" aria-label="Novo item" title="Novo item">+</button>
+          </div>
+          <div id="shop-body"></div>
+          <form id="shop-form" autocomplete="off" hidden>
+            <input class="card-add-input" id="shop-input" maxlength="80"
+                   placeholder="Novo item — ex: leite, ovos, café" />
+          </form>
+        </div>
+
       </div>
 
     </div>
@@ -613,6 +637,7 @@ function init() {
   renderTodayCard();
   renderCountersCard();
   renderNightCard();
+  renderShoppingCard();
 }
 
 /* ═══════════════════════════════
@@ -1459,6 +1484,51 @@ function removeCounter(id) {
   });
 }
 
+/* ─ LISTA DE COMPRAS ─ */
+function renderShoppingCard() {
+  const body = document.getElementById('shop-body');
+  if (!body || typeof Store.getShoppingItems !== 'function') return;
+  const list = Store.getShoppingItems();
+  if (!list.length) {
+    body.innerHTML = `<div class="shop-empty">Lista vazia.<br>Adicione o que precisa comprar no próximo mercado.</div>`;
+    return;
+  }
+  const sorted = list.slice().sort((a, b) => (a.bought === b.bought) ? 0 : (a.bought ? 1 : -1));
+  const anyBought = sorted.some(it => it.bought);
+  body.innerHTML = sorted.map(it => `
+    <div class="nr-row ${it.bought ? 'done' : ''}" onclick="toggleShopItem(${it.id})">
+      <div class="nr-check ${it.bought ? 'done' : ''}">${it.bought ? '✓' : ''}</div>
+      <div class="nr-label">${_esc(it.label)}</div>
+      <button class="nr-del" title="Excluir" onclick="event.stopPropagation(); removeShopItem(${it.id})">✕</button>
+    </div>`).join('') +
+    (anyBought ? '<button type="button" class="shop-clear" onclick="clearBoughtShop()">limpar comprados</button>' : '');
+}
+function toggleShopItem(id) {
+  Store.toggleShoppingItem(id);
+  renderShoppingCard();
+}
+function removeShopItem(id) {
+  const it = Store.getShoppingItems().find(x => x.id === id);
+  if (!it) return;
+  const snapshot = { ...it };
+  Store.deleteShoppingItem(id);
+  renderShoppingCard();
+  window.p90toastUndo(`"${snapshot.label}" removido`, () => {
+    Store.addShoppingItem(snapshot.label);
+    if (snapshot.bought) {
+      const added = Store.getShoppingItems().find(x => x.label === snapshot.label && !x.bought);
+      if (added) Store.toggleShoppingItem(added.id);
+    }
+    renderShoppingCard();
+  });
+}
+function clearBoughtShop() {
+  const n = Store.getShoppingItems().filter(x => x.bought).length;
+  Store.clearBoughtShoppingItems();
+  renderShoppingCard();
+  toast(`${n} item${n === 1 ? '' : 's'} comprado${n === 1 ? '' : 's'} removido${n === 1 ? '' : 's'} da lista`);
+}
+
 /* Abre/fecha um campo "adicionar" escondido dentro do card, e foca. */
 function wireAddToggle(btnId, formId, inputId) {
   const btn = document.getElementById(btnId);
@@ -1488,6 +1558,22 @@ function wireAddToggle(btnId, formId, inputId) {
     document.getElementById('dc-add-btn').classList.remove('on');
     toast('Contador criado ✓');
     renderCountersCard();
+  });
+})();
+
+(function wireShoppingForm() {
+  const form = document.getElementById('shop-form');
+  const input = document.getElementById('shop-input');
+  if (!form) return;
+  wireAddToggle('shop-add-btn', 'shop-form', 'shop-input');
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+    const v = input.value.trim();
+    if (!v) return;
+    Store.addShoppingItem(v);
+    input.value = '';
+    input.focus();
+    renderShoppingCard();
   });
 })();
 
