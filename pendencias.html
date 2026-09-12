@@ -23,8 +23,7 @@
 <style>
 .pend-main { padding: 30px 40px 72px; overflow-y: auto; }
 
-.pend-grid { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 16px; align-items: start; }
-@media (max-width: 1300px) { .pend-grid { grid-template-columns: repeat(2, minmax(0,1fr)); } }
+.pend-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 16px; align-items: start; }
 @media (max-width: 640px)  { .pend-grid { grid-template-columns: 1fr; } }
 
 /* ── linhas de item (tarefas · faculdade · vocabulário · treino · financeiro) ── */
@@ -79,6 +78,53 @@
 }
 .card-add-input:focus { border-color: rgba(245,245,240,0.3); }
 .card-add-input::placeholder { color: var(--mid); }
+
+/* botão "+" que revela o campo de adicionar (rotina noturna) */
+.card-add-toggle {
+  background: none; border: 1px solid var(--border2); color: var(--mid);
+  width: 22px; height: 22px; font-size: 14px; line-height: 1; cursor: pointer; flex-shrink: 0; padding: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+.card-add-toggle:hover { color: var(--white); border-color: rgba(245,245,240,0.35); }
+.card-add-toggle.on { background: var(--white); color: var(--bg); border-color: var(--white); }
+#nr-form:not([hidden]) { margin-top: 12px; }
+
+.h-badge { font-family: 'Bebas Neue', sans-serif; font-size: 12px; letter-spacing: 0.12em; color: var(--mid); border: 1px solid var(--border); padding: 3px 8px; white-space: nowrap; }
+.h-badge.hot { color: var(--white); border-color: rgba(245,245,240,0.25); }
+
+/* ── PRIORIDADES DO DIA (TOP 3) ── */
+.pri-row { display: flex; align-items: center; gap: 10px; padding: 9px 2px; border-bottom: 1px solid var(--border); }
+.pri-row:last-of-type { border-bottom: none; }
+.pri-input {
+  flex: 1; min-width: 0; background: none; border: none; color: var(--white);
+  font-family: 'DM Mono', monospace; font-weight: 300; font-size: 13px; letter-spacing: 0.02em;
+  padding: 4px 0; outline: none;
+}
+.pri-input::placeholder { color: var(--mid); }
+.pri-row.done .pri-input { color: var(--mid); text-decoration: line-through; }
+.pri-done-msg { font-size: 13px; color: rgba(134,239,172,0.9); line-height: 1.6; padding: 10px 0 4px; }
+.pri-link {
+  flex-shrink: 0; max-width: 108px; background: var(--surface2); border: 1px solid var(--border);
+  color: var(--mid); font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.02em;
+  padding: 5px 6px; outline: none; opacity: 0; transition: opacity 0.15s; cursor: pointer;
+}
+.pri-row:hover .pri-link, .pri-link:focus, .pri-link.linked { opacity: 1; }
+@media (hover: none) { .pri-link { opacity: 0.7; } }
+.pri-link.linked { color: var(--white); border-color: var(--border2); }
+
+/* ── ROTINA NOTURNA ── */
+.nr-hd-right { display: inline-flex; align-items: center; gap: 10px; }
+.nr-switch { display: inline-flex; border: 1px solid var(--border2); flex-shrink: 0; }
+.nr-rbtn { background: none; border: none; color: var(--mid); font-family: 'Bebas Neue', sans-serif;
+  font-size: 14px; letter-spacing: 0.12em; padding: 2px 11px; cursor: pointer;
+  transition: background 0.15s, color 0.15s; }
+.nr-rbtn + .nr-rbtn { border-left: 1px solid var(--border2); }
+.nr-rbtn.active { background: var(--white); color: var(--bg); }
+.nr-streak-line { font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--mid);
+  padding: 2px 0 12px; }
+.nr-done-msg { font-size: 13px; color: rgba(134,239,172,0.9); line-height: 1.6; padding: 10px 0 4px; }
+.nr-empty { font-size: 13px; color: var(--mid); line-height: 1.7; padding: 4px 0 10px; }
 
 .app,.pend-main{position:relative;z-index:1;}
 </style>
@@ -145,6 +191,15 @@
 
     <div class="pend-grid" style="margin-top:22px">
 
+      <!-- PRIORIDADES DO DIA (TOP 3) -->
+      <div class="card" id="priorities-card">
+        <div class="card-hd">
+          <span class="card-title">Prioridades do dia <span class="h-badge hot" id="pri-streak" style="margin-left:8px"></span></span>
+          <span class="card-action" id="pri-count"></span>
+        </div>
+        <div id="pri-body"></div>
+      </div>
+
       <!-- FINANCEIRO -->
       <div class="card" id="pend-financeiro">
         <div class="card-hd">
@@ -187,6 +242,26 @@
             <button type="submit" class="btn-sm primary">Adicionar</button>
           </form>
         </div>
+      </div>
+
+      <!-- ROTINA NOTURNA (duas rotinas: I / II) -->
+      <div class="card" id="night-card">
+        <div class="card-hd">
+          <span class="card-title">Rotina noturna</span>
+          <span class="nr-hd-right">
+            <span class="nr-switch" role="group" aria-label="Escolher rotina">
+              <button type="button" class="nr-rbtn" data-r="1" onclick="switchNightRoutine(1)">I</button>
+              <button type="button" class="nr-rbtn" data-r="2" onclick="switchNightRoutine(2)">II</button>
+            </span>
+            <button type="button" class="card-add-toggle" id="nr-add-btn" aria-label="Adicionar item" title="Adicionar item">+</button>
+          </span>
+        </div>
+        <div id="nr-body"></div>
+        <form id="nr-form" autocomplete="off" hidden class="card-add-row">
+          <input class="card-add-input" id="nr-input" maxlength="80"
+                 placeholder="Novo item da rotina — ex: separar a roupa de amanhã" />
+          <button type="submit" class="btn-sm primary">Adicionar</button>
+        </form>
       </div>
 
     </div>
@@ -250,6 +325,205 @@ function initSidebar() {
   document.getElementById('sb-streak-val').textContent = Store.currentStreak(Store.getHabits(), DAY);
   setTimeout(() => { document.getElementById('sb-fill').style.width = pct + '%'; }, 400);
 }
+
+/* Abre/fecha um campo "adicionar" escondido dentro do card, e foca. */
+function wireAddToggle(btnId, formId, inputId) {
+  const btn = document.getElementById(btnId);
+  const form = document.getElementById(formId);
+  const input = document.getElementById(inputId);
+  if (!btn || !form) return;
+  btn.addEventListener('click', () => {
+    form.hidden = !form.hidden;
+    btn.classList.toggle('on', !form.hidden);
+    if (!form.hidden) input.focus(); else input.value = '';
+  });
+  input.addEventListener('keydown', e => { if (e.key === 'Escape') btn.click(); });
+}
+
+/* ══ PRIORIDADES DO DIA (TOP 3) ══ */
+function _renderPriStreak() {
+  const el = document.getElementById('pri-streak');
+  if (!el) return;
+  const streak = Store.dayPrioritiesStreak(DAY);
+  el.textContent = streak > 0 ? `🔥 ${streak}` : '';
+  el.hidden = streak <= 0;
+}
+// Tarefas pra vincular a um slot: só as ativas, mais urgentes primeiro.
+function _priTaskOptions(selectedId) {
+  const rank = st => ({ overdue: 0, due: 1, backlog: 2, upcoming: 3, 'done-today': 4, done: 5 }[st] ?? 3);
+  const tasks = Store.getTasks().filter(t => !t.archived)
+    .slice().sort((a, b) => rank(Store.taskStatus(a)) - rank(Store.taskStatus(b)));
+  return '<option value="">— texto livre —</option>' +
+    tasks.map(t => `<option value="${t.id}" ${t.id === selectedId ? 'selected' : ''}>${esc(t.title)}</option>`).join('');
+}
+function renderPrioritiesCard() {
+  const body = document.getElementById('pri-body');
+  if (!body) return;
+  const items = Store.getDayPriorities(DAY);
+  const slots = [0, 1, 2].map(i => items[i] || { text: '', done: false, taskId: null });
+  const filled = slots.filter(s => s.text);
+  const doneCount = filled.filter(s => s.done).length;
+  document.getElementById('pri-count').textContent = filled.length ? `${doneCount}/${filled.length}` : '';
+  _renderPriStreak();
+
+  body.innerHTML = slots.map((s, i) => `
+    <div class="pri-row ${s.done ? 'done' : ''}">
+      <div class="nr-check ${s.done ? 'done' : ''}" onclick="togglePriority(${i})" title="${s.done ? 'Desmarcar' : 'Concluir'}">${s.done ? '✓' : ''}</div>
+      <input class="pri-input" data-idx="${i}" value="${esc(s.text)}" maxlength="120" ${s.taskId ? 'readonly' : ''}
+             placeholder="Prioridade ${i + 1}${i === 0 ? ' — o que mais importa hoje?' : ''}" />
+      <select class="pri-link ${s.taskId ? 'linked' : ''}" data-idx="${i}" title="Vincular a uma tarefa existente">
+        ${_priTaskOptions(s.taskId)}
+      </select>
+    </div>`).join('') +
+    (filled.length && doneCount === filled.length
+      ? '<div class="pri-done-msg">Prioridades do dia batidas ✓</div>' : '');
+
+  body.querySelectorAll('.pri-input').forEach(inp => {
+    inp.addEventListener('keydown', e => { if (e.key === 'Enter') inp.blur(); });
+    inp.addEventListener('blur', () => savePriorityText(Number(inp.dataset.idx), inp.value));
+  });
+  body.querySelectorAll('.pri-link').forEach(sel => {
+    sel.addEventListener('change', () => linkPriorityTask(Number(sel.dataset.idx), sel.value));
+  });
+}
+// Salva só o texto do slot sem reconstruir o card inteiro: um innerHTML novo
+// destruiria o <input> que acabou de receber foco via Tab, quebrando o fluxo
+// de preencher as 3 prioridades em sequência.
+function savePriorityText(idx, text) {
+  const items = [0, 1, 2].map(i => Store.getDayPriorities(DAY)[i] || { text: '', done: false, taskId: null });
+  items[idx] = { text: text.trim(), done: items[idx].done, taskId: items[idx].taskId };
+  Store.setDayPriorities(DAY, items);
+
+  const saved = Store.getDayPriorities(DAY)[idx];
+  const row = document.querySelectorAll('#pri-body .pri-row')[idx];
+  if (row) {
+    row.classList.toggle('done', saved.done);
+    const chk = row.querySelector('.nr-check');
+    if (chk) { chk.classList.toggle('done', saved.done); chk.textContent = saved.done ? '✓' : ''; }
+  }
+
+  const filled = [0, 1, 2].map(i => Store.getDayPriorities(DAY)[i]).filter(s => s && s.text);
+  const doneCount = filled.filter(s => s.done).length;
+  document.getElementById('pri-count').textContent = filled.length ? `${doneCount}/${filled.length}` : '';
+  _renderPriStreak();
+
+  const body = document.getElementById('pri-body');
+  const existingMsg = body.querySelector('.pri-done-msg');
+  const allDone = filled.length > 0 && doneCount === filled.length;
+  if (allDone && !existingMsg) body.insertAdjacentHTML('beforeend', '<div class="pri-done-msg">Prioridades do dia batidas ✓</div>');
+  else if (!allDone && existingMsg) existingMsg.remove();
+}
+// Vincula (ou desvincula, value='') um slot a uma tarefa real de Tarefas —
+// o texto passa a espelhar o título dela.
+function linkPriorityTask(idx, taskIdStr) {
+  const items = [0, 1, 2].map(i => Store.getDayPriorities(DAY)[i] || { text: '', done: false, taskId: null });
+  if (!taskIdStr) {
+    items[idx] = { text: items[idx].text, done: items[idx].done, taskId: null };
+  } else {
+    const t = Store.getTasks().find(x => x.id === Number(taskIdStr));
+    if (!t) return;
+    const st = Store.taskStatus(t);
+    items[idx] = { text: t.title, done: st === 'done' || st === 'done-today', taskId: t.id };
+  }
+  Store.setDayPriorities(DAY, items);
+  renderPrioritiesCard();
+}
+// Concluir/desmarcar um slot vinculado também conclui/desmarca a tarefa de
+// verdade, sem toast pra não duplicar feedback com o checkbox da própria
+// prioridade.
+function togglePriority(idx) {
+  const it = Store.getDayPriorities(DAY)[idx];
+  if (it && it.taskId) {
+    const t = Store.getTasks().find(x => x.id === it.taskId);
+    if (t) {
+      const done = Store.getTaskDone(t.id) || [];
+      const now = new Date();
+      const localISO = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+      if (t.sched === 'once') {
+        if (!it.done) Store.completeTask(t.id); else if (done.length) Store.uncompleteTask(t.id, done[done.length - 1]);
+      } else {
+        if (!it.done) Store.completeTask(t.id); else if (done.indexOf(localISO) !== -1) Store.uncompleteTask(t.id, localISO);
+      }
+      renderPendTarefas();
+    }
+  }
+  Store.toggleDayPriority(DAY, idx);
+  renderPrioritiesCard();
+}
+
+/* ══ ROTINA NOTURNA — checklist de antes de dormir (zera toda noite) ══ */
+function _nrRoman(n) { return n === 2 ? 'II' : 'I'; }
+function renderNightCard() {
+  const body = document.getElementById('nr-body');
+  if (!body || typeof Store.getNightHabits !== 'function') return;
+
+  const active = Store.getNightRoutineActive();
+  document.querySelectorAll('#night-card .nr-rbtn').forEach(b =>
+    b.classList.toggle('active', Number(b.dataset.r) === active));
+
+  const items  = Store.getNightHabits();
+  const done   = new Set(Store.getNightRoutine());
+  const streak = Store.nightRoutineStreak();
+  const streakHTML = streak > 0
+    ? `<div class="nr-streak-line">🌙 ${streak} noite${streak === 1 ? '' : 's'} seguida${streak === 1 ? '' : 's'}</div>`
+    : '';
+
+  if (!items.length) {
+    body.innerHTML =
+      `<div class="nr-empty">Rotina ${_nrRoman(active)} vazia. Monte a checklist que você faz antes de dormir ` +
+      `na semana em que essa rotina vale — preparar o sono, deixar o dia seguinte pronto.</div>`;
+    return;
+  }
+
+  const allDone = items.every(h => done.has(h.id));
+  body.innerHTML = streakHTML +
+    items.map(h => `
+      <div class="nr-row ${done.has(h.id) ? 'done' : ''}" onclick="toggleNight(${h.id}, event)">
+        <span class="nr-check">${done.has(h.id) ? '✓' : ''}</span>
+        <span class="nr-label">${esc(h.label)}</span>
+        <button class="nr-del" type="button" title="Remover da rotina" onclick="removeNight(${h.id}, event)">✕</button>
+      </div>`).join('') +
+    (allDone ? '<div class="nr-done-msg">Rotina completa. Boa noite.</div>' : '');
+}
+function switchNightRoutine(n) {
+  Store.setNightRoutineActive(n);
+  const input = document.getElementById('nr-input');
+  if (input) input.placeholder = `Novo item da rotina ${_nrRoman(n)} — ex: separar a roupa`;
+  renderNightCard();
+}
+function toggleNight(id, ev) {
+  if (ev && ev.target.closest('.nr-del')) return;
+  Store.toggleNightHabitDone(id);
+  renderNightCard();
+}
+function removeNight(id, ev) {
+  if (ev) ev.stopPropagation();
+  const h = Store.getNightHabits().find(x => x.id === id);
+  if (!h) return;
+  const label = h.label, routine = h.routine;
+  Store.deleteNightHabit(id);
+  renderNightCard();
+  window.p90toastUndo(`"${label}" removido`, () => {
+    Store.addNightHabit(label, routine);
+    renderNightCard();
+  });
+}
+(function wireNightForm() {
+  const form = document.getElementById('nr-form');
+  const input = document.getElementById('nr-input');
+  if (!form) return;
+  wireAddToggle('nr-add-btn', 'nr-form', 'nr-input');
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+    const v = input.value.trim();
+    if (!v) return;
+    Store.addNightHabit(v);
+    input.value = '';
+    form.hidden = true;
+    document.getElementById('nr-add-btn').classList.remove('on');
+    renderNightCard();
+  });
+})();
 
 /* ══ FINANCEIRO — contas fixas vencendo hoje ou atrasadas no mês ══ */
 function renderPendFinanceiro() {
@@ -466,11 +740,13 @@ document.getElementById('shop-form').addEventListener('submit', e => {
 /* ══ RENDER ALL ══ */
 function renderAll() {
   realHabits = Store.getHabits();
+  renderPrioritiesCard();
   renderPendFinanceiro();
   renderPendHabitos();
   renderPendTarefas();
   renderPendDemais();
   renderPendShopping();
+  renderNightCard();
 }
 
 initSidebar();
