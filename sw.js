@@ -7,13 +7,13 @@
 ═══════════════════════════════════════════════ */
 importScripts('js/idb.js');
 
-const CACHE = 'p90-shell-v30';
+const CACHE = 'p90-shell-v31';
 const FONTS = 'p90-fonts-v1';
 
 const ASSETS = [
   './',
   'index.html', 'login.html',
-  'dashboard.html', 'habitos.html', 'metricas.html', 'diario.html', 'conquistas.html',
+  'dashboard.html', 'pendencias.html', 'habitos.html', 'metricas.html', 'diario.html', 'conquistas.html',
   'vocabulario.html', 'diccao.html', 'biblia.html', 'tarefas.html', 'faculdade.html', 'treino.html', 'financeiro.html', 'biblioteca.html',
   'css/base.css', 'css/components.css',
   'js/store.js', 'js/ui.js', 'js/achievements.js', 'js/quotes.js',
