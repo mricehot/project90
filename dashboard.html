@@ -27,10 +27,6 @@ body { overflow: hidden; }
 /* ── MAIN AREA ── */
 .dash-main { padding: 32px 36px; overflow-y: auto; display: flex; flex-direction: column; gap: 28px; }
 
-/* Cards de resumo (tarefas · revisão · provas · contadores) em 2 colunas.
-   Multi-column (não grid) pra não deixar buraco quando as alturas diferem
-   ou quando um card está oculto — os cards fluem preenchendo a coluna. */
-.dash-cards { display: flex; flex-direction: column; gap: 16px; }
 .dash-cards-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; align-items: start; }
 @media (max-width: 1080px) { .dash-cards-row { grid-template-columns: 1fr 1fr; } }
 @media (max-width: 720px) { .dash-cards-row { grid-template-columns: 1fr; } }
@@ -107,6 +103,22 @@ body { overflow: hidden; }
 @media (hover: none) { .nr-del { opacity: 0.5; } }
 .nr-done-msg { font-size: 13px; color: rgba(134,239,172,0.9); line-height: 1.6; padding: 10px 0 4px; }
 .nr-empty { font-size: 13px; color: var(--mid); line-height: 1.7; padding: 4px 0 10px; }
+
+/* ── GRUPO "IMPORTANTE" (recolhível — <details>/<summary> nativo) ── */
+.dash-group { background: var(--surface); border: 1px solid var(--border); }
+.dash-group-toggle {
+  display: flex; align-items: center; gap: 10px; padding: 18px 24px; cursor: pointer;
+  list-style: none; font-family: 'DM Serif Display', serif; font-size: 17px; color: var(--white);
+  transition: background 0.15s;
+}
+.dash-group-toggle::-webkit-details-marker { display: none; }
+.dash-group-toggle::marker { content: ''; }
+.dash-group-toggle:hover { background: rgba(245,245,240,0.03); }
+.dash-group-badge { margin-left: auto; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--mid); }
+.dash-group-caret { font-size: 13px; color: var(--mid); transition: transform 0.2s; flex-shrink: 0; }
+.dash-group[open] .dash-group-caret { transform: rotate(90deg); }
+.dash-group[open] .dash-group-toggle { border-bottom: 1px solid var(--border); }
+.dash-group-grid { padding: 22px 24px; }
 
 /* ── PRIORIDADES DO DIA (TOP 3) ── */
 .pri-row { display: flex; align-items: center; gap: 10px; padding: 9px 2px; border-bottom: 1px solid var(--border); }
@@ -478,77 +490,85 @@ body { overflow: hidden; }
 
     </div>
 
-    <!-- PRIORIDADES DO DIA (TOP 3) -->
-    <div class="card" id="priorities-card">
-      <div class="card-hd">
-        <span class="card-title">Prioridades do dia <span class="h-badge hot" id="pri-streak" style="margin-left:8px"></span></span>
-        <span class="card-action" id="pri-count"></span>
+    <!-- IMPORTANTE (recolhível — prioridades do dia + pendências) -->
+    <details class="dash-group" id="important-group">
+      <summary class="dash-group-toggle">
+        <span class="dash-group-title">⚠ Importante</span>
+        <span class="dash-group-badge" id="important-badge"></span>
+        <span class="dash-group-caret">›</span>
+      </summary>
+      <div class="g21 dash-group-grid">
+
+        <!-- PENDÊNCIAS DE HOJE — tarefas + entregas + vocabulário -->
+        <div class="card" id="today-card">
+          <div class="card-hd">
+            <span class="card-title">Pendências de hoje</span>
+            <span class="card-action" id="today-count"></span>
+          </div>
+          <div id="today-body"></div>
+        </div>
+
+        <!-- PRIORIDADES DO DIA (TOP 3) -->
+        <div class="card" id="priorities-card">
+          <div class="card-hd">
+            <span class="card-title">Prioridades do dia <span class="h-badge hot" id="pri-streak" style="margin-left:8px"></span></span>
+            <span class="card-action" id="pri-count"></span>
+          </div>
+          <div id="pri-body"></div>
+        </div>
+
       </div>
-      <div id="pri-body"></div>
-    </div>
+    </details>
 
-    <!-- PENDÊNCIAS DE HOJE + ferramentas (rotina noturna · dias desde) -->
-    <div class="dash-cards">
+    <!-- FERRAMENTAS (rotina noturna · dias desde · lista de compras) -->
+    <div class="dash-cards-row">
 
-      <!-- PENDÊNCIAS DE HOJE — tarefas + entregas + vocabulário -->
-      <div class="card" id="today-card">
+      <!-- ROTINA NOTURNA (duas rotinas: I / II) -->
+      <div class="card" id="night-card">
         <div class="card-hd">
-          <span class="card-title">Pendências de hoje</span>
-          <span class="card-action" id="today-count"></span>
+          <span class="card-title">Rotina noturna</span>
+          <span class="nr-hd-right">
+            <span class="nr-switch" role="group" aria-label="Escolher rotina">
+              <button type="button" class="nr-rbtn" data-r="1" onclick="switchNightRoutine(1)">I</button>
+              <button type="button" class="nr-rbtn" data-r="2" onclick="switchNightRoutine(2)">II</button>
+            </span>
+            <button type="button" class="card-add-toggle" id="nr-add-btn" aria-label="Adicionar item" title="Adicionar item">+</button>
+          </span>
         </div>
-        <div id="today-body"></div>
+        <div id="nr-body"></div>
+        <form id="nr-form" autocomplete="off" hidden class="card-add-row">
+          <input class="card-add-input" id="nr-input" maxlength="80"
+                 placeholder="Novo item da rotina — ex: separar a roupa de amanhã" />
+          <button type="submit" class="btn-sm primary">Adicionar</button>
+        </form>
       </div>
 
-      <div class="dash-cards-row">
-
-        <!-- ROTINA NOTURNA (duas rotinas: I / II) -->
-        <div class="card" id="night-card">
-          <div class="card-hd">
-            <span class="card-title">Rotina noturna</span>
-            <span class="nr-hd-right">
-              <span class="nr-switch" role="group" aria-label="Escolher rotina">
-                <button type="button" class="nr-rbtn" data-r="1" onclick="switchNightRoutine(1)">I</button>
-                <button type="button" class="nr-rbtn" data-r="2" onclick="switchNightRoutine(2)">II</button>
-              </span>
-              <button type="button" class="card-add-toggle" id="nr-add-btn" aria-label="Adicionar item" title="Adicionar item">+</button>
-            </span>
-          </div>
-          <div id="nr-body"></div>
-          <form id="nr-form" autocomplete="off" hidden class="card-add-row">
-            <input class="card-add-input" id="nr-input" maxlength="80"
-                   placeholder="Novo item da rotina — ex: separar a roupa de amanhã" />
-            <button type="submit" class="btn-sm primary">Adicionar</button>
-          </form>
+      <!-- CONTADORES "DIAS DESDE" -->
+      <div class="card" id="counters-card">
+        <div class="card-hd">
+          <span class="card-title">Dias desde</span>
+          <button type="button" class="card-add-toggle" id="dc-add-btn" aria-label="Novo contador" title="Novo contador">+</button>
         </div>
+        <div id="dc-list"></div>
+        <form id="dc-form" autocomplete="off" hidden class="card-add-row">
+          <input class="card-add-input" id="dc-input" maxlength="80"
+                 placeholder="Novo contador — ex: sem rede social até tarde" />
+          <button type="submit" class="btn-sm primary">Adicionar</button>
+        </form>
+      </div>
 
-        <!-- CONTADORES "DIAS DESDE" -->
-        <div class="card" id="counters-card">
-          <div class="card-hd">
-            <span class="card-title">Dias desde</span>
-            <button type="button" class="card-add-toggle" id="dc-add-btn" aria-label="Novo contador" title="Novo contador">+</button>
-          </div>
-          <div id="dc-list"></div>
-          <form id="dc-form" autocomplete="off" hidden class="card-add-row">
-            <input class="card-add-input" id="dc-input" maxlength="80"
-                   placeholder="Novo contador — ex: sem rede social até tarde" />
-            <button type="submit" class="btn-sm primary">Adicionar</button>
-          </form>
+      <!-- LISTA DE COMPRAS -->
+      <div class="card" id="shop-card">
+        <div class="card-hd">
+          <span class="card-title">Lista de compras</span>
+          <button type="button" class="card-add-toggle" id="shop-add-btn" aria-label="Novo item" title="Novo item">+</button>
         </div>
-
-        <!-- LISTA DE COMPRAS -->
-        <div class="card" id="shop-card">
-          <div class="card-hd">
-            <span class="card-title">Lista de compras</span>
-            <button type="button" class="card-add-toggle" id="shop-add-btn" aria-label="Novo item" title="Novo item">+</button>
-          </div>
-          <div id="shop-body"></div>
-          <form id="shop-form" autocomplete="off" hidden class="card-add-row">
-            <input class="card-add-input" id="shop-input" maxlength="80"
-                   placeholder="Novo item — ex: leite, ovos, café" />
-            <button type="submit" class="btn-sm primary">Adicionar</button>
-          </form>
-        </div>
-
+        <div id="shop-body"></div>
+        <form id="shop-form" autocomplete="off" hidden class="card-add-row">
+          <input class="card-add-input" id="shop-input" maxlength="80"
+                 placeholder="Novo item — ex: leite, ovos, café" />
+          <button type="submit" class="btn-sm primary">Adicionar</button>
+        </form>
       </div>
 
     </div>
@@ -1129,6 +1149,20 @@ function _priTaskOptions(selectedId) {
   return '<option value="">— texto livre —</option>' +
     tasks.map(t => `<option value="${t.id}" ${t.id === selectedId ? 'selected' : ''}>${_esc(t.title)}</option>`).join('');
 }
+// Badge do grupo "Importante" (some quando fechado) — lê os contadores já
+// prontos de #pri-count/#today-count em vez de recalcular tudo de novo.
+function renderImportantBadge() {
+  const badge = document.getElementById('important-badge');
+  if (!badge) return;
+  const priText = (document.getElementById('pri-count') || {}).textContent || '';
+  let priOpen = 0;
+  const m = priText.match(/^(\d+)\/(\d+)$/);
+  if (m) priOpen = Math.max(0, Number(m[2]) - Number(m[1]));
+  const todayOpen = parseInt((document.getElementById('today-count') || {}).textContent, 10) || 0;
+  const total = priOpen + todayOpen;
+  badge.textContent = total ? `${total} pendência${total === 1 ? '' : 's'}` : 'tudo em dia';
+}
+
 function renderPrioritiesCard() {
   const body = document.getElementById('pri-body');
   if (!body) return;
@@ -1158,6 +1192,7 @@ function renderPrioritiesCard() {
   body.querySelectorAll('.pri-link').forEach(sel => {
     sel.addEventListener('change', () => linkPriorityTask(Number(sel.dataset.idx), sel.value));
   });
+  renderImportantBadge();
 }
 // Salva só o texto do slot sem reconstruir o card inteiro: um innerHTML novo
 // destruiria o <input> que acabou de receber foco via Tab (o navegador não
@@ -1186,6 +1221,7 @@ function savePriorityText(idx, text) {
   const allDone = filled.length > 0 && doneCount === filled.length;
   if (allDone && !existingMsg) body.insertAdjacentHTML('beforeend', '<div class="pri-done-msg">Prioridades do dia batidas ✓</div>');
   else if (!allDone && existingMsg) existingMsg.remove();
+  renderImportantBadge();
 }
 // Vincula (ou desvincula, value='') um slot a uma tarefa real de Tarefas —
 // o texto passa a espelhar o título dela.
@@ -1403,6 +1439,7 @@ function renderTodayCard() {
   }
 
   document.getElementById('today-count').textContent = open ? `${open} aberta${open === 1 ? '' : 's'}` : '';
+  renderImportantBadge();
 
   if (!secs.length) {
     body.innerHTML = '<div class="tc-allclear">Tudo em dia por aqui. <span>Sem tarefas, entregas ou revisões pendentes agora.</span></div>';
