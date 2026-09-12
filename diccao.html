@@ -720,13 +720,16 @@ async function loadLibrary() {
   renderStats(); renderList();
 }
 
-async function removeEx(id) {
+function removeEx(id) {
   const e = Store.getSpeechExercises().find(x => x.id === id);
   if (!e) return;
-  if (!await window.p90confirm(`Excluir "${e.title}"? Esta ação não pode ser desfeita.`, { okText: 'Excluir' })) return;
+  const snapshot = { ...e };
   Store.deleteSpeechExercise(id);
-  toast('Exercício excluído');
   renderStats(); renderList();
+  window.p90toastUndo('Exercício excluído', () => {
+    Store.addSpeechExercise(snapshot);
+    renderStats(); renderList();
+  });
 }
 
 /* ════════════════════════════════════
@@ -1210,13 +1213,18 @@ document.getElementById('rd-modal-save').addEventListener('click', () => {
   closeMyText();
   renderReading();
 });
-document.getElementById('rd-modal-del').addEventListener('click', async () => {
+document.getElementById('rd-modal-del').addEventListener('click', () => {
   if (editingRdId == null) return;
   const t = Store.getReadingTexts().find(x => x.id === editingRdId);
-  if (!await window.p90confirm(`Excluir o texto "${t ? t.title : ''}"?`, { okText: 'Excluir' })) return;
+  if (!t) return;
+  const snapshot = { ...t };
   Store.deleteReadingText(editingRdId);
   closeMyText();
   renderReading();
+  window.p90toastUndo(`"${snapshot.title}" excluído`, () => {
+    Store.addReadingText(snapshot);
+    renderReading();
+  });
 });
 
 document.getElementById('btn-load-reading').addEventListener('click', async () => {
@@ -1238,9 +1246,14 @@ document.getElementById('rd-list').addEventListener('click', async e => {
   if (btn && btn.dataset.act === 'edit') { openMyText(id); return; }
   if (btn && btn.dataset.act === 'del') {
     const t = Store.getReadingTexts().find(x => x.id === id);
-    if (!await window.p90confirm(`Excluir o texto "${t ? t.title : ''}"?`, { okText: 'Excluir' })) return;
+    if (!t) return;
+    const snapshot = { ...t };
     Store.deleteReadingText(id);
     renderReading();
+    window.p90toastUndo(`"${snapshot.title}" excluído`, () => {
+      Store.addReadingText(snapshot);
+      renderReading();
+    });
     return;
   }
   openRead(id);

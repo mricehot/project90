@@ -1353,17 +1353,20 @@ document.getElementById('gl-save').addEventListener('click', () => {
 
 /* ══ AÇÕES NAS LINHAS (delegação) ══ */
 function rowId(e) { const r = e.target.closest('.frow'); return r ? +r.dataset.id : null; }
-async function confirmDel(msg) {
-  return window.p90confirm ? window.p90confirm(msg, { okText: 'Excluir', danger: true }) : Promise.resolve(confirm(msg));
-}
 
-document.querySelector('.fin-main').addEventListener('click', async e => {
+document.querySelector('.fin-main').addEventListener('click', e => {
   const btn = e.target.closest('[data-act]');
   if (!btn) return;
   const id = rowId(e);
   const act = btn.dataset.act;
 
-  if (act === 'del-income') { Store.deleteFinIncome(id); renderAll(); }
+  if (act === 'del-income') {
+    const row = Store.getFinance().income.find(x => x.id === id);
+    if (!row) return;
+    const snapshot = { ...row };
+    Store.deleteFinIncome(id); renderAll();
+    window.p90toastUndo('Renda excluída', () => { Store.addFinIncome(snapshot); renderAll(); });
+  }
   else if (act === 'toggle-fixed') {
     const paid = !!Store.finFixedPaidMark(id, YM);
     Store.setFinFixedPaid(id, YM, !paid);
@@ -1375,16 +1378,46 @@ document.querySelector('.fin-main').addEventListener('click', async e => {
     if (f) { Store.updateFinFixed(id, { active: !f.active }); renderAll(); }
   }
   else if (act === 'del-fixed') {
-    if (await confirmDel('Excluir este gasto fixo e o histórico de pagamentos dele?')) { Store.deleteFinFixed(id); toast('Excluído'); renderAll(); }
+    const row = Store.getFinance().fixed.find(x => x.id === id);
+    if (!row) return;
+    const snapshot = { ...row };
+    const paidMarks = Store.getFinance().fixedPaid.filter(p => p.fixedId === id).map(p => ({ ...p }));
+    Store.deleteFinFixed(id); renderAll();
+    window.p90toastUndo('Gasto fixo excluído', () => {
+      const nf = Store.addFinFixed(snapshot);
+      if (!snapshot.active) Store.updateFinFixed(nf.id, { active: false });
+      paidMarks.forEach(p => Store.setFinFixedPaid(nf.id, p.ym, true, p.amount));
+      renderAll();
+    });
   }
   else if (act === 'del-inst') {
-    if (await confirmDel('Excluir este parcelamento?')) { Store.deleteFinInstallment(id); toast('Excluído'); renderAll(); }
+    const row = Store.getFinance().installments.find(x => x.id === id);
+    if (!row) return;
+    const snapshot = { ...row };
+    Store.deleteFinInstallment(id); renderAll();
+    window.p90toastUndo('Parcelamento excluído', () => { Store.addFinInstallment(snapshot); renderAll(); });
   }
-  else if (act === 'del-exp') { Store.deleteFinExpense(id); renderAll(); }
-  else if (act === 'del-inv') { Store.deleteFinInvestment(id); renderAll(); }
+  else if (act === 'del-exp') {
+    const row = Store.getFinance().expenses.find(x => x.id === id);
+    if (!row) return;
+    const snapshot = { ...row };
+    Store.deleteFinExpense(id); renderAll();
+    window.p90toastUndo('Gasto excluído', () => { Store.addFinExpense(snapshot); renderAll(); });
+  }
+  else if (act === 'del-inv') {
+    const row = Store.getFinance().investments.find(x => x.id === id);
+    if (!row) return;
+    const snapshot = { ...row };
+    Store.deleteFinInvestment(id); renderAll();
+    window.p90toastUndo('Movimento excluído', () => { Store.restoreFinInvestment(snapshot); renderAll(); });
+  }
   else if (act === 'edit-goal') openGoal(id);
   else if (act === 'del-goal') {
-    if (await confirmDel('Excluir este objetivo?')) { Store.deleteFinGoal(id); toast('Excluído'); renderAll(); }
+    const row = Store.getFinance().goals.find(x => x.id === id);
+    if (!row) return;
+    const snapshot = { ...row };
+    Store.deleteFinGoal(id); renderAll();
+    window.p90toastUndo('Objetivo excluído', () => { Store.addFinGoal(snapshot); renderAll(); });
   }
 });
 

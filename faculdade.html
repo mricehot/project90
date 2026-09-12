@@ -805,20 +805,38 @@ function startRename(subjEl, subjId) {
   inp.addEventListener('blur', commit);
 }
 
-async function removeSubject(subjId) {
+function removeSubject(subjId) {
   const s = Store.getStudySubjects(true).find(x => x.id === subjId);
-  const n = Store.getStudyActivities(subjId).length;
-  const msg = `Excluir "${s ? s.name : ''}"` + (n ? ` e as ${n} atividade${n === 1 ? '' : 's'} dela?` : '?');
-  if (!await window.p90confirm(msg, { okText: 'Excluir', danger: true })) return;
+  if (!s) return;
+  const acts = Store.getStudyActivities(subjId).map(a => ({ ...a }));
+  const n = acts.length;
   Store.deleteStudySubject(subjId);
   render();
+  window.p90toastUndo(
+    `"${s.name}" excluída` + (n ? ` (${n} atividade${n === 1 ? '' : 's'})` : ''),
+    () => {
+      const newSubj = Store.addStudySubject(s.name);
+      if (s.archived) Store.setStudySubjectArchived(newSubj.id, true);
+      acts.forEach(a => {
+        const na = Store.addStudyActivity(newSubj.id, { title: a.title, dueOn: a.dueOn, link: a.link, notes: a.notes });
+        if (na) Store.setStudyStatus(na.id, a.status);
+      });
+      render();
+    }
+  );
 }
 
-async function removeActivity(actId) {
+function removeActivity(actId) {
   const a = Store.getStudyActivities().find(x => x.id === actId);
-  if (!await window.p90confirm(`Excluir "${a ? a.title : ''}"?`, { okText: 'Excluir' })) return;
+  if (!a) return;
+  const snapshot = { ...a };
   Store.deleteStudyActivity(actId);
   render();
+  window.p90toastUndo(`"${snapshot.title}" excluída`, () => {
+    const na = Store.addStudyActivity(snapshot.subjectId, { title: snapshot.title, dueOn: snapshot.dueOn, link: snapshot.link, notes: snapshot.notes });
+    if (na) Store.setStudyStatus(na.id, snapshot.status);
+    render();
+  });
 }
 
 /* ── nova disciplina ── */
@@ -948,14 +966,20 @@ document.getElementById('fm-save').addEventListener('click', () => {
   closeEdit();
   render();
 });
-document.getElementById('fm-del').addEventListener('click', async () => {
+document.getElementById('fm-del').addEventListener('click', () => {
   if (editingId == null) return;
   const id = editingId;
   const a = Store.getStudyActivities().find(x => x.id === id);
-  if (!await window.p90confirm(`Excluir "${a ? a.title : ''}"?`, { okText: 'Excluir' })) return;
+  if (!a) return;
+  const snapshot = { ...a };
   Store.deleteStudyActivity(id);
   closeEdit();
   render();
+  window.p90toastUndo(`"${snapshot.title}" excluída`, () => {
+    const na = Store.addStudyActivity(snapshot.subjectId, { title: snapshot.title, dueOn: snapshot.dueOn, link: snapshot.link, notes: snapshot.notes });
+    if (na) Store.setStudyStatus(na.id, snapshot.status);
+    render();
+  });
 });
 document.getElementById('fac-modal').addEventListener('click', e => {
   if (e.target === e.currentTarget) closeEdit();

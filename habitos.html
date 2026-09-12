@@ -627,13 +627,18 @@ function togglePause(id) {
   saveHabits(); renderAll();
 }
 
-async function deleteHabit(id) {
-  const h = habits.find(x => x.id === id);
-  if (!h) return;
+function deleteHabit(id) {
+  const idx = habits.findIndex(x => x.id === id);
+  if (idx === -1) return;
+  const h = habits[idx];
   if (h.coreKey) { toast('Hábito fixo não pode ser excluído — você pode pausá-lo.'); return; }
-  if (!await window.p90confirm(`Excluir "${h.name}"? Esta ação não pode ser desfeita.`, { okText: 'Excluir' })) return;
+  const snapshot = { ...h };
   habits = habits.filter(x => x.id !== id);
-  saveHabits(); renderAll(); toast('Hábito excluído');
+  saveHabits(); renderAll();
+  window.p90toastUndo('Hábito excluído', () => {
+    habits.splice(Math.min(idx, habits.length), 0, snapshot);
+    saveHabits(); renderAll();
+  });
 }
 
 /* ═══════════════════════════════════

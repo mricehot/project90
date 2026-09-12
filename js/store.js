@@ -81,6 +81,49 @@ const Store = (() => {
   let _ready = false;
   let _readyPromise = null;
 
+  /* ──────────────────────────────────────────
+     BOOT SCREEN — evita mostrar zeros/estado vazio por uma fração de
+     segundo antes do primeiro bootstrap() terminar (login novo, storage
+     limpo, ou logo após "Resetar progresso"). Só ativa quando NÃO há
+     espelho local ainda — se já tem cache, a página renderiza na hora
+     como sempre (nada muda pro caso comum). js/store.js é carregado via
+     <script> síncrono no <head>, então isto roda ANTES do <body> ser
+     parseado — não precisa mexer no HTML de cada página.
+  ────────────────────────────────────────── */
+  let _bootStyle = null, _bootLoader = null, _bootTimeout = null;
+  try {
+    if (!localStorage.getItem(MIRROR_KEY)) {
+      _bootStyle = document.createElement('style');
+      _bootStyle.textContent = 'body{visibility:hidden}';
+      document.head.appendChild(_bootStyle);
+
+      _bootLoader = document.createElement('div');
+      _bootLoader.style.cssText =
+        'position:fixed;inset:0;z-index:2147483000;background:#080808;' +
+        'display:flex;align-items:center;justify-content:center;visibility:visible;';
+      _bootLoader.innerHTML =
+        '<div id="p90-boot-spin" style="width:22px;height:22px;border:2px solid rgba(245,245,240,.16);' +
+        'border-top-color:#f5f5f0;border-radius:50%;animation:p90bootspin .8s linear infinite"></div>' +
+        '<style>@keyframes p90bootspin{to{transform:rotate(360deg)}}' +
+        '@media (prefers-reduced-motion: reduce){#p90-boot-spin{animation:none}}</style>';
+      const _attachLoader = () => { if (document.body) document.body.appendChild(_bootLoader); };
+      if (document.body) _attachLoader();
+      else document.addEventListener('DOMContentLoaded', _attachLoader, { once: true });
+
+      // Se algo travar antes do bootstrap() terminar (rede, sessão), não
+      // deixa o usuário preso numa tela preta pra sempre.
+      _bootTimeout = setTimeout(_hideBootScreen, 8000);
+    }
+  } catch (e) {}
+
+  function _hideBootScreen() {
+    try {
+      clearTimeout(_bootTimeout);
+      if (_bootStyle)  { _bootStyle.remove();  _bootStyle = null; }
+      if (_bootLoader) { _bootLoader.remove(); _bootLoader = null; }
+    } catch (e) {}
+  }
+
   function _hydrateMirror() {
     try {
       const raw = localStorage.getItem(MIRROR_KEY);
@@ -840,40 +883,44 @@ const Store = (() => {
     }
 
     _readyPromise = (async () => {
-      if (!window.sb) {
-        console.error('[Project 90] cliente Supabase indisponível (js/supabase.js).');
-        return;
-      }
-
-      let session = null;
       try {
-        const r = await window.sb.auth.getSession();
-        session = (r && r.data && r.data.session) || null;
-      } catch (e) {
-        console.error('[Project 90] getSession falhou:', e);
-        return;
-      }
-      if (!session) { _redirectToLogin(); return; }
-      _uid = session.user.id;
+        if (!window.sb) {
+          console.error('[Project 90] cliente Supabase indisponível (js/supabase.js).');
+          return;
+        }
 
-      const { data, error } = await window.sb.rpc('app_bootstrap');
-      if (error) {
-        console.error('[Project 90] app_bootstrap falhou:', error);
-        if (typeof toast === 'function') toast('Erro ao carregar seus dados.');
-        return;
-      }
+        let session = null;
+        try {
+          const r = await window.sb.auth.getSession();
+          session = (r && r.data && r.data.session) || null;
+        } catch (e) {
+          console.error('[Project 90] getSession falhou:', e);
+          return;
+        }
+        if (!session) { _redirectToLogin(); return; }
+        _uid = session.user.id;
 
-      _applyServerData(data);
-      _syncTimezone();
-      const dirty = _rollForward();
-      const dirty2 = _reconcileJournalHabit();
-      const dirty3 = _reconcileSpeechHabit();
-      const dirty4 = _reconcileTrainingHabit();
-      const dirty5 = _reconcileBibleHabit();
-      _saveMirror();
-      _ready = true;
-      window.dispatchEvent(new Event('p90:synced'));
-      if (dirty || dirty2 || dirty3 || dirty4 || dirty5) _persistHabits();
+        const { data, error } = await window.sb.rpc('app_bootstrap');
+        if (error) {
+          console.error('[Project 90] app_bootstrap falhou:', error);
+          if (typeof toast === 'function') toast('Erro ao carregar seus dados.');
+          return;
+        }
+
+        _applyServerData(data);
+        _syncTimezone();
+        const dirty = _rollForward();
+        const dirty2 = _reconcileJournalHabit();
+        const dirty3 = _reconcileSpeechHabit();
+        const dirty4 = _reconcileTrainingHabit();
+        const dirty5 = _reconcileBibleHabit();
+        _saveMirror();
+        _ready = true;
+        window.dispatchEvent(new Event('p90:synced'));
+        if (dirty || dirty2 || dirty3 || dirty4 || dirty5) _persistHabits();
+      } finally {
+        _hideBootScreen();
+      }
     })();
 
     return _readyPromise;
@@ -2614,6 +2661,15 @@ const Store = (() => {
     _pushCounter(c);
   }
 
+  // Recria um contador com o snapshot exato (id/bestRun/lastSlip/startDate
+  // preservados) — usado pelo "Desfazer" do toast depois de deleteStreakCounter.
+  function restoreStreakCounter(row) {
+    cache.streakCounters.push({ ...row });
+    _saveMirror();
+    _pushCounter(cache.streakCounters[cache.streakCounters.length - 1]);
+    return row;
+  }
+
   function deleteStreakCounter(id) {
     const idx = cache.streakCounters.findIndex(c => c.id === id);
     if (idx !== -1) cache.streakCounters.splice(idx, 1);
@@ -3341,6 +3397,18 @@ const Store = (() => {
     if (i !== -1) cache.finance.investments.splice(i, 1);
     _saveMirror(); _finDel('fin_investments', id);
   }
+  // Recria um movimento com o snapshot exato, SEM repetir o efeito colateral
+  // de somar cotas na posição do fundo (addFinInvestment faz isso; delete não
+  // desfaz — repetir o aporte aqui dobraria a posição). Usado pelo "Desfazer".
+  function restoreFinInvestment(row) {
+    cache.finance.investments.unshift({ ...row });
+    _saveMirror();
+    _finPush('fin_investments', {
+      id: row.id, user_id: _uid, kind: row.kind, on_date: row.onDate, ym: row.ym,
+      ticker: row.ticker, amount: row.amount, quantity: row.quantity, created_at: row.createdAt,
+    });
+    return row;
+  }
   function finInvestTotals() {
     const inv = cache.finance.investments;
     const aportado  = _sum(inv.filter(v => v.kind === 'aporte'), v => v.amount);
@@ -3746,7 +3814,7 @@ const Store = (() => {
     completeTask, uncompleteTask, taskNextDue, taskStatus, tasksForToday, taskStreak, taskDoneTotal,
     getWins, winsCount, addWin, deleteWin,
     getStreakCounters, counterDaysSince, addStreakCounter, renameStreakCounter,
-    registerCounterSlip, undoCounterSlip, deleteStreakCounter,
+    registerCounterSlip, undoCounterSlip, deleteStreakCounter, restoreStreakCounter,
     getNightRoutineActive, setNightRoutineActive,
     getNightHabits, addNightHabit, renameNightHabit, deleteNightHabit,
     getNightRoutine, toggleNightHabitDone, nightRoutineComplete, nightRoutineStreak,
@@ -3770,7 +3838,7 @@ const Store = (() => {
     addFinFixed, updateFinFixed, deleteFinFixed, finFixedPaidMark, setFinFixedPaid,
     addFinInstallment, deleteFinInstallment, finInstallmentAt,
     addFinExpense, updateFinExpense, deleteFinExpense,
-    addFinInvestment, deleteFinInvestment, finInvestTotals,
+    addFinInvestment, deleteFinInvestment, restoreFinInvestment, finInvestTotals,
     getFinHoldings, upsertFinHolding, deleteFinHolding,
     finHoldingsValue, finPortfolioValue, finHoldingsAllocation,
     addFinGoal, updateFinGoal, deleteFinGoal, finGoalForecast,
@@ -3838,6 +3906,43 @@ window.p90confirm = function (message, opts) {
     ov.querySelector('#p90c-yes').addEventListener('click', function () { done(true); });
     ov.querySelector('#p90c-yes').focus();
   });
+};
+
+/* ──────────────────────────────────────────
+   p90toastUndo(msg, undoFn, opts?) — toast com ação "Desfazer" no lugar de
+   um p90confirm() antes de excluir. A exclusão já aconteceu quando isto é
+   chamado; undoFn() deve reverter (tipicamente recriar o item apagado).
+   opts: { undoText (default 'Desfazer'), duration (ms, default 5000) }
+────────────────────────────────────────── */
+window.p90toastUndo = function (message, undoFn, opts) {
+  opts = opts || {};
+  var el = document.getElementById('toast');
+  if (!el) return;
+  var esc = String(message).replace(/[&<>]/g, function (c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c];
+  });
+  clearTimeout(el._p90UndoTimer);
+  el.innerHTML = esc + '<span class="toast-undo" tabindex="0" role="button">' +
+    (opts.undoText || 'Desfazer') + '</span>';
+  el.classList.add('show');
+  var undoBtn = el.querySelector('.toast-undo');
+  var finished = false;
+  function finish() {
+    if (finished) return;
+    finished = true;
+    el.classList.remove('show');
+  }
+  function fire() {
+    if (finished) return;
+    clearTimeout(el._p90UndoTimer);
+    finish();
+    undoFn();
+  }
+  undoBtn.addEventListener('click', fire);
+  undoBtn.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fire(); }
+  });
+  el._p90UndoTimer = setTimeout(finish, opts.duration || 5000);
 };
 
 /* ──────────────────────────────────────────

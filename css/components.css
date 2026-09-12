@@ -228,6 +228,11 @@
   max-width: min(90vw, 440px); text-align: center;
 }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast .toast-undo {
+  margin-left: 14px; padding-left: 14px; border-left: 1px solid rgba(8,8,8,0.25); color: var(--bg);
+  cursor: pointer; letter-spacing: 0.1em; text-transform: uppercase; font-size: 11px; font-weight: 500;
+  text-decoration: underline; text-underline-offset: 2px;
+}
 
 /* ── MODAL BASE ── */
 .modal-overlay {
