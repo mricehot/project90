@@ -148,11 +148,6 @@
 .empty-icon { font-size: 26px; margin-bottom: 12px; opacity: 0.4; }
 .empty-sub { font-size: 13px; color: var(--mid); line-height: 1.8; }
 
-.toast .toast-undo {
-  margin-left: 14px; padding-left: 14px; border-left: 1px solid var(--border2); color: var(--white);
-  cursor: pointer; letter-spacing: 0.1em; text-transform: uppercase; font-size: 11px;
-}
-
 /* modal extras */
 textarea.modal-input { resize: vertical; min-height: 56px; line-height: 1.6; }
 .m-quick { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
@@ -366,16 +361,6 @@ function toast(msg) {
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
 }
-function toastUndo(msg, undoFn) {
-  const el = document.getElementById('toast');
-  el.innerHTML = esc(msg) + '<span class="toast-undo" id="toast-undo">Desfazer</span>';
-  el.classList.add('show');
-  clearTimeout(toastTimer);
-  document.getElementById('toast-undo').onclick = () => {
-    clearTimeout(toastTimer); el.classList.remove('show'); undoFn();
-  };
-  toastTimer = setTimeout(() => el.classList.remove('show'), 4500);
-}
 
 const DAY  = Store.getCurrentDay();
 const DAYS = Store.getTotalDays();
@@ -558,7 +543,7 @@ function onToggle(card, id) {
     }
     render();
     if (!wasDone) {
-      toastUndo('Concluída ✓', () => {
+      window.p90toastUndo('Concluída ✓', () => {
         const d2 = Store.getTaskDone(id) || [];
         if (t.sched === 'once') { if (d2.length) Store.uncompleteTask(id, d2[d2.length - 1]); }
         else Store.uncompleteTask(id, localISO);
@@ -579,13 +564,19 @@ function toggleArchive(id) {
   render();
 }
 
-async function removeTask(id) {
+function removeTask(id) {
   const t = Store.getTasks().find(x => x.id === id);
   if (!t) return;
-  if (!await window.p90confirm(`Excluir "${t.title}"? Isso apaga a tarefa e seu histórico.`, { okText: 'Excluir', danger: true })) return;
+  const snapshot = { ...t };
+  const doneDates = (Store.getTaskDone(id) || []).slice();
   Store.deleteTask(id);
-  toast('Tarefa excluída');
   render();
+  window.p90toastUndo('Tarefa excluída', () => {
+    const restored = Store.addTask(snapshot);
+    doneDates.forEach(d => Store.completeTask(restored.id, d));
+    if (snapshot.archived) Store.setTaskArchived(restored.id, true);
+    render();
+  });
 }
 
 /* ── MENU DE DATA (reagendar rápido) ── */

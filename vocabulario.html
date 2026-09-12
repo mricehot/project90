@@ -763,13 +763,16 @@ function escapeHtml(s) {
   return String(s || '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
 }
 
-async function removeWord(id) {
+function removeWord(id) {
   const w = Store.getVocabWords().find(x => x.id === id);
   if (!w) return;
-  if (!await window.p90confirm(`Excluir "${w.word}"? Esta ação não pode ser desfeita.`, { okText: 'Excluir' })) return;
+  const snapshot = { ...w };
   Store.deleteVocabWord(id);
-  toast('Palavra excluída');
   renderStats(); renderList();
+  window.p90toastUndo('Palavra excluída', () => {
+    Store.addVocabWord(snapshot);
+    renderStats(); renderList();
+  });
 }
 
 /* ════════════════════════════════════

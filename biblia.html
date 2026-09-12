@@ -637,14 +637,18 @@ document.getElementById('bpv-edit').addEventListener('click', () => {
   closeBpView();
   openBpForm(id);
 });
-document.getElementById('bpv-del').addEventListener('click', async () => {
+document.getElementById('bpv-del').addEventListener('click', () => {
   if (bpCurrent == null) return;
-  const ok = await window.p90confirm('Excluir esta passagem?', { okText: 'Excluir', danger: true });
-  if (!ok) return;
+  const p = Store.getBiblePassages().find(x => x.id === bpCurrent);
+  if (!p) return;
+  const snapshot = { ...p };
   Store.deleteBiblePassage(bpCurrent);
   closeBpView();
   renderBiblePassages();
-  toast('Passagem excluída');
+  window.p90toastUndo('Passagem excluída', () => {
+    Store.addBiblePassage(snapshot);
+    renderBiblePassages();
+  });
 });
 
 [bpView, bpForm].forEach(ov => ov.addEventListener('click', e => {

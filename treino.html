@@ -786,9 +786,13 @@ document.getElementById('plan-body').addEventListener('click', async e => {
     Store.moveTrainingExercise(id, act === 'up' ? -1 : 1);
     renderPlans(); renderToday();
   } else if (act === 'del') {
-    if (!await window.p90confirm(`Excluir "${ex.name}" do plano ${ex.split}?`, { okText: 'Excluir' })) return;
+    const snapshot = { ...ex };
     Store.deleteTrainingExercise(id);
     renderPlans(); renderToday();
+    window.p90toastUndo(`"${snapshot.name}" excluído`, () => {
+      Store.addTrainingExercise(snapshot.split, snapshot);
+      renderPlans(); renderToday();
+    });
   } else if (act === 'edit') {
     openExModal(id);
   }
@@ -832,13 +836,18 @@ document.getElementById('exm-save').addEventListener('click', () => {
   closeExModal();
   renderPlans(); renderToday();
 });
-document.getElementById('exm-del').addEventListener('click', async () => {
+document.getElementById('exm-del').addEventListener('click', () => {
   if (exmId == null) return;
   const ex = Store.getTrainingExercises().find(x => x.id === exmId);
-  if (!await window.p90confirm(`Excluir "${ex ? ex.name : ''}" do plano ${ex ? ex.split : ''}?`, { okText: 'Excluir' })) return;
+  if (!ex) return;
+  const snapshot = { ...ex };
   Store.deleteTrainingExercise(exmId);
   closeExModal();
   renderPlans(); renderToday();
+  window.p90toastUndo(`"${snapshot.name}" excluído`, () => {
+    Store.addTrainingExercise(snapshot.split, snapshot);
+    renderPlans(); renderToday();
+  });
 });
 exModal.addEventListener('click', e => { if (e.target === exModal) closeExModal(); });
 document.addEventListener('keydown', e => {
@@ -866,9 +875,14 @@ document.getElementById('meals-body').addEventListener('click', async e => {
   if (del) {
     e.stopPropagation();
     const m = Store.getMealItems().find(x => x.id === id);
-    if (!await window.p90confirm(`Remover "${m ? m.label : ''}" da lista?`, { okText: 'Remover' })) return;
+    if (!m) return;
+    const label = m.label;
     Store.deleteMealItem(id);
     renderMeals();
+    window.p90toastUndo(`"${label}" removido`, () => {
+      Store.addMealItem(label);
+      renderMeals();
+    });
     return;
   }
   Store.toggleMeal(id);

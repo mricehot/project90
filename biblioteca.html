@@ -612,9 +612,13 @@ document.addEventListener('click', async e => {
   if (act === 'edit') openBookModal(book);
   else if (act === 'finish') { Store.setLibStatus(id, 'lido'); renderAll(); toast('Livro concluído'); }
   else if (act === 'del') {
-    const ok = await window.p90confirm(`Excluir "${book.title}"?`, { okText: 'Excluir' });
-    if (!ok) return;
-    Store.deleteLibBook(id); renderAll(); toast('Livro excluído');
+    const snapshot = { ...book };
+    Store.deleteLibBook(id);
+    renderAll();
+    window.p90toastUndo('Livro excluído', () => {
+      Store.addLibBook(snapshot);
+      renderAll();
+    });
   }
 });
 

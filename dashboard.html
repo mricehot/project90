@@ -1274,11 +1274,16 @@ function undoSlip(id) {
   Store.undoCounterSlip(id);
   renderCountersCard();
 }
-async function removeCounter(id) {
+function removeCounter(id) {
   const c = Store.getStreakCounters().find(x => x.id === id);
-  if (!await window.p90confirm(`Excluir o contador "${c ? c.label : ''}"?`, { okText: 'Excluir' })) return;
+  if (!c) return;
+  const snapshot = { ...c };
   Store.deleteStreakCounter(id);
   renderCountersCard();
+  window.p90toastUndo('Contador excluído', () => {
+    Store.restoreStreakCounter(snapshot);
+    renderCountersCard();
+  });
 }
 
 /* Abre/fecha um campo "adicionar" escondido dentro do card, e foca. */
@@ -1382,12 +1387,17 @@ function toggleNight(id, ev) {
   renderNightCard();
 }
 
-async function removeNight(id, ev) {
+function removeNight(id, ev) {
   if (ev) ev.stopPropagation();
   const h = Store.getNightHabits().find(x => x.id === id);
-  if (!await window.p90confirm(`Remover "${h ? h.label : ''}" da rotina ${_nrRoman(Store.getNightRoutineActive())}?`, { okText: 'Remover' })) return;
+  if (!h) return;
+  const label = h.label, routine = h.routine;
   Store.deleteNightHabit(id);
   renderNightCard();
+  window.p90toastUndo(`"${label}" removido`, () => {
+    Store.addNightHabit(label, routine);
+    renderNightCard();
+  });
 }
 
 (function wireNightForm() {
