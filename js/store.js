@@ -73,6 +73,7 @@ const Store = (() => {
                      //   currentPage, totalPages, notes, startedOn, finishedOn, createdAt }
         goals: {},   // { [year]: targetBooks } — meta de livros lidos no ano
       },
+      dailyPriorities: {},   // { [dayNum]: [{text, done}, ...] } — até 3, ritual de manhã
     };
   }
 
@@ -405,6 +406,15 @@ const Store = (() => {
         Object.keys(cache.library.goals).forEach(k => delete cache.library.goals[k]);
         Object.keys(lib.goals).forEach(k => { cache.library.goals[k] = parseInt(lib.goals[k], 10) || 0; });
       }
+    }
+    if (data.dailyPriorities && typeof data.dailyPriorities === 'object') {
+      Object.keys(cache.dailyPriorities).forEach(k => delete cache.dailyPriorities[k]);
+      Object.keys(data.dailyPriorities).forEach(k => {
+        const arr = Array.isArray(data.dailyPriorities[k]) ? data.dailyPriorities[k] : [];
+        cache.dailyPriorities[k] = arr.slice(0, 3).map(it => ({
+          text: String((it && it.text) || ''), done: !!(it && it.done),
+        }));
+      });
     }
   }
 
@@ -3787,6 +3797,37 @@ const Store = (() => {
   }
 
   /* ──────────────────────────────────────────
+     PRIORIDADES DO DIA (Top 3) — card no Dashboard.
+     cache.dailyPriorities[dayNum] = [{text, done}, ...] até 3 slots fixos.
+  ────────────────────────────────────────── */
+  function getDayPriorities(dayNum) {
+    const arr = cache.dailyPriorities[dayNum];
+    return Array.isArray(arr) ? arr : [];
+  }
+  function setDayPriorities(dayNum, items) {
+    items = items || [];
+    const clean = [0, 1, 2].map(i => {
+      const it = items[i] || {};
+      const text = String(it.text || '').trim();
+      return { text, done: text ? !!it.done : false };
+    });
+    cache.dailyPriorities[dayNum] = clean;
+    _saveMirror();
+    _push(async () => {
+      const { error } = await window.sb.from('daily_priorities').upsert({
+        user_id: _uid, day_num: dayNum, items: clean, updated_at: new Date().toISOString(),
+      }, { onConflict: 'user_id,day_num' });
+      if (error) throw error;
+    });
+  }
+  function toggleDayPriority(dayNum, idx) {
+    const items = getDayPriorities(dayNum).slice();
+    if (!items[idx] || !items[idx].text) return;
+    items[idx] = { ...items[idx], done: !items[idx].done };
+    setDayPriorities(dayNum, items);
+  }
+
+  /* ──────────────────────────────────────────
      PUBLIC API
   ────────────────────────────────────────── */
   return {
@@ -3849,6 +3890,8 @@ const Store = (() => {
     getLibrary, getLibBooks, libGenres,
     addLibBook, updateLibBook, setLibStatus, deleteLibBook,
     libGoalForYear, setLibGoal, libBooksReadInYear, libGoalProgress, libStats,
+    // prioridades do dia
+    getDayPriorities, setDayPriorities, toggleDayPriority,
     // computed
     habitVal, scheduledOn, dayCompletionPct, maxStreak, countDays,
     allHabitsDone, currentStreak, computeAchievementProgress, computeLevels,

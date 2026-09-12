@@ -106,6 +106,18 @@ body { overflow: hidden; }
 @media (hover: none) { .nr-del { opacity: 0.5; } }
 .nr-done-msg { font-size: 13px; color: rgba(134,239,172,0.9); line-height: 1.6; padding: 10px 0 4px; }
 .nr-empty { font-size: 13px; color: var(--mid); line-height: 1.7; padding: 4px 0 10px; }
+
+/* ── PRIORIDADES DO DIA (TOP 3) ── */
+.pri-row { display: flex; align-items: center; gap: 10px; padding: 9px 2px; border-bottom: 1px solid var(--border); }
+.pri-row:last-of-type { border-bottom: none; }
+.pri-input {
+  flex: 1; min-width: 0; background: none; border: none; color: var(--white);
+  font-family: 'DM Mono', monospace; font-weight: 300; font-size: 13px; letter-spacing: 0.02em;
+  padding: 4px 0; outline: none;
+}
+.pri-input::placeholder { color: var(--mid); }
+.pri-row.done .pri-input { color: var(--mid); text-decoration: line-through; }
+.pri-done-msg { font-size: 13px; color: rgba(134,239,172,0.9); line-height: 1.6; padding: 10px 0 4px; }
 .topbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
 .page-title { font-family: 'DM Serif Display', serif; font-size: 26px; font-weight: 400; display: flex; align-items: baseline; gap: 10px; }
 .page-title em { font-style: italic; opacity: 0.45; font-size: 22px; }
@@ -444,6 +456,15 @@ body { overflow: hidden; }
 
     </div>
 
+    <!-- PRIORIDADES DO DIA (TOP 3) -->
+    <div class="card" id="priorities-card">
+      <div class="card-hd">
+        <span class="card-title">Prioridades do dia</span>
+        <span class="card-action" id="pri-count"></span>
+      </div>
+      <div id="pri-body"></div>
+    </div>
+
     <!-- PENDÊNCIAS DE HOJE + ferramentas (rotina noturna · dias desde) -->
     <div class="dash-cards">
 
@@ -580,6 +601,7 @@ function init() {
   renderNudge();
   renderWeeklyNudge();
   renderLevels();
+  renderPrioritiesCard();
   renderTodayCard();
   renderCountersCard();
   renderNightCard();
@@ -1050,6 +1072,64 @@ function _tcSec(title, href, linkTxt, inner) {
     </div>${inner}</div>`;
 }
 
+/* ═══════════════════════════════
+   PRIORIDADES DO DIA (TOP 3)
+═══════════════════════════════ */
+function renderPrioritiesCard() {
+  const body = document.getElementById('pri-body');
+  if (!body) return;
+  const items = Store.getDayPriorities(DAY);
+  const slots = [0, 1, 2].map(i => items[i] || { text: '', done: false });
+  const filled = slots.filter(s => s.text);
+  const doneCount = filled.filter(s => s.done).length;
+  document.getElementById('pri-count').textContent = filled.length ? `${doneCount}/${filled.length}` : '';
+
+  body.innerHTML = slots.map((s, i) => `
+    <div class="pri-row ${s.done ? 'done' : ''}">
+      <div class="nr-check ${s.done ? 'done' : ''}" onclick="togglePriority(${i})" title="${s.done ? 'Desmarcar' : 'Concluir'}">${s.done ? '✓' : ''}</div>
+      <input class="pri-input" data-idx="${i}" value="${_esc(s.text)}" maxlength="120"
+             placeholder="Prioridade ${i + 1}${i === 0 ? ' — o que mais importa hoje?' : ''}" />
+    </div>`).join('') +
+    (filled.length && doneCount === filled.length
+      ? '<div class="pri-done-msg">Prioridades do dia batidas ✓</div>' : '');
+
+  body.querySelectorAll('.pri-input').forEach(inp => {
+    inp.addEventListener('keydown', e => { if (e.key === 'Enter') inp.blur(); });
+    inp.addEventListener('blur', () => savePriorityText(Number(inp.dataset.idx), inp.value));
+  });
+}
+// Salva só o texto do slot sem reconstruir o card inteiro: um innerHTML novo
+// destruiria o <input> que acabou de receber foco via Tab (o navegador não
+// tem como restaurar o foco num elemento recriado), quebrando o fluxo de
+// preencher as 3 prioridades em sequência.
+function savePriorityText(idx, text) {
+  const items = [0, 1, 2].map(i => Store.getDayPriorities(DAY)[i] || { text: '', done: false });
+  items[idx] = { text: text.trim(), done: items[idx].done };
+  Store.setDayPriorities(DAY, items);
+
+  const saved = Store.getDayPriorities(DAY)[idx];
+  const row = document.querySelectorAll('#pri-body .pri-row')[idx];
+  if (row) {
+    row.classList.toggle('done', saved.done);
+    const chk = row.querySelector('.nr-check');
+    if (chk) { chk.classList.toggle('done', saved.done); chk.textContent = saved.done ? '✓' : ''; }
+  }
+
+  const filled = [0, 1, 2].map(i => Store.getDayPriorities(DAY)[i]).filter(s => s && s.text);
+  const doneCount = filled.filter(s => s.done).length;
+  document.getElementById('pri-count').textContent = filled.length ? `${doneCount}/${filled.length}` : '';
+
+  const body = document.getElementById('pri-body');
+  const existingMsg = body.querySelector('.pri-done-msg');
+  const allDone = filled.length > 0 && doneCount === filled.length;
+  if (allDone && !existingMsg) body.insertAdjacentHTML('beforeend', '<div class="pri-done-msg">Prioridades do dia batidas ✓</div>');
+  else if (!allDone && existingMsg) existingMsg.remove();
+}
+function togglePriority(idx) {
+  Store.toggleDayPriority(DAY, idx);
+  renderPrioritiesCard();
+}
+
 // Anel de progresso do card (SVG, mesmo estilo do de Métricas).
 function _dayRing(pct, size) {
   const r = (size - 6) / 2, cx = size / 2, cy = size / 2;
@@ -1198,6 +1278,34 @@ function renderTodayCard() {
     secs.push({ title: 'Alimentação', href: 'treino.html', link: 'Marcar →', inner, status, doneTxt: `${doneN}/${items.length}` });
   }
 
+  /* ── Contas fixas vencendo hoje (ou já atrasadas no mês) ── */
+  if (typeof Store.getFinance === 'function' && Store.getFinance().fixed.length) {
+    const todayDate = new Date().getDate();
+    const ym = Store.finYm();
+    const due = Store.getFinance().fixed
+      .filter(f => f.active && f.dueDay <= todayDate && !Store.finFixedPaidMark(f.id, ym))
+      .sort((a, b) => a.dueDay - b.dueDay);
+    if (due.length) {
+      open += due.length;
+      const anyOver = due.some(f => f.dueDay < todayDate);
+      const inner = due.slice(0, 4).map(f => {
+        const over = f.dueDay < todayDate;
+        return `<div class="tc-row">
+          <div class="tc-check" onclick="quickPayFixed(${f.id})" title="Marcar pago"></div>
+          <div class="tc-info"><div class="tc-name">${_esc(f.label)}</div><div class="tc-sub">R$ ${Math.round(f.amount).toLocaleString('pt-BR')}</div></div>
+          <div class="tc-when ${over ? 'over' : 'soon'}">${over ? 'venceu dia ' + f.dueDay : 'vence hoje'}</div>
+        </div>`;
+      }).join('') + (due.length > 4 ? `<div class="tc-more">+${due.length - 4} mais</div>` : '');
+      secs.push({
+        title: anyOver ? 'Financeiro <b>· atrasado</b>' : 'Financeiro',
+        href: 'financeiro.html', link: 'Abrir →', inner,
+        status: anyOver ? 'overdue' : 'pending', doneTxt: 'contas em dia',
+      });
+    } else {
+      secs.push({ title: 'Financeiro', href: 'financeiro.html', link: 'Ver →', inner: '', status: 'done', doneTxt: 'contas em dia' });
+    }
+  }
+
   document.getElementById('today-count').textContent = open ? `${open} aberta${open === 1 ? '' : 's'}` : '';
 
   if (!secs.length) {
@@ -1334,6 +1442,14 @@ function quickToggleTask(id) {
   renderTodayCard();
   renderStats();
   initSidebar();
+}
+
+function quickPayFixed(id) {
+  const f = Store.getFinance().fixed.find(x => x.id === id);
+  if (!f) return;
+  Store.setFinFixedPaid(id, Store.finYm(), true);
+  toast(`"${f.label}" marcado como pago ✓`);
+  renderTodayCard();
 }
 
 /* ═══════════════════════════════
