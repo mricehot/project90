@@ -229,8 +229,15 @@ function buildEvents() {
     events.push({ day, icon: '☯', title: 'Reflexão', detail: TOPICS[r.topicIdx] || '—' });
   });
 
-  events.sort((a, b) => a.day - b.day);
-  return events;
+  // Descarta eventos com dia além do dia atual do desafio — sobra de
+  // "Resetar progresso" (que rebobina o dia mas não apaga vitórias/
+  // conquistas/diário/reflexões antigas) deixa registros com dayNum de
+  // antes do reset, que passam a apontar pra um "futuro" que não existe
+  // mais depois que o contador voltou pro dia 1.
+  const withoutFuture = events.filter(e => e.day <= DAY);
+
+  withoutFuture.sort((a, b) => a.day - b.day);
+  return withoutFuture;
 }
 
 function groupByDay(events) {
