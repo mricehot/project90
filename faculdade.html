@@ -120,6 +120,23 @@
 .fac-subj-body { border-top: 1px solid var(--border); padding: 6px 16px 14px; }
 .fac-subj.collapsed .fac-subj-body { display: none; }
 
+/* renomear disciplina de dentro do modal de atividades — sempre visível
+   (não escondido atrás de hover), já que é o ponto de entrada mais comum
+   pra editar uma disciplina (clicando nela na régua direita). */
+.fsm-title-row { display: flex; align-items: center; gap: 10px; margin-bottom: 28px; }
+.fsm-title-row .modal-title { margin-bottom: 0; flex: 1; min-width: 0; }
+.fsm-rename-btn {
+  background: none; border: 1px solid var(--border2); color: var(--mid);
+  width: 26px; height: 26px; font-size: 13px; cursor: pointer; flex-shrink: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  transition: color 0.15s, border-color 0.15s;
+}
+.fsm-rename-btn:hover { color: var(--white); border-color: rgba(245,245,240,0.35); }
+.fsm-title-input {
+  flex: 1; min-width: 0; background: var(--surface2); border: 1px solid var(--border2); color: var(--white);
+  font-family: 'DM Serif Display', serif; font-size: 22px; padding: 6px 10px; outline: none;
+}
+
 /* atividade */
 .fac-act { display: flex; align-items: center; gap: 12px; padding: 10px 2px; border-bottom: 1px solid var(--border); }
 .fac-act:last-of-type { border-bottom: none; }
@@ -415,7 +432,10 @@ textarea.modal-input { resize: vertical; min-height: 60px; line-height: 1.6; fon
 <!-- ATIVIDADES DA DISCIPLINA -->
 <div class="modal-overlay" id="fac-subj-modal">
   <div class="modal fac-subj-box" role="dialog" aria-modal="true" aria-labelledby="fsm-title">
-    <div class="modal-title" id="fsm-title">Disciplina</div>
+    <div class="fsm-title-row">
+      <div class="modal-title" id="fsm-title">Disciplina</div>
+      <button type="button" class="fsm-rename-btn" id="fsm-rename" title="Renomear disciplina">✎</button>
+    </div>
     <div class="fsm-list" id="fsm-list"></div>
     <form class="fac-qa fsm-add" id="fsm-add" autocomplete="off">
       <input class="fac-qa-title" id="fsm-add-title" maxlength="200" placeholder="Nova atividade" />
@@ -586,6 +606,39 @@ function closeSubjModal() {
   document.getElementById('fac-subj-modal').classList.remove('open');
   subjModalId = null;
 }
+
+/* Renomear a disciplina de dentro do modal — mesma lógica de startRename(),
+   só que trocando o <div class="modal-title"> em vez do card da lista. */
+function startSubjModalRename() {
+  if (subjModalId == null) return;
+  const titleEl = document.getElementById('fsm-title');
+  if (titleEl.querySelector('.fsm-title-input')) return;
+  const s = Store.getStudySubjects(true).find(x => x.id === subjModalId);
+  if (!s) return;
+  const cur = s.name;
+  titleEl.textContent = '';
+  const inp = document.createElement('input');
+  inp.className = 'fsm-title-input';
+  inp.maxLength = 120;
+  inp.value = cur;
+  titleEl.appendChild(inp);
+  inp.focus(); inp.select();
+  let done = false;
+  const commit = () => {
+    if (done) return;
+    done = true;
+    const v = inp.value.trim();
+    if (v && v !== cur) Store.renameStudySubject(subjModalId, v);
+    titleEl.textContent = (v || cur);
+    render();
+  };
+  inp.addEventListener('keydown', ev => {
+    if (ev.key === 'Enter') { ev.preventDefault(); commit(); }
+    if (ev.key === 'Escape') { done = true; titleEl.textContent = cur; }
+  });
+  inp.addEventListener('blur', commit);
+}
+document.getElementById('fsm-rename').addEventListener('click', startSubjModalRename);
 
 function renderStats() {
   let pend = 0, over = 0, done = 0;
