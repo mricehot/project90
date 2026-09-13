@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#080808">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Project 90">
+<title>Project 90 — Conversação</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/components.css">
+<script src="js/supabase-config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase.js"></script>
+<script src="js/store.js"></script>
+<script src="js/achievements.js"></script>
+<script src="js/conversation-tips.js"></script>
+<style>
+.ct-main { padding: 30px 40px 72px; overflow-y: auto; display: flex; flex-direction: column; gap: 22px; }
+@media (max-width: 640px) { .g3 { grid-template-columns: 1fr; } .ct-main { padding: 20px; } }
+
+/* ── CATEGORIAS (recolhíveis) ── */
+.ct-list { display: flex; flex-direction: column; gap: 10px; }
+.ct-cat { border: 1px solid var(--border); background: var(--surface); }
+.ct-cat-hd {
+  display: flex; align-items: center; gap: 12px; padding: 16px 20px; cursor: pointer;
+  list-style: none; transition: background 0.15s;
+}
+.ct-cat-hd::-webkit-details-marker { display: none; }
+.ct-cat-hd::marker { content: ''; }
+.ct-cat-hd:hover { background: rgba(245,245,240,0.03); }
+.ct-chev { font-size: 11px; color: var(--mid); transition: transform 0.2s; flex-shrink: 0; }
+.ct-cat[open] .ct-chev { transform: rotate(90deg); }
+.ct-cat-name { flex: 1; min-width: 0; font-family: 'DM Serif Display', serif; font-size: 15.5px; color: var(--white); }
+.ct-cat-count { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--mid); flex-shrink: 0; }
+.ct-cat[data-allread="1"] .ct-cat-count { color: var(--green); }
+.ct-cat-body { padding: 4px 20px 18px; display: flex; flex-direction: column; gap: 10px; }
+
+.ct-tip { display: flex; gap: 12px; align-items: flex-start; padding: 13px 15px; background: var(--surface2); border: 1px solid var(--border); }
+.ct-tip-check {
+  width: 20px; height: 20px; border: 1px solid var(--border2); flex-shrink: 0; margin-top: 1px;
+  background: none; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  font-size: 12px; color: var(--bg); transition: background 0.15s, border-color 0.15s;
+}
+.ct-tip-check.done { background: var(--green); border-color: var(--green); }
+.ct-tip-check:not(.done):hover { border-color: rgba(245,245,240,0.3); }
+.ct-tip-body { flex: 1; min-width: 0; }
+.ct-tip-title { font-size: 13.5px; letter-spacing: 0.02em; color: var(--white); }
+.ct-tip.done .ct-tip-title { color: var(--mid); }
+.ct-tip-text { font-size: 12.5px; color: var(--mid); line-height: 1.7; margin-top: 6px; }
+
+.app { position: relative; z-index: 1; }
+</style>
+</head>
+<body>
+
+<div id="cur"></div>
+<div id="cur-ring"></div>
+<div class="toast" id="toast"></div>
+
+<div class="app">
+
+  <aside class="sidebar">
+    <div class="sb-logo">
+      <a href="index.html" class="sb-logomark">Project 90</a>
+      <div class="sb-logosub">Transformação pessoal</div>
+    </div>
+    <div class="sb-day">
+      <div class="sb-daynum" id="sb-daynum">34</div>
+      <div class="sb-daylbl">de 90 dias</div>
+      <div style="display:flex;justify-content:space-between;font-size:10px;letter-spacing:0.1em;color:var(--mid);margin-top:10px">
+        <span>Progresso</span><span id="sb-pct">38%</span>
+      </div>
+      <div class="sb-prog-bar-bg"><div class="sb-prog-bar-fill" id="sb-fill" style="width:0%"></div></div>
+      <div class="sb-prog-meta"><span id="sb-days-left">56 restantes</span><span id="sb-pct2">38%</span></div>
+    </div>
+    <nav class="sb-nav">
+      <a class="sb-item" href="dashboard.html"><span class="sb-item-icon">◈</span> Dashboard</a>
+      <details class="sb-group">
+        <summary class="sb-group-toggle"><span class="sb-item-icon">⚑</span> Pendências<span class="sb-group-caret">›</span></summary>
+        <a class="sb-item sb-subitem" href="pendencias.html"><span class="sb-item-icon">⚑</span> Pendências</a>
+        <a class="sb-item sb-subitem" href="calendario.html"><span class="sb-item-icon">⊞</span> Calendário</a>
+      </details>
+      <a class="sb-item" href="habitos.html"><span class="sb-item-icon">◉</span> Hábitos</a>
+      <a class="sb-item" href="metricas.html"><span class="sb-item-icon">△</span> Métricas</a>
+      <a class="sb-item" href="diario.html"><span class="sb-item-icon">◻</span> Diário</a>
+      <details class="sb-group">
+        <summary class="sb-group-toggle"><span class="sb-item-icon">✦</span> Conhecimento<span class="sb-group-caret">›</span></summary>
+        <a class="sb-item sb-subitem" href="vocabulario.html"><span class="sb-item-icon">▤</span> Vocabulário</a>
+        <a class="sb-item sb-subitem" href="biblioteca.html"><span class="sb-item-icon">❐</span> Biblioteca</a>
+        <a class="sb-item sb-subitem" href="reflexoes.html"><span class="sb-item-icon">☯</span> Reflexões</a>
+      </details>
+      <details class="sb-group" open>
+        <summary class="sb-group-toggle has-active"><span class="sb-item-icon">◗</span> Dicção<span class="sb-group-caret">›</span></summary>
+        <a class="sb-item sb-subitem" href="diccao.html"><span class="sb-item-icon">◗</span> Dicção</a>
+        <a class="sb-item sb-subitem active" href="conversacao.html"><span class="sb-item-icon">❞</span> Conversação</a>
+      </details>
+      <a class="sb-item" href="biblia.html"><span class="sb-item-icon">✝</span> Bíblia</a>
+      <a class="sb-item" href="tarefas.html"><span class="sb-item-icon">✓</span> Tarefas</a>
+      <a class="sb-item" href="faculdade.html"><span class="sb-item-icon">▦</span> Faculdade</a>
+      <a class="sb-item" href="treino.html"><span class="sb-item-icon">◲</span> Treino</a>
+      <a class="sb-item" href="financeiro.html"><span class="sb-item-icon">◫</span> Financeiro</a>
+      <details class="sb-group">
+        <summary class="sb-group-toggle"><span class="sb-item-icon">◆</span> Conquistas<span class="sb-group-caret">›</span></summary>
+        <a class="sb-item sb-subitem" href="conquistas.html"><span class="sb-item-icon">◆</span> Conquistas</a>
+        <a class="sb-item sb-subitem" href="vitorias.html"><span class="sb-item-icon">✪</span> Vitórias</a>
+      </details>
+    </nav>
+    <div class="sb-bottom">
+      <div class="sb-streak">
+        <span class="sb-streak-icon">🔥</span>
+        <div>
+          <div class="sb-streak-val" id="sb-streak-val">12</div>
+          <div class="sb-streak-lbl">Dias seguidos</div>
+        </div>
+      </div>
+      <a href="login.html" class="sb-logout">← Sair</a>
+    </div>
+  </aside>
+
+  <main class="ct-main">
+
+    <div class="topbar">
+      <div class="page-title">Conversação <em>relações interpessoais, na prática.</em></div>
+    </div>
+
+    <div class="g3">
+      <div class="stat-card">
+        <div class="stat-lbl">Dicas</div>
+        <div class="stat-val" id="st-total">0</div>
+        <div class="stat-sub">na biblioteca</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-lbl">Lidas</div>
+        <div class="stat-val" id="st-read">0</div>
+        <div class="stat-sub">até agora</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-lbl">Categorias</div>
+        <div class="stat-val" id="st-cats">0</div>
+        <div class="stat-sub">temas diferentes</div>
+      </div>
+    </div>
+
+    <div class="ct-list" id="ct-list"></div>
+
+  </main>
+</div>
+
+<script>
+/* ── CURSOR ── */
+(function () {
+  const cur = document.getElementById('cur'), ring = document.getElementById('cur-ring');
+  let mx = 0, my = 0, rx = 0, ry = 0;
+  document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; cur.style.transform = `translate(${mx - 3}px,${my - 3}px)`; });
+  (function tick() { rx += (mx - rx - 15) * 0.1; ry += (my - ry - 15) * 0.1; ring.style.transform = `translate(${rx}px,${ry}px)`; requestAnimationFrame(tick); })();
+})();
+
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+let toastTimer;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
+}
+
+const DAY  = Store.getCurrentDay();
+const DAYS = Store.getTotalDays();
+const TIPS = window.P90_CONVERSATION_TIPS || [];
+
+function initSidebar() {
+  const pct = Math.round(DAY / DAYS * 100);
+  document.getElementById('sb-daynum').textContent = DAY;
+  document.getElementById('sb-pct').textContent = pct + '%';
+  document.getElementById('sb-pct2').textContent = pct + '%';
+  document.getElementById('sb-days-left').textContent = (DAYS - DAY) + ' restantes';
+  document.getElementById('sb-streak-val').textContent = Store.currentStreak(Store.getHabits(), DAY);
+  setTimeout(() => { document.getElementById('sb-fill').style.width = pct + '%'; }, 400);
+}
+
+function buildCategories() {
+  const cats = [];
+  TIPS.forEach((t, idx) => {
+    let cat = cats.find(c => c.name === t.category);
+    if (!cat) { cat = { name: t.category, items: [] }; cats.push(cat); }
+    cat.items.push({ title: t.title, body: t.body, idx });
+  });
+  return cats;
+}
+const CATEGORIES = buildCategories();
+
+function renderStats() {
+  const read = Store.getConversationTipsRead();
+  document.getElementById('st-total').textContent = TIPS.length;
+  document.getElementById('st-read').textContent = Object.keys(read).length;
+  document.getElementById('st-cats').textContent = CATEGORIES.length;
+}
+
+function renderCategories() {
+  const read = Store.getConversationTipsRead();
+  const el = document.getElementById('ct-list');
+  const openSet = new Set(Array.from(el.querySelectorAll('details.ct-cat[open]')).map(d => d.dataset.cat));
+  const firstRender = !el.dataset.rendered;
+
+  el.innerHTML = CATEGORIES.map((cat, ci) => {
+    const readN = cat.items.filter(it => read[it.idx] != null).length;
+    const allRead = readN === cat.items.length;
+    const isOpen = firstRender ? ci === 0 : openSet.has(cat.name);
+    return `<details class="ct-cat" data-cat="${esc(cat.name)}" data-allread="${allRead ? 1 : 0}" ${isOpen ? 'open' : ''}>
+      <summary class="ct-cat-hd">
+        <span class="ct-chev">›</span>
+        <span class="ct-cat-name">${esc(cat.name)}</span>
+        <span class="ct-cat-count">${readN}/${cat.items.length} lidas</span>
+      </summary>
+      <div class="ct-cat-body">
+        ${cat.items.map(it => {
+          const done = read[it.idx] != null;
+          return `<div class="ct-tip ${done ? 'done' : ''}">
+            <button class="ct-tip-check ${done ? 'done' : ''}" onclick="toggleTip(${it.idx})" title="${done ? 'Desmarcar' : 'Marcar como lida'}">${done ? '✓' : ''}</button>
+            <div class="ct-tip-body">
+              <div class="ct-tip-title">${esc(it.title)}</div>
+              <div class="ct-tip-text">${esc(it.body)}</div>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+    </details>`;
+  }).join('');
+  el.dataset.rendered = '1';
+}
+
+function toggleTip(idx) {
+  const wasRead = Store.getConversationTipsRead()[idx] != null;
+  Store.toggleConversationTipRead(idx, DAY);
+  renderStats();
+  renderCategories();
+  if (!wasRead) toast('Dica marcada como lida ✓');
+}
+
+initSidebar();
+renderStats();
+renderCategories();
+window.addEventListener('p90:synced', () => { initSidebar(); renderStats(); renderCategories(); });
+</script>
+<script src="js/pwa.js"></script>
+</body>
+</html>
