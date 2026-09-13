@@ -247,6 +247,21 @@ body{cursor:none;}
 .mini-ach.un .mini-ach-icon{filter:none;opacity:1;}
 .mini-ach-lbl{font-size:7px;letter-spacing:.1em;text-transform:uppercase;color:var(--m);}
 .mini-ach.un .mini-ach-lbl{color:var(--w);}
+.mini-kanban{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}
+.mini-kb-col{background:var(--s2);border:1px solid var(--b);padding:8px;}
+.mini-kb-hd{font-size:8px;letter-spacing:.12em;text-transform:uppercase;color:var(--m);margin-bottom:6px;}
+.mini-kb-card{background:var(--bg);border:1px solid var(--b2);padding:6px 7px;font-size:10px;line-height:1.4;color:rgba(245,245,240,.75);margin-bottom:5px;}
+.mini-kb-card:last-child{margin-bottom:0;}
+.mini-cal{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
+.mcd{aspect-ratio:1;border-radius:1px;background:rgba(245,245,240,.05);display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--m);}
+.mcd.on{background:rgba(245,245,240,.35);color:var(--w);}
+.mcd.ov{background:rgba(252,165,165,.45);color:var(--w);}
+.mcd.today{background:var(--w);color:var(--bg);font-weight:600;}
+.mini-tl{display:flex;flex-direction:column;gap:11px;position:relative;padding-left:17px;}
+.mini-tl::before{content:'';position:absolute;left:3px;top:2px;bottom:2px;width:1px;background:var(--b);}
+.mini-tl-item{position:relative;font-size:11px;color:rgba(245,245,240,.7);line-height:1.5;}
+.mini-tl-item::before{content:'';position:absolute;left:-17px;top:4px;width:6px;height:6px;border-radius:50%;background:var(--w);border:1px solid var(--b2);}
+.mini-tl-day{font-size:9px;letter-spacing:.1em;color:var(--m);display:block;margin-bottom:2px;}
 
 /* STEPS */
 .steps-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--b);margin-top:56px;}
@@ -346,7 +361,7 @@ body{cursor:none;}
 footer{border-top:1px solid var(--b);padding:36px var(--gut);position:relative;z-index:2;}
 .footer-inner{max-width:var(--max);margin:0 auto;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:32px;}
 .footer-brand{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:.15em;}
-.footer-links{display:flex;gap:28px;list-style:none;justify-content:center;}
+.footer-links{display:flex;gap:20px 28px;list-style:none;justify-content:center;flex-wrap:wrap;}
 .footer-links a{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--m);text-decoration:none;transition:color .2s;}
 .footer-links a:hover{color:var(--w);}
 .footer-copy{font-size:12px;color:var(--m);text-align:right;}
@@ -418,16 +433,36 @@ footer{border-top:1px solid var(--b);padding:36px var(--gut);position:relative;z
     <span class="ticker-item">Quatro Pilares <span class="ticker-sep">·</span></span>
     <span class="ticker-item">Métricas em Tempo Real <span class="ticker-sep">·</span></span>
     <span class="ticker-item">Diário de Reflexão <span class="ticker-sep">·</span></span>
-    <span class="ticker-item">Conquistas <span class="ticker-sep">·</span></span>
-    <span class="ticker-item">Calendário 90 dias <span class="ticker-sep">·</span></span>
+    <span class="ticker-item">Conquistas &amp; Vitórias <span class="ticker-sep">·</span></span>
+    <span class="ticker-item">Jornada <span class="ticker-sep">·</span></span>
+    <span class="ticker-item">Pendências &amp; Calendário <span class="ticker-sep">·</span></span>
+    <span class="ticker-item">Tarefas &amp; Kanban <span class="ticker-sep">·</span></span>
+    <span class="ticker-item">Vocabulário <span class="ticker-sep">·</span></span>
+    <span class="ticker-item">Biblioteca <span class="ticker-sep">·</span></span>
+    <span class="ticker-item">Reflexões <span class="ticker-sep">·</span></span>
+    <span class="ticker-item">Dicção &amp; Conversação <span class="ticker-sep">·</span></span>
+    <span class="ticker-item">Bíblia <span class="ticker-sep">·</span></span>
+    <span class="ticker-item">Faculdade <span class="ticker-sep">·</span></span>
+    <span class="ticker-item">Treino <span class="ticker-sep">·</span></span>
+    <span class="ticker-item">Financeiro <span class="ticker-sep">·</span></span>
     <span class="ticker-item">Streak &amp; Metas <span class="ticker-sep">·</span></span>
     <span class="ticker-item">Dashboard <span class="ticker-sep">·</span></span>
     <span class="ticker-item">Rastreador de Hábitos <span class="ticker-sep">·</span></span>
     <span class="ticker-item">Quatro Pilares <span class="ticker-sep">·</span></span>
     <span class="ticker-item">Métricas em Tempo Real <span class="ticker-sep">·</span></span>
     <span class="ticker-item">Diário de Reflexão <span class="ticker-sep">·</span></span>
-    <span class="ticker-item">Conquistas <span class="ticker-sep">·</span></span>
-    <span class="ticker-item">Calendário 90 dias <span class="ticker-sep">·</span></span>
+    <span class="ticker-item">Conquistas &amp; Vitórias <span class="ticker-sep">·</span></span>
+    <span class="ticker-item">Jornada <span class="ticker-sep">·</span></span>
+    <span class="ticker-item">Pendências &amp; Calendário <span class="ticker-sep">·</span></span>
+    <span class="ticker-item">Tarefas &amp; Kanban <span class="ticker-sep">·</span></span>
+    <span class="ticker-item">Vocabulário <span class="ticker-sep">·</span></span>
+    <span class="ticker-item">Biblioteca <span class="ticker-sep">·</span></span>
+    <span class="ticker-item">Reflexões <span class="ticker-sep">·</span></span>
+    <span class="ticker-item">Dicção &amp; Conversação <span class="ticker-sep">·</span></span>
+    <span class="ticker-item">Bíblia <span class="ticker-sep">·</span></span>
+    <span class="ticker-item">Faculdade <span class="ticker-sep">·</span></span>
+    <span class="ticker-item">Treino <span class="ticker-sep">·</span></span>
+    <span class="ticker-item">Financeiro <span class="ticker-sep">·</span></span>
     <span class="ticker-item">Streak &amp; Metas <span class="ticker-sep">·</span></span>
   </div>
 </div>
@@ -467,7 +502,7 @@ footer{border-top:1px solid var(--b);padding:36px var(--gut);position:relative;z
 <div class="divider"></div>
 <section class="section" id="features">
   <div class="wrap">
-    <div class="label reveal">7 módulos integrados</div>
+    <div class="label reveal">21 módulos integrados</div>
     <h2 class="manifesto-big reveal" style="font-size:clamp(28px,4vw,54px);margin-bottom:48px">O sistema que <em data-fx="glitch">transforma</em><br>hábitos em identidade.</h2>
     <div class="feat-grid">
 
@@ -595,14 +630,257 @@ footer{border-top:1px solid var(--b);padding:36px var(--gut);position:relative;z
         </div>
       </div>
 
-      <!-- 07 SISTEMA -->
-      <div class="feat reveal" style="transition-delay:.42s;grid-column:1/-1">
+      <!-- 07 VITÓRIAS -->
+      <div class="feat reveal">
         <div class="feat-scan"></div>
         <div class="feat-n">07</div>
+        <div class="feat-icon">✪</div>
+        <div class="feat-title">Vitórias</div>
+        <p class="feat-body">Registro rápido de pequenas vitórias do dia — sem categoria, sem julgamento. Um feed cronológico dentro de Conquistas, pra lembrar que progresso não é só hábito marcado.</p>
+        <span class="feat-tag">↗ vitorias.html</span>
+        <div class="feat-preview">
+          <div class="mini-card">
+            <div class="mini-row"><span style="font-size:11px;color:var(--m);flex-shrink:0;width:46px">Dia 34</span><span class="mini-name">Terminei o relatório antes do prazo</span></div>
+            <div class="mini-row"><span style="font-size:11px;color:var(--m);flex-shrink:0;width:46px">Dia 31</span><span class="mini-name">Consegui meditar 10min sem distração</span></div>
+            <div class="mini-row"><span style="font-size:11px;color:var(--m);flex-shrink:0;width:46px">Dia 29</span><span class="mini-name">Liguei pra minha mãe só pra conversar</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 08 JORNADA -->
+      <div class="feat reveal" style="transition-delay:.07s">
+        <div class="feat-scan"></div>
+        <div class="feat-n">08</div>
+        <div class="feat-icon">◐</div>
+        <div class="feat-title">Jornada</div>
+        <p class="feat-body">Linha do tempo narrativa que junta diário, vitórias, conquistas desbloqueadas e reflexões num só lugar — a história dos seus 90 dias, capítulo por dia.</p>
+        <span class="feat-tag">↗ jornada.html</span>
+        <div class="feat-preview">
+          <div class="mini-tl">
+            <div class="mini-tl-item"><span class="mini-tl-day">Dia 29</span>Vitória — "Liguei pra minha mãe"</div>
+            <div class="mini-tl-item"><span class="mini-tl-day">Dia 31</span>Reflexão — Estoicismo e controle</div>
+            <div class="mini-tl-item"><span class="mini-tl-day">Dia 34</span>Conquista desbloqueada — 🌱 Primeira semana</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 09 PENDÊNCIAS -->
+      <div class="feat reveal" style="transition-delay:.14s">
+        <div class="feat-scan"></div>
+        <div class="feat-n">09</div>
+        <div class="feat-icon">⚑</div>
+        <div class="feat-title">Pendências</div>
+        <p class="feat-body">Central única de avisos — tarefas atrasadas, entregas de faculdade, contas do mês e rotina noturna, priorizados num só lugar pra você nunca perder nada de vista.</p>
+        <span class="feat-tag">↗ pendencias.html</span>
+        <div class="feat-preview">
+          <div class="mini-card">
+            <div class="mini-row"><div class="mini-dot" style="background:#fca5a5"></div><span class="mini-name">Trabalho de Cálculo II</span><span class="mini-streak" style="color:#fca5a5">atrasada</span></div>
+            <div class="mini-row"><div class="mini-dot partial"></div><span class="mini-name">Conta de internet</span><span class="mini-streak">vence hoje</span></div>
+            <div class="mini-row"><div class="mini-dot done"></div><span class="mini-name">Alongamento noturno</span><span class="mini-streak">feito</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 10 CALENDÁRIO -->
+      <div class="feat reveal" style="transition-delay:.21s">
+        <div class="feat-scan"></div>
+        <div class="feat-n">10</div>
+        <div class="feat-icon">⊞</div>
+        <div class="feat-title">Calendário</div>
+        <p class="feat-body">Grade mensal com tudo que vence — tarefas, entregas e contas — num só calendário, mais a lista dia a dia embaixo pra ver o mês inteiro sem clicar em nada.</p>
+        <span class="feat-tag">↗ calendario.html</span>
+        <div class="feat-preview">
+          <div class="mini-cal">
+            <div class="mcd">27</div><div class="mcd">28</div><div class="mcd">29</div><div class="mcd on">30</div><div class="mcd ov">31</div><div class="mcd">1</div><div class="mcd">2</div>
+            <div class="mcd">3</div><div class="mcd on">4</div><div class="mcd">5</div><div class="mcd today">6</div><div class="mcd">7</div><div class="mcd">8</div><div class="mcd">9</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 11 TAREFAS -->
+      <div class="feat reveal" style="transition-delay:.28s">
+        <div class="feat-scan"></div>
+        <div class="feat-n">11</div>
+        <div class="feat-icon">✓</div>
+        <div class="feat-title">Tarefas</div>
+        <p class="feat-body">Tarefas recorrentes ou pontuais, agrupadas por urgência estilo Todoist — e agora também em kanban, arrastando cards entre Atrasadas, A fazer e Concluídas.</p>
+        <span class="feat-tag">↗ tarefas.html</span>
+        <div class="feat-preview">
+          <div class="mini-kanban">
+            <div class="mini-kb-col"><div class="mini-kb-hd">Atrasadas</div><div class="mini-kb-card">Renovar CNH</div></div>
+            <div class="mini-kb-col"><div class="mini-kb-hd">A fazer</div><div class="mini-kb-card">Comprar presente</div><div class="mini-kb-card">Ligar pro dentista</div></div>
+            <div class="mini-kb-col"><div class="mini-kb-hd">Concluídas</div><div class="mini-kb-card" style="opacity:.5;text-decoration:line-through">Pagar aluguel</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 12 VOCABULÁRIO -->
+      <div class="feat reveal" style="transition-delay:.35s">
+        <div class="feat-scan"></div>
+        <div class="feat-n">12</div>
+        <div class="feat-icon">▤</div>
+        <div class="feat-title">Vocabulário</div>
+        <p class="feat-body">Revisão espaçada (SRS) de palavras novas, com atalhos de teclado e progressão por caixinhas — do "nunca vi" ao "sei de cor", no seu ritmo.</p>
+        <span class="feat-tag">↗ vocabulario.html</span>
+        <div class="feat-preview">
+          <div style="display:flex;gap:8px">
+            <div style="flex:1;text-align:center;padding:10px 4px;background:var(--s2);border:1px solid var(--b)"><div style="font-family:'Bebas Neue',sans-serif;font-size:20px">12</div><div style="font-size:8px;letter-spacing:.1em;color:var(--m);margin-top:2px">CAIXA 1</div></div>
+            <div style="flex:1;text-align:center;padding:10px 4px;background:var(--s2);border:1px solid var(--b)"><div style="font-family:'Bebas Neue',sans-serif;font-size:20px">7</div><div style="font-size:8px;letter-spacing:.1em;color:var(--m);margin-top:2px">CAIXA 2</div></div>
+            <div style="flex:1;text-align:center;padding:10px 4px;background:var(--s2);border:1px solid var(--b)"><div style="font-family:'Bebas Neue',sans-serif;font-size:20px">3</div><div style="font-size:8px;letter-spacing:.1em;color:var(--m);margin-top:2px">CAIXA 3</div></div>
+            <div style="flex:1;text-align:center;padding:10px 4px;background:var(--s2);border:1px solid var(--b)"><div style="font-family:'Bebas Neue',sans-serif;font-size:20px">21</div><div style="font-size:8px;letter-spacing:.1em;color:var(--m);margin-top:2px">SEI</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 13 BIBLIOTECA -->
+      <div class="feat reveal">
+        <div class="feat-scan"></div>
+        <div class="feat-n">13</div>
+        <div class="feat-icon">❐</div>
+        <div class="feat-title">Biblioteca</div>
+        <p class="feat-body">Registro de leitura — livros em andamento, terminados e na fila, com progresso e nota. Sua estante inteira, sempre à mão.</p>
+        <span class="feat-tag">↗ biblioteca.html</span>
+        <div class="feat-preview">
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <div><div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:5px"><span>Hábitos Atômicos</span><span style="color:var(--m)">72%</span></div><div class="mini-bar-wrap"><div class="mini-bar" style="width:72%"></div></div></div>
+            <div><div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:5px"><span>Sapiens</span><span style="color:var(--m)">100%</span></div><div class="mini-bar-wrap"><div class="mini-bar" style="width:100%"></div></div></div>
+            <div><div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:5px"><span>Meditações</span><span style="color:var(--m)">18%</span></div><div class="mini-bar-wrap"><div class="mini-bar" style="width:18%"></div></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 14 REFLEXÕES -->
+      <div class="feat reveal" style="transition-delay:.07s">
+        <div class="feat-scan"></div>
+        <div class="feat-n">14</div>
+        <div class="feat-icon">☯</div>
+        <div class="feat-title">Reflexões</div>
+        <p class="feat-body">Um tema novo de filosofia, psicologia ou meditação por dia — leia, responda uma pergunta guiada, e construa um histórico de reflexão que vai além do hábito.</p>
+        <span class="feat-tag">↗ reflexoes.html</span>
+        <div class="feat-preview">
+          <div class="mini-journal">
+            <div class="mini-jlbl">Reflexão — Dia 34 · Estoicismo</div>
+            <div class="mini-jtext">O que está sob meu controle hoje, e o que eu preciso soltar?</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 15 DICÇÃO -->
+      <div class="feat reveal" style="transition-delay:.14s">
+        <div class="feat-scan"></div>
+        <div class="feat-n">15</div>
+        <div class="feat-icon">◗</div>
+        <div class="feat-title">Dicção</div>
+        <p class="feat-body">Exercícios guiados de dicção e leitura em voz alta, com textos longos pra praticar, gravar e ouvir de volta.</p>
+        <span class="feat-tag">↗ diccao.html</span>
+        <div class="feat-preview">
+          <div class="mini-card" style="display:flex;align-items:center;gap:12px;padding:16px 15px">
+            <div style="width:30px;height:30px;border-radius:50%;border:1px solid var(--b2);display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0">▶</div>
+            <div style="flex:1;display:flex;align-items:flex-end;gap:2px;height:22px">
+              <div style="width:3px;height:40%;background:rgba(245,245,240,.3)"></div><div style="width:3px;height:80%;background:rgba(245,245,240,.5)"></div><div style="width:3px;height:55%;background:rgba(245,245,240,.3)"></div><div style="width:3px;height:100%;background:rgba(245,245,240,.6)"></div><div style="width:3px;height:35%;background:rgba(245,245,240,.25)"></div><div style="width:3px;height:65%;background:rgba(245,245,240,.4)"></div><div style="width:3px;height:45%;background:rgba(245,245,240,.3)"></div><div style="width:3px;height:70%;background:rgba(245,245,240,.45)"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 16 CONVERSAÇÃO -->
+      <div class="feat reveal" style="transition-delay:.21s">
+        <div class="feat-scan"></div>
+        <div class="feat-n">16</div>
+        <div class="feat-icon">❞</div>
+        <div class="feat-title">Conversação</div>
+        <p class="feat-body">Biblioteca de dicas de comunicação interpessoal — como puxar assunto, escuta ativa, postura — organizadas em 6 categorias, pra praticar fora da tela também.</p>
+        <span class="feat-tag">↗ conversacao.html</span>
+        <div class="feat-preview">
+          <div class="mini-card">
+            <div class="mini-row"><span class="mini-name">Iniciar conversas</span><span class="mini-streak">8</span></div>
+            <div class="mini-row"><span class="mini-name">Escuta ativa</span><span class="mini-streak">6</span></div>
+            <div class="mini-row"><span class="mini-name">Postura e linguagem corporal</span><span class="mini-streak">7</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 17 BÍBLIA -->
+      <div class="feat reveal" style="transition-delay:.28s">
+        <div class="feat-scan"></div>
+        <div class="feat-n">17</div>
+        <div class="feat-icon">✝</div>
+        <div class="feat-title">Bíblia</div>
+        <p class="feat-body">Plano de leitura diário organizado por livro, com passagens marcantes salvas à parte pra revisitar quando quiser.</p>
+        <span class="feat-tag">↗ biblia.html</span>
+        <div class="feat-preview">
+          <div class="mini-card">
+            <div class="mini-row"><div class="mini-dot done"></div><span class="mini-name">Gênesis 1-3</span></div>
+            <div class="mini-row"><div class="mini-dot done"></div><span class="mini-name">Gênesis 4-6</span></div>
+            <div class="mini-row"><div class="mini-dot partial"></div><span class="mini-name">Êxodo 1-3</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 18 FACULDADE -->
+      <div class="feat reveal" style="transition-delay:.35s">
+        <div class="feat-scan"></div>
+        <div class="feat-n">18</div>
+        <div class="feat-icon">▦</div>
+        <div class="feat-title">Faculdade</div>
+        <p class="feat-body">Prazos de faculdade por disciplina, em lista ou kanban, com link direto pro Studeo e alerta de atrasadas no dashboard.</p>
+        <span class="feat-tag">↗ faculdade.html</span>
+        <div class="feat-preview">
+          <div class="mini-kanban">
+            <div class="mini-kb-col"><div class="mini-kb-hd">A fazer</div><div class="mini-kb-card">Resenha — Cálculo II</div></div>
+            <div class="mini-kb-col"><div class="mini-kb-hd">Fazendo</div><div class="mini-kb-card">Trabalho de História</div></div>
+            <div class="mini-kb-col"><div class="mini-kb-hd">Entregue</div><div class="mini-kb-card" style="opacity:.5;text-decoration:line-through">Lista de exercícios</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 19 TREINO -->
+      <div class="feat reveal">
+        <div class="feat-scan"></div>
+        <div class="feat-n">19</div>
+        <div class="feat-icon">◲</div>
+        <div class="feat-title">Treino</div>
+        <p class="feat-body">Musculação em ciclos A/B/C e checklist de alimentação do dia — tudo num só lugar pra não perder o fio na academia.</p>
+        <span class="feat-tag">↗ treino.html</span>
+        <div class="feat-preview">
+          <div class="mini-card">
+            <div class="mini-row"><div class="mini-dot done"></div><span class="mini-name">Treino A — Peito/Tríceps</span></div>
+            <div class="mini-row"><div class="mini-dot done"></div><span class="mini-name">Café da manhã proteico</span></div>
+            <div class="mini-row"><div class="mini-dot miss"></div><span class="mini-name">Jantar sem carboidrato</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 20 FINANCEIRO -->
+      <div class="feat reveal" style="transition-delay:.07s">
+        <div class="feat-scan"></div>
+        <div class="feat-n">20</div>
+        <div class="feat-icon">◫</div>
+        <div class="feat-title">Financeiro</div>
+        <p class="feat-body">Controle mensal completo — salário, contas fixas, parcelas, gastos e investimentos em FIIs — com gráficos de evolução mês a mês.</p>
+        <span class="feat-tag">↗ financeiro.html</span>
+        <div class="feat-preview">
+          <div class="mini-chart">
+            <div class="mcbar lo" style="height:35%"></div>
+            <div class="mcbar lo" style="height:50%"></div>
+            <div class="mcbar lo" style="height:42%"></div>
+            <div class="mcbar hi" style="height:68%"></div>
+            <div class="mcbar hi" style="height:85%"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-top:8px;font-size:10px;color:var(--m)">
+            <span>Mai</span><span>Jun</span><span>Jul</span><span>Ago</span><span>Set</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 21 SISTEMA -->
+      <div class="feat reveal" style="transition-delay:.14s;grid-column:1/-1">
+        <div class="feat-scan"></div>
+        <div class="feat-n">21</div>
         <div class="feat-icon">◎</div>
         <div class="feat-title">Sistema Integrado</div>
-        <p class="feat-body" style="max-width:600px">Todas as páginas conectadas ao Supabase. Hábitos, diário e conquistas compartilham a mesma fonte de dados. Cursor personalizado com anel inercial, grid animado de fundo, efeitos de entrada e hover glow em cada card.</p>
-        <span class="feat-tag">7 módulos · 1 sistema</span>
+        <p class="feat-body" style="max-width:600px">Todas as 21 páginas conectadas ao Supabase, compartilhando a mesma fonte de dados. Cursor personalizado com anel inercial, grid animado de fundo, efeitos de entrada e hover glow em cada card.</p>
+        <span class="feat-tag">21 módulos · 1 sistema</span>
         <div class="feat-preview" style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;max-width:560px">
           <div style="padding:16px;background:var(--s2);border:1px solid var(--b)">
             <div style="font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--m);margin-bottom:8px">Progresso</div>
@@ -847,7 +1125,14 @@ footer{border-top:1px solid var(--b);padding:36px var(--gut);position:relative;z
       <li><a href="habitos.html">Hábitos</a></li>
       <li><a href="metricas.html">Métricas</a></li>
       <li><a href="diario.html">Diário</a></li>
+      <li><a href="pendencias.html">Pendências</a></li>
+      <li><a href="calendario.html">Calendário</a></li>
+      <li><a href="tarefas.html">Tarefas</a></li>
+      <li><a href="faculdade.html">Faculdade</a></li>
+      <li><a href="treino.html">Treino</a></li>
+      <li><a href="financeiro.html">Financeiro</a></li>
       <li><a href="conquistas.html">Conquistas</a></li>
+      <li><a href="jornada.html">Jornada</a></li>
     </ul>
     <div class="footer-copy">© 2025 Project 90</div>
   </div>
@@ -911,8 +1196,8 @@ const stObs=new IntersectionObserver(entries=>{
   if(entries[0].isIntersecting){
     countUp(document.getElementById('sn1'),90,'',1400);
     countUp(document.getElementById('sn2'),5,'+',1000,150);
-    countUp(document.getElementById('sn3'),7,'',900,300);
-    countUp(document.getElementById('sn4'),26,'',1100,450);
+    countUp(document.getElementById('sn3'),21,'',900,300);
+    countUp(document.getElementById('sn4'),51,'',1100,450);
     stObs.disconnect();
   }
 },{threshold:.5});
