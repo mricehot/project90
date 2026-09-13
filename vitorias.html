@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#080808">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Project 90">
+<title>Project 90 — Vitórias</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/components.css">
+<script src="js/supabase-config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase.js"></script>
+<script src="js/store.js"></script>
+<script src="js/achievements.js"></script>
+<style>
+.win-main { padding: 30px 40px 72px; overflow-y: auto; display: flex; flex-direction: column; gap: 22px; }
+@media (max-width: 640px) { .g3 { grid-template-columns: 1fr; } .win-main { padding: 20px; } }
+
+/* ── REGISTRAR VITÓRIA ── */
+.win-add-row { display: flex; gap: 10px; align-items: center; }
+.win-add-input {
+  flex: 1; background: var(--surface2); border: 1px solid var(--border); color: var(--white);
+  font-family: 'DM Mono', monospace; font-weight: 300; font-size: 13.5px; letter-spacing: 0.03em;
+  padding: 13px 15px; outline: none; transition: border-color 0.2s;
+}
+.win-add-input:focus { border-color: rgba(245,245,240,0.3); }
+.win-add-input::placeholder { color: var(--mid); }
+
+/* ── FEED, AGRUPADO POR DIA ── */
+.win-day-group + .win-day-group { margin-top: 24px; }
+.win-day-hd {
+  display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px;
+  font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--mid);
+}
+.win-day-hd b { font-family: 'Bebas Neue', sans-serif; font-size: 14px; letter-spacing: 0.05em; color: var(--white); }
+.win-row {
+  display: flex; align-items: center; gap: 12px; padding: 13px 2px;
+  border-bottom: 1px solid var(--border);
+}
+.win-row:last-child { border-bottom: none; }
+.win-icon { flex-shrink: 0; font-size: 15px; color: #86efac; }
+.win-text { flex: 1; min-width: 0; font-size: 13.5px; line-height: 1.6; letter-spacing: 0.02em; word-break: break-word; }
+.win-del {
+  background: none; border: none; color: var(--mid); font-size: 14px; cursor: pointer; padding: 2px 4px;
+  opacity: 0; transition: opacity 0.15s, color 0.15s; flex-shrink: 0;
+}
+.win-row:hover .win-del { opacity: 1; }
+.win-del:hover { color: var(--white); }
+@media (hover: none) { .win-del { opacity: 0.5; } }
+.win-empty { text-align: center; padding: 48px 20px; color: var(--mid); font-size: 13px; line-height: 1.8; }
+
+.app { position: relative; z-index: 1; }
+</style>
+</head>
+<body>
+
+<div id="cur"></div>
+<div id="cur-ring"></div>
+<div class="toast" id="toast"></div>
+
+<div class="app">
+
+  <aside class="sidebar">
+    <div class="sb-logo">
+      <a href="index.html" class="sb-logomark">Project 90</a>
+      <div class="sb-logosub">Transformação pessoal</div>
+    </div>
+    <div class="sb-day">
+      <div class="sb-daynum" id="sb-daynum">34</div>
+      <div class="sb-daylbl">de 90 dias</div>
+      <div style="display:flex;justify-content:space-between;font-size:10px;letter-spacing:0.1em;color:var(--mid);margin-top:10px">
+        <span>Progresso</span><span id="sb-pct">38%</span>
+      </div>
+      <div class="sb-prog-bar-bg"><div class="sb-prog-bar-fill" id="sb-fill" style="width:0%"></div></div>
+      <div class="sb-prog-meta"><span id="sb-days-left">56 restantes</span><span id="sb-pct2">38%</span></div>
+    </div>
+    <nav class="sb-nav">
+      <a class="sb-item" href="dashboard.html"><span class="sb-item-icon">◈</span> Dashboard</a>
+      <a class="sb-item" href="pendencias.html"><span class="sb-item-icon">⚑</span> Pendências</a>
+      <a class="sb-item" href="habitos.html"><span class="sb-item-icon">◉</span> Hábitos</a>
+      <a class="sb-item" href="metricas.html"><span class="sb-item-icon">△</span> Métricas</a>
+      <a class="sb-item" href="diario.html"><span class="sb-item-icon">◻</span> Diário</a>
+      <details class="sb-group">
+        <summary class="sb-group-toggle"><span class="sb-item-icon">✦</span> Conhecimento<span class="sb-group-caret">›</span></summary>
+        <a class="sb-item sb-subitem" href="vocabulario.html"><span class="sb-item-icon">▤</span> Vocabulário</a>
+        <a class="sb-item sb-subitem" href="biblioteca.html"><span class="sb-item-icon">❐</span> Biblioteca</a>
+        <a class="sb-item sb-subitem" href="reflexoes.html"><span class="sb-item-icon">☯</span> Reflexões</a>
+      </details>
+      <a class="sb-item" href="diccao.html"><span class="sb-item-icon">◗</span> Dicção</a>
+      <a class="sb-item" href="biblia.html"><span class="sb-item-icon">✝</span> Bíblia</a>
+      <a class="sb-item" href="tarefas.html"><span class="sb-item-icon">✓</span> Tarefas</a>
+      <a class="sb-item" href="faculdade.html"><span class="sb-item-icon">▦</span> Faculdade</a>
+      <a class="sb-item" href="treino.html"><span class="sb-item-icon">◲</span> Treino</a>
+      <a class="sb-item" href="financeiro.html"><span class="sb-item-icon">◫</span> Financeiro</a>
+      <details class="sb-group" open>
+        <summary class="sb-group-toggle has-active"><span class="sb-item-icon">◆</span> Conquistas<span class="sb-group-caret">›</span></summary>
+        <a class="sb-item sb-subitem" href="conquistas.html"><span class="sb-item-icon">◆</span> Conquistas</a>
+        <a class="sb-item sb-subitem active" href="vitorias.html"><span class="sb-item-icon">✪</span> Vitórias</a>
+      </details>
+    </nav>
+    <div class="sb-bottom">
+      <div class="sb-streak">
+        <span class="sb-streak-icon">🔥</span>
+        <div>
+          <div class="sb-streak-val" id="sb-streak-val">12</div>
+          <div class="sb-streak-lbl">Dias seguidos</div>
+        </div>
+      </div>
+      <a href="login.html" class="sb-logout">← Sair</a>
+    </div>
+  </aside>
+
+  <main class="win-main">
+
+    <div class="topbar">
+      <div class="page-title">Vitórias <em>pequenas conquistas do dia a dia.</em></div>
+    </div>
+
+    <div class="g3">
+      <div class="stat-card">
+        <div class="stat-lbl">Total</div>
+        <div class="stat-val" id="st-total">0</div>
+        <div class="stat-sub">vitórias registradas</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-lbl">Essa semana</div>
+        <div class="stat-val" id="st-week">0</div>
+        <div class="stat-sub">últimos 7 dias</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-lbl">Sequência</div>
+        <div class="stat-val" id="st-streak">0</div>
+        <div class="stat-sub">dias seguidos</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-hd"><span class="card-title">Registrar vitória</span></div>
+      <form id="win-form" autocomplete="off" class="win-add-row">
+        <input class="win-add-input" id="win-input" maxlength="240" placeholder="O que você conquistou hoje? — ex: terminei o relatório difícil" />
+        <button type="submit" class="btn-sm primary">Adicionar</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <div class="card-hd"><span class="card-title">Suas vitórias</span></div>
+      <div id="win-feed"></div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+/* ── CURSOR ── */
+(function () {
+  const cur = document.getElementById('cur'), ring = document.getElementById('cur-ring');
+  let mx = 0, my = 0, rx = 0, ry = 0;
+  document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; cur.style.transform = `translate(${mx - 3}px,${my - 3}px)`; });
+  (function tick() { rx += (mx - rx - 15) * 0.1; ry += (my - ry - 15) * 0.1; ring.style.transform = `translate(${rx}px,${ry}px)`; requestAnimationFrame(tick); })();
+})();
+
+let toastTimer;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
+}
+
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+const DAY  = Store.getCurrentDay();
+const DAYS = Store.getTotalDays();
+const START_DATE = Store.getStartDate();
+
+const MONTHS_ABR = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+const DAYS_PT    = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+
+function dayToDate(n) { const d = new Date(START_DATE); d.setDate(d.getDate() + (n - 1)); return d; }
+function fmtDateShort(d) { return d.getDate() + ' ' + MONTHS_ABR[d.getMonth()]; }
+
+function initSidebar() {
+  const pct = Math.round(DAY / DAYS * 100);
+  document.getElementById('sb-daynum').textContent = DAY;
+  document.getElementById('sb-pct').textContent = pct + '%';
+  document.getElementById('sb-pct2').textContent = pct + '%';
+  document.getElementById('sb-days-left').textContent = (DAYS - DAY) + ' restantes';
+  document.getElementById('sb-streak-val').textContent = Store.currentStreak(Store.getHabits(), DAY);
+  setTimeout(() => { document.getElementById('sb-fill').style.width = pct + '%'; }, 400);
+}
+
+function renderStats() {
+  const wins = Store.getWins();
+  document.getElementById('st-total').textContent = wins.length;
+  document.getElementById('st-week').textContent = wins.filter(w => w.dayNum > DAY - 7).length;
+
+  const hasWin = d => wins.some(w => w.dayNum === d);
+  let streak = 0, d = DAY;
+  if (hasWin(d)) { streak++; d--; } else { d--; }
+  while (d >= 1 && hasWin(d)) { streak++; d--; }
+  document.getElementById('st-streak').textContent = streak;
+}
+
+function renderFeed() {
+  const el = document.getElementById('win-feed');
+  const wins = Store.getWins().slice().sort((a, b) => b.dayNum - a.dayNum || new Date(b.createdAt) - new Date(a.createdAt));
+  if (!wins.length) {
+    el.innerHTML = '<div class="win-empty">Nenhuma vitória registrada ainda.<br>Comece pequeno — qualquer coisa que valeu a pena hoje conta.</div>';
+    return;
+  }
+
+  const days = [];
+  wins.forEach(w => { if (!days.length || days[days.length - 1].dayNum !== w.dayNum) days.push({ dayNum: w.dayNum, items: [] }); days[days.length - 1].items.push(w); });
+
+  el.innerHTML = days.map(group => {
+    const d = dayToDate(group.dayNum);
+    const rows = group.items.map(w => `
+      <div class="win-row">
+        <span class="win-icon">✓</span>
+        <div class="win-text">${esc(w.text)}</div>
+        <button class="win-del" title="Excluir" onclick="removeWin(${w.id})">✕</button>
+      </div>`).join('');
+    return `<div class="win-day-group">
+      <div class="win-day-hd"><b>Dia ${group.dayNum}</b><span>${fmtDateShort(d)} · ${DAYS_PT[d.getDay()]}</span></div>
+      ${rows}
+    </div>`;
+  }).join('');
+}
+
+document.getElementById('win-form').addEventListener('submit', e => {
+  e.preventDefault();
+  const input = document.getElementById('win-input');
+  const v = input.value.trim();
+  if (!v) return;
+  Store.addWin(v);
+  input.value = '';
+  toast('Vitória registrada ✓');
+  renderStats();
+  renderFeed();
+});
+
+function removeWin(id) {
+  const w = Store.getWins().find(x => x.id === id);
+  if (!w) return;
+  const snapshot = { ...w };
+  Store.deleteWin(id);
+  renderStats();
+  renderFeed();
+  window.p90toastUndo('Vitória removida', () => {
+    Store.restoreWin(snapshot);
+    renderStats();
+    renderFeed();
+  });
+}
+
+initSidebar();
+renderStats();
+renderFeed();
+window.addEventListener('p90:synced', () => { initSidebar(); renderStats(); renderFeed(); });
+</script>
+<script src="js/pwa.js"></script>
+</body>
+</html>
