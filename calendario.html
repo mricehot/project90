@@ -68,6 +68,19 @@ body { overflow: hidden; }
 
 @media (max-width: 640px) { .cal2-cell { min-height: 44px; padding: 6px; } .cal2-daynum { font-size: 13px; } }
 
+/* ── LISTA "O QUE VENCE ESTE MÊS" — abaixo da grade, um card por dia com
+   pendência, pra não depender só de clicar em cada bolinha ── */
+.cal2-agenda-hd { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--mid); }
+.cal2-agenda-list { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }
+.cal2-day-group { background: var(--surface); border: 1px solid var(--border); padding: 16px 20px; }
+.cal2-day-group.today { border-color: var(--border2); }
+.cal2-day-hd {
+  display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px; cursor: pointer;
+  font-size: 11px; letter-spacing: 0.08em; color: var(--mid); text-transform: uppercase;
+}
+.cal2-day-hd b { font-family: 'Bebas Neue', sans-serif; font-size: 16px; letter-spacing: 0.04em; color: var(--white); text-transform: none; }
+.cal2-day-hd:hover b { text-decoration: underline; text-underline-offset: 3px; }
+
 /* ── SIDEBAR DIREITA — agenda do dia selecionado ── */
 .cal2-rail { grid-column: 2; grid-row: 2; border-left: 1px solid var(--border); background: var(--surface); display: flex; flex-direction: column; overflow: hidden; }
 .cal2-rail-hd { padding: 20px 22px 4px; border-bottom: 1px solid var(--border); padding-bottom: 16px; }
@@ -189,6 +202,11 @@ body { overflow: hidden; }
       </div>
 
       <div class="cal2-grid" id="cal2-grid"></div>
+
+      <div>
+        <div class="cal2-agenda-hd">O que vence este mês</div>
+        <div class="cal2-agenda-list" id="cal2-agenda-list"></div>
+      </div>
 
     </div>
 
@@ -333,6 +351,32 @@ function selectDay(iso) {
   renderRail();
 }
 
+/* ── Helpers de markup compartilhados entre a agenda lateral (1 dia) e a
+   lista "o que vence este mês" (todos os dias) — mesma estrutura, evita
+   duas versões do mesmo HTML divergindo com o tempo. ── */
+function _calItemRow(title, sub, over, done) {
+  return `<div class="cal2-item">
+    <span class="cal2-item-dot ${over ? 'over' : done ? 'done' : ''}"></span>
+    <div class="cal2-item-body"><div class="cal2-item-title ${done ? 'done' : ''}">${esc(title)}</div>${sub ? `<div class="cal2-item-sub">${esc(sub)}</div>` : ''}</div>
+  </div>`;
+}
+function _calSections(items) {
+  const secs = [];
+  if (items.tasks.length) {
+    secs.push({ title: 'Tarefas', link: 'tarefas.html',
+      body: items.tasks.map(t => _calItemRow(t.title, null, t.over, t.done)).join('') });
+  }
+  if (items.fac.length) {
+    secs.push({ title: 'Faculdade', link: 'faculdade.html',
+      body: items.fac.map(a => _calItemRow(a.title, a.subject, a.over, a.done)).join('') });
+  }
+  if (items.fin.length) {
+    secs.push({ title: 'Financeiro', link: 'financeiro.html',
+      body: items.fin.map(f => _calItemRow(f.label, 'R$ ' + Math.round(f.amount).toLocaleString('pt-BR'), f.over, f.done)).join('') });
+  }
+  return secs;
+}
+
 function renderRail() {
   const d = dateFromIso(selectedIso);
   const y = d.getFullYear(), m = d.getMonth();
@@ -342,38 +386,7 @@ function renderRail() {
   document.getElementById('rail-day').textContent = (isToday ? 'Hoje · ' : '') + d.getDate() + ' ' + MONTHS_ABR[m];
   document.getElementById('rail-date').textContent = DAYS_FULL[d.getDay()];
 
-  const secs = [];
-  if (items.tasks.length) {
-    secs.push({
-      title: 'Tarefas', link: 'tarefas.html',
-      body: items.tasks.map(t => `
-        <div class="cal2-item">
-          <span class="cal2-item-dot ${t.over ? 'over' : t.done ? 'done' : ''}"></span>
-          <div class="cal2-item-body"><div class="cal2-item-title ${t.done ? 'done' : ''}">${esc(t.title)}</div></div>
-        </div>`).join(''),
-    });
-  }
-  if (items.fac.length) {
-    secs.push({
-      title: 'Faculdade', link: 'faculdade.html',
-      body: items.fac.map(a => `
-        <div class="cal2-item">
-          <span class="cal2-item-dot ${a.over ? 'over' : a.done ? 'done' : ''}"></span>
-          <div class="cal2-item-body"><div class="cal2-item-title ${a.done ? 'done' : ''}">${esc(a.title)}</div><div class="cal2-item-sub">${esc(a.subject)}</div></div>
-        </div>`).join(''),
-    });
-  }
-  if (items.fin.length) {
-    secs.push({
-      title: 'Financeiro', link: 'financeiro.html',
-      body: items.fin.map(f => `
-        <div class="cal2-item">
-          <span class="cal2-item-dot ${f.over ? 'over' : f.done ? 'done' : ''}"></span>
-          <div class="cal2-item-body"><div class="cal2-item-title ${f.done ? 'done' : ''}">${esc(f.label)}</div><div class="cal2-item-sub">R$ ${Math.round(f.amount).toLocaleString('pt-BR')}</div></div>
-        </div>`).join(''),
-    });
-  }
-
+  const secs = _calSections(items);
   const body = document.getElementById('rail-body');
   if (!secs.length) {
     body.innerHTML = '<div class="cal2-rail-empty">Nada vencendo nesse dia.</div>';
@@ -386,25 +399,62 @@ function renderRail() {
     </div>`).join('');
 }
 
+/* ── "O que vence este mês" — um card por dia com pendência, listado
+   abaixo da grade. A grade em si só mostra bolinhas; aqui dá pra ler o
+   que é sem precisar clicar em cada dia. ── */
+function renderMonthAgenda() {
+  const y = viewDate.getFullYear(), m = viewDate.getMonth();
+  const items = computeMonthItems(y, m);
+  const isos = Object.keys(items).sort();
+  const el = document.getElementById('cal2-agenda-list');
+
+  if (!isos.length) {
+    el.innerHTML = '<div class="cal2-rail-empty">Nada vencendo neste mês.</div>';
+    return;
+  }
+
+  const todayIso = isoOf(TODAY.getFullYear(), TODAY.getMonth(), TODAY.getDate());
+  el.innerHTML = isos.map(iso => {
+    const d = dateFromIso(iso);
+    const isToday = iso === todayIso;
+    const secs = _calSections(items[iso]);
+    if (!secs.length) return '';
+    return `<div class="cal2-day-group ${isToday ? 'today' : ''}">
+      <div class="cal2-day-hd" onclick="selectDay('${iso}')">
+        <b>${d.getDate()} ${MONTHS_ABR[m]}</b><span>${DAYS_PT[d.getDay()]}${isToday ? ' · hoje' : ''}</span>
+      </div>
+      ${secs.map(s => `
+        <div class="cal2-sec">
+          <div class="cal2-sec-hd"><span>${s.title}</span><a class="cal2-rail-link" href="${s.link}">Abrir →</a></div>
+          ${s.body}
+        </div>`).join('')}
+    </div>`;
+  }).join('');
+}
+
 document.getElementById('cal2-prev').addEventListener('click', () => {
   viewDate = new Date(viewDate.getFullYear(), viewDate.getMonth() - 1, 1);
   renderMonth();
+  renderMonthAgenda();
 });
 document.getElementById('cal2-next').addEventListener('click', () => {
   viewDate = new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 1);
   renderMonth();
+  renderMonthAgenda();
 });
 document.getElementById('cal2-today-btn').addEventListener('click', () => {
   viewDate = new Date(TODAY.getFullYear(), TODAY.getMonth(), 1);
   selectedIso = isoOf(TODAY.getFullYear(), TODAY.getMonth(), TODAY.getDate());
   renderMonth();
   renderRail();
+  renderMonthAgenda();
 });
 
 initSidebar();
 renderMonth();
 renderRail();
-window.addEventListener('p90:synced', () => { initSidebar(); renderMonth(); renderRail(); });
+renderMonthAgenda();
+window.addEventListener('p90:synced', () => { initSidebar(); renderMonth(); renderRail(); renderMonthAgenda(); });
 </script>
 <script src="js/pwa.js"></script>
 </body>
