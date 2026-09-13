@@ -76,6 +76,7 @@ const Store = (() => {
       dailyPriorities: {},   // { [dayNum]: [{text, done}, ...] } — até 3, ritual de manhã
       shoppingItems: [],    // { id, label, bought, createdAt } — lista de compras do mercado
       studyReflections: {}, // { [dayNum]: { topicIdx, q1, q2, q3, free } } — Conhecimento/Reflexões
+      conversationTipsRead: {}, // { [tipIdx]: readDay } — Dicção/Conversação
     };
   }
 
@@ -428,6 +429,10 @@ const Store = (() => {
     if (data.studyReflections && typeof data.studyReflections === 'object') {
       Object.keys(cache.studyReflections).forEach(k => delete cache.studyReflections[k]);
       Object.assign(cache.studyReflections, data.studyReflections);
+    }
+    if (data.conversationTipsRead && typeof data.conversationTipsRead === 'object') {
+      Object.keys(cache.conversationTipsRead).forEach(k => delete cache.conversationTipsRead[k]);
+      Object.assign(cache.conversationTipsRead, data.conversationTipsRead);
     }
   }
 
@@ -3952,6 +3957,38 @@ const Store = (() => {
   }
 
   /* ──────────────────────────────────────────
+     CONVERSAÇÃO (Dicção) — biblioteca de dicas de comunicação
+     (js/conversation-tips.js, conteúdo estático). Só o estado "lida" é
+     persistido, referenciando o índice da dica no array — igual
+     bible_days marca dias do plano sem duplicar o texto do capítulo.
+       cache.conversationTipsRead: { [tipIdx]: readDay }
+  ────────────────────────────────────────── */
+  function getConversationTipsRead() { return cache.conversationTipsRead; }
+
+  function toggleConversationTipRead(tipIdx, dayNum) {
+    tipIdx = Number(tipIdx);
+    if (cache.conversationTipsRead[tipIdx] != null) {
+      delete cache.conversationTipsRead[tipIdx];
+      _saveMirror();
+      _push(async () => {
+        const { error } = await window.sb.from('conversation_tips_read')
+          .delete().eq('user_id', _uid).eq('tip_idx', tipIdx);
+        if (error) throw error;
+      });
+    } else {
+      const readDay = dayNum || getCurrentDay();
+      cache.conversationTipsRead[tipIdx] = readDay;
+      _saveMirror();
+      _push(async () => {
+        const { error } = await window.sb.from('conversation_tips_read').upsert({
+          user_id: _uid, tip_idx: tipIdx, read_day: readDay,
+        }, { onConflict: 'user_id,tip_idx' });
+        if (error) throw error;
+      });
+    }
+  }
+
+  /* ──────────────────────────────────────────
      PUBLIC API
   ────────────────────────────────────────── */
   return {
@@ -4020,6 +4057,8 @@ const Store = (() => {
     getShoppingItems, addShoppingItem, toggleShoppingItem, deleteShoppingItem, clearBoughtShoppingItems,
     // reflexões (conhecimento)
     getStudyReflections, getStudyReflection, saveStudyReflection,
+    // conversação (dicção)
+    getConversationTipsRead, toggleConversationTipRead,
     // computed
     habitVal, scheduledOn, dayCompletionPct, maxStreak, countDays,
     allHabitsDone, currentStreak, computeAchievementProgress, computeLevels,
