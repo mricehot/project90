@@ -265,7 +265,18 @@ function initSidebar() {
    fixas do Financeiro (recorrentes todo mês no dia cadastrado). Tarefas
    recorrentes (a cada N dias / dias da semana) ficam de fora de propósito:
    apareceriam quase todo dia e o calendário viraria uma bagunça — essas
-   continuam vivendo em Pendências/Tarefas, que é o lugar certo pra elas. ── */
+   continuam vivendo em Pendências/Tarefas, que é o lugar certo pra elas.
+
+   Atrasados de meses anteriores: tarefas e entregas são pontuais (uma data
+   só), então uma que venceu em agosto e nunca foi feita só apareceria de
+   novo se o usuário voltasse pro mês de agosto — fácil de esquecer que ela
+   existe. Quando o mês visto é o mês atual, "traz" pra hoje qualquer
+   tarefa/entrega ainda aberta e vencida num mês anterior (marcada com a
+   data original em "sub"), além de continuar aparecendo no mês em que
+   venceu de fato. Contas fixas do Financeiro não precisam disso: cada mês
+   é uma cobrança independente (finFixedPaidMark é por mês), então a conta
+   de agosto não pago não "contamina" a de setembro — cada uma já fica
+   marcada como atrasada no seu próprio mês. ── */
 function computeMonthItems(year, month) {
   const items = {};
   function add(iso, cat, obj) {
@@ -273,12 +284,18 @@ function computeMonthItems(year, month) {
     items[iso][cat].push(obj);
   }
 
+  const todayIso = isoOf(TODAY.getFullYear(), TODAY.getMonth(), TODAY.getDate());
+  const isCurrentMonth = (year === TODAY.getFullYear() && month === TODAY.getMonth());
+  const fmtShort = iso => { const d = dateFromIso(iso); return d.getDate() + ' ' + MONTHS_ABR[d.getMonth()]; };
+
   if (typeof Store.getTasks === 'function') {
     Store.getTasks().filter(t => !t.archived && t.sched === 'once' && t.anchor).forEach(t => {
       const d = dateFromIso(t.anchor);
+      const status = Store.taskStatus(t);
       if (d.getFullYear() === year && d.getMonth() === month) {
-        const status = Store.taskStatus(t);
-        add(t.anchor, 'tasks', { title: t.title, over: status === 'overdue', done: status === 'done' });
+        add(t.anchor, 'tasks', { title: t.title, sub: null, over: status === 'overdue', done: status === 'done' });
+      } else if (isCurrentMonth && status === 'overdue') {
+        add(todayIso, 'tasks', { title: t.title, sub: 'Atrasada desde ' + fmtShort(t.anchor), over: true, done: false });
       }
     });
   }
@@ -287,9 +304,12 @@ function computeMonthItems(year, month) {
     Store.getStudyActivities().forEach(a => {
       if (!a.dueOn) return;
       const d = dateFromIso(a.dueOn);
+      const subject = Store.studySubjectName(a.subjectId);
       if (d.getFullYear() === year && d.getMonth() === month) {
-        const over = !a.done && a.dueOn < isoOf(TODAY.getFullYear(), TODAY.getMonth(), TODAY.getDate());
-        add(a.dueOn, 'fac', { title: a.title, subject: Store.studySubjectName(a.subjectId), over, done: !!a.done });
+        const over = !a.done && a.dueOn < todayIso;
+        add(a.dueOn, 'fac', { title: a.title, sub: subject, over, done: !!a.done });
+      } else if (isCurrentMonth && !a.done && a.dueOn < todayIso) {
+        add(todayIso, 'fac', { title: a.title, sub: subject + ' · atrasada desde ' + fmtShort(a.dueOn), over: true, done: false });
       }
     });
   }
@@ -301,7 +321,7 @@ function computeMonthItems(year, month) {
       const iso = isoOf(year, month, f.dueDay);
       const ym = Store.finYm(iso);
       const paid = Store.finFixedPaidMark(f.id, ym);
-      const over = !paid && iso < isoOf(TODAY.getFullYear(), TODAY.getMonth(), TODAY.getDate());
+      const over = !paid && iso < todayIso;
       add(iso, 'fin', { label: f.label, amount: f.amount, over, done: paid });
     });
   }
@@ -364,11 +384,11 @@ function _calSections(items) {
   const secs = [];
   if (items.tasks.length) {
     secs.push({ title: 'Tarefas', link: 'tarefas.html',
-      body: items.tasks.map(t => _calItemRow(t.title, null, t.over, t.done)).join('') });
+      body: items.tasks.map(t => _calItemRow(t.title, t.sub, t.over, t.done)).join('') });
   }
   if (items.fac.length) {
     secs.push({ title: 'Faculdade', link: 'faculdade.html',
-      body: items.fac.map(a => _calItemRow(a.title, a.subject, a.over, a.done)).join('') });
+      body: items.fac.map(a => _calItemRow(a.title, a.sub, a.over, a.done)).join('') });
   }
   if (items.fin.length) {
     secs.push({ title: 'Financeiro', link: 'financeiro.html',
