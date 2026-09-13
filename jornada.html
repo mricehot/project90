@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#080808">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Project 90">
+<title>Project 90 — Jornada</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/components.css">
+<script src="js/supabase-config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase.js"></script>
+<script src="js/store.js"></script>
+<script src="js/achievements.js"></script>
+<script src="js/study-topics.js"></script>
+<style>
+.jr-main { padding: 30px 40px 72px; overflow-y: auto; display: flex; flex-direction: column; gap: 22px; }
+@media (max-width: 640px) { .g3 { grid-template-columns: 1fr; } .jr-main { padding: 20px; } }
+
+/* ── LINHA DO TEMPO ── */
+.jr-timeline { position: relative; padding-left: 30px; }
+.jr-timeline::before {
+  content: ''; position: absolute; left: 5px; top: 6px; bottom: 6px; width: 1px; background: var(--border2);
+}
+.jr-day { position: relative; }
+.jr-day + .jr-day { margin-top: 26px; }
+.jr-day::before {
+  content: ''; position: absolute; left: -30px; top: 5px; width: 9px; height: 9px; border-radius: 50%;
+  background: var(--mid); border: 2px solid var(--bg); box-shadow: 0 0 0 1px var(--border2);
+}
+.jr-day.today::before { background: var(--green); box-shadow: 0 0 0 1px var(--green); }
+.jr-day-hd { display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px; }
+.jr-day-num { font-family: 'Bebas Neue', sans-serif; font-size: 17px; letter-spacing: 0.03em; color: var(--white); }
+.jr-day-date { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--mid); }
+.jr-day.today .jr-day-date { color: var(--green); }
+
+.jr-card { background: var(--surface); border: 1px solid var(--border); padding: 13px 16px; display: flex; gap: 12px; align-items: flex-start; }
+.jr-card + .jr-card { margin-top: 8px; }
+.jr-card-icon { font-size: 15px; flex-shrink: 0; line-height: 1.4; }
+.jr-card-body { flex: 1; min-width: 0; }
+.jr-card-title { font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--mid); }
+.jr-card-detail {
+  font-size: 13px; color: var(--white); line-height: 1.6; margin-top: 4px;
+  overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; word-break: break-word;
+}
+
+.jr-empty { text-align: center; color: var(--mid); font-size: 13px; padding: 60px 0; line-height: 1.8; }
+
+.app { position: relative; z-index: 1; }
+</style>
+</head>
+<body>
+
+<div id="cur"></div>
+<div id="cur-ring"></div>
+<div class="toast" id="toast"></div>
+
+<div class="app">
+
+  <aside class="sidebar">
+    <div class="sb-logo">
+      <a href="index.html" class="sb-logomark">Project 90</a>
+      <div class="sb-logosub">Transformação pessoal</div>
+    </div>
+    <div class="sb-day">
+      <div class="sb-daynum" id="sb-daynum">34</div>
+      <div class="sb-daylbl">de 90 dias</div>
+      <div style="display:flex;justify-content:space-between;font-size:10px;letter-spacing:0.1em;color:var(--mid);margin-top:10px">
+        <span>Progresso</span><span id="sb-pct">38%</span>
+      </div>
+      <div class="sb-prog-bar-bg"><div class="sb-prog-bar-fill" id="sb-fill" style="width:0%"></div></div>
+      <div class="sb-prog-meta"><span id="sb-days-left">56 restantes</span><span id="sb-pct2">38%</span></div>
+    </div>
+    <nav class="sb-nav">
+      <a class="sb-item" href="dashboard.html"><span class="sb-item-icon">◈</span> Dashboard</a>
+      <details class="sb-group">
+        <summary class="sb-group-toggle"><span class="sb-item-icon">⚑</span> Pendências<span class="sb-group-caret">›</span></summary>
+        <a class="sb-item sb-subitem" href="pendencias.html"><span class="sb-item-icon">⚑</span> Pendências</a>
+        <a class="sb-item sb-subitem" href="calendario.html"><span class="sb-item-icon">⊞</span> Calendário</a>
+      </details>
+      <a class="sb-item" href="habitos.html"><span class="sb-item-icon">◉</span> Hábitos</a>
+      <a class="sb-item" href="metricas.html"><span class="sb-item-icon">△</span> Métricas</a>
+      <a class="sb-item" href="diario.html"><span class="sb-item-icon">◻</span> Diário</a>
+      <details class="sb-group">
+        <summary class="sb-group-toggle"><span class="sb-item-icon">✦</span> Conhecimento<span class="sb-group-caret">›</span></summary>
+        <a class="sb-item sb-subitem" href="vocabulario.html"><span class="sb-item-icon">▤</span> Vocabulário</a>
+        <a class="sb-item sb-subitem" href="biblioteca.html"><span class="sb-item-icon">❐</span> Biblioteca</a>
+        <a class="sb-item sb-subitem" href="reflexoes.html"><span class="sb-item-icon">☯</span> Reflexões</a>
+      </details>
+      <a class="sb-item" href="diccao.html"><span class="sb-item-icon">◗</span> Dicção</a>
+      <a class="sb-item" href="biblia.html"><span class="sb-item-icon">✝</span> Bíblia</a>
+      <a class="sb-item" href="tarefas.html"><span class="sb-item-icon">✓</span> Tarefas</a>
+      <a class="sb-item" href="faculdade.html"><span class="sb-item-icon">▦</span> Faculdade</a>
+      <a class="sb-item" href="treino.html"><span class="sb-item-icon">◲</span> Treino</a>
+      <a class="sb-item" href="financeiro.html"><span class="sb-item-icon">◫</span> Financeiro</a>
+      <details class="sb-group" open>
+        <summary class="sb-group-toggle has-active"><span class="sb-item-icon">◆</span> Conquistas<span class="sb-group-caret">›</span></summary>
+        <a class="sb-item sb-subitem" href="conquistas.html"><span class="sb-item-icon">◆</span> Conquistas</a>
+        <a class="sb-item sb-subitem" href="vitorias.html"><span class="sb-item-icon">✪</span> Vitórias</a>
+        <a class="sb-item sb-subitem active" href="jornada.html"><span class="sb-item-icon">◐</span> Jornada</a>
+      </details>
+    </nav>
+    <div class="sb-bottom">
+      <div class="sb-streak">
+        <span class="sb-streak-icon">🔥</span>
+        <div>
+          <div class="sb-streak-val" id="sb-streak-val">12</div>
+          <div class="sb-streak-lbl">Dias seguidos</div>
+        </div>
+      </div>
+      <a href="login.html" class="sb-logout">← Sair</a>
+    </div>
+  </aside>
+
+  <main class="jr-main">
+
+    <div class="topbar">
+      <div class="page-title">Jornada <em>a história dos seus 90 dias.</em></div>
+      <div class="topbar-right">
+        <button class="btn-sm" id="jr-today-btn">Ir para hoje</button>
+      </div>
+    </div>
+
+    <div class="g3">
+      <div class="stat-card">
+        <div class="stat-lbl">Marcos</div>
+        <div class="stat-val" id="st-total">0</div>
+        <div class="stat-sub">registrados até agora</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-lbl">Dias com registro</div>
+        <div class="stat-val" id="st-days">0</div>
+        <div class="stat-sub">de <span id="st-days-total">90</span></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-lbl">Dia atual</div>
+        <div class="stat-val" id="st-current">1</div>
+        <div class="stat-sub">do desafio</div>
+      </div>
+    </div>
+
+    <div class="jr-timeline" id="jr-timeline"></div>
+
+  </main>
+</div>
+
+<script>
+/* ── CURSOR ── */
+(function () {
+  const cur = document.getElementById('cur'), ring = document.getElementById('cur-ring');
+  let mx = 0, my = 0, rx = 0, ry = 0;
+  document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; cur.style.transform = `translate(${mx - 3}px,${my - 3}px)`; });
+  (function tick() { rx += (mx - rx - 15) * 0.1; ry += (my - ry - 15) * 0.1; ring.style.transform = `translate(${rx}px,${ry}px)`; requestAnimationFrame(tick); })();
+})();
+
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+const DAY  = Store.getCurrentDay();
+const DAYS = Store.getTotalDays();
+const START_DATE = Store.getStartDate();
+
+const MONTHS_ABR = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+const DAYS_PT    = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+
+function dayToDate(n) { const d = new Date(START_DATE); d.setDate(d.getDate() + (n - 1)); return d; }
+function fmtDateShort(d) { return d.getDate() + ' ' + MONTHS_ABR[d.getMonth()]; }
+
+function initSidebar() {
+  const pct = Math.round(DAY / DAYS * 100);
+  document.getElementById('sb-daynum').textContent = DAY;
+  document.getElementById('sb-pct').textContent = pct + '%';
+  document.getElementById('sb-pct2').textContent = pct + '%';
+  document.getElementById('sb-days-left').textContent = (DAYS - DAY) + ' restantes';
+  document.getElementById('sb-streak-val').textContent = Store.currentStreak(Store.getHabits(), DAY);
+  setTimeout(() => { document.getElementById('sb-fill').style.width = pct + '%'; }, 400);
+}
+
+/* ── MONTAGEM DOS EVENTOS — junta diário, vitórias, conquistas
+   desbloqueadas e reflexões num só array ordenado por dia. Tudo lido do
+   Store, nada novo persistido — a Jornada é só uma outra forma de olhar
+   pra dado que já existe. ── */
+function buildEvents() {
+  const events = [];
+
+  const journal = Store.getJournal();
+  Object.keys(journal).forEach(k => {
+    const day = Number(k);
+    const e = journal[k] || {};
+    const text = e.free || e.good || e.promptReply || e.improve || '';
+    if (!text && !e.mood) return;
+    events.push({
+      day, icon: '◻', title: 'Entrada no diário',
+      detail: text || (e.mood ? 'Humor registrado' : ''),
+    });
+  });
+
+  Store.getWins().forEach(w => {
+    events.push({ day: w.dayNum, icon: '✪', title: 'Vitória', detail: w.text });
+  });
+
+  const achMap = {};
+  (window.P90_ACHIEVEMENTS || []).forEach(cat => cat.achievements.forEach(a => { achMap[a.id] = a; }));
+  const unlocked = Store.getAchievements();
+  Object.keys(unlocked).forEach(id => {
+    const u = unlocked[id];
+    if (!u || !u.unlockedDay) return;
+    const def = achMap[id];
+    events.push({
+      day: u.unlockedDay, icon: def ? def.icon : '◆', title: 'Conquista desbloqueada',
+      detail: def ? def.name : id,
+    });
+  });
+
+  const TOPICS = window.P90_STUDY_TOPICS || [];
+  const reflections = Store.getStudyReflections();
+  Object.keys(reflections).forEach(k => {
+    const day = Number(k);
+    const r = reflections[k] || {};
+    events.push({ day, icon: '☯', title: 'Reflexão', detail: TOPICS[r.topicIdx] || '—' });
+  });
+
+  events.sort((a, b) => a.day - b.day);
+  return events;
+}
+
+function groupByDay(events) {
+  const groups = [];
+  events.forEach(e => {
+    if (!groups.length || groups[groups.length - 1].day !== e.day) groups.push({ day: e.day, items: [] });
+    groups[groups.length - 1].items.push(e);
+  });
+  return groups;
+}
+
+function renderStats(events, groups) {
+  document.getElementById('st-total').textContent = events.length;
+  document.getElementById('st-days').textContent = groups.length;
+  document.getElementById('st-days-total').textContent = DAYS;
+  document.getElementById('st-current').textContent = DAY;
+}
+
+function renderTimeline() {
+  const events = buildEvents();
+  const groups = groupByDay(events);
+  renderStats(events, groups);
+
+  const el = document.getElementById('jr-timeline');
+  if (!groups.length) {
+    el.innerHTML = '<div class="jr-empty">Sua jornada ainda está começando.<br>Registre algo no diário, uma reflexão ou uma vitória — os marcos aparecem aqui.</div>';
+    return;
+  }
+
+  el.innerHTML = groups.map(g => {
+    const d = dayToDate(g.day);
+    const isToday = g.day === DAY;
+    return `<div class="jr-day ${isToday ? 'today' : ''}" ${isToday ? 'id="jr-today"' : ''}>
+      <div class="jr-day-hd">
+        <span class="jr-day-num">Dia ${g.day}</span>
+        <span class="jr-day-date">${fmtDateShort(d)} · ${DAYS_PT[d.getDay()]}${isToday ? ' · hoje' : ''}</span>
+      </div>
+      ${g.items.map(e => `
+        <div class="jr-card">
+          <span class="jr-card-icon">${e.icon}</span>
+          <div class="jr-card-body">
+            <div class="jr-card-title">${esc(e.title)}</div>
+            <div class="jr-card-detail">${esc(e.detail)}</div>
+          </div>
+        </div>`).join('')}
+    </div>`;
+  }).join('');
+}
+
+document.getElementById('jr-today-btn').addEventListener('click', () => {
+  const el = document.getElementById('jr-today');
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  else toast('Nenhum registro hoje ainda');
+});
+
+let toastTimer;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
+}
+
+initSidebar();
+renderTimeline();
+window.addEventListener('p90:synced', () => { initSidebar(); renderTimeline(); });
+</script>
+<script src="js/pwa.js"></script>
+</body>
+</html>
