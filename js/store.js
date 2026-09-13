@@ -2614,6 +2614,20 @@ const Store = (() => {
     });
   }
 
+  // Restaura uma vitória excluída (undo), preservando id/dia/data originais
+  // em vez de gerar uma nova via addWin — mesma lógica de restoreStreakCounter.
+  function restoreWin(row) {
+    cache.wins.unshift({ ...row });
+    _saveMirror();
+    _push(async () => {
+      const { error } = await window.sb.from('wins').upsert({
+        id: row.id, user_id: _uid, text: row.text, day_num: row.dayNum, created_at: row.createdAt,
+      }, { onConflict: 'user_id,id' });
+      if (error) throw error;
+    });
+    return row;
+  }
+
   /* ──────────────────────────────────────────
      CONTADORES "DIAS DESDE"
   ────────────────────────────────────────── */
@@ -3963,7 +3977,7 @@ const Store = (() => {
     getBiblePassages, addBiblePassage, updateBiblePassage, deleteBiblePassage,
     getTasks, getTaskDone, taskLastDone, addTask, updateTask, deleteTask, setTaskArchived,
     completeTask, uncompleteTask, taskNextDue, taskStatus, tasksForToday, taskStreak, taskDoneTotal,
-    getWins, winsCount, addWin, deleteWin,
+    getWins, winsCount, addWin, deleteWin, restoreWin,
     getStreakCounters, counterDaysSince, addStreakCounter, renameStreakCounter,
     registerCounterSlip, undoCounterSlip, deleteStreakCounter, restoreStreakCounter,
     getNightRoutineActive, setNightRoutineActive,
