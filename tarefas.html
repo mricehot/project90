@@ -148,6 +148,50 @@
 .empty-icon { font-size: 26px; margin-bottom: 12px; opacity: 0.4; }
 .empty-sub { font-size: 13px; color: var(--mid); line-height: 1.8; }
 
+/* ── alternador de visão ── */
+.tsk-viewsw { display: inline-flex; border: 1px solid var(--border2); flex-shrink: 0; }
+.tsk-viewbtn {
+  background: none; border: none; color: var(--mid); font-family: 'DM Mono', monospace;
+  font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; padding: 7px 14px; cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.tsk-viewbtn + .tsk-viewbtn { border-left: 1px solid var(--border2); }
+.tsk-viewbtn.active { background: var(--white); color: var(--bg); }
+
+/* ── KANBAN ── */
+#tsk-kanban { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; align-items: start; }
+.kb-col {
+  background: var(--surface); border: 1px solid var(--border); display: flex; flex-direction: column;
+  min-height: 140px; transition: border-color 0.15s, background 0.15s;
+}
+.kb-col.kb-over { border-color: rgba(245,245,240,0.45); background: var(--surface2); }
+.kb-col-hd {
+  display: flex; align-items: center; gap: 8px; padding: 12px 14px; border-bottom: 1px solid var(--border);
+  font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--mid);
+}
+.kb-col-hd .kb-count { margin-left: auto; color: var(--white); letter-spacing: 0.06em; }
+.kb-col-body { padding: 10px; display: flex; flex-direction: column; gap: 8px; flex: 1; max-height: 62vh; overflow-y: auto; }
+.kb-card {
+  background: var(--surface2); border: 1px solid var(--border2); padding: 10px 10px 10px 6px;
+  display: flex; gap: 6px; cursor: pointer;
+}
+.kb-card:hover { border-color: rgba(245,245,240,0.3); }
+.kb-grip {
+  flex-shrink: 0; width: 14px; color: var(--mid); cursor: grab; touch-action: none; user-select: none;
+  display: flex; align-items: flex-start; justify-content: center; font-size: 13px; padding-top: 1px;
+}
+.kb-grip:active { cursor: grabbing; }
+.kb-card-main { flex: 1; min-width: 0; }
+.kb-card-title { font-size: 13px; line-height: 1.4; color: var(--white); }
+.kb-card.done .kb-card-title { color: var(--mid); text-decoration: line-through; }
+.kb-card-meta { font-size: 11px; letter-spacing: 0.04em; color: var(--mid); margin-top: 4px; display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.kb-card-meta .kb-late { color: #fca5a5; }
+.kb-card-meta .kb-soon { color: var(--white); }
+.kb-card-meta .kb-recur { opacity: 0.7; }
+.kb-empty { font-size: 12px; color: var(--mid); padding: 6px 4px; }
+.kb-ghost { position: fixed; top: 0; left: 0; z-index: 9000; pointer-events: none; opacity: 0.92; box-shadow: 0 10px 28px rgba(0,0,0,0.55); }
+.kb-dragging { opacity: 0.3; }
+
 /* modal extras */
 textarea.modal-input { resize: vertical; min-height: 56px; line-height: 1.6; }
 .m-quick { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
@@ -176,6 +220,11 @@ textarea.modal-input { resize: vertical; min-height: 56px; line-height: 1.6; }
   .app { grid-template-columns: 1fr; }
   .tsk-main { padding: 20px; }
   .g4 { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 720px) {
+  /* kanban empilha as 3 colunas em telas estreitas */
+  #tsk-kanban { grid-template-columns: 1fr; }
+  .kb-col-body { max-height: none; }
 }
 @media (max-width: 520px) { .g4 { grid-template-columns: 1fr; } }
 
@@ -254,7 +303,13 @@ textarea.modal-input { resize: vertical; min-height: 56px; line-height: 1.6; }
 
     <div class="topbar">
       <div class="page-title">Tarefas <em>&amp; recorrências.</em></div>
-      <button class="btn-sm primary" id="btn-new">+ Detalhada</button>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="tsk-viewsw" role="group" aria-label="Visualização">
+          <button type="button" class="tsk-viewbtn" data-view="lista">Lista</button>
+          <button type="button" class="tsk-viewbtn" data-view="kanban">Kanban</button>
+        </div>
+        <button class="btn-sm primary" id="btn-new">+ Detalhada</button>
+      </div>
     </div>
 
     <div class="g4">
@@ -293,6 +348,7 @@ textarea.modal-input { resize: vertical; min-height: 56px; line-height: 1.6; }
     </div>
 
     <div id="groups"></div>
+    <div id="tsk-kanban" hidden></div>
 
     <button class="done-toggle" id="done-toggle" hidden>Concluídas</button>
     <div class="tsk-list" id="done-list" hidden></div>
@@ -481,6 +537,16 @@ function cardHTML(t) {
 
 let showDone = false;
 
+/* ── visão ativa (lista | kanban) ── */
+const VKEY = 'p90_tsk_view';
+function curView() {
+  try { return localStorage.getItem(VKEY) === 'kanban' ? 'kanban' : 'lista'; } catch (e) { return 'lista'; }
+}
+function setView(v) {
+  try { localStorage.setItem(VKEY, v); } catch (e) {}
+  render();
+}
+
 function render() {
   const all = Store.getTasks();
   const active  = all.filter(t => !t.archived && Store.taskStatus(t) !== 'done');
@@ -493,6 +559,29 @@ function render() {
   document.getElementById('sc-done').textContent   = Store.taskDoneTotal();
   document.getElementById('sc-streak').textContent = Store.taskStreak();
 
+  const v = curView();
+  document.querySelectorAll('.tsk-viewbtn').forEach(b => b.classList.toggle('active', b.dataset.view === v));
+  document.getElementById('groups').hidden = v !== 'lista';
+  document.getElementById('tsk-kanban').hidden = v !== 'kanban';
+
+  if (v === 'lista') renderList(all); else renderKanban(all);
+
+  // Concluídas + arquivadas (recolhível) — só faz sentido na lista;
+  // no kanban, concluídas já têm sua própria coluna.
+  const doneTasks = all.filter(t => t.archived || Store.taskStatus(t) === 'done');
+  const dToggle = document.getElementById('done-toggle');
+  const dList   = document.getElementById('done-list');
+  if (v === 'lista' && doneTasks.length) {
+    dToggle.hidden = false;
+    dToggle.textContent = (showDone ? '▾ ' : '▸ ') + 'Concluídas e arquivadas · ' + doneTasks.length;
+    dList.hidden = !showDone;
+    dList.innerHTML = showDone ? doneTasks.map(cardHTML).join('') : '';
+  } else {
+    dToggle.hidden = true; dList.hidden = true; dList.innerHTML = '';
+  }
+}
+
+function renderList(all) {
   const buckets = {};
   all.filter(t => !t.archived).forEach(t => {
     const b = bucketOf(t);
@@ -510,19 +599,72 @@ function render() {
         </div>`;
       }).join('')
     : `<div class="empty-state"><div class="empty-icon">✓</div><div class="empty-sub">Tudo limpo por aqui.<br>Adiciona a próxima ali em cima.</div></div>`;
+}
 
-  // Concluídas + arquivadas (recolhível)
-  const doneTasks = all.filter(t => t.archived || Store.taskStatus(t) === 'done');
-  const dToggle = document.getElementById('done-toggle');
-  const dList   = document.getElementById('done-list');
-  if (doneTasks.length) {
-    dToggle.hidden = false;
-    dToggle.textContent = (showDone ? '▾ ' : '▸ ') + 'Concluídas e arquivadas · ' + doneTasks.length;
-    dList.hidden = !showDone;
-    dList.innerHTML = showDone ? doneTasks.map(cardHTML).join('') : '';
-  } else {
-    dToggle.hidden = true; dList.hidden = true; dList.innerHTML = '';
+/* ── KANBAN: mesmas 3 categorias dos cards de estatística (Atrasadas/Ativas/Concluídas) ── */
+const KB_COLS = [
+  { key: 'overdue', label: 'Atrasadas' },
+  { key: 'active',  label: 'A fazer' },
+  { key: 'done',    label: 'Concluídas' },
+];
+
+function kbBucket(t) {
+  const st = Store.taskStatus(t);
+  if (st === 'done' || st === 'done-today') return 'done';
+  if (st === 'overdue') return 'overdue';
+  return 'active';
+}
+
+function kbCardHTML(t) {
+  const st = Store.taskStatus(t);
+  const done = (st === 'done' || st === 'done-today');
+  const recurring = t.sched !== 'once';
+  const due = Store.taskNextDue(t);
+  let dateTxt = 'Sem data', dateCls = '';
+  if (recurring) {
+    dateTxt = due ? fmtDateRel(due) : 'sem próxima';
+    if (st === 'overdue') dateCls = 'kb-late';
+    else if (st === 'due' || st === 'done-today') dateCls = 'kb-soon';
+  } else if (t.anchor) {
+    dateTxt = fmtDateRel(t.anchor);
+    if (st === 'overdue') dateCls = 'kb-late';
+    else if (st === 'due') dateCls = 'kb-soon';
   }
+  return `<div class="kb-card ${done ? 'done' : ''}" data-id="${t.id}">
+    <div class="kb-grip" data-grip title="Arrastar">⠿</div>
+    <div class="kb-card-main">
+      <div class="kb-card-title">${esc(t.title)}</div>
+      <div class="kb-card-meta">${recurring ? '<span class="kb-recur" title="Recorrente">↻</span>' : ''}<span class="${dateCls}">${esc(dateTxt)}</span></div>
+    </div>
+  </div>`;
+}
+
+function renderKanban(all) {
+  const board = document.getElementById('tsk-kanban');
+  const items = all.filter(t => !t.archived);
+  const byCol = { overdue: [], active: [], done: [] };
+  items.forEach(t => byCol[kbBucket(t)].push(t));
+  byCol.overdue.sort(sortInGroup);
+  byCol.active.sort(sortInGroup);
+  byCol.done.sort((a, b) => {
+    const da = (Store.getTaskDone(a.id) || []).slice(-1)[0] || '';
+    const db = (Store.getTaskDone(b.id) || []).slice(-1)[0] || '';
+    return db.localeCompare(da) || (b.id - a.id);
+  });
+
+  if (!items.length) {
+    board.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">✓</div><div class="empty-sub">Tudo limpo por aqui.<br>Adiciona a próxima ali em cima.</div></div>`;
+    return;
+  }
+
+  board.innerHTML = KB_COLS.map(col => {
+    const list = byCol[col.key];
+    const cards = list.length ? list.map(kbCardHTML).join('') : '<div class="kb-empty">—</div>';
+    return `<div class="kb-col" data-status="${col.key}">
+      <div class="kb-col-hd">${col.label}<span class="kb-count">${list.length}</span></div>
+      <div class="kb-col-body">${cards}</div>
+    </div>`;
+  }).join('');
 }
 
 /* ── AÇÕES NAS LINHAS ── */
@@ -545,30 +687,50 @@ function onToggle(card, id) {
   if (!t) return;
   const st = Store.taskStatus(t);
   const wasDone = (st === 'done' || st === 'done-today');
+  if (!wasDone) { card.classList.add('leaving'); setTimeout(() => markTaskDone(t), 240); }
+  else markTaskUndone(t);
+}
+
+function markTaskDone(t) {
   const localISO = todayISO();
-
-  const apply = () => {
-    const done = Store.getTaskDone(id) || [];
-    if (t.sched === 'once') {
-      if (done.length) Store.uncompleteTask(id, done[done.length - 1]);
-      else Store.completeTask(id);
-    } else {
-      if (done.indexOf(localISO) !== -1) Store.uncompleteTask(id, localISO);
-      else Store.completeTask(id);
-    }
+  if (t.sched === 'once') Store.completeTask(t.id);
+  else Store.completeTask(t.id, localISO);
+  render();
+  window.p90toastUndo('Concluída ✓', () => {
+    const d2 = Store.getTaskDone(t.id) || [];
+    if (t.sched === 'once') { if (d2.length) Store.uncompleteTask(t.id, d2[d2.length - 1]); }
+    else Store.uncompleteTask(t.id, localISO);
     render();
-    if (!wasDone) {
-      window.p90toastUndo('Concluída ✓', () => {
-        const d2 = Store.getTaskDone(id) || [];
-        if (t.sched === 'once') { if (d2.length) Store.uncompleteTask(id, d2[d2.length - 1]); }
-        else Store.uncompleteTask(id, localISO);
-        render();
-      });
-    }
-  };
+  });
+}
 
-  if (!wasDone) { card.classList.add('leaving'); setTimeout(apply, 240); }
-  else apply();
+function markTaskUndone(t) {
+  const done = Store.getTaskDone(t.id) || [];
+  const localISO = todayISO();
+  if (t.sched === 'once') {
+    if (done.length) Store.uncompleteTask(t.id, done[done.length - 1]);
+  } else if (done.indexOf(localISO) !== -1) {
+    Store.uncompleteTask(t.id, localISO);
+  }
+  render();
+}
+
+/* ── KANBAN: drag entre colunas reaproveita completar/desmarcar/reagendar ── */
+function applyKbMove(id, targetStatus) {
+  const t = Store.getTasks().find(x => x.id === id);
+  if (!t) return;
+  const st = Store.taskStatus(t);
+  const wasDone = (st === 'done' || st === 'done-today');
+  if (targetStatus === 'done') {
+    if (!wasDone) markTaskDone(t);
+  } else if (wasDone) {
+    markTaskUndone(t);
+  } else if (targetStatus === 'active' && st === 'overdue' && t.sched === 'once') {
+    Store.updateTask(t.id, { anchor: todayISO() });
+    toast('Reagendada pra hoje');
+    render();
+  }
+  // soltar em "Atrasadas" não faz sentido manualmente — o card volta pro lugar certo no próximo render.
 }
 
 function toggleArchive(id) {
@@ -730,6 +892,64 @@ function saveModal() {
 document.getElementById('groups').addEventListener('click', onListClick);
 document.getElementById('done-list').addEventListener('click', onListClick);
 document.getElementById('done-toggle').addEventListener('click', () => { showDone = !showDone; render(); });
+
+/* ── alternador de visão ── */
+document.querySelector('.tsk-viewsw').addEventListener('click', e => {
+  const b = e.target.closest('.tsk-viewbtn');
+  if (b) setView(b.dataset.view);
+});
+
+/* ── KANBAN: abrir modal + drag-and-drop ── */
+const tkEl = document.getElementById('tsk-kanban');
+
+tkEl.addEventListener('click', e => {
+  if (e.target.closest('[data-grip]')) return;
+  const card = e.target.closest('.kb-card');
+  if (card && !card.classList.contains('kb-dragging')) openModal(Number(card.dataset.id));
+});
+
+(function kanbanDnD() {
+  let drag = null;
+  tkEl.addEventListener('pointerdown', e => {
+    const grip = e.target.closest('[data-grip]');
+    if (!grip) return;
+    const card = grip.closest('.kb-card');
+    if (!card) return;
+    e.preventDefault();
+    grip.setPointerCapture(e.pointerId);
+    drag = { id: Number(card.dataset.id), card, x0: e.clientX, y0: e.clientY, active: false, ghost: null };
+  });
+  tkEl.addEventListener('pointermove', e => {
+    if (!drag) return;
+    if (!drag.active) {
+      if (Math.hypot(e.clientX - drag.x0, e.clientY - drag.y0) < 6) return;
+      drag.active = true;
+      drag.w = drag.card.offsetWidth;
+      const g = drag.card.cloneNode(true);
+      g.classList.add('kb-ghost');
+      g.style.width = drag.w + 'px';
+      document.body.appendChild(g);
+      drag.ghost = g;
+      drag.card.classList.add('kb-dragging');
+    }
+    drag.ghost.style.transform = `translate(${e.clientX - drag.w / 2}px, ${e.clientY - 18}px)`;
+    const under = document.elementFromPoint(e.clientX, e.clientY);
+    const col = under && under.closest('.kb-col');
+    tkEl.querySelectorAll('.kb-col').forEach(c => c.classList.toggle('kb-over', c === col));
+  });
+  function finish(e) {
+    if (!drag) return;
+    const d = drag; drag = null;
+    if (d.ghost) d.ghost.remove();
+    if (!d.active) return;
+    const under = document.elementFromPoint(e.clientX, e.clientY);
+    const col = under && under.closest('.kb-col');
+    if (col && col.dataset.status) applyKbMove(d.id, col.dataset.status);
+    render();
+  }
+  tkEl.addEventListener('pointerup', finish);
+  tkEl.addEventListener('pointercancel', finish);
+})();
 document.getElementById('btn-new').addEventListener('click', () => openModal());
 document.getElementById('tm-cancel').addEventListener('click', closeModal);
 document.getElementById('tm-save').addEventListener('click', saveModal);
