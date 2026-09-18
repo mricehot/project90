@@ -109,9 +109,7 @@
 }
 .fac-subj-count { font-size: 11px; letter-spacing: 0.08em; color: var(--mid); white-space: nowrap; flex-shrink: 0; }
 .fac-subj-count .over { color: var(--red); }
-.fac-subj-acts { display: flex; gap: 4px; flex-shrink: 0; opacity: 0; transition: opacity 0.15s; }
-.fac-subj-hd:hover .fac-subj-acts { opacity: 1; }
-@media (hover: none) { .fac-subj-acts { opacity: 0.6; } }
+.fac-subj-acts { display: flex; gap: 4px; flex-shrink: 0; }
 .fac-subj-acts button {
   background: none; border: none; color: var(--mid); font-size: 14px; cursor: pointer; padding: 2px 5px;
   transition: color 0.15s;
@@ -718,7 +716,7 @@ function renderList() {
         <span class="fac-subj-count">${countBits.join(' · ')}</span>
         <span class="fac-subj-acts">
           <button data-act="rename" title="Renomear">✎</button>
-          <button data-act="archive" title="${s.archived ? 'Desarquivar' : 'Arquivar'}">${s.archived ? '⇧' : '⌂'}</button>
+          <button data-act="archive" title="${s.archived ? 'Desarquivar' : 'Arquivar'}">${s.archived ? '↺' : '⊟'}</button>
           <button data-act="delsubj" title="Excluir disciplina">✕</button>
         </span>
       </div>
