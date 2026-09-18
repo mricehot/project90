@@ -7,7 +7,7 @@
 ═══════════════════════════════════════════════ */
 importScripts('js/idb.js');
 
-const CACHE = 'p90-shell-v41';
+const CACHE = 'p90-shell-v42';
 const FONTS = 'p90-fonts-v1';
 
 const ASSETS = [

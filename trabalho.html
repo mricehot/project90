@@ -818,8 +818,9 @@ function renderRail() {
   }
   const itemHTML = p => {
     const c = projCounts(p.id);
+    const isRealce = p.kind === 'realce';
     let meta;
-    if (!c.total) meta = 'sem tarefas';
+    if (!c.total) meta = isRealce ? 'sem leques' : 'sem tarefas';
     else if (!c.pending) meta = 'tudo entregue';
     else {
       meta = c.pending + ' pendente' + (c.pending === 1 ? '' : 's');
@@ -843,12 +844,14 @@ let projModalId = null;
 
 function renderProjModalList(projId) {
   const listEl = document.getElementById('wpm-list');
+  const p = Store.getWorkProjects(true).find(x => x.id === projId);
+  const isRealce = p && p.kind === 'realce';
   const tasks = Store.getWorkTasks(projId);
   const pending = tasks.filter(t => !t.done);
   const doneTasks = tasks.filter(t => t.done);
   const rows = [...pending, ...doneTasks];
   if (!rows.length) {
-    listEl.innerHTML = '<div class="wpm-empty">Nenhuma tarefa neste projeto. Adicione abaixo.</div>';
+    listEl.innerHTML = `<div class="wpm-empty">${isRealce ? 'Nenhum leque neste realce. Adicione abaixo.' : 'Nenhuma tarefa neste projeto. Adicione abaixo.'}</div>`;
     return;
   }
   listEl.innerHTML = rows.map(t => {
@@ -872,6 +875,7 @@ function openProjModal(projId) {
   projModalId = projId;
   document.getElementById('wpm-title').textContent = p.name;
   document.querySelectorAll('#wpm-kind button').forEach(b => b.classList.toggle('active', b.dataset.kind === (p.kind || 'avulsa')));
+  document.getElementById('wpm-add-title').placeholder = p.kind === 'realce' ? 'Novo leque' : 'Nova tarefa';
   document.getElementById('wpm-add-title').value = '';
   document.getElementById('wpm-add-date').value = '';
   renderProjModalList(projId);
@@ -886,6 +890,8 @@ document.getElementById('wpm-kind').addEventListener('click', e => {
   if (!b || projModalId == null) return;
   Store.setWorkProjectKind(projModalId, b.dataset.kind);
   document.querySelectorAll('#wpm-kind button').forEach(x => x.classList.toggle('active', x === b));
+  document.getElementById('wpm-add-title').placeholder = b.dataset.kind === 'realce' ? 'Novo leque' : 'Nova tarefa';
+  renderProjModalList(projModalId);
   render();
 });
 
@@ -923,13 +929,14 @@ function buildProjectReport(projId) {
   const pctProf = totalHoles ? Math.round((profTotal / totalHoles) * 100) : 0;
   const pctSurv = totalHoles ? Math.round((survTotal / totalHoles) * 100) : 0;
 
+  const isRealce = p.kind === 'realce';
   let msg = `*${p.name}*\n${new Date().toLocaleString('pt-BR')}\n\n`;
-  msg += `Tarefas: ${done.length}/${tasks.length} entregues\n`;
+  msg += isRealce ? `Leques: ${done.length}/${tasks.length} concluídos\n` : `Tarefas: ${done.length}/${tasks.length} entregues\n`;
   if (totalHoles) msg += `Furos: ${profTotal}/${totalHoles} perfilados (${pctProf}%) — ${survTotal}/${totalHoles} topografados (${pctSurv}%)\n`;
   msg += '\n';
-  if (done.length) msg += `[ENTREGUES] ${done.map(t => t.title).join(', ')}\n`;
+  if (done.length) msg += `[${isRealce ? 'CONCLUÍDOS' : 'ENTREGUES'}] ${done.map(t => t.title).join(', ')}\n`;
   if (pending.length) msg += `[PENDENTES] ${pending.map(t => t.title).join(', ')}\n`;
-  if (perTaskBlocks.length) msg += `\n[FUROS POR TAREFA]\n${perTaskBlocks.join('\n\n')}`;
+  if (perTaskBlocks.length) msg += `\n[FUROS POR ${isRealce ? 'LEQUE' : 'TAREFA'}]\n${perTaskBlocks.join('\n\n')}`;
   return msg.trim();
 }
 
@@ -957,7 +964,8 @@ async function copyText(text) {
 document.getElementById('wpm-report').addEventListener('click', async () => {
   if (projModalId == null) return;
   const tasks = Store.getWorkTasks(projModalId);
-  if (!tasks.length) { toast('Nenhuma tarefa neste projeto ainda'); return; }
+  const p = Store.getWorkProjects(true).find(x => x.id === projModalId);
+  if (!tasks.length) { toast((p && p.kind === 'realce') ? 'Nenhum leque neste realce ainda' : 'Nenhuma tarefa neste projeto ainda'); return; }
   const ok = await copyText(buildProjectReport(projModalId));
   toast(ok ? 'Relatório copiado ✓' : 'Não consegui copiar — tenta de novo');
 });
@@ -995,9 +1003,13 @@ function startProjModalRename() {
 }
 document.getElementById('wpm-rename').addEventListener('click', startProjModalRename);
 
+// Estatísticas do topo contam só atividades avulsas — leques de um
+// realce são acompanhados pelo próprio indicador de furos (badges na
+// lista + "furos pendentes" em Pendências), não pelas contagens de
+// tarefa/entrega genéricas.
 function renderStats() {
   let pend = 0, over = 0, done = 0;
-  const liveIds = new Set(Store.getWorkProjects(false).map(p => p.id));
+  const liveIds = new Set(Store.getWorkProjects(false).filter(p => p.kind !== 'realce').map(p => p.id));
   Store.getWorkTasks().forEach(t => {
     if (!liveIds.has(t.projectId)) return;
     if (t.done) { done++; return; }
@@ -1025,7 +1037,7 @@ function projectCardHTML(p, collapsed) {
   const countBits = [];
   if (pending.length) countBits.push(pending.length + ' pendente' + (pending.length === 1 ? '' : 's'));
   if (nOver) countBits.push('<span class="over">' + nOver + ' atrasada' + (nOver === 1 ? '' : 's') + '</span>');
-  if (!pending.length && !doneTasks.length) countBits.push('sem tarefas');
+  if (!pending.length && !doneTasks.length) countBits.push(isRealce ? 'sem leques' : 'sem tarefas');
 
   const rowHTML = t => {
     const rel = t.status === 'fazendo' && !t.done
@@ -1054,9 +1066,9 @@ function projectCardHTML(p, collapsed) {
 
   const body = isCol ? '' : `<div class="wk-proj-body">
     ${(pending.map(rowHTML).join('') + doneTasks.map(rowHTML).join('')) ||
-      '<div class="wk-empty">Nenhuma tarefa. Adicione abaixo.</div>'}
+      `<div class="wk-empty">${isRealce ? 'Nenhum leque' : 'Nenhuma tarefa'}. Adicione abaixo.</div>`}
     <form class="wk-qa" data-proj="${p.id}" autocomplete="off">
-      <input class="wk-qa-title" maxlength="200" placeholder="Nova tarefa" />
+      <input class="wk-qa-title" maxlength="200" placeholder="${isRealce ? 'Novo leque' : 'Nova tarefa'}" />
       <input class="wk-qa-date" type="date" />
       <button type="submit">+</button>
     </form>
@@ -1107,8 +1119,7 @@ const KB_COLS = [
 ];
 
 function kbCardHTML(t) {
-  const proj = Store.getWorkProjects(true).find(x => x.id === t.projectId);
-  const bits = [(proj && proj.kind === 'realce' ? '⛏ ' : '') + esc(proj ? proj.name : '')];
+  const bits = [esc(Store.workProjectName(t.projectId))];
   if (t.dueOn) {
     if (t.done) {
       bits.push(fmtDue(t.dueOn));
@@ -1133,15 +1144,18 @@ function kbCardHTML(t) {
   </div>`;
 }
 
+// Kanban é só pra atividades avulsas — leques de um realce não seguem
+// esse fluxo de status (a_fazer/fazendo/entregue), são acompanhados pelo
+// progresso dos furos, então nem entram nas colunas aqui.
 function renderKanban() {
   const board = document.getElementById('wk-kanban');
-  const liveIds = new Set(Store.getWorkProjects(false).map(p => p.id));
+  const projects = Store.getWorkProjects(false).filter(p => p.kind !== 'realce');
+  const liveIds = new Set(projects.map(p => p.id));
   const tasks = Store.getWorkTasks().filter(t => liveIds.has(t.projectId));
   const byStatus = { a_fazer: [], fazendo: [], entregue: [] };
   tasks.forEach(t => { (byStatus[t.status] || byStatus.a_fazer).push(t); });
   byStatus.entregue.sort((x, y) => String(y.doneOn || '').localeCompare(String(x.doneOn || '')) || (y.id - x.id));
 
-  const projects = Store.getWorkProjects(false);
   const projOpts = projects.map(p => `<option value="${p.id}">${esc(p.name)}</option>`).join('');
 
   board.innerHTML = KB_COLS.map(col => {
@@ -1167,7 +1181,7 @@ function renderKanban() {
   }).join('');
 
   if (!projects.length) {
-    board.innerHTML = '<div class="wk-empty">Nenhum projeto ainda. Adicione um no campo acima.</div>';
+    board.innerHTML = '<div class="wk-empty">Nenhuma atividade avulsa ainda. O Kanban é só pra elas — realces ficam na lista, acompanhados pelo progresso dos furos.</div>';
   }
 }
 
@@ -1426,6 +1440,8 @@ function openEdit(id) {
   const t = Store.getWorkTasks().find(x => x.id === id);
   if (!t) return;
   editingId = id;
+  const proj = Store.getWorkProjects(true).find(x => x.id === t.projectId);
+  document.getElementById('wtm-hd').textContent = (proj && proj.kind === 'realce') ? 'Editar leque' : 'Editar tarefa';
   document.getElementById('wtm-title').value = t.title;
   document.getElementById('wtm-date').value = t.dueOn || '';
   document.getElementById('wtm-link').value = t.link || '';
