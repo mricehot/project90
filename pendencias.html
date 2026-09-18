@@ -694,6 +694,28 @@ function renderPendDemais() {
     html += tcSec(title, inner);
   }
 
+  if (typeof Store.getWorkReminders === 'function') {
+    const tasksById = new Map(Store.getWorkTasks().map(t => [t.id, t]));
+    const reminders = Store.getWorkReminders().filter(r => {
+      const t = r.taskId != null ? tasksById.get(r.taskId) : null;
+      return !(t && t.done);
+    });
+    if (reminders.length) {
+      const shown = reminders.slice(0, 4);
+      let inner = shown.map(r => {
+        const t = r.taskId != null ? tasksById.get(r.taskId) : null;
+        const sub = t ? `${esc(Store.workProjectName(t.projectId))} · ${esc(t.title)}` : '';
+        return `<div class="tc-row">
+          <div class="tc-check" onclick="remCardResolve(${r.id})" title="Resolver"></div>
+          <div class="tc-info"><div class="tc-name">${esc(r.text)}</div>${sub ? `<div class="tc-sub">${sub}</div>` : ''}</div>
+        </div>`;
+      }).join('');
+      const extra = reminders.length - shown.length;
+      if (extra > 0) inner += `<div class="tc-more">+${extra} mais</div>`;
+      html += tcSec('Lembretes', inner);
+    }
+  }
+
   if (typeof Store.vocabDueToday === 'function' && Store.getVocabWords && Store.getVocabWords().length) {
     const due = Store.vocabDueToday();
     let inner;
@@ -734,6 +756,11 @@ function facCardToggle(id) {
 function workCardToggle(id) {
   Store.toggleWorkTaskDone(id);
   renderPendDemais();
+}
+function remCardResolve(id) {
+  const removed = Store.deleteWorkReminder(id);
+  renderPendDemais();
+  if (removed) window.p90toastUndo('Lembrete resolvido', () => { Store.restoreWorkReminder(removed); renderPendDemais(); });
 }
 
 /* ══ LISTA DE COMPRAS ══ */
