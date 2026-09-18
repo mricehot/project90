@@ -7,14 +7,14 @@
 ═══════════════════════════════════════════════ */
 importScripts('js/idb.js');
 
-const CACHE = 'p90-shell-v37';
+const CACHE = 'p90-shell-v38';
 const FONTS = 'p90-fonts-v1';
 
 const ASSETS = [
   './',
   'index.html', 'login.html',
   'dashboard.html', 'pendencias.html', 'calendario.html', 'habitos.html', 'metricas.html', 'diario.html', 'conquistas.html', 'vitorias.html', 'jornada.html',
-  'vocabulario.html', 'diccao.html', 'conversacao.html', 'biblia.html', 'tarefas.html', 'faculdade.html', 'treino.html', 'financeiro.html', 'biblioteca.html', 'reflexoes.html',
+  'vocabulario.html', 'diccao.html', 'conversacao.html', 'biblia.html', 'tarefas.html', 'faculdade.html', 'treino.html', 'financeiro.html', 'trabalho.html', 'biblioteca.html', 'reflexoes.html',
   'css/base.css', 'css/components.css',
   'js/store.js', 'js/ui.js', 'js/achievements.js', 'js/quotes.js',
   'js/supabase.js', 'js/supabase-config.js', 'js/speech-library.js', 'js/reading-texts.js',

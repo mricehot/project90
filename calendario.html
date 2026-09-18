@@ -163,6 +163,7 @@ body { overflow: hidden; }
       <a class="sb-item" href="faculdade.html"><span class="sb-item-icon">▦</span> Faculdade</a>
       <a class="sb-item" href="treino.html"><span class="sb-item-icon">◲</span> Treino</a>
       <a class="sb-item" href="financeiro.html"><span class="sb-item-icon">◫</span> Financeiro</a>
+      <a class="sb-item" href="trabalho.html"><span class="sb-item-icon">⚙</span> Trabalho</a>
       <details class="sb-group">
         <summary class="sb-group-toggle"><span class="sb-item-icon">◆</span> Conquistas<span class="sb-group-caret">›</span></summary>
         <a class="sb-item sb-subitem" href="conquistas.html"><span class="sb-item-icon">◆</span> Conquistas</a>
@@ -285,7 +286,7 @@ function initSidebar() {
 function computeMonthItems(year, month) {
   const items = {};
   function add(iso, cat, obj) {
-    if (!items[iso]) items[iso] = { tasks: [], fac: [], fin: [] };
+    if (!items[iso]) items[iso] = { tasks: [], fac: [], work: [], fin: [] };
     items[iso][cat].push(obj);
   }
 
@@ -315,6 +316,20 @@ function computeMonthItems(year, month) {
         add(a.dueOn, 'fac', { title: a.title, sub: subject, over, done: !!a.done });
       } else if (isCurrentMonth && !a.done && a.dueOn < todayIso) {
         add(todayIso, 'fac', { title: a.title, sub: subject + ' · atrasada desde ' + fmtShort(a.dueOn), over: true, done: false });
+      }
+    });
+  }
+
+  if (typeof Store.getWorkTasks === 'function') {
+    Store.getWorkTasks().forEach(t => {
+      if (!t.dueOn) return;
+      const d = dateFromIso(t.dueOn);
+      const project = Store.workProjectName(t.projectId);
+      if (d.getFullYear() === year && d.getMonth() === month) {
+        const over = !t.done && t.dueOn < todayIso;
+        add(t.dueOn, 'work', { title: t.title, sub: project, over, done: !!t.done });
+      } else if (isCurrentMonth && !t.done && t.dueOn < todayIso) {
+        add(todayIso, 'work', { title: t.title, sub: project + ' · atrasada desde ' + fmtShort(t.dueOn), over: true, done: false });
       }
     });
   }
@@ -353,7 +368,7 @@ function renderMonth() {
     let cls = 'cal2-cell' + (isToday ? ' today' : '') + (isSelected ? ' selected' : '');
     let dots = '';
     if (it) {
-      ['tasks', 'fac', 'fin'].forEach(cat => {
+      ['tasks', 'fac', 'work', 'fin'].forEach(cat => {
         if (!it[cat].length) return;
         const anyOver = it[cat].some(x => x.over);
         const allDone = it[cat].every(x => x.done);
@@ -395,6 +410,10 @@ function _calSections(items) {
     secs.push({ title: 'Faculdade', link: 'faculdade.html',
       body: items.fac.map(a => _calItemRow(a.title, a.sub, a.over, a.done)).join('') });
   }
+  if (items.work.length) {
+    secs.push({ title: 'Trabalho', link: 'trabalho.html',
+      body: items.work.map(t => _calItemRow(t.title, t.sub, t.over, t.done)).join('') });
+  }
   if (items.fin.length) {
     secs.push({ title: 'Financeiro', link: 'financeiro.html',
       body: items.fin.map(f => _calItemRow(f.label, 'R$ ' + Math.round(f.amount).toLocaleString('pt-BR'), f.over, f.done)).join('') });
@@ -405,7 +424,7 @@ function _calSections(items) {
 function renderRail() {
   const d = dateFromIso(selectedIso);
   const y = d.getFullYear(), m = d.getMonth();
-  const items = computeMonthItems(y, m)[selectedIso] || { tasks: [], fac: [], fin: [] };
+  const items = computeMonthItems(y, m)[selectedIso] || { tasks: [], fac: [], work: [], fin: [] };
   const isToday = selectedIso === isoOf(TODAY.getFullYear(), TODAY.getMonth(), TODAY.getDate());
 
   document.getElementById('rail-day').textContent = (isToday ? 'Hoje · ' : '') + d.getDate() + ' ' + MONTHS_ABR[m];

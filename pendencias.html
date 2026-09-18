@@ -178,6 +178,7 @@
       <a class="sb-item" href="faculdade.html"><span class="sb-item-icon">▦</span> Faculdade</a>
       <a class="sb-item" href="treino.html"><span class="sb-item-icon">◲</span> Treino</a>
       <a class="sb-item" href="financeiro.html"><span class="sb-item-icon">◫</span> Financeiro</a>
+      <a class="sb-item" href="trabalho.html"><span class="sb-item-icon">⚙</span> Trabalho</a>
       <details class="sb-group">
         <summary class="sb-group-toggle"><span class="sb-item-icon">◆</span> Conquistas<span class="sb-group-caret">›</span></summary>
         <a class="sb-item sb-subitem" href="conquistas.html"><span class="sb-item-icon">◆</span> Conquistas</a>
@@ -635,7 +636,7 @@ function quickToggleTask(id) {
   renderPendTarefas();
 }
 
-/* ══ DEMAIS — faculdade · vocabulário · treino · alimentação ══ */
+/* ══ DEMAIS — faculdade · trabalho · vocabulário · treino · alimentação ══ */
 function renderPendDemais() {
   const body = document.getElementById('pend-demais-body');
   if (!body) return;
@@ -664,6 +665,32 @@ function renderPendDemais() {
       if (extra > 0) inner += `<div class="tc-more">+${extra} mais</div>`;
     }
     const title = overdue.length ? `Faculdade <b>· ${overdue.length} atrasada${overdue.length === 1 ? '' : 's'}</b>` : 'Faculdade';
+    html += tcSec(title, inner);
+  }
+
+  if (typeof Store.getWorkProjects === 'function' && Store.getWorkProjects().length) {
+    const { overdue, soon } = Store.workUpcoming(7);
+    const shown = [...overdue, ...soon].slice(0, 4);
+    let inner;
+    if (!shown.length) inner = '<div class="tc-allclear">Nada vencendo em 7 dias ✓</div>';
+    else {
+      inner = shown.map(t => {
+        const n = Store.workTaskDaysUntil(t);
+        let when, cls;
+        if (n < 0) { when = 'atrasada'; cls = 'over'; }
+        else if (n === 0) { when = 'hoje'; cls = 'soon'; }
+        else if (n === 1) { when = 'amanhã'; cls = 'soon'; }
+        else { when = n + ' dias'; cls = n <= 3 ? 'soon' : ''; }
+        return `<div class="tc-row">
+          <div class="tc-check" onclick="workCardToggle(${t.id})" title="Marcar entregue"></div>
+          <div class="tc-info"><div class="tc-name">${esc(t.title)}</div><div class="tc-sub">${esc(Store.workProjectName(t.projectId))}</div></div>
+          <div class="tc-when ${cls}">${when}</div>
+        </div>`;
+      }).join('');
+      const extra = overdue.length + soon.length - shown.length;
+      if (extra > 0) inner += `<div class="tc-more">+${extra} mais</div>`;
+    }
+    const title = overdue.length ? `Trabalho <b>· ${overdue.length} atrasada${overdue.length === 1 ? '' : 's'}</b>` : 'Trabalho';
     html += tcSec(title, inner);
   }
 
@@ -702,6 +729,10 @@ function renderPendDemais() {
 }
 function facCardToggle(id) {
   Store.toggleStudyDone(id);
+  renderPendDemais();
+}
+function workCardToggle(id) {
+  Store.toggleWorkTaskDone(id);
   renderPendDemais();
 }
 
@@ -777,30 +808,40 @@ function replanCandidates() {
       liveSubjIds.has(a.subjectId) && a.dueOn &&
       Store.studyActivityStatus(a) === 'atrasada' && a.dueOn >= monISO && a.dueOn < tISO);
   }
-  return { tasks, acts };
+  let workTasks = [];
+  if (typeof Store.getWorkTasks === 'function') {
+    const liveProjIds = new Set(Store.getWorkProjects(false).map(p => p.id));
+    workTasks = Store.getWorkTasks().filter(t =>
+      liveProjIds.has(t.projectId) && t.dueOn &&
+      Store.workTaskStatus(t) === 'atrasada' && t.dueOn >= monISO && t.dueOn < tISO);
+  }
+  return { tasks, acts, workTasks };
 }
 function renderReplanBtn() {
   const btn = document.getElementById('replan-btn');
   if (!btn) return;
-  const { tasks, acts } = replanCandidates();
-  const n = tasks.length + acts.length;
+  const { tasks, acts, workTasks } = replanCandidates();
+  const n = tasks.length + acts.length + workTasks.length;
   btn.hidden = n === 0;
   btn.textContent = `↻ Replanejar a semana (${n})`;
 }
 function replanWeek() {
-  const { tasks, acts } = replanCandidates();
-  const n = tasks.length + acts.length;
+  const { tasks, acts, workTasks } = replanCandidates();
+  const n = tasks.length + acts.length + workTasks.length;
   if (!n) return;
   const snapshot = {
     tasks: tasks.map(t => ({ id: t.id, anchor: t.anchor })),
     acts: acts.map(a => ({ id: a.id, dueOn: a.dueOn })),
+    workTasks: workTasks.map(t => ({ id: t.id, dueOn: t.dueOn })),
   };
   tasks.forEach(t => Store.updateTask(t.id, { anchor: addDaysISO(t.anchor, 7) }));
   acts.forEach(a => Store.updateStudyActivity(a.id, { dueOn: addDaysISO(a.dueOn, 7) }));
+  workTasks.forEach(t => Store.updateWorkTask(t.id, { dueOn: addDaysISO(t.dueOn, 7) }));
   renderAll();
   window.p90toastUndo(`${n} ${n === 1 ? 'item replanejado' : 'itens replanejados'} pra semana que vem`, () => {
     snapshot.tasks.forEach(s => Store.updateTask(s.id, { anchor: s.anchor }));
     snapshot.acts.forEach(s => Store.updateStudyActivity(s.id, { dueOn: s.dueOn }));
+    snapshot.workTasks.forEach(s => Store.updateWorkTask(s.id, { dueOn: s.dueOn }));
     renderAll();
   });
 }

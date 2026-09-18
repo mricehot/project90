@@ -77,6 +77,8 @@ const Store = (() => {
       shoppingItems: [],    // { id, label, bought, createdAt } — lista de compras do mercado
       studyReflections: {}, // { [dayNum]: { topicIdx, q1, q2, q3, free } } — Conhecimento/Reflexões
       conversationTipsRead: {}, // { [tipIdx]: readDay } — Dicção/Conversação
+      workProjects: [],
+      workTasks:    [],
     };
   }
 
@@ -433,6 +435,28 @@ const Store = (() => {
     if (data.conversationTipsRead && typeof data.conversationTipsRead === 'object') {
       Object.keys(cache.conversationTipsRead).forEach(k => delete cache.conversationTipsRead[k]);
       Object.assign(cache.conversationTipsRead, data.conversationTipsRead);
+    }
+    if (Array.isArray(data.workProjects)) {
+      cache.workProjects.length = 0;
+      data.workProjects.forEach(p => cache.workProjects.push({
+        id: p.id, name: p.name, archived: !!p.archived, createdAt: p.createdAt,
+      }));
+    }
+    if (Array.isArray(data.workTasks)) {
+      cache.workTasks.length = 0;
+      data.workTasks.forEach(t => {
+        const done = !!t.done;
+        const status = (t.status === 'fazendo' || t.status === 'entregue' || t.status === 'a_fazer')
+          ? t.status : (done ? 'entregue' : 'a_fazer');
+        cache.workTasks.push({
+          id: t.id, projectId: t.projectId, title: t.title,
+          dueOn: t.dueOn ? String(t.dueOn).slice(0, 10) : null,
+          status, done: status === 'entregue',
+          doneOn: t.doneOn ? String(t.doneOn).slice(0, 10) : null,
+          link: t.link || null, notes: t.notes || null,
+          createdAt: t.createdAt,
+        });
+      });
     }
   }
 
@@ -2917,6 +2941,201 @@ const Store = (() => {
   }
 
   /* ──────────────────────────────────────────
+     TRABALHO — controle de projetos e entregas (mesma forma de Faculdade)
+       cache.workProjects: [{ id, name, archived, createdAt }]
+       cache.workTasks:    [{ id, projectId, title, dueOn, status, done, doneOn, link, notes, createdAt }]
+     status: 'a_fazer' | 'fazendo' | 'entregue' (kanban). `done` = status==='entregue'.
+     "atrasada" continua derivado (venceu e não entregue). NÃO é resetado por
+     reset_progress(), igual faculdade/financeiro/biblioteca.
+  ────────────────────────────────────────── */
+  var WORK_STATUSES = ['a_fazer', 'fazendo', 'entregue'];
+  function _pushWorkProject(p) {
+    _push(async () => {
+      const { error } = await window.sb.from('work_projects').upsert({
+        user_id: _uid, id: p.id, name: p.name,
+        sort_order: p.sortOrder || 0, archived: !!p.archived, created_at: p.createdAt,
+      }, { onConflict: 'user_id,id' });
+      if (error) throw error;
+    });
+  }
+
+  function getWorkProjects(includeArchived) {
+    return cache.workProjects
+      .filter(p => includeArchived || !p.archived)
+      .slice()
+      .sort((a, b) => String(a.createdAt).localeCompare(String(b.createdAt)) || (a.id - b.id));
+  }
+
+  function workProjectName(id) {
+    const p = cache.workProjects.find(x => x.id === id);
+    return p ? p.name : '';
+  }
+
+  function addWorkProject(name) {
+    const t = String(name || '').trim();
+    if (!t) return null;
+    const id = (cache.workProjects.reduce((m, p) => Math.max(m, p.id), 0) || 0) + 1;
+    const p = { id, name: t, archived: false, sortOrder: cache.workProjects.length,
+                createdAt: new Date().toISOString() };
+    cache.workProjects.push(p);
+    _saveMirror();
+    _pushWorkProject(p);
+    return p;
+  }
+
+  function renameWorkProject(id, name) {
+    const p = cache.workProjects.find(x => x.id === id);
+    if (!p) return;
+    p.name = String(name || '').trim() || p.name;
+    _saveMirror();
+    _pushWorkProject(p);
+  }
+
+  function setWorkProjectArchived(id, val) {
+    const p = cache.workProjects.find(x => x.id === id);
+    if (!p) return;
+    p.archived = !!val;
+    _saveMirror();
+    _pushWorkProject(p);
+  }
+
+  function deleteWorkProject(id) {
+    const pi = cache.workProjects.findIndex(p => p.id === id);
+    if (pi !== -1) cache.workProjects.splice(pi, 1);
+    let removed = 0;
+    for (let i = cache.workTasks.length - 1; i >= 0; i--) {
+      if (cache.workTasks[i].projectId === id) { cache.workTasks.splice(i, 1); removed++; }
+    }
+    _saveMirror();
+    _push(async () => {
+      if (removed) {
+        const { error: e1 } = await window.sb.from('work_tasks')
+          .delete().eq('user_id', _uid).eq('project_id', id);
+        if (e1) throw e1;
+      }
+      const { error } = await window.sb.from('work_projects')
+        .delete().eq('user_id', _uid).eq('id', id);
+      if (error) throw error;
+    });
+  }
+
+  function _pushWorkTask(t) {
+    _push(async () => {
+      const { error } = await window.sb.from('work_tasks').upsert({
+        user_id: _uid, id: t.id, project_id: t.projectId, title: t.title,
+        due_on: t.dueOn || null, status: t.status || 'a_fazer',
+        done: !!t.done, done_on: t.doneOn || null,
+        link: t.link || null, notes: t.notes || null,
+        created_at: t.createdAt,
+      }, { onConflict: 'user_id,id' });
+      if (error) throw error;
+    });
+  }
+
+  function _workTaskSort(a, b) {
+    if (a.dueOn && b.dueOn) return a.dueOn < b.dueOn ? -1 : a.dueOn > b.dueOn ? 1 : (a.id - b.id);
+    if (a.dueOn) return -1;
+    if (b.dueOn) return 1;
+    return a.id - b.id;
+  }
+
+  function getWorkTasks(projectId) {
+    return cache.workTasks
+      .filter(t => projectId == null || t.projectId === projectId)
+      .slice()
+      .sort(_workTaskSort);
+  }
+
+  function addWorkTask(projectId, fields) {
+    const f = fields || {};
+    const ti = String(f.title || '').trim();
+    if (!ti || projectId == null) return null;
+    const id = (cache.workTasks.reduce((m, t) => Math.max(m, t.id), 0) || 0) + 1;
+    const t = {
+      id, projectId, title: ti,
+      dueOn: f.dueOn ? String(f.dueOn).slice(0, 10) : null,
+      status: 'a_fazer', done: false, doneOn: null,
+      link: (f.link && String(f.link).trim()) || null,
+      notes: (f.notes && String(f.notes).trim()) || null,
+      createdAt: new Date().toISOString(),
+    };
+    cache.workTasks.push(t);
+    _saveMirror();
+    _pushWorkTask(t);
+    return t;
+  }
+
+  function updateWorkTask(id, fields) {
+    const t = cache.workTasks.find(x => x.id === id);
+    if (!t || !fields) return;
+    if ('title' in fields) t.title = String(fields.title || '').trim() || t.title;
+    if ('dueOn' in fields) t.dueOn = fields.dueOn ? String(fields.dueOn).slice(0, 10) : null;
+    if ('link'  in fields) t.link  = (fields.link  && String(fields.link).trim())  || null;
+    if ('notes' in fields) t.notes = (fields.notes && String(fields.notes).trim()) || null;
+    _saveMirror();
+    _pushWorkTask(t);
+  }
+
+  // Move a tarefa no kanban. Mantém done/doneOn em sincronia com o status.
+  function setWorkTaskStatus(id, status) {
+    const t = cache.workTasks.find(x => x.id === id);
+    if (!t || WORK_STATUSES.indexOf(status) === -1 || t.status === status) return;
+    t.status = status;
+    t.done = status === 'entregue';
+    t.doneOn = t.done ? (t.doneOn || _localDate(0)) : null;
+    _saveMirror();
+    _pushWorkTask(t);
+  }
+
+  function toggleWorkTaskDone(id) {
+    const t = cache.workTasks.find(x => x.id === id);
+    if (!t) return;
+    setWorkTaskStatus(id, t.done ? 'a_fazer' : 'entregue');
+    return t.done;   // já mutado por setWorkTaskStatus
+  }
+
+  function deleteWorkTask(id) {
+    const i = cache.workTasks.findIndex(t => t.id === id);
+    if (i !== -1) cache.workTasks.splice(i, 1);
+    _saveMirror();
+    _push(async () => {
+      const { error } = await window.sb.from('work_tasks')
+        .delete().eq('user_id', _uid).eq('id', id);
+      if (error) throw error;
+    });
+  }
+
+  // 'entregue' | 'atrasada' | 'pendente'
+  function workTaskStatus(t) {
+    if (!t) return 'pendente';
+    if (t.done) return 'entregue';
+    if (t.dueOn && t.dueOn < _localDate(0)) return 'atrasada';
+    return 'pendente';
+  }
+
+  // Dias até a entrega (0 = hoje, negativo = atrasada). null se sem data.
+  function workTaskDaysUntil(t) {
+    if (!t || !t.dueOn) return null;
+    const ms = new Date(t.dueOn + 'T00:00:00') - new Date(_localDate(0) + 'T00:00:00');
+    return Math.round(ms / 86400000);
+  }
+
+  // { overdue, soon } — tarefas não entregues; 'soon' vence em [hoje, hoje+days].
+  function workUpcoming(days) {
+    const win = days == null ? 7 : days;
+    const overdue = [], soon = [];
+    cache.workTasks.forEach(t => {
+      if (t.done || !t.dueOn) return;
+      const d = workTaskDaysUntil(t);
+      if (d < 0) overdue.push(t);
+      else if (d <= win) soon.push(t);
+    });
+    overdue.sort(_workTaskSort);
+    soon.sort(_workTaskSort);
+    return { overdue, soon };
+  }
+
+  /* ──────────────────────────────────────────
      COMPUTED HELPERS
   ────────────────────────────────────────── */
 
@@ -4059,6 +4278,11 @@ const Store = (() => {
     getStudyReflections, getStudyReflection, saveStudyReflection,
     // conversação (dicção)
     getConversationTipsRead, toggleConversationTipRead,
+    // trabalho
+    getWorkProjects, workProjectName, addWorkProject, renameWorkProject,
+    setWorkProjectArchived, deleteWorkProject,
+    getWorkTasks, addWorkTask, updateWorkTask, toggleWorkTaskDone,
+    setWorkTaskStatus, deleteWorkTask, workTaskStatus, workTaskDaysUntil, workUpcoming,
     // computed
     habitVal, scheduledOn, dayCompletionPct, maxStreak, countDays,
     allHabitsDone, currentStreak, computeAchievementProgress, computeLevels,
