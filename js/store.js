@@ -80,6 +80,7 @@ const Store = (() => {
       workProjects: [],
       workTasks:    [],
       workTaskHoles: [],
+      workReminders: [],
     };
   }
 
@@ -467,6 +468,13 @@ const Store = (() => {
         meters: h.meters != null ? Number(h.meters) : null,
         profiledAt: h.profiledAt || null, surveyedAt: h.surveyedAt || null,
         createdAt: h.createdAt,
+      }));
+    }
+    if (Array.isArray(data.workReminders)) {
+      cache.workReminders.length = 0;
+      data.workReminders.forEach(r => cache.workReminders.push({
+        id: r.id, text: r.text, taskId: r.taskId != null ? r.taskId : null,
+        createdAt: r.createdAt,
       }));
     }
   }
@@ -3282,6 +3290,63 @@ const Store = (() => {
   }
 
   /* ──────────────────────────────────────────
+     TRABALHO — lembretes: nota visível (sem horário), opcionalmente ligada
+     a uma tarefa. Sem estado "resolved" — resolver é excluir (com
+     desfazer na UI, mesmo padrão do resto do app). O desaparecimento
+     quando a tarefa ligada é concluída é calculado no render (comparando
+     taskId com a lista de tarefas), não gravado aqui.
+       cache.workReminders: [{ id, text, taskId, createdAt }]
+  ────────────────────────────────────────── */
+  function _pushWorkReminder(r) {
+    _push(async () => {
+      const { error } = await window.sb.from('work_reminders').upsert({
+        user_id: _uid, id: r.id, text: r.text, task_id: r.taskId,
+        created_at: r.createdAt,
+      }, { onConflict: 'user_id,id' });
+      if (error) throw error;
+    });
+  }
+
+  function getWorkReminders() {
+    return cache.workReminders.slice().sort((a, b) => a.id - b.id);
+  }
+
+  function addWorkReminder(text, taskId) {
+    const t = String(text || '').trim();
+    if (!t) return null;
+    const id = (cache.workReminders.reduce((m, r) => Math.max(m, r.id), 0) || 0) + 1;
+    const r = { id, text: t, taskId: taskId != null ? taskId : null, createdAt: new Date().toISOString() };
+    cache.workReminders.push(r);
+    _saveMirror();
+    _pushWorkReminder(r);
+    return r;
+  }
+
+  function deleteWorkReminder(id) {
+    const i = cache.workReminders.findIndex(r => r.id === id);
+    if (i === -1) return null;
+    const [removed] = cache.workReminders.splice(i, 1);
+    _saveMirror();
+    _push(async () => {
+      const { error } = await window.sb.from('work_reminders')
+        .delete().eq('user_id', _uid).eq('id', id);
+      if (error) throw error;
+    });
+    return removed;
+  }
+
+  // Restaura um lembrete excluído (desfazer) — sempre com id novo, mesmo
+  // padrão de restoreWorkTaskHole.
+  function restoreWorkReminder(reminder) {
+    const id = (cache.workReminders.reduce((m, r) => Math.max(m, r.id), 0) || 0) + 1;
+    const r = { ...reminder, id };
+    cache.workReminders.push(r);
+    _saveMirror();
+    _pushWorkReminder(r);
+    return r;
+  }
+
+  /* ──────────────────────────────────────────
      COMPUTED HELPERS
   ────────────────────────────────────────── */
 
@@ -4433,6 +4498,8 @@ const Store = (() => {
     getWorkTaskHoles, workHoleProgress, addWorkTaskHoles,
     toggleWorkHoleProfiled, toggleWorkHoleSurveyed, setWorkHoleMeters,
     deleteWorkTaskHole, restoreWorkTaskHole,
+    // trabalho — lembretes
+    getWorkReminders, addWorkReminder, deleteWorkReminder, restoreWorkReminder,
     // computed
     habitVal, scheduledOn, dayCompletionPct, maxStreak, countDays,
     allHabitsDone, currentStreak, computeAchievementProgress, computeLevels,
