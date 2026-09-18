@@ -7,6 +7,17 @@
 /* ── RESET ── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+/* O atributo [hidden] some um elemento por padrão, mas só com a
+   especificidade baixa de um seletor de atributo — qualquer regra da
+   própria página que force `display` num #id (ex.: um board kanban com
+   `#id { display: grid }`) já ganha da folha de estilo do navegador,
+   já que CSS de autor sempre tem prioridade sobre CSS de user-agent,
+   independente de especificidade. Isso deixava o board "escondido"
+   ainda visível atrás da lista em Faculdade/Tarefas/Trabalho sempre
+   que a visão trocava — sem isso aqui, cada página teria que reforçar
+   isso sozinha pra cada elemento que ela mesma estiliza com display. */
+[hidden] { display: none !important; }
+
 /* ── DESIGN TOKENS ── */
 :root {
   --bg:       #080808;
