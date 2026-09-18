@@ -332,7 +332,14 @@
         <button type="button" data-s="lido">Lido</button>
       </div>
     </div>
-    <div class="m-row">
+    <div class="modal-field">
+      <label class="modal-lbl">Progresso</label>
+      <div class="m-seg" id="bk-progmode">
+        <button type="button" data-m="pages">Página</button>
+        <button type="button" data-m="percent">Porcentagem (Kindle)</button>
+      </div>
+    </div>
+    <div class="m-row" id="bk-pages-row">
       <div class="modal-field">
         <label class="modal-lbl" for="bk-cur">Página atual</label>
         <input class="modal-input" id="bk-cur" type="number" min="0" placeholder="0" />
@@ -341,6 +348,10 @@
         <label class="modal-lbl" for="bk-total">Total de páginas</label>
         <input class="modal-input" id="bk-total" type="number" min="0" placeholder="0" />
       </div>
+    </div>
+    <div class="modal-field" id="bk-pct-row" hidden>
+      <label class="modal-lbl" for="bk-pct">Porcentagem lida</label>
+      <input class="modal-input" id="bk-pct" type="number" min="0" max="100" placeholder="0" />
     </div>
     <div class="modal-field">
       <label class="modal-lbl">Nota</label>
@@ -480,14 +491,17 @@ function renderReading() {
   const list = Store.getLibBooks().filter(b => b.status === 'lendo');
   document.getElementById('reading-card').style.display = list.length ? '' : 'none';
   document.getElementById('reading-list').innerHTML = list.map(b => {
-    const pct = b.totalPages ? Math.min(100, Math.round(b.currentPage / b.totalPages * 100)) : 0;
+    const isPct = b.progressMode === 'percent';
+    const pct = isPct ? (b.progressPct || 0) : (b.totalPages ? Math.min(100, Math.round(b.currentPage / b.totalPages * 100)) : 0);
+    const hasProgress = isPct ? b.progressPct != null : !!b.totalPages;
+    const sub = isPct ? `${pct}% lido` : `pág. ${b.currentPage}/${b.totalPages} (${pct}%)`;
     return `
     <div class="brow" data-id="${b.id}">
       ${coverHTML(b)}
       <div class="brow-main">
         <div class="brow-title">${esc(b.title || 'Sem título')}</div>
-        <div class="brow-sub">${esc(b.author || '')}${b.totalPages ? ` · pág. ${b.currentPage}/${b.totalPages} (${pct}%)` : ''}</div>
-        ${b.totalPages ? `<div class="brow-bar-bg"><div class="brow-bar-fill" style="width:${pct}%"></div></div>` : ''}
+        <div class="brow-sub">${esc(b.author || '')}${hasProgress ? ` · ${sub}` : ''}</div>
+        ${hasProgress ? `<div class="brow-bar-bg"><div class="brow-bar-fill" style="width:${pct}%"></div></div>` : ''}
       </div>
       <div class="brow-acts">
         <button class="bbtn next" data-act="finish">✓ Terminar</button>
@@ -555,8 +569,10 @@ function openBookModal(book) {
   document.getElementById('bk-cover').value = book ? (book.coverUrl || '') : '';
   document.getElementById('bk-cur').value = book ? (book.currentPage || '') : '';
   document.getElementById('bk-total').value = book ? (book.totalPages || '') : '';
+  document.getElementById('bk-pct').value = book && book.progressPct != null ? book.progressPct : '';
   document.getElementById('bk-notes').value = book ? (book.notes || '') : '';
   setBookStatus(book ? book.status : 'quero_ler');
+  setProgMode(book && book.progressMode === 'percent' ? 'percent' : 'pages');
   setBookRating(book ? (book.rating || 0) : 0);
   document.getElementById('m-book').classList.add('open');
   document.getElementById('bk-name').focus();
@@ -565,6 +581,12 @@ function setBookStatus(s) {
   document.getElementById('bk-status').dataset.v = s;
   document.querySelectorAll('#bk-status button').forEach(btn => btn.classList.toggle('on', btn.dataset.s === s));
 }
+function setProgMode(m) {
+  document.getElementById('bk-progmode').dataset.v = m;
+  document.querySelectorAll('#bk-progmode button').forEach(btn => btn.classList.toggle('on', btn.dataset.m === m));
+  document.getElementById('bk-pages-row').hidden = m === 'percent';
+  document.getElementById('bk-pct-row').hidden = m !== 'percent';
+}
 function setBookRating(r) {
   document.getElementById('bk-rating').dataset.v = r;
   document.querySelectorAll('#bk-rating button[data-r]').forEach(btn => btn.classList.toggle('on', parseInt(btn.dataset.r, 10) <= r));
@@ -572,6 +594,10 @@ function setBookRating(r) {
 document.getElementById('bk-status').addEventListener('click', e => {
   const btn = e.target.closest('button[data-s]');
   if (btn) setBookStatus(btn.dataset.s);
+});
+document.getElementById('bk-progmode').addEventListener('click', e => {
+  const btn = e.target.closest('button[data-m]');
+  if (btn) setProgMode(btn.dataset.m);
 });
 document.getElementById('bk-rating').addEventListener('click', e => {
   const btn = e.target.closest('button[data-r]');
@@ -590,8 +616,10 @@ document.getElementById('bk-save').addEventListener('click', () => {
     genre: document.getElementById('bk-genre').value,
     coverUrl: document.getElementById('bk-cover').value.trim(),
     status: document.getElementById('bk-status').dataset.v || 'quero_ler',
+    progressMode: document.getElementById('bk-progmode').dataset.v || 'pages',
     currentPage: parseInt(document.getElementById('bk-cur').value, 10) || 0,
     totalPages: document.getElementById('bk-total').value ? parseInt(document.getElementById('bk-total').value, 10) : null,
+    progressPct: document.getElementById('bk-pct').value ? parseInt(document.getElementById('bk-pct').value, 10) : null,
     rating: parseInt(document.getElementById('bk-rating').dataset.v, 10) || null,
     notes: document.getElementById('bk-notes').value.trim(),
   };
