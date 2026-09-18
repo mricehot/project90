@@ -670,11 +670,17 @@ function renderPendDemais() {
 
   if (typeof Store.getWorkProjects === 'function' && Store.getWorkProjects().length) {
     const { overdue, soon } = Store.workUpcoming(7);
-    const shown = [...overdue, ...soon].slice(0, 4);
+    // Realces (levantamento com furos) não têm prazo — workUpcoming só olha
+    // dueOn, então sem isso um realce nunca aparecia aqui mesmo com furo
+    // pendente. workHolesPending() é o equivalente pra quem é acompanhado
+    // pelo progresso dos furos, não por data.
+    const holesPending = typeof Store.workHolesPending === 'function' ? Store.workHolesPending() : [];
+    const shownTasks = [...overdue, ...soon].slice(0, 4);
+    const shownHoles = holesPending.slice(0, Math.max(0, 4 - shownTasks.length));
     let inner;
-    if (!shown.length) inner = '<div class="tc-allclear">Nada vencendo em 7 dias ✓</div>';
+    if (!shownTasks.length && !holesPending.length) inner = '<div class="tc-allclear">Nada vencendo em 7 dias ✓</div>';
     else {
-      inner = shown.map(t => {
+      const taskRows = shownTasks.map(t => {
         const n = Store.workTaskDaysUntil(t);
         let when, cls;
         if (n < 0) { when = 'atrasada'; cls = 'over'; }
@@ -686,11 +692,23 @@ function renderPendDemais() {
           <div class="tc-info"><div class="tc-name">${esc(t.title)}</div><div class="tc-sub">${esc(Store.workProjectName(t.projectId))}</div></div>
           <div class="tc-when ${cls}">${when}</div>
         </div>`;
-      }).join('');
-      const extra = overdue.length + soon.length - shown.length;
+      });
+      const holeRows = shownHoles.map(h => {
+        const bits = [];
+        if (h.profPending) bits.push(`${h.profPending} p/ perfilar`);
+        if (h.survPending) bits.push(`${h.survPending} p/ topografar`);
+        return `<div class="tc-row">
+          <div class="tc-info"><div class="tc-name">${esc(h.title)}</div><div class="tc-sub">${esc(Store.workProjectName(h.projectId))}</div></div>
+          <div class="tc-when over">${bits.join(' · ')}</div>
+        </div>`;
+      });
+      inner = taskRows.join('') + holeRows.join('');
+      const extra = (overdue.length + soon.length - shownTasks.length) + (holesPending.length - shownHoles.length);
       if (extra > 0) inner += `<div class="tc-more">+${extra} mais</div>`;
     }
-    const title = overdue.length ? `Trabalho <b>· ${overdue.length} atrasada${overdue.length === 1 ? '' : 's'}</b>` : 'Trabalho';
+    const title = overdue.length
+      ? `Trabalho <b>· ${overdue.length} atrasada${overdue.length === 1 ? '' : 's'}</b>`
+      : (holesPending.length ? `Trabalho <b>· ${holesPending.length} leque${holesPending.length === 1 ? '' : 's'} c/ furo pendente</b>` : 'Trabalho');
     html += tcSec(title, inner);
   }
 

@@ -441,7 +441,9 @@ const Store = (() => {
     if (Array.isArray(data.workProjects)) {
       cache.workProjects.length = 0;
       data.workProjects.forEach(p => cache.workProjects.push({
-        id: p.id, name: p.name, archived: !!p.archived, createdAt: p.createdAt,
+        id: p.id, name: p.name, archived: !!p.archived,
+        kind: p.kind === 'realce' ? 'realce' : 'avulsa',
+        createdAt: p.createdAt,
       }));
     }
     if (Array.isArray(data.workTasks)) {
@@ -2961,17 +2963,24 @@ const Store = (() => {
 
   /* ──────────────────────────────────────────
      TRABALHO — controle de projetos e entregas (mesma forma de Faculdade)
-       cache.workProjects: [{ id, name, archived, createdAt }]
+       cache.workProjects: [{ id, name, archived, kind, createdAt }]
        cache.workTasks:    [{ id, projectId, title, dueOn, status, done, doneOn, link, notes, createdAt }]
      status: 'a_fazer' | 'fazendo' | 'entregue' (kanban). `done` = status==='entregue'.
      "atrasada" continua derivado (venceu e não entregue). NÃO é resetado por
      reset_progress(), igual faculdade/financeiro/biblioteca.
+
+     kind: 'realce' (levantamento com furos, sem prazo — acompanhado pelo
+     progresso de perfilamento/topografia) | 'avulsa' (entrega comum, com
+     prazo). Separar os dois evita misturar o botão "⛏ Furos" em tarefas
+     que não são de levantamento, e permite Pendências cobrar furos
+     pendentes de um realce mesmo sem prazo (workUpcoming só olha dueOn).
   ────────────────────────────────────────── */
   var WORK_STATUSES = ['a_fazer', 'fazendo', 'entregue'];
+  var WORK_PROJECT_KINDS = ['realce', 'avulsa'];
   function _pushWorkProject(p) {
     _push(async () => {
       const { error } = await window.sb.from('work_projects').upsert({
-        user_id: _uid, id: p.id, name: p.name,
+        user_id: _uid, id: p.id, name: p.name, kind: p.kind || 'avulsa',
         sort_order: p.sortOrder || 0, archived: !!p.archived, created_at: p.createdAt,
       }, { onConflict: 'user_id,id' });
       if (error) throw error;
@@ -2990,16 +2999,25 @@ const Store = (() => {
     return p ? p.name : '';
   }
 
-  function addWorkProject(name) {
+  function addWorkProject(name, kind) {
     const t = String(name || '').trim();
     if (!t) return null;
+    const k = WORK_PROJECT_KINDS.indexOf(kind) !== -1 ? kind : 'avulsa';
     const id = (cache.workProjects.reduce((m, p) => Math.max(m, p.id), 0) || 0) + 1;
-    const p = { id, name: t, archived: false, sortOrder: cache.workProjects.length,
+    const p = { id, name: t, archived: false, kind: k, sortOrder: cache.workProjects.length,
                 createdAt: new Date().toISOString() };
     cache.workProjects.push(p);
     _saveMirror();
     _pushWorkProject(p);
     return p;
+  }
+
+  function setWorkProjectKind(id, kind) {
+    const p = cache.workProjects.find(x => x.id === id);
+    if (!p || WORK_PROJECT_KINDS.indexOf(kind) === -1) return;
+    p.kind = kind;
+    _saveMirror();
+    _pushWorkProject(p);
   }
 
   function renameWorkProject(id, name) {
@@ -3170,6 +3188,28 @@ const Store = (() => {
     overdue.sort(_workTaskSort);
     soon.sort(_workTaskSort);
     return { overdue, soon };
+  }
+
+  // Furos ainda pendentes (perfilar e/ou topografar) em tarefas abertas de
+  // projetos 'realce' não arquivados — o equivalente de workUpcoming() pra
+  // quem não tem prazo (realce é acompanhado pelo progresso dos furos, não
+  // por dueOn). Usado em Pendências pra não deixar realce sem nenhum sinal.
+  function workHolesPending() {
+    const liveRealceIds = new Set(
+      cache.workProjects.filter(p => !p.archived && p.kind === 'realce').map(p => p.id)
+    );
+    const items = [];
+    cache.workTasks.forEach(t => {
+      if (t.done || !liveRealceIds.has(t.projectId)) return;
+      const prog = workHoleProgress(t.id);
+      if (!prog.total) return;
+      const profPending = prog.total - prog.profiled;
+      const survPending = prog.total - prog.surveyed;
+      if (profPending > 0 || survPending > 0) {
+        items.push({ taskId: t.id, projectId: t.projectId, title: t.title, profPending, survPending });
+      }
+    });
+    return items;
   }
 
   /* ──────────────────────────────────────────
@@ -4491,9 +4531,9 @@ const Store = (() => {
     getConversationTipsRead, toggleConversationTipRead,
     // trabalho
     getWorkProjects, workProjectName, addWorkProject, renameWorkProject,
-    setWorkProjectArchived, deleteWorkProject,
+    setWorkProjectArchived, setWorkProjectKind, deleteWorkProject,
     getWorkTasks, addWorkTask, updateWorkTask, toggleWorkTaskDone,
-    setWorkTaskStatus, deleteWorkTask, workTaskStatus, workTaskDaysUntil, workUpcoming,
+    setWorkTaskStatus, deleteWorkTask, workTaskStatus, workTaskDaysUntil, workUpcoming, workHolesPending,
     // trabalho — checklist de furos por tarefa
     getWorkTaskHoles, workHoleProgress, addWorkTaskHoles,
     toggleWorkHoleProfiled, toggleWorkHoleSurveyed, setWorkHoleMeters,
