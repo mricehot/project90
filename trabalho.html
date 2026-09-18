@@ -109,9 +109,7 @@
 }
 .wk-proj-count { font-size: 11px; letter-spacing: 0.08em; color: var(--mid); white-space: nowrap; flex-shrink: 0; }
 .wk-proj-count .over { color: var(--red); }
-.wk-proj-acts { display: flex; gap: 4px; flex-shrink: 0; opacity: 0; transition: opacity 0.15s; }
-.wk-proj-hd:hover .wk-proj-acts { opacity: 1; }
-@media (hover: none) { .wk-proj-acts { opacity: 0.6; } }
+.wk-proj-acts { display: flex; gap: 4px; flex-shrink: 0; }
 .wk-proj-acts button {
   background: none; border: none; color: var(--mid); font-size: 14px; cursor: pointer; padding: 2px 5px;
   transition: color 0.15s;
@@ -708,13 +706,20 @@ function buildProjectReport(projId) {
   const pending = tasks.filter(t => !t.done);
 
   let allHoles = [];
-  const perTaskLines = tasks.map(t => {
+  const perTaskBlocks = tasks.map(t => {
     const holes = Store.getWorkTaskHoles(t.id);
     allHoles = allHoles.concat(holes);
     if (!holes.length) return `${t.title} — sem furos`;
-    const prof = holes.filter(h => h.profiled).length;
-    const surv = holes.filter(h => h.surveyed).length;
-    return `${t.title} — ${prof}/${holes.length} perfilados · ${surv}/${holes.length} topografados`;
+    const profOk = holes.filter(h => h.profiled).map(h => 'F' + h.number);
+    const profNo = holes.filter(h => !h.profiled).map(h => 'F' + h.number);
+    const survOk = holes.filter(h => h.surveyed).map(h => 'F' + h.number);
+    const survNo = holes.filter(h => !h.surveyed).map(h => 'F' + h.number);
+    let block = `${t.title} (${holes.length} furo${holes.length === 1 ? '' : 's'})`;
+    block += `\n  Perfilados: ${profOk.length ? profOk.join(', ') : '—'}`;
+    if (profNo.length) block += ` · pendentes: ${profNo.join(', ')}`;
+    block += `\n  Topografados: ${survOk.length ? survOk.join(', ') : '—'}`;
+    if (survNo.length) block += ` · pendentes: ${survNo.join(', ')}`;
+    return block;
   });
 
   const totalHoles = allHoles.length;
@@ -729,7 +734,7 @@ function buildProjectReport(projId) {
   msg += '\n';
   if (done.length) msg += `[ENTREGUES] ${done.map(t => t.title).join(', ')}\n`;
   if (pending.length) msg += `[PENDENTES] ${pending.map(t => t.title).join(', ')}\n`;
-  if (perTaskLines.length) msg += `\n[FUROS POR TAREFA]\n${perTaskLines.join('\n')}`;
+  if (perTaskBlocks.length) msg += `\n[FUROS POR TAREFA]\n${perTaskBlocks.join('\n\n')}`;
   return msg.trim();
 }
 
@@ -877,7 +882,7 @@ function renderList() {
         <span class="wk-proj-count">${countBits.join(' · ')}</span>
         <span class="wk-proj-acts">
           <button data-act="rename" title="Renomear">✎</button>
-          <button data-act="archive" title="${p.archived ? 'Desarquivar' : 'Arquivar'}">${p.archived ? '⇧' : '⌂'}</button>
+          <button data-act="archive" title="${p.archived ? 'Desarquivar' : 'Arquivar'}">${p.archived ? '↺' : '⊟'}</button>
           <button data-act="delproj" title="Excluir projeto">✕</button>
         </span>
       </div>
