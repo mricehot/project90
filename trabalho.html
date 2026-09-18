@@ -493,6 +493,7 @@ textarea.modal-input { resize: vertical; min-height: 60px; line-height: 1.6; fon
       <button type="submit">+</button>
     </form>
     <div class="modal-footer">
+      <button class="modal-btn ghost" type="button" id="wpm-report">📋 Copiar relatório</button>
       <button class="modal-btn ghost" type="button" id="wpm-close">Fechar</button>
     </div>
   </div>
@@ -694,6 +695,72 @@ function closeProjModal() {
   document.getElementById('wk-proj-modal').classList.remove('open');
   projModalId = null;
 }
+
+/* ── relatório do projeto — texto pronto pra colar em WhatsApp/e-mail,
+   com tarefas entregues/pendentes e progresso de furos (agregado e por
+   tarefa). Mesmo formato do relatório do BlastHole Manager, só que
+   "copiar" em vez de abrir direto o WhatsApp. ── */
+function buildProjectReport(projId) {
+  const p = Store.getWorkProjects(true).find(x => x.id === projId);
+  if (!p) return '';
+  const tasks = Store.getWorkTasks(projId);
+  const done = tasks.filter(t => t.done);
+  const pending = tasks.filter(t => !t.done);
+
+  let allHoles = [];
+  const perTaskLines = tasks.map(t => {
+    const holes = Store.getWorkTaskHoles(t.id);
+    allHoles = allHoles.concat(holes);
+    if (!holes.length) return `${t.title} — sem furos`;
+    const prof = holes.filter(h => h.profiled).length;
+    const surv = holes.filter(h => h.surveyed).length;
+    return `${t.title} — ${prof}/${holes.length} perfilados · ${surv}/${holes.length} topografados`;
+  });
+
+  const totalHoles = allHoles.length;
+  const profTotal = allHoles.filter(h => h.profiled).length;
+  const survTotal = allHoles.filter(h => h.surveyed).length;
+  const pctProf = totalHoles ? Math.round((profTotal / totalHoles) * 100) : 0;
+  const pctSurv = totalHoles ? Math.round((survTotal / totalHoles) * 100) : 0;
+
+  let msg = `*${p.name}*\n${new Date().toLocaleString('pt-BR')}\n\n`;
+  msg += `Tarefas: ${done.length}/${tasks.length} entregues\n`;
+  if (totalHoles) msg += `Furos: ${profTotal}/${totalHoles} perfilados (${pctProf}%) — ${survTotal}/${totalHoles} topografados (${pctSurv}%)\n`;
+  msg += '\n';
+  if (done.length) msg += `[ENTREGUES] ${done.map(t => t.title).join(', ')}\n`;
+  if (pending.length) msg += `[PENDENTES] ${pending.map(t => t.title).join(', ')}\n`;
+  if (perTaskLines.length) msg += `\n[FUROS POR TAREFA]\n${perTaskLines.join('\n')}`;
+  return msg.trim();
+}
+
+async function copyText(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch (e) {
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.focus(); ta.select();
+      const ok = document.execCommand('copy');
+      document.body.removeChild(ta);
+      return ok;
+    } catch (e2) {
+      return false;
+    }
+  }
+}
+
+document.getElementById('wpm-report').addEventListener('click', async () => {
+  if (projModalId == null) return;
+  const tasks = Store.getWorkTasks(projModalId);
+  if (!tasks.length) { toast('Nenhuma tarefa neste projeto ainda'); return; }
+  const ok = await copyText(buildProjectReport(projModalId));
+  toast(ok ? 'Relatório copiado ✓' : 'Não consegui copiar — tenta de novo');
+});
 
 /* Renomear o projeto de dentro do modal — mesma lógica de startRename(),
    só que trocando o <div class="modal-title"> em vez do card da lista. */
