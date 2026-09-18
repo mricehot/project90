@@ -914,6 +914,30 @@ const Store = (() => {
     return changed;
   }
 
+  // "Meditar / refletir" (core_key = meditar) ganha um 'done' automático em
+  // todo dia com uma reflexão salva em Conhecimento/Reflexões (studyReflections)
+  // — ver reflexoes-feature. Mesmo padrão de _reconcileJournalHabit(): só
+  // adiciona 'done', nunca remove (marcar o hábito à mão continua valendo se
+  // o dia não tiver reflexão). Devolve true se mudou algo.
+  function _reconcileReflectionHabit() {
+    const h = cache.habits.find(x => x.coreKey === 'meditar');
+    if (!h) return false;
+    if (!Array.isArray(h.history)) h.history = [];
+    const start = (h.createdDay || 1) - 1;
+    const today = getCurrentDay();
+    let changed = false;
+    Object.keys(cache.studyReflections).forEach(k => {
+      const dayNum = Number(k);
+      if (!dayNum || dayNum > today) return;
+      const idx = (dayNum - 1) - start;
+      if (idx < 0) return;
+      while (h.history.length <= idx) h.history.push('miss');
+      if (h.history[idx] !== 'done') { h.history[idx] = 'done'; changed = true; }
+    });
+    if (changed) _recalcStreak(h);
+    return changed;
+  }
+
   // Upsert de todos os hábitos no Supabase (usado quando roll-forward /
   // reconcile mexeram no cache fora de um saveHabits explícito).
   function _persistHabits() {
@@ -987,10 +1011,11 @@ const Store = (() => {
         const dirty3 = _reconcileSpeechHabit();
         const dirty4 = _reconcileTrainingHabit();
         const dirty5 = _reconcileBibleHabit();
+        const dirty6 = _reconcileReflectionHabit();
         _saveMirror();
         _ready = true;
         window.dispatchEvent(new Event('p90:synced'));
-        if (dirty || dirty2 || dirty3 || dirty4 || dirty5) _persistHabits();
+        if (dirty || dirty2 || dirty3 || dirty4 || dirty5 || dirty6) _persistHabits();
       } finally {
         _hideBootScreen();
       }
@@ -4414,7 +4439,11 @@ const Store = (() => {
   function getStudyReflection(dayNum) { return cache.studyReflections[dayNum] || null; }
   function saveStudyReflection(dayNum, data) {
     cache.studyReflections[dayNum] = data;
+    // Salvar a reflexão do dia também marca o hábito fixo "Meditar / refletir"
+    // (add-only, mesmo padrão de setBibleReading/_reconcileBibleHabit).
+    const habitChanged = _reconcileReflectionHabit();
     _saveMirror();
+    if (habitChanged) _persistHabits();
     _push(async () => {
       const e = data || {};
       const { error } = await window.sb.from('study_reflections').upsert({
