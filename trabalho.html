@@ -10,7 +10,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Project 90">
-<title>Project 90 — Faculdade</title>
+<title>Project 90 — Trabalho</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/base.css">
@@ -22,59 +22,59 @@
 <script src="js/achievements.js"></script>
 <style>
 
-.fac-main { display: grid; grid-template-columns: 1fr 280px; grid-template-rows: auto 1fr; height: 100vh; overflow: hidden; }
+.wk-main { display: grid; grid-template-columns: 1fr 280px; grid-template-rows: auto 1fr; height: 100vh; overflow: hidden; }
 .topbar {
   grid-column: 1 / -1;
   display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
   padding: 24px 32px 16px; border-bottom: 1px solid var(--border);
 }
-.fac-body {
+.wk-body {
   grid-column: 1; grid-row: 2; overflow-y: auto; padding: 24px 32px;
   display: flex; flex-direction: column; gap: 24px;
 }
 
-/* ── RAIL DIREITA — disciplinas ── */
-.fac-rail {
+/* ── RAIL DIREITA — projetos ── */
+.wk-rail {
   grid-column: 2; grid-row: 2; border-left: 1px solid var(--border); background: var(--surface);
   display: flex; flex-direction: column; overflow: hidden;
 }
-.fac-rail-hd {
+.wk-rail-hd {
   padding: 18px 20px 14px; border-bottom: 1px solid var(--border);
   font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--mid);
 }
-.fac-rail-list { flex: 1; overflow-y: auto; }
-.fac-rail-item {
+.wk-rail-list { flex: 1; overflow-y: auto; }
+.wk-rail-item {
   padding: 14px 20px; border-bottom: 1px solid var(--border); cursor: pointer;
   transition: background 0.15s; display: flex; flex-direction: column; gap: 5px;
 }
-.fac-rail-item:hover { background: rgba(245,245,240,0.04); }
-.fac-rail-name { font-size: 13px; letter-spacing: 0.03em; color: var(--white); word-break: break-word; }
-.fac-rail-meta { font-size: 10px; letter-spacing: 0.08em; color: var(--mid); }
-.fac-rail-meta .over { color: var(--red); }
-.fac-rail-empty { padding: 16px 20px; font-size: 12px; color: var(--mid); line-height: 1.7; }
+.wk-rail-item:hover { background: rgba(245,245,240,0.04); }
+.wk-rail-name { font-size: 13px; letter-spacing: 0.03em; color: var(--white); word-break: break-word; }
+.wk-rail-meta { font-size: 10px; letter-spacing: 0.08em; color: var(--mid); }
+.wk-rail-meta .over { color: var(--red); }
+.wk-rail-empty { padding: 16px 20px; font-size: 12px; color: var(--mid); line-height: 1.7; }
 
-/* ── MODAL — atividades da disciplina ── */
-.modal.fac-subj-box { max-width: 540px; max-height: 86vh; display: flex; flex-direction: column; }
-.fsm-list { flex: 1; overflow-y: auto; margin: 4px -4px 0; padding: 0 4px; }
-.fsm-row { display: flex; align-items: center; gap: 12px; padding: 11px 2px; border-bottom: 1px solid var(--border); }
-.fsm-row:last-child { border-bottom: none; }
-.fsm-check {
+/* ── MODAL — tarefas do projeto ── */
+.modal.wk-proj-box { max-width: 540px; max-height: 86vh; display: flex; flex-direction: column; }
+.wpm-list { flex: 1; overflow-y: auto; margin: 4px -4px 0; padding: 0 4px; }
+.wpm-row { display: flex; align-items: center; gap: 12px; padding: 11px 2px; border-bottom: 1px solid var(--border); }
+.wpm-row:last-child { border-bottom: none; }
+.wpm-check {
   width: 18px; height: 18px; border: 1px solid var(--border2); flex-shrink: 0; cursor: pointer;
   display: flex; align-items: center; justify-content: center; font-size: 12px; color: var(--white); transition: background 0.15s;
 }
-.fsm-row.done .fsm-check { background: var(--white); color: var(--bg); border-color: var(--white); }
-.fsm-main { flex: 1; min-width: 0; cursor: pointer; }
-.fsm-title { font-size: 13px; line-height: 1.4; color: var(--white); }
-.fsm-row.done .fsm-title { color: var(--mid); text-decoration: line-through; }
-.fsm-due { font-size: 11px; letter-spacing: 0.06em; color: var(--mid); margin-top: 3px; }
-.fsm-due .rel-over { color: var(--red); }
-.fsm-due .rel-soon { color: var(--white); }
-.fsm-due .rel-done { color: var(--green); }
-.fsm-due .rel-fazendo { color: var(--white); }
-.fsm-link { color: var(--mid); text-decoration: none; font-size: 13px; flex-shrink: 0; padding: 2px 4px; }
-.fsm-link:hover { color: var(--white); }
-.fsm-empty { font-size: 13px; color: var(--mid); padding: 14px 2px; }
-.fsm-add { margin-top: 12px; }
+.wpm-row.done .wpm-check { background: var(--white); color: var(--bg); border-color: var(--white); }
+.wpm-main { flex: 1; min-width: 0; cursor: pointer; }
+.wpm-title { font-size: 13px; line-height: 1.4; color: var(--white); }
+.wpm-row.done .wpm-title { color: var(--mid); text-decoration: line-through; }
+.wpm-due { font-size: 11px; letter-spacing: 0.06em; color: var(--mid); margin-top: 3px; }
+.wpm-due .rel-over { color: var(--red); }
+.wpm-due .rel-soon { color: var(--white); }
+.wpm-due .rel-done { color: var(--green); }
+.wpm-due .rel-fazendo { color: var(--white); }
+.wpm-link { color: var(--mid); text-decoration: none; font-size: 13px; flex-shrink: 0; padding: 2px 4px; }
+.wpm-link:hover { color: var(--white); }
+.wpm-empty { font-size: 13px; color: var(--mid); padding: 14px 2px; }
+.wpm-add { margin-top: 12px; }
 .page-title { font-family: 'DM Serif Display', serif; font-size: 26px; font-weight: 400; display: flex; align-items: baseline; gap: 10px; }
 .page-title em { font-style: italic; opacity: 0.45; font-size: 22px; }
 
@@ -84,123 +84,124 @@
 .stat-val { font-family: 'Bebas Neue', sans-serif; font-size: 38px; line-height: 1; }
 .stat-val.warn { color: var(--red); }
 
-/* nova disciplina */
-.fac-newsubj { display: flex; gap: 10px; }
-.fac-newsubj input {
+/* novo projeto */
+.wk-newproj { display: flex; gap: 10px; }
+.wk-newproj input {
   flex: 1; background: var(--surface2); border: 1px solid var(--border); color: var(--white);
   font-family: 'DM Mono', monospace; font-size: 13px; letter-spacing: 0.02em; padding: 10px 14px;
   outline: none; transition: border-color 0.2s;
 }
-.fac-newsubj input:focus { border-color: rgba(245,245,240,0.35); }
-.fac-newsubj input::placeholder { color: var(--mid); }
+.wk-newproj input:focus { border-color: rgba(245,245,240,0.35); }
+.wk-newproj input::placeholder { color: var(--mid); }
 
-/* disciplina (accordion) */
-.fac-subj { border: 1px solid var(--border); background: var(--surface); margin-bottom: 12px; }
-.fac-subj-hd {
+/* projeto (accordion) */
+.wk-proj { border: 1px solid var(--border); background: var(--surface); margin-bottom: 12px; }
+.wk-proj-hd {
   display: flex; align-items: center; gap: 12px; padding: 14px 16px; cursor: pointer;
   user-select: none;
 }
-.fac-subj-caret { color: var(--mid); font-size: 11px; width: 12px; flex-shrink: 0; transition: transform 0.15s; }
-.fac-subj.collapsed .fac-subj-caret { transform: rotate(-90deg); }
-.fac-subj-name { flex: 1; min-width: 0; font-size: 14px; letter-spacing: 0.04em; color: var(--white); }
-.fac-subj-name-input {
+.wk-proj-caret { color: var(--mid); font-size: 11px; width: 12px; flex-shrink: 0; transition: transform 0.15s; }
+.wk-proj.collapsed .wk-proj-caret { transform: rotate(-90deg); }
+.wk-proj-name { flex: 1; min-width: 0; font-size: 14px; letter-spacing: 0.04em; color: var(--white); }
+.wk-proj-name-input {
   flex: 1; background: var(--surface2); border: 1px solid var(--border2); color: var(--white);
   font-family: 'DM Mono', monospace; font-size: 14px; letter-spacing: 0.04em; padding: 6px 10px; outline: none;
 }
-.fac-subj-count { font-size: 11px; letter-spacing: 0.08em; color: var(--mid); white-space: nowrap; flex-shrink: 0; }
-.fac-subj-count .over { color: var(--red); }
-.fac-subj-acts { display: flex; gap: 4px; flex-shrink: 0; opacity: 0; transition: opacity 0.15s; }
-.fac-subj-hd:hover .fac-subj-acts { opacity: 1; }
-@media (hover: none) { .fac-subj-acts { opacity: 0.6; } }
-.fac-subj-acts button {
+.wk-proj-count { font-size: 11px; letter-spacing: 0.08em; color: var(--mid); white-space: nowrap; flex-shrink: 0; }
+.wk-proj-count .over { color: var(--red); }
+.wk-proj-acts { display: flex; gap: 4px; flex-shrink: 0; opacity: 0; transition: opacity 0.15s; }
+.wk-proj-hd:hover .wk-proj-acts { opacity: 1; }
+@media (hover: none) { .wk-proj-acts { opacity: 0.6; } }
+.wk-proj-acts button {
   background: none; border: none; color: var(--mid); font-size: 14px; cursor: pointer; padding: 2px 5px;
   transition: color 0.15s;
 }
-.fac-subj-acts button:hover { color: var(--white); }
-.fac-subj-body { border-top: 1px solid var(--border); padding: 6px 16px 14px; }
-.fac-subj.collapsed .fac-subj-body { display: none; }
+.wk-proj-acts button:hover { color: var(--white); }
+.wk-proj-body { border-top: 1px solid var(--border); padding: 6px 16px 14px; }
+.wk-proj.collapsed .wk-proj-body { display: none; }
 
-/* renomear disciplina de dentro do modal de atividades — sempre visível
-   (não escondido atrás de hover), já que é o ponto de entrada mais comum
-   pra editar uma disciplina (clicando nela na régua direita). */
-.fsm-title-row { display: flex; align-items: center; gap: 10px; margin-bottom: 28px; }
-.fsm-title-row .modal-title { margin-bottom: 0; flex: 1; min-width: 0; }
-.fsm-rename-btn {
+/* renomear projeto de dentro do modal de tarefas — sempre visível (não
+   escondido atrás de hover), já que é o ponto de entrada mais comum pra
+   editar um projeto (clicando nele na régua direita). Mesma solução do
+   #fsm-rename da Faculdade. */
+.wpm-title-row { display: flex; align-items: center; gap: 10px; margin-bottom: 28px; }
+.wpm-title-row .modal-title { margin-bottom: 0; flex: 1; min-width: 0; }
+.wpm-rename-btn {
   background: none; border: 1px solid var(--border2); color: var(--mid);
   width: 26px; height: 26px; font-size: 13px; cursor: pointer; flex-shrink: 0;
   display: inline-flex; align-items: center; justify-content: center;
   transition: color 0.15s, border-color 0.15s;
 }
-.fsm-rename-btn:hover { color: var(--white); border-color: rgba(245,245,240,0.35); }
-.fsm-title-input {
+.wpm-rename-btn:hover { color: var(--white); border-color: rgba(245,245,240,0.35); }
+.wpm-title-input {
   flex: 1; min-width: 0; background: var(--surface2); border: 1px solid var(--border2); color: var(--white);
   font-family: 'DM Serif Display', serif; font-size: 22px; padding: 6px 10px; outline: none;
 }
 
-/* atividade */
-.fac-act { display: flex; align-items: center; gap: 12px; padding: 10px 2px; border-bottom: 1px solid var(--border); }
-.fac-act:last-of-type { border-bottom: none; }
-.fac-check {
+/* tarefa */
+.wk-task { display: flex; align-items: center; gap: 12px; padding: 10px 2px; border-bottom: 1px solid var(--border); }
+.wk-task:last-of-type { border-bottom: none; }
+.wk-check {
   width: 18px; height: 18px; border: 1px solid var(--border2); flex-shrink: 0; cursor: pointer;
   display: flex; align-items: center; justify-content: center; font-size: 12px; color: var(--white);
   transition: background 0.15s;
 }
-.fac-act.done .fac-check { background: var(--white); color: var(--bg); border-color: var(--white); }
-.fac-act-body { flex: 1; min-width: 0; }
-.fac-act-title { font-size: 13px; line-height: 1.4; color: var(--white); }
-.fac-act.done .fac-act-title { color: var(--mid); text-decoration: line-through; }
-.fac-act-due { font-size: 11px; letter-spacing: 0.06em; color: var(--mid); margin-top: 3px; }
-.fac-act-due .rel-over { color: var(--red); }
-.fac-act-due .rel-soon { color: var(--white); }
-.fac-act-due .rel-done { color: var(--green); }
-.fac-act-tools { display: flex; gap: 2px; flex-shrink: 0; opacity: 0; transition: opacity 0.15s; }
-.fac-act:hover .fac-act-tools { opacity: 1; }
-@media (hover: none) { .fac-act-tools { opacity: 0.6; } }
-.fac-act-tools button {
+.wk-task.done .wk-check { background: var(--white); color: var(--bg); border-color: var(--white); }
+.wk-task-body { flex: 1; min-width: 0; }
+.wk-task-title { font-size: 13px; line-height: 1.4; color: var(--white); }
+.wk-task.done .wk-task-title { color: var(--mid); text-decoration: line-through; }
+.wk-task-due { font-size: 11px; letter-spacing: 0.06em; color: var(--mid); margin-top: 3px; }
+.wk-task-due .rel-over { color: var(--red); }
+.wk-task-due .rel-soon { color: var(--white); }
+.wk-task-due .rel-done { color: var(--green); }
+.wk-task-due .rel-fazendo { color: var(--white); }
+.wk-task-tools { display: flex; gap: 2px; flex-shrink: 0; opacity: 0; transition: opacity 0.15s; }
+.wk-task:hover .wk-task-tools { opacity: 1; }
+@media (hover: none) { .wk-task-tools { opacity: 0.6; } }
+.wk-task-tools button {
   background: none; border: none; color: var(--mid); font-size: 13px; cursor: pointer; padding: 2px 5px;
   transition: color 0.15s;
 }
-.fac-act-tools button:hover { color: var(--white); }
+.wk-task-tools button:hover { color: var(--white); }
+.wk-task-link { color: var(--mid); text-decoration: none; font-size: 13px; padding: 2px 5px; }
+.wk-task-link:hover { color: var(--white); }
 
-.fac-empty { font-size: 13px; color: var(--mid); line-height: 1.7; padding: 8px 0; }
+.wk-empty { font-size: 13px; color: var(--mid); line-height: 1.7; padding: 8px 0; }
 
 /* quick-add */
-.fac-qa { display: flex; gap: 8px; margin-top: 10px; }
-.fac-qa input {
+.wk-qa { display: flex; gap: 8px; margin-top: 10px; }
+.wk-qa input {
   background: var(--surface2); border: 1px solid var(--border); color: var(--white);
   font-family: 'DM Mono', monospace; font-size: 12px; letter-spacing: 0.02em; padding: 8px 10px;
   outline: none; transition: border-color 0.2s;
 }
-.fac-qa input:focus { border-color: rgba(245,245,240,0.35); }
-.fac-qa input::placeholder { color: var(--mid); }
-.fac-qa-title { flex: 1; min-width: 0; }
-.fac-qa-date { width: 140px; color-scheme: dark; }
-.fac-qa button {
+.wk-qa input:focus { border-color: rgba(245,245,240,0.35); }
+.wk-qa input::placeholder { color: var(--mid); }
+.wk-qa-title { flex: 1; min-width: 0; }
+.wk-qa-date { width: 140px; color-scheme: dark; }
+.wk-qa button {
   background: none; border: 1px solid var(--border2); color: var(--mid); font-family: 'DM Mono', monospace;
   font-size: 13px; letter-spacing: 0.1em; padding: 0 14px; cursor: pointer; transition: color 0.2s, border-color 0.2s;
 }
-.fac-qa button:hover { color: var(--white); border-color: rgba(245,245,240,0.35); }
+.wk-qa button:hover { color: var(--white); border-color: rgba(245,245,240,0.35); }
 
 .arch-toggle { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; letter-spacing: 0.06em; color: var(--mid); cursor: pointer; }
 .arch-toggle input { accent-color: var(--white); width: 14px; height: 14px; cursor: pointer; }
 
 .modal-input[type="date"] { color-scheme: dark; }
-.fac-act-due .rel-fazendo { color: var(--white); }
-.fac-act-link { color: var(--mid); text-decoration: none; font-size: 13px; padding: 2px 5px; }
-.fac-act-link:hover { color: var(--white); }
 
 /* alternador de visão */
-.fac-viewsw { display: inline-flex; border: 1px solid var(--border2); flex-shrink: 0; }
-.fac-viewbtn {
+.wk-viewsw { display: inline-flex; border: 1px solid var(--border2); flex-shrink: 0; }
+.wk-viewbtn {
   background: none; border: none; color: var(--mid); font-family: 'DM Mono', monospace;
   font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; padding: 7px 14px; cursor: pointer;
   transition: background 0.15s, color 0.15s;
 }
-.fac-viewbtn + .fac-viewbtn { border-left: 1px solid var(--border2); }
-.fac-viewbtn.active { background: var(--white); color: var(--bg); }
+.wk-viewbtn + .wk-viewbtn { border-left: 1px solid var(--border2); }
+.wk-viewbtn.active { background: var(--white); color: var(--bg); }
 
 /* kanban */
-#fac-kanban { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; align-items: start; }
+#wk-kanban { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; align-items: start; }
 .kb-col {
   background: var(--surface); border: 1px solid var(--border); display: flex; flex-direction: column;
   min-height: 140px; transition: border-color 0.15s, background 0.15s;
@@ -250,30 +251,30 @@
 .kb-add button:hover { color: var(--white); border-color: rgba(245,245,240,0.35); }
 
 /* modal — situação */
-.fm-status { display: flex; gap: 0; border: 1px solid var(--border2); }
-.fm-status button {
+.wtm-status { display: flex; gap: 0; border: 1px solid var(--border2); }
+.wtm-status button {
   flex: 1; background: none; border: none; color: var(--mid); font-family: 'DM Mono', monospace;
   font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; padding: 9px 4px; cursor: pointer;
   transition: background 0.15s, color 0.15s;
 }
-.fm-status button + button { border-left: 1px solid var(--border2); }
-.fm-status button.active { background: var(--white); color: var(--bg); }
+.wtm-status button + button { border-left: 1px solid var(--border2); }
+.wtm-status button.active { background: var(--white); color: var(--bg); }
 textarea.modal-input { resize: vertical; min-height: 60px; line-height: 1.6; font-family: 'DM Mono', monospace; }
 
 @media (max-width: 1080px) {
-  .fac-main { grid-template-columns: 1fr 240px; }
+  .wk-main { grid-template-columns: 1fr 240px; }
 }
 @media (max-width: 900px) {
-  .fac-main { display: block; height: auto; overflow: visible; }
-  .fac-body { padding: 20px; }
-  .fac-rail { display: none; }
+  .wk-main { display: block; height: auto; overflow: visible; }
+  .wk-body { padding: 20px; }
+  .wk-rail { display: none; }
 }
 @media (max-width: 720px) {
   .g3 { grid-template-columns: 1fr 1fr; }
-  .fac-qa { flex-wrap: wrap; }
-  .fac-qa-title { flex-basis: 100%; }
-  /* kanban empilha as 3 colunas (antes rolava de lado e só cabia uma) */
-  #fac-kanban { grid-template-columns: 1fr; }
+  .wk-qa { flex-wrap: wrap; }
+  .wk-qa-title { flex-basis: 100%; }
+  /* kanban empilha as 3 colunas em telas estreitas */
+  #wk-kanban { grid-template-columns: 1fr; }
   .kb-col-body { max-height: none; }
 }
 @media (max-width: 460px) {
@@ -327,10 +328,10 @@ textarea.modal-input { resize: vertical; min-height: 60px; line-height: 1.6; fon
       </details>
       <a class="sb-item" href="biblia.html"><span class="sb-item-icon">✝</span> Bíblia</a>
       <a class="sb-item" href="tarefas.html"><span class="sb-item-icon">✓</span> Tarefas</a>
-      <a class="sb-item active" href="faculdade.html"><span class="sb-item-icon">▦</span> Faculdade</a>
+      <a class="sb-item" href="faculdade.html"><span class="sb-item-icon">▦</span> Faculdade</a>
       <a class="sb-item" href="treino.html"><span class="sb-item-icon">◲</span> Treino</a>
       <a class="sb-item" href="financeiro.html"><span class="sb-item-icon">◫</span> Financeiro</a>
-      <a class="sb-item" href="trabalho.html"><span class="sb-item-icon">⚙</span> Trabalho</a>
+      <a class="sb-item active" href="trabalho.html"><span class="sb-item-icon">⚙</span> Trabalho</a>
       <details class="sb-group">
         <summary class="sb-group-toggle"><span class="sb-item-icon">◆</span> Conquistas<span class="sb-group-caret">›</span></summary>
         <a class="sb-item sb-subitem" href="conquistas.html"><span class="sb-item-icon">◆</span> Conquistas</a>
@@ -350,17 +351,17 @@ textarea.modal-input { resize: vertical; min-height: 60px; line-height: 1.6; fon
     </div>
   </aside>
 
-  <main class="fac-main">
+  <main class="wk-main">
 
     <div class="topbar">
-      <div class="page-title">Faculdade <em>&amp; prazos.</em></div>
-      <div class="fac-viewsw" role="group" aria-label="Visualização">
-        <button type="button" class="fac-viewbtn" data-view="lista">Lista</button>
-        <button type="button" class="fac-viewbtn" data-view="kanban">Kanban</button>
+      <div class="page-title">Trabalho <em>&amp; entregas.</em></div>
+      <div class="wk-viewsw" role="group" aria-label="Visualização">
+        <button type="button" class="wk-viewbtn" data-view="lista">Lista</button>
+        <button type="button" class="wk-viewbtn" data-view="kanban">Kanban</button>
       </div>
     </div>
 
-    <div class="fac-body">
+    <div class="wk-body">
       <div class="g3">
         <div class="stat-card">
           <div class="stat-lbl">Pendentes</div>
@@ -376,75 +377,75 @@ textarea.modal-input { resize: vertical; min-height: 60px; line-height: 1.6; fon
         </div>
       </div>
 
-      <form class="fac-newsubj" id="newsubj-form" autocomplete="off">
-        <input id="newsubj-input" maxlength="120" placeholder="Nova disciplina — ex: Cálculo I" />
+      <form class="wk-newproj" id="newproj-form" autocomplete="off">
+        <input id="newproj-input" maxlength="120" placeholder="Novo projeto — ex: Redesign do site" />
         <button type="submit" class="btn-sm primary">Adicionar</button>
       </form>
 
-      <div id="fac-list"></div>
-      <div id="fac-kanban" hidden></div>
+      <div id="wk-list"></div>
+      <div id="wk-kanban" hidden></div>
 
-      <label class="arch-toggle" id="arch-wrap"><input type="checkbox" id="show-arch" /> ver disciplinas arquivadas</label>
+      <label class="arch-toggle" id="arch-wrap"><input type="checkbox" id="show-arch" /> ver projetos arquivados</label>
     </div>
 
-    <aside class="fac-rail">
-      <div class="fac-rail-hd">Disciplinas</div>
-      <div class="fac-rail-list" id="fac-rail-list"></div>
+    <aside class="wk-rail">
+      <div class="wk-rail-hd">Projetos</div>
+      <div class="wk-rail-list" id="wk-rail-list"></div>
     </aside>
 
   </main>
 </div>
 
-<!-- EDITAR ATIVIDADE -->
-<div class="modal-overlay" id="fac-modal">
-  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="fm-hd">
-    <div class="modal-title" id="fm-hd">Editar atividade</div>
+<!-- EDITAR TAREFA -->
+<div class="modal-overlay" id="wk-task-modal">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="wtm-hd">
+    <div class="modal-title" id="wtm-hd">Editar tarefa</div>
     <div class="modal-field">
-      <label class="modal-lbl" for="fm-title">Título</label>
-      <input class="modal-input" id="fm-title" maxlength="200" />
+      <label class="modal-lbl" for="wtm-title">Título</label>
+      <input class="modal-input" id="wtm-title" maxlength="200" />
     </div>
     <div class="modal-field">
-      <label class="modal-lbl" for="fm-date">Data de entrega</label>
-      <input class="modal-input" id="fm-date" type="date" />
+      <label class="modal-lbl" for="wtm-date">Prazo</label>
+      <input class="modal-input" id="wtm-date" type="date" />
     </div>
     <div class="modal-field">
       <label class="modal-lbl">Situação</label>
-      <div class="fm-status" id="fm-status">
+      <div class="wtm-status" id="wtm-status">
         <button type="button" data-s="a_fazer">A fazer</button>
         <button type="button" data-s="fazendo">Fazendo</button>
         <button type="button" data-s="entregue">Entregue</button>
       </div>
     </div>
     <div class="modal-field">
-      <label class="modal-lbl" for="fm-link">Link do Studeo</label>
-      <input class="modal-input" id="fm-link" type="url" placeholder="https://…" />
+      <label class="modal-lbl" for="wtm-link">Link (Jira, Trello, doc…)</label>
+      <input class="modal-input" id="wtm-link" type="url" placeholder="https://…" />
     </div>
     <div class="modal-field">
-      <label class="modal-lbl" for="fm-notes">Observações</label>
-      <textarea class="modal-input" id="fm-notes" maxlength="1000" rows="3"></textarea>
+      <label class="modal-lbl" for="wtm-notes">Observações</label>
+      <textarea class="modal-input" id="wtm-notes" maxlength="1000" rows="3"></textarea>
     </div>
     <div class="modal-footer">
-      <button class="modal-btn ghost" type="button" id="fm-del">Excluir</button>
-      <button class="modal-btn primary" type="button" id="fm-save">Salvar</button>
+      <button class="modal-btn ghost" type="button" id="wtm-del">Excluir</button>
+      <button class="modal-btn primary" type="button" id="wtm-save">Salvar</button>
     </div>
   </div>
 </div>
 
-<!-- ATIVIDADES DA DISCIPLINA -->
-<div class="modal-overlay" id="fac-subj-modal">
-  <div class="modal fac-subj-box" role="dialog" aria-modal="true" aria-labelledby="fsm-title">
-    <div class="fsm-title-row">
-      <div class="modal-title" id="fsm-title">Disciplina</div>
-      <button type="button" class="fsm-rename-btn" id="fsm-rename" title="Renomear disciplina">✎</button>
+<!-- TAREFAS DO PROJETO -->
+<div class="modal-overlay" id="wk-proj-modal">
+  <div class="modal wk-proj-box" role="dialog" aria-modal="true" aria-labelledby="wpm-title">
+    <div class="wpm-title-row">
+      <div class="modal-title" id="wpm-title">Projeto</div>
+      <button type="button" class="wpm-rename-btn" id="wpm-rename" title="Renomear projeto">✎</button>
     </div>
-    <div class="fsm-list" id="fsm-list"></div>
-    <form class="fac-qa fsm-add" id="fsm-add" autocomplete="off">
-      <input class="fac-qa-title" id="fsm-add-title" maxlength="200" placeholder="Nova atividade" />
-      <input class="fac-qa-date" id="fsm-add-date" type="date" />
+    <div class="wpm-list" id="wpm-list"></div>
+    <form class="wk-qa wpm-add" id="wpm-add" autocomplete="off">
+      <input class="wk-qa-title" id="wpm-add-title" maxlength="200" placeholder="Nova tarefa" />
+      <input class="wk-qa-date" id="wpm-add-date" type="date" />
       <button type="submit">+</button>
     </form>
     <div class="modal-footer">
-      <button class="modal-btn ghost" type="button" id="fsm-close">Fechar</button>
+      <button class="modal-btn ghost" type="button" id="wpm-close">Fechar</button>
     </div>
   </div>
 </div>
@@ -485,13 +486,13 @@ function fmtDue(iso) {
   const d = new Date(iso + 'T00:00:00');
   return d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
 }
-function relLabel(a) {
-  const st = Store.studyActivityStatus(a);
+function relLabel(t) {
+  const st = Store.workTaskStatus(t);
   if (st === 'entregue') {
-    const on = a.doneOn ? ' · ' + fmtDue(a.doneOn) : '';
+    const on = t.doneOn ? ' · ' + fmtDue(t.doneOn) : '';
     return `<span class="rel-done">entregue${on}</span>`;
   }
-  const n = Store.studyDaysUntil(a);
+  const n = Store.workTaskDaysUntil(t);
   if (n == null) return '';
   if (n < 0)  return `<span class="rel-over">atrasada ${-n} ${(-n) === 1 ? 'dia' : 'dias'}</span>`;
   if (n === 0) return `<span class="rel-soon">hoje</span>`;
@@ -500,8 +501,8 @@ function relLabel(a) {
   return `faltam ${n} dias`;
 }
 
-/* estado de collapse por disciplina */
-const CKEY = 'p90_fac_collapsed';
+/* estado de collapse por projeto */
+const CKEY = 'p90_wk_collapsed';
 function collapsedSet() {
   try { return new Set(JSON.parse(localStorage.getItem(CKEY) || '[]')); } catch (e) { return new Set(); }
 }
@@ -510,7 +511,7 @@ function saveCollapsed(set) {
 }
 
 /* ── visão ativa (lista | kanban) ── */
-const VKEY = 'p90_fac_view';
+const VKEY = 'p90_wk_view';
 function curView() {
   try { return localStorage.getItem(VKEY) === 'kanban' ? 'kanban' : 'lista'; } catch (e) { return 'lista'; }
 }
@@ -523,103 +524,103 @@ function render() { renderView(); }   // alias — usado por todos os handlers d
 
 function renderView() {
   const v = curView();
-  document.querySelectorAll('.fac-viewbtn').forEach(b => b.classList.toggle('active', b.dataset.view === v));
-  document.getElementById('fac-list').hidden   = v !== 'lista';
-  document.getElementById('fac-kanban').hidden = v !== 'kanban';
+  document.querySelectorAll('.wk-viewbtn').forEach(b => b.classList.toggle('active', b.dataset.view === v));
+  document.getElementById('wk-list').hidden   = v !== 'lista';
+  document.getElementById('wk-kanban').hidden = v !== 'kanban';
   document.getElementById('arch-wrap').style.display = v === 'lista' ? '' : 'none';
   renderStats();
   renderRail();
-  if (subjModalId != null) renderSubjModalList(subjModalId);
+  if (projModalId != null) renderProjModalList(projModalId);
   if (v === 'kanban') renderKanban(); else renderList();
 }
 
-/* ── RAIL DIREITA — lista de disciplinas ── */
-function subjCounts(subjId) {
-  const acts = Store.getStudyActivities(subjId);
-  const pending = acts.filter(a => !a.done);
-  const over = pending.filter(a => Store.studyActivityStatus(a) === 'atrasada').length;
-  return { total: acts.length, pending: pending.length, over, done: acts.length - pending.length };
+/* ── RAIL DIREITA — lista de projetos ── */
+function projCounts(projId) {
+  const tasks = Store.getWorkTasks(projId);
+  const pending = tasks.filter(t => !t.done);
+  const over = pending.filter(t => Store.workTaskStatus(t) === 'atrasada').length;
+  return { total: tasks.length, pending: pending.length, over, done: tasks.length - pending.length };
 }
 
 function renderRail() {
-  const el = document.getElementById('fac-rail-list');
+  const el = document.getElementById('wk-rail-list');
   if (!el) return;
-  const subjects = Store.getStudySubjects(false);
-  if (!subjects.length) {
-    el.innerHTML = '<div class="fac-rail-empty">Nenhuma disciplina ainda. Adicione uma no campo à esquerda.</div>';
+  const projects = Store.getWorkProjects(false);
+  if (!projects.length) {
+    el.innerHTML = '<div class="wk-rail-empty">Nenhum projeto ainda. Adicione um no campo à esquerda.</div>';
     return;
   }
-  el.innerHTML = subjects.map(s => {
-    const c = subjCounts(s.id);
+  el.innerHTML = projects.map(p => {
+    const c = projCounts(p.id);
     let meta;
-    if (!c.total) meta = 'sem atividades';
+    if (!c.total) meta = 'sem tarefas';
     else if (!c.pending) meta = 'tudo entregue';
     else {
       meta = c.pending + ' pendente' + (c.pending === 1 ? '' : 's');
       if (c.over) meta += ' · <span class="over">' + c.over + ' atrasada' + (c.over === 1 ? '' : 's') + '</span>';
     }
-    return `<div class="fac-rail-item" data-subj="${s.id}">
-      <span class="fac-rail-name">${esc(s.name)}</span>
-      <span class="fac-rail-meta">${meta}</span>
+    return `<div class="wk-rail-item" data-proj="${p.id}">
+      <span class="wk-rail-name">${esc(p.name)}</span>
+      <span class="wk-rail-meta">${meta}</span>
     </div>`;
   }).join('');
 }
 
-/* ── MODAL: atividades de uma disciplina ── */
-let subjModalId = null;
+/* ── MODAL: tarefas de um projeto ── */
+let projModalId = null;
 
-function renderSubjModalList(subjId) {
-  const listEl = document.getElementById('fsm-list');
-  const acts = Store.getStudyActivities(subjId);
-  const pending = acts.filter(a => !a.done);
-  const doneActs = acts.filter(a => a.done);
-  const rows = [...pending, ...doneActs];
+function renderProjModalList(projId) {
+  const listEl = document.getElementById('wpm-list');
+  const tasks = Store.getWorkTasks(projId);
+  const pending = tasks.filter(t => !t.done);
+  const doneTasks = tasks.filter(t => t.done);
+  const rows = [...pending, ...doneTasks];
   if (!rows.length) {
-    listEl.innerHTML = '<div class="fsm-empty">Nenhuma atividade nesta disciplina. Adicione abaixo.</div>';
+    listEl.innerHTML = '<div class="wpm-empty">Nenhuma tarefa neste projeto. Adicione abaixo.</div>';
     return;
   }
-  listEl.innerHTML = rows.map(a => {
-    const rel = a.status === 'fazendo' && !a.done
-      ? `<span class="rel-fazendo">fazendo</span>${a.dueOn ? ' · ' + relLabel(a) : ''}`
-      : relLabel(a);
-    return `<div class="fsm-row ${a.done ? 'done' : ''}" data-id="${a.id}">
-      <div class="fsm-check" data-act="check" title="${a.done ? 'Desmarcar' : 'Marcar entregue'}">${a.done ? '✓' : ''}</div>
-      <div class="fsm-main" data-act="edit">
-        <div class="fsm-title">${esc(a.title)}</div>
-        <div class="fsm-due">${a.dueOn ? fmtDue(a.dueOn) + ' · ' : ''}${rel}</div>
+  listEl.innerHTML = rows.map(t => {
+    const rel = t.status === 'fazendo' && !t.done
+      ? `<span class="rel-fazendo">fazendo</span>${t.dueOn ? ' · ' + relLabel(t) : ''}`
+      : relLabel(t);
+    return `<div class="wpm-row ${t.done ? 'done' : ''}" data-id="${t.id}">
+      <div class="wpm-check" data-act="check" title="${t.done ? 'Desmarcar' : 'Marcar entregue'}">${t.done ? '✓' : ''}</div>
+      <div class="wpm-main" data-act="edit">
+        <div class="wpm-title">${esc(t.title)}</div>
+        <div class="wpm-due">${t.dueOn ? fmtDue(t.dueOn) + ' · ' : ''}${rel}</div>
       </div>
-      ${linkIcon(a, 'fsm-link')}
+      ${linkIcon(t, 'wpm-link')}
     </div>`;
   }).join('');
 }
 
-function openSubjModal(subjId) {
-  const s = Store.getStudySubjects(true).find(x => x.id === subjId);
-  if (!s) return;
-  subjModalId = subjId;
-  document.getElementById('fsm-title').textContent = s.name;
-  document.getElementById('fsm-add-title').value = '';
-  document.getElementById('fsm-add-date').value = '';
-  renderSubjModalList(subjId);
-  document.getElementById('fac-subj-modal').classList.add('open');
+function openProjModal(projId) {
+  const p = Store.getWorkProjects(true).find(x => x.id === projId);
+  if (!p) return;
+  projModalId = projId;
+  document.getElementById('wpm-title').textContent = p.name;
+  document.getElementById('wpm-add-title').value = '';
+  document.getElementById('wpm-add-date').value = '';
+  renderProjModalList(projId);
+  document.getElementById('wk-proj-modal').classList.add('open');
 }
-function closeSubjModal() {
-  document.getElementById('fac-subj-modal').classList.remove('open');
-  subjModalId = null;
+function closeProjModal() {
+  document.getElementById('wk-proj-modal').classList.remove('open');
+  projModalId = null;
 }
 
-/* Renomear a disciplina de dentro do modal — mesma lógica de startRename(),
+/* Renomear o projeto de dentro do modal — mesma lógica de startRename(),
    só que trocando o <div class="modal-title"> em vez do card da lista. */
-function startSubjModalRename() {
-  if (subjModalId == null) return;
-  const titleEl = document.getElementById('fsm-title');
-  if (titleEl.querySelector('.fsm-title-input')) return;
-  const s = Store.getStudySubjects(true).find(x => x.id === subjModalId);
-  if (!s) return;
-  const cur = s.name;
+function startProjModalRename() {
+  if (projModalId == null) return;
+  const titleEl = document.getElementById('wpm-title');
+  if (titleEl.querySelector('.wpm-title-input')) return;
+  const p = Store.getWorkProjects(true).find(x => x.id === projModalId);
+  if (!p) return;
+  const cur = p.name;
   titleEl.textContent = '';
   const inp = document.createElement('input');
-  inp.className = 'fsm-title-input';
+  inp.className = 'wpm-title-input';
   inp.maxLength = 120;
   inp.value = cur;
   titleEl.appendChild(inp);
@@ -629,7 +630,7 @@ function startSubjModalRename() {
     if (done) return;
     done = true;
     const v = inp.value.trim();
-    if (v && v !== cur) Store.renameStudySubject(subjModalId, v);
+    if (v && v !== cur) Store.renameWorkProject(projModalId, v);
     titleEl.textContent = (v || cur);
     render();
   };
@@ -639,15 +640,15 @@ function startSubjModalRename() {
   });
   inp.addEventListener('blur', commit);
 }
-document.getElementById('fsm-rename').addEventListener('click', startSubjModalRename);
+document.getElementById('wpm-rename').addEventListener('click', startProjModalRename);
 
 function renderStats() {
   let pend = 0, over = 0, done = 0;
-  const liveIds = new Set(Store.getStudySubjects(false).map(s => s.id));
-  Store.getStudyActivities().forEach(a => {
-    if (!liveIds.has(a.subjectId)) return;
-    if (a.done) { done++; return; }
-    if (Store.studyActivityStatus(a) === 'atrasada') over++;
+  const liveIds = new Set(Store.getWorkProjects(false).map(p => p.id));
+  Store.getWorkTasks().forEach(t => {
+    if (!liveIds.has(t.projectId)) return;
+    if (t.done) { done++; return; }
+    if (Store.workTaskStatus(t) === 'atrasada') over++;
     pend++;
   });
   document.getElementById('sc-pend').textContent = pend;
@@ -655,71 +656,71 @@ function renderStats() {
   document.getElementById('sc-done').textContent = done;
 }
 
-function linkIcon(a, cls) {
-  if (!a.link) return '';
-  return `<a class="${cls}" href="${esc(a.link)}" target="_blank" rel="noopener" title="Abrir no Studeo" onclick="event.stopPropagation()">↗</a>`;
+function linkIcon(t, cls) {
+  if (!t.link) return '';
+  return `<a class="${cls}" href="${esc(t.link)}" target="_blank" rel="noopener" title="Abrir link" onclick="event.stopPropagation()">↗</a>`;
 }
 
 function renderList() {
   const showArch = document.getElementById('show-arch').checked;
-  const subjects = Store.getStudySubjects(showArch);
+  const projects = Store.getWorkProjects(showArch);
   const collapsed = collapsedSet();
-  const list = document.getElementById('fac-list');
+  const list = document.getElementById('wk-list');
 
-  if (!subjects.length) {
-    list.innerHTML = '<div class="fac-empty">Nenhuma disciplina ainda. Adicione a primeira no campo acima e vá lançando as atividades com a data de entrega.</div>';
+  if (!projects.length) {
+    list.innerHTML = '<div class="wk-empty">Nenhum projeto ainda. Adicione o primeiro no campo acima e vá lançando as tarefas com o prazo.</div>';
     return;
   }
 
-  list.innerHTML = subjects.map(s => {
-    const acts = Store.getStudyActivities(s.id);
-    const pending = acts.filter(a => !a.done);
-    const doneActs = acts.filter(a => a.done);
-    const nOver = pending.filter(a => Store.studyActivityStatus(a) === 'atrasada').length;
-    const isCol = collapsed.has(s.id);
+  list.innerHTML = projects.map(p => {
+    const tasks = Store.getWorkTasks(p.id);
+    const pending = tasks.filter(t => !t.done);
+    const doneTasks = tasks.filter(t => t.done);
+    const nOver = pending.filter(t => Store.workTaskStatus(t) === 'atrasada').length;
+    const isCol = collapsed.has(p.id);
 
     const countBits = [];
     if (pending.length) countBits.push(pending.length + ' pendente' + (pending.length === 1 ? '' : 's'));
     if (nOver) countBits.push('<span class="over">' + nOver + ' atrasada' + (nOver === 1 ? '' : 's') + '</span>');
-    if (!pending.length && !doneActs.length) countBits.push('sem atividades');
+    if (!pending.length && !doneTasks.length) countBits.push('sem tarefas');
 
-    const rowHTML = a => {
-      const rel = a.status === 'fazendo' && !a.done
-        ? `<span class="rel-fazendo">fazendo</span>${a.dueOn ? ' · ' + relLabel(a) : ''}`
-        : relLabel(a);
-      return `<div class="fac-act ${a.done ? 'done' : ''}" data-id="${a.id}">
-        <div class="fac-check" data-act="check" title="${a.done ? 'Desmarcar' : 'Marcar entregue'}">${a.done ? '✓' : ''}</div>
-        <div class="fac-act-body">
-          <div class="fac-act-title">${esc(a.title)}</div>
-          <div class="fac-act-due">${a.dueOn ? fmtDue(a.dueOn) + ' · ' : ''}${rel}</div>
+    const rowHTML = t => {
+      const rel = t.status === 'fazendo' && !t.done
+        ? `<span class="rel-fazendo">fazendo</span>${t.dueOn ? ' · ' + relLabel(t) : ''}`
+        : relLabel(t);
+      return `<div class="wk-task ${t.done ? 'done' : ''}" data-id="${t.id}">
+        <div class="wk-check" data-act="check" title="${t.done ? 'Desmarcar' : 'Marcar entregue'}">${t.done ? '✓' : ''}</div>
+        <div class="wk-task-body">
+          <div class="wk-task-title">${esc(t.title)}</div>
+          <div class="wk-task-due">${t.dueOn ? fmtDue(t.dueOn) + ' · ' : ''}${rel}</div>
         </div>
-        <div class="fac-act-tools">
-          ${linkIcon(a, 'fac-act-link')}
+        <div class="wk-task-tools">
+          ${linkIcon(t, 'wk-task-link')}
           <button data-act="edit" title="Editar">✎</button>
           <button data-act="del" title="Excluir">✕</button>
         </div>
       </div>`;
     };
 
-    const body = isCol ? '' : `<div class="fac-subj-body">
-      ${(pending.map(rowHTML).join('') + doneActs.map(rowHTML).join('')) ||
-        '<div class="fac-empty">Nenhuma atividade. Adicione abaixo.</div>'}
-      <form class="fac-qa" data-subj="${s.id}" autocomplete="off">
-        <input class="fac-qa-title" maxlength="200" placeholder="Nova atividade" />
-        <input class="fac-qa-date" type="date" />
+    const body = isCol ? '' : `<div class="wk-proj-body">
+      ${(pending.map(rowHTML).join('') + doneTasks.map(rowHTML).join('')) ||
+        '<div class="wk-empty">Nenhuma tarefa. Adicione abaixo.</div>'}
+      <form class="wk-qa" data-proj="${p.id}" autocomplete="off">
+        <input class="wk-qa-title" maxlength="200" placeholder="Nova tarefa" />
+        <input class="wk-qa-date" type="date" />
         <button type="submit">+</button>
       </form>
     </div>`;
 
-    return `<div class="fac-subj ${isCol ? 'collapsed' : ''}" data-subj="${s.id}">
-      <div class="fac-subj-hd" data-act="toggle">
-        <span class="fac-subj-caret">▼</span>
-        <span class="fac-subj-name">${esc(s.name)}${s.archived ? ' <span style="color:var(--mid)">(arquivada)</span>' : ''}</span>
-        <span class="fac-subj-count">${countBits.join(' · ')}</span>
-        <span class="fac-subj-acts">
+    return `<div class="wk-proj ${isCol ? 'collapsed' : ''}" data-proj="${p.id}">
+      <div class="wk-proj-hd" data-act="toggle">
+        <span class="wk-proj-caret">▼</span>
+        <span class="wk-proj-name">${esc(p.name)}${p.archived ? ' <span style="color:var(--mid)">(arquivado)</span>' : ''}</span>
+        <span class="wk-proj-count">${countBits.join(' · ')}</span>
+        <span class="wk-proj-acts">
           <button data-act="rename" title="Renomear">✎</button>
-          <button data-act="archive" title="${s.archived ? 'Desarquivar' : 'Arquivar'}">${s.archived ? '⇧' : '⌂'}</button>
-          <button data-act="delsubj" title="Excluir disciplina">✕</button>
+          <button data-act="archive" title="${p.archived ? 'Desarquivar' : 'Arquivar'}">${p.archived ? '⇧' : '⌂'}</button>
+          <button data-act="delproj" title="Excluir projeto">✕</button>
         </span>
       </div>
       ${body}
@@ -734,54 +735,54 @@ const KB_COLS = [
   { status: 'entregue', label: 'Entregue' },
 ];
 
-function kbCardHTML(a) {
-  const subj = esc(Store.studySubjectName(a.subjectId));
-  const bits = [subj];
-  if (a.dueOn) {
-    if (a.done) {
-      bits.push(fmtDue(a.dueOn));
+function kbCardHTML(t) {
+  const proj = esc(Store.workProjectName(t.projectId));
+  const bits = [proj];
+  if (t.dueOn) {
+    if (t.done) {
+      bits.push(fmtDue(t.dueOn));
     } else {
-      const n = Store.studyDaysUntil(a);
+      const n = Store.workTaskDaysUntil(t);
       if (n < 0)       bits.push(`<span class="kb-late">atrasada ${-n}d</span>`);
       else if (n === 0) bits.push(`<span class="kb-soon">hoje</span>`);
       else if (n === 1) bits.push(`<span class="kb-soon">amanhã</span>`);
       else if (n <= 7)  bits.push(`<span class="kb-soon">${n}d</span>`);
-      else              bits.push(fmtDue(a.dueOn));
+      else              bits.push(fmtDue(t.dueOn));
     }
   } else {
     bits.push('sem data');
   }
-  return `<div class="kb-card ${a.done ? 'done' : ''}" data-id="${a.id}">
+  return `<div class="kb-card ${t.done ? 'done' : ''}" data-id="${t.id}">
     <div class="kb-grip" data-grip title="Arrastar">⠿</div>
     <div class="kb-card-main">
-      <div class="kb-card-title">${esc(a.title)}</div>
+      <div class="kb-card-title">${esc(t.title)}</div>
       <div class="kb-card-meta">${bits.join('<span>·</span>')}</div>
     </div>
-    ${linkIcon(a, 'kb-card-link')}
+    ${linkIcon(t, 'kb-card-link')}
   </div>`;
 }
 
 function renderKanban() {
-  const board = document.getElementById('fac-kanban');
-  const liveIds = new Set(Store.getStudySubjects(false).map(s => s.id));
-  const acts = Store.getStudyActivities().filter(a => liveIds.has(a.subjectId));
+  const board = document.getElementById('wk-kanban');
+  const liveIds = new Set(Store.getWorkProjects(false).map(p => p.id));
+  const tasks = Store.getWorkTasks().filter(t => liveIds.has(t.projectId));
   const byStatus = { a_fazer: [], fazendo: [], entregue: [] };
-  acts.forEach(a => { (byStatus[a.status] || byStatus.a_fazer).push(a); });
+  tasks.forEach(t => { (byStatus[t.status] || byStatus.a_fazer).push(t); });
   byStatus.entregue.sort((x, y) => String(y.doneOn || '').localeCompare(String(x.doneOn || '')) || (y.id - x.id));
 
-  const subjects = Store.getStudySubjects(false);
-  const subjOpts = subjects.map(s => `<option value="${s.id}">${esc(s.name)}</option>`).join('');
+  const projects = Store.getWorkProjects(false);
+  const projOpts = projects.map(p => `<option value="${p.id}">${esc(p.name)}</option>`).join('');
 
   board.innerHTML = KB_COLS.map(col => {
     const items = byStatus[col.status];
     const cards = items.length
       ? items.map(kbCardHTML).join('')
       : '<div class="kb-empty">—</div>';
-    const addForm = col.status === 'a_fazer' && subjects.length
+    const addForm = col.status === 'a_fazer' && projects.length
       ? `<form class="kb-add" autocomplete="off">
-           <select class="kb-add-subj" aria-label="Disciplina">${subjOpts}</select>
+           <select class="kb-add-proj" aria-label="Projeto">${projOpts}</select>
            <div class="kb-add-row">
-             <input class="kb-add-title" maxlength="200" placeholder="Nova atividade" />
+             <input class="kb-add-title" maxlength="200" placeholder="Nova tarefa" />
              <input class="kb-add-date" type="date" />
            </div>
            <button type="submit">+ adicionar</button>
@@ -794,78 +795,78 @@ function renderKanban() {
     </div>`;
   }).join('');
 
-  if (!subjects.length) {
-    board.innerHTML = '<div class="fac-empty">Nenhuma disciplina ainda. Adicione uma no campo acima.</div>';
+  if (!projects.length) {
+    board.innerHTML = '<div class="wk-empty">Nenhum projeto ainda. Adicione um no campo acima.</div>';
   }
 }
 
 /* ── delegação de eventos na lista ── */
-const listEl = document.getElementById('fac-list');
+const listEl = document.getElementById('wk-list');
 
 listEl.addEventListener('click', e => {
   const btn = e.target.closest('[data-act]');
   if (!btn) return;
   const act = btn.dataset.act;
-  const subjEl = e.target.closest('.fac-subj');
-  const subjId = subjEl ? Number(subjEl.dataset.subj) : null;
-  const actEl = e.target.closest('.fac-act');
-  const actId = actEl ? Number(actEl.dataset.id) : null;
+  const projEl = e.target.closest('.wk-proj');
+  const projId = projEl ? Number(projEl.dataset.proj) : null;
+  const taskEl = e.target.closest('.wk-task');
+  const taskId = taskEl ? Number(taskEl.dataset.id) : null;
 
   if (act === 'toggle') {
-    if (e.target.closest('.fac-subj-acts')) return;
+    if (e.target.closest('.wk-proj-acts')) return;
     const set = collapsedSet();
-    set.has(subjId) ? set.delete(subjId) : set.add(subjId);
+    set.has(projId) ? set.delete(projId) : set.add(projId);
     saveCollapsed(set);
     render();
   } else if (act === 'rename') {
     e.stopPropagation();
-    startRename(subjEl, subjId);
+    startRename(projEl, projId);
   } else if (act === 'archive') {
     e.stopPropagation();
-    const s = Store.getStudySubjects(true).find(x => x.id === subjId);
-    Store.setStudySubjectArchived(subjId, !(s && s.archived));
+    const p = Store.getWorkProjects(true).find(x => x.id === projId);
+    Store.setWorkProjectArchived(projId, !(p && p.archived));
     render();
-  } else if (act === 'delsubj') {
+  } else if (act === 'delproj') {
     e.stopPropagation();
-    removeSubject(subjId);
+    removeProject(projId);
   } else if (act === 'check') {
-    Store.toggleStudyDone(actId);
+    Store.toggleWorkTaskDone(taskId);
     render();
   } else if (act === 'edit') {
-    openEdit(actId);
+    openEdit(taskId);
   } else if (act === 'del') {
-    removeActivity(actId);
+    removeTask(taskId);
   }
 });
 
 listEl.addEventListener('submit', e => {
-  const form = e.target.closest('.fac-qa');
+  const form = e.target.closest('.wk-qa');
   if (!form) return;
   e.preventDefault();
-  const subjId = Number(form.dataset.subj);
-  const tEl = form.querySelector('.fac-qa-title');
-  const dEl = form.querySelector('.fac-qa-date');
+  const projId = Number(form.dataset.proj);
+  const tEl = form.querySelector('.wk-qa-title');
+  const dEl = form.querySelector('.wk-qa-date');
   const title = tEl.value.trim();
   if (!title) { tEl.focus(); return; }
-  Store.addStudyActivity(subjId, { title, dueOn: dEl.value || null });
+  Store.addWorkTask(projId, { title, dueOn: dEl.value || null });
   render();
-  // re-foca o quick-add da mesma disciplina
-  const again = listEl.querySelector(`.fac-qa[data-subj="${subjId}"] .fac-qa-title`);
+  // re-foca o quick-add do mesmo projeto
+  const again = listEl.querySelector(`.wk-qa[data-proj="${projId}"] .wk-qa-title`);
   if (again) again.focus();
 });
 
-function startRename(subjEl, subjId) {
-  const nameEl = subjEl.querySelector('.fac-subj-name');
-  if (!nameEl || subjEl.querySelector('.fac-subj-name-input')) return;
-  const cur = (Store.getStudySubjects(true).find(x => x.id === subjId) || {}).name || '';
+function startRename(projEl, projId) {
+  const nameEl = projEl.querySelector('.wk-proj-name');
+  if (!nameEl || projEl.querySelector('.wk-proj-name-input')) return;
+  const cur = (Store.getWorkProjects(true).find(x => x.id === projId) || {}).name || '';
   const inp = document.createElement('input');
-  inp.className = 'fac-subj-name-input';
+  inp.className = 'wk-proj-name-input';
   inp.value = cur; inp.maxLength = 120;
   nameEl.replaceWith(inp);
   inp.focus(); inp.select();
   const commit = () => {
     const v = inp.value.trim();
-    if (v && v !== cur) { Store.renameStudySubject(subjId, v); }
+    if (v && v !== cur) { Store.renameWorkProject(projId, v); }
     render();
   };
   inp.addEventListener('keydown', ev => {
@@ -875,72 +876,72 @@ function startRename(subjEl, subjId) {
   inp.addEventListener('blur', commit);
 }
 
-function removeSubject(subjId) {
-  const s = Store.getStudySubjects(true).find(x => x.id === subjId);
-  if (!s) return;
-  const acts = Store.getStudyActivities(subjId).map(a => ({ ...a }));
-  const n = acts.length;
-  Store.deleteStudySubject(subjId);
+function removeProject(projId) {
+  const p = Store.getWorkProjects(true).find(x => x.id === projId);
+  if (!p) return;
+  const tasks = Store.getWorkTasks(projId).map(t => ({ ...t }));
+  const n = tasks.length;
+  Store.deleteWorkProject(projId);
   render();
   window.p90toastUndo(
-    `"${s.name}" excluída` + (n ? ` (${n} atividade${n === 1 ? '' : 's'})` : ''),
+    `"${p.name}" excluído` + (n ? ` (${n} tarefa${n === 1 ? '' : 's'})` : ''),
     () => {
-      const newSubj = Store.addStudySubject(s.name);
-      if (s.archived) Store.setStudySubjectArchived(newSubj.id, true);
-      acts.forEach(a => {
-        const na = Store.addStudyActivity(newSubj.id, { title: a.title, dueOn: a.dueOn, link: a.link, notes: a.notes });
-        if (na) Store.setStudyStatus(na.id, a.status);
+      const newProj = Store.addWorkProject(p.name);
+      if (p.archived) Store.setWorkProjectArchived(newProj.id, true);
+      tasks.forEach(t => {
+        const nt = Store.addWorkTask(newProj.id, { title: t.title, dueOn: t.dueOn, link: t.link, notes: t.notes });
+        if (nt) Store.setWorkTaskStatus(nt.id, t.status);
       });
       render();
     }
   );
 }
 
-function removeActivity(actId) {
-  const a = Store.getStudyActivities().find(x => x.id === actId);
-  if (!a) return;
-  const snapshot = { ...a };
-  Store.deleteStudyActivity(actId);
+function removeTask(taskId) {
+  const t = Store.getWorkTasks().find(x => x.id === taskId);
+  if (!t) return;
+  const snapshot = { ...t };
+  Store.deleteWorkTask(taskId);
   render();
   window.p90toastUndo(`"${snapshot.title}" excluída`, () => {
-    const na = Store.addStudyActivity(snapshot.subjectId, { title: snapshot.title, dueOn: snapshot.dueOn, link: snapshot.link, notes: snapshot.notes });
-    if (na) Store.setStudyStatus(na.id, snapshot.status);
+    const nt = Store.addWorkTask(snapshot.projectId, { title: snapshot.title, dueOn: snapshot.dueOn, link: snapshot.link, notes: snapshot.notes });
+    if (nt) Store.setWorkTaskStatus(nt.id, snapshot.status);
     render();
   });
 }
 
-/* ── nova disciplina ── */
-document.getElementById('newsubj-form').addEventListener('submit', e => {
+/* ── novo projeto ── */
+document.getElementById('newproj-form').addEventListener('submit', e => {
   e.preventDefault();
-  const inp = document.getElementById('newsubj-input');
+  const inp = document.getElementById('newproj-input');
   const v = inp.value.trim();
   if (!v) return;
-  Store.addStudySubject(v);
+  Store.addWorkProject(v);
   inp.value = '';
-  toast('Disciplina adicionada');
+  toast('Projeto adicionado');
   render();
 });
 
 document.getElementById('show-arch').addEventListener('change', render);
 
 /* ── alternador de visão ── */
-document.querySelector('.fac-viewsw').addEventListener('click', e => {
-  const b = e.target.closest('.fac-viewbtn');
+document.querySelector('.wk-viewsw').addEventListener('click', e => {
+  const b = e.target.closest('.wk-viewbtn');
   if (b) setView(b.dataset.view);
 });
 
-/* ── KANBAN: adicionar atividade + drag-and-drop ── */
-const kbEl = document.getElementById('fac-kanban');
+/* ── KANBAN: adicionar tarefa + drag-and-drop ── */
+const kbEl = document.getElementById('wk-kanban');
 
 kbEl.addEventListener('submit', e => {
   const form = e.target.closest('.kb-add');
   if (!form) return;
   e.preventDefault();
-  const subjId = Number(form.querySelector('.kb-add-subj').value);
+  const projId = Number(form.querySelector('.kb-add-proj').value);
   const tEl = form.querySelector('.kb-add-title');
   const title = tEl.value.trim();
-  if (!title || !subjId) { tEl.focus(); return; }
-  Store.addStudyActivity(subjId, { title, dueOn: form.querySelector('.kb-add-date').value || null });
+  if (!title || !projId) { tEl.focus(); return; }
+  Store.addWorkTask(projId, { title, dueOn: form.querySelector('.kb-add-date').value || null });
   render();
   const again = kbEl.querySelector('.kb-add-title');
   if (again) again.focus();
@@ -988,114 +989,114 @@ kbEl.addEventListener('click', e => {
     if (!d.active) return;
     const under = document.elementFromPoint(e.clientX, e.clientY);
     const col = under && under.closest('.kb-col');
-    if (col && col.dataset.status) Store.setStudyStatus(d.id, col.dataset.status);
+    if (col && col.dataset.status) Store.setWorkTaskStatus(d.id, col.dataset.status);
     render();
   }
   kbEl.addEventListener('pointerup', finish);
   kbEl.addEventListener('pointercancel', finish);
 })();
 
-/* ── modal editar atividade ── */
+/* ── modal editar tarefa ── */
 let editingId = null;
 let editStatus = 'a_fazer';
-function _setFmStatus(s) {
+function _setWtmStatus(s) {
   editStatus = s;
-  document.querySelectorAll('#fm-status button').forEach(b => b.classList.toggle('active', b.dataset.s === s));
+  document.querySelectorAll('#wtm-status button').forEach(b => b.classList.toggle('active', b.dataset.s === s));
 }
-document.getElementById('fm-status').addEventListener('click', e => {
+document.getElementById('wtm-status').addEventListener('click', e => {
   const b = e.target.closest('button[data-s]');
-  if (b) _setFmStatus(b.dataset.s);
+  if (b) _setWtmStatus(b.dataset.s);
 });
 function openEdit(id) {
-  const a = Store.getStudyActivities().find(x => x.id === id);
-  if (!a) return;
+  const t = Store.getWorkTasks().find(x => x.id === id);
+  if (!t) return;
   editingId = id;
-  document.getElementById('fm-title').value = a.title;
-  document.getElementById('fm-date').value = a.dueOn || '';
-  document.getElementById('fm-link').value = a.link || '';
-  document.getElementById('fm-notes').value = a.notes || '';
-  _setFmStatus(a.status || (a.done ? 'entregue' : 'a_fazer'));
-  document.getElementById('fac-modal').classList.add('open');
-  setTimeout(() => document.getElementById('fm-title').focus(), 50);
+  document.getElementById('wtm-title').value = t.title;
+  document.getElementById('wtm-date').value = t.dueOn || '';
+  document.getElementById('wtm-link').value = t.link || '';
+  document.getElementById('wtm-notes').value = t.notes || '';
+  _setWtmStatus(t.status || (t.done ? 'entregue' : 'a_fazer'));
+  document.getElementById('wk-task-modal').classList.add('open');
+  setTimeout(() => document.getElementById('wtm-title').focus(), 50);
 }
 function closeEdit() {
-  document.getElementById('fac-modal').classList.remove('open');
+  document.getElementById('wk-task-modal').classList.remove('open');
   editingId = null;
 }
-document.getElementById('fm-save').addEventListener('click', () => {
+document.getElementById('wtm-save').addEventListener('click', () => {
   if (editingId == null) return;
-  const title = document.getElementById('fm-title').value.trim();
-  if (!title) { document.getElementById('fm-title').focus(); return; }
-  Store.updateStudyActivity(editingId, {
+  const title = document.getElementById('wtm-title').value.trim();
+  if (!title) { document.getElementById('wtm-title').focus(); return; }
+  Store.updateWorkTask(editingId, {
     title,
-    dueOn: document.getElementById('fm-date').value || null,
-    link:  document.getElementById('fm-link').value.trim() || null,
-    notes: document.getElementById('fm-notes').value.trim() || null,
+    dueOn: document.getElementById('wtm-date').value || null,
+    link:  document.getElementById('wtm-link').value.trim() || null,
+    notes: document.getElementById('wtm-notes').value.trim() || null,
   });
-  Store.setStudyStatus(editingId, editStatus);
+  Store.setWorkTaskStatus(editingId, editStatus);
   closeEdit();
   render();
 });
-document.getElementById('fm-del').addEventListener('click', () => {
+document.getElementById('wtm-del').addEventListener('click', () => {
   if (editingId == null) return;
   const id = editingId;
-  const a = Store.getStudyActivities().find(x => x.id === id);
-  if (!a) return;
-  const snapshot = { ...a };
-  Store.deleteStudyActivity(id);
+  const t = Store.getWorkTasks().find(x => x.id === id);
+  if (!t) return;
+  const snapshot = { ...t };
+  Store.deleteWorkTask(id);
   closeEdit();
   render();
   window.p90toastUndo(`"${snapshot.title}" excluída`, () => {
-    const na = Store.addStudyActivity(snapshot.subjectId, { title: snapshot.title, dueOn: snapshot.dueOn, link: snapshot.link, notes: snapshot.notes });
-    if (na) Store.setStudyStatus(na.id, snapshot.status);
+    const nt = Store.addWorkTask(snapshot.projectId, { title: snapshot.title, dueOn: snapshot.dueOn, link: snapshot.link, notes: snapshot.notes });
+    if (nt) Store.setWorkTaskStatus(nt.id, snapshot.status);
     render();
   });
 });
-document.getElementById('fac-modal').addEventListener('click', e => {
+document.getElementById('wk-task-modal').addEventListener('click', e => {
   if (e.target === e.currentTarget) closeEdit();
 });
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape' && document.getElementById('fac-modal').classList.contains('open')) closeEdit();
+  if (e.key === 'Escape' && document.getElementById('wk-task-modal').classList.contains('open')) closeEdit();
 });
 
-/* ── rail + modal de disciplina ── */
-document.getElementById('fac-rail-list').addEventListener('click', e => {
-  const item = e.target.closest('.fac-rail-item');
-  if (item) openSubjModal(Number(item.dataset.subj));
+/* ── rail + modal de projeto ── */
+document.getElementById('wk-rail-list').addEventListener('click', e => {
+  const item = e.target.closest('.wk-rail-item');
+  if (item) openProjModal(Number(item.dataset.proj));
 });
 
-document.getElementById('fsm-list').addEventListener('click', e => {
-  if (e.target.closest('.fsm-link')) return;
-  const row = e.target.closest('.fsm-row');
+document.getElementById('wpm-list').addEventListener('click', e => {
+  if (e.target.closest('.wpm-link')) return;
+  const row = e.target.closest('.wpm-row');
   if (!row) return;
   const id = Number(row.dataset.id);
   if (e.target.closest('[data-act="check"]')) {
-    Store.toggleStudyDone(id);
+    Store.toggleWorkTaskDone(id);
     render();
   } else if (e.target.closest('[data-act="edit"]')) {
-    closeSubjModal();
+    closeProjModal();
     openEdit(id);
   }
 });
 
-document.getElementById('fsm-add').addEventListener('submit', e => {
+document.getElementById('wpm-add').addEventListener('submit', e => {
   e.preventDefault();
-  if (subjModalId == null) return;
-  const tEl = document.getElementById('fsm-add-title');
+  if (projModalId == null) return;
+  const tEl = document.getElementById('wpm-add-title');
   const title = tEl.value.trim();
   if (!title) { tEl.focus(); return; }
-  Store.addStudyActivity(subjModalId, { title, dueOn: document.getElementById('fsm-add-date').value || null });
-  tEl.value = ''; document.getElementById('fsm-add-date').value = '';
+  Store.addWorkTask(projModalId, { title, dueOn: document.getElementById('wpm-add-date').value || null });
+  tEl.value = ''; document.getElementById('wpm-add-date').value = '';
   render();
   tEl.focus();
 });
 
-document.getElementById('fsm-close').addEventListener('click', closeSubjModal);
-document.getElementById('fac-subj-modal').addEventListener('click', e => {
-  if (e.target === e.currentTarget) closeSubjModal();
+document.getElementById('wpm-close').addEventListener('click', closeProjModal);
+document.getElementById('wk-proj-modal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeProjModal();
 });
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape' && document.getElementById('fac-subj-modal').classList.contains('open')) closeSubjModal();
+  if (e.key === 'Escape' && document.getElementById('wk-proj-modal').classList.contains('open')) closeProjModal();
 });
 
 function init() { initSidebar(); render(); }
