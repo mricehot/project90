@@ -403,6 +403,8 @@ const Store = (() => {
           rating: b.rating != null ? parseInt(b.rating, 10) : null,
           currentPage: parseInt(b.currentPage, 10) || 0,
           totalPages: b.totalPages != null ? (parseInt(b.totalPages, 10) || null) : null,
+          progressMode: b.progressMode === 'percent' ? 'percent' : 'pages',
+          progressPct: b.progressPct != null ? Math.min(100, Math.max(0, parseInt(b.progressPct, 10) || 0)) : null,
           notes: b.notes || '',
           startedOn: b.startedOn ? String(b.startedOn).slice(0, 10) : null,
           finishedOn: b.finishedOn ? String(b.finishedOn).slice(0, 10) : null,
@@ -4202,6 +4204,7 @@ const Store = (() => {
   function addLibBook(f) {
     const status = (f.status === 'lendo' || f.status === 'lido') ? f.status : 'quero_ler';
     const today = _localDate(0);
+    const progressMode = f.progressMode === 'percent' ? 'percent' : 'pages';
     const row = {
       id: _libNextId(cache.library.books),
       title: (f.title || '').trim(),
@@ -4210,19 +4213,23 @@ const Store = (() => {
       coverUrl: (f.coverUrl || '').trim(),
       status,
       rating: f.rating != null ? Math.min(5, Math.max(1, parseInt(f.rating, 10) || 0)) || null : null,
-      currentPage: Math.max(0, parseInt(f.currentPage, 10) || 0),
-      totalPages: f.totalPages != null ? (Math.max(0, parseInt(f.totalPages, 10)) || null) : null,
+      currentPage: progressMode === 'pages' ? Math.max(0, parseInt(f.currentPage, 10) || 0) : 0,
+      totalPages: progressMode === 'pages' && f.totalPages != null ? (Math.max(0, parseInt(f.totalPages, 10)) || null) : null,
+      progressMode,
+      progressPct: progressMode === 'percent' ? Math.min(100, Math.max(0, parseInt(f.progressPct, 10) || 0)) : null,
       notes: f.notes || '',
       startedOn: status !== 'quero_ler' ? (f.startedOn || today) : null,
       finishedOn: status === 'lido' ? (f.finishedOn || today) : null,
       createdAt: new Date().toISOString(),
     };
+    if (status === 'lido' && progressMode === 'percent') row.progressPct = 100;
     cache.library.books.unshift(row);
     _saveMirror();
     _libPush('lib_books', {
       id: row.id, user_id: _uid, title: row.title, author: row.author, genre: row.genre || null,
       cover_url: row.coverUrl || null,
       status: row.status, rating: row.rating, current_page: row.currentPage, total_pages: row.totalPages,
+      progress_mode: row.progressMode, progress_pct: row.progressPct,
       notes: row.notes || null, started_on: row.startedOn, finished_on: row.finishedOn, created_at: row.createdAt,
     });
     return row;
@@ -4236,15 +4243,23 @@ const Store = (() => {
     if (patch.genre != null)       b.genre = patch.genre;
     if (patch.coverUrl != null)    b.coverUrl = String(patch.coverUrl).trim();
     if (patch.rating !== undefined) b.rating = patch.rating != null ? Math.min(5, Math.max(1, parseInt(patch.rating, 10) || 0)) || null : null;
-    if (patch.currentPage != null) b.currentPage = Math.max(0, parseInt(patch.currentPage, 10) || 0);
-    if (patch.totalPages !== undefined) b.totalPages = patch.totalPages != null ? (Math.max(0, parseInt(patch.totalPages, 10)) || null) : null;
+    if (patch.progressMode != null) b.progressMode = patch.progressMode === 'percent' ? 'percent' : 'pages';
+    if (b.progressMode === 'percent') {
+      if (patch.progressPct !== undefined) b.progressPct = patch.progressPct != null ? Math.min(100, Math.max(0, parseInt(patch.progressPct, 10) || 0)) : null;
+      b.currentPage = 0; b.totalPages = null;
+    } else {
+      if (patch.currentPage != null) b.currentPage = Math.max(0, parseInt(patch.currentPage, 10) || 0);
+      if (patch.totalPages !== undefined) b.totalPages = patch.totalPages != null ? (Math.max(0, parseInt(patch.totalPages, 10)) || null) : null;
+      b.progressPct = null;
+    }
     if (patch.notes != null)       b.notes = patch.notes;
     if (patch.status != null && patch.status !== b.status) setLibStatus(id, patch.status, true);
     _saveMirror();
     _push(async () => {
       const { error } = await window.sb.from('lib_books').update({
         title: b.title, author: b.author, genre: b.genre || null, cover_url: b.coverUrl || null, rating: b.rating,
-        current_page: b.currentPage, total_pages: b.totalPages, notes: b.notes || null,
+        current_page: b.currentPage, total_pages: b.totalPages,
+        progress_mode: b.progressMode, progress_pct: b.progressPct, notes: b.notes || null,
         started_on: b.startedOn, finished_on: b.finishedOn, status: b.status,
       }).eq('user_id', _uid).eq('id', id);
       if (error) throw error;
@@ -4252,8 +4267,9 @@ const Store = (() => {
     return b;
   }
 
-  // Muda o status e ajusta datas/página automaticamente: "lendo" grava início
-  // (se ainda não tinha), "lido" grava fim e completa a página atual.
+  // Muda o status e ajusta datas/página (ou porcentagem) automaticamente:
+  // "lendo" grava início (se ainda não tinha), "lido" grava fim e completa
+  // o progresso — página atual = total, ou porcentagem = 100.
   function setLibStatus(id, status, _skipSave) {
     const b = cache.library.books.find(x => x.id === id);
     if (!b || (b.status === status && !_skipSave)) return;
@@ -4262,7 +4278,8 @@ const Store = (() => {
     if (status !== 'quero_ler' && !b.startedOn) b.startedOn = today;
     if (status === 'lido') {
       if (!b.finishedOn) b.finishedOn = today;
-      if (b.totalPages) b.currentPage = b.totalPages;
+      if (b.progressMode === 'percent') b.progressPct = 100;
+      else if (b.totalPages) b.currentPage = b.totalPages;
     } else {
       b.finishedOn = null;
     }
@@ -4270,7 +4287,8 @@ const Store = (() => {
       _saveMirror();
       _push(async () => {
         const { error } = await window.sb.from('lib_books').update({
-          status: b.status, started_on: b.startedOn, finished_on: b.finishedOn, current_page: b.currentPage,
+          status: b.status, started_on: b.startedOn, finished_on: b.finishedOn,
+          current_page: b.currentPage, progress_pct: b.progressPct,
         }).eq('user_id', _uid).eq('id', id);
         if (error) throw error;
       });
