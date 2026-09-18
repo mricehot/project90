@@ -84,6 +84,55 @@
 .stat-val { font-family: 'Bebas Neue', sans-serif; font-size: 38px; line-height: 1; }
 .stat-val.warn { color: var(--red); }
 
+/* ── LEMBRETES ──
+   Nota visível ligada (opcionalmente) a uma tarefa — sem horário, sem
+   notificação. "Resolver" é excluir (com desfazer), por isso a linha
+   soma uma animação de saída antes de sumir de vez — mesma ideia do
+   .tsk-card.leaving em Tarefas. */
+.wk-rem-empty { font-size: 13px; color: var(--mid); line-height: 1.7; padding: 4px 0; }
+.wk-rem-row {
+  display: flex; align-items: flex-start; gap: 12px; padding: 10px 2px; border-bottom: 1px solid var(--border);
+  transition: opacity 0.22s, transform 0.22s;
+}
+.wk-rem-row:last-of-type { border-bottom: none; }
+.wk-rem-row.leaving { opacity: 0; transform: translateX(10px); }
+.wk-rem-check {
+  width: 18px; height: 18px; margin-top: 1px; border: 1px solid var(--border2); flex-shrink: 0; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; font-size: 12px; color: var(--white);
+  transition: background 0.15s, border-color 0.15s;
+}
+.wk-rem-check:hover { border-color: rgba(245,245,240,0.4); }
+.wk-rem-body { flex: 1; min-width: 0; }
+.wk-rem-text { font-size: 13px; line-height: 1.5; color: var(--white); }
+.wk-rem-link {
+  display: inline-flex; align-items: center; gap: 5px; margin-top: 6px; max-width: 100%;
+  background: var(--surface2); border: 1px solid var(--border); color: var(--mid);
+  font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.02em; padding: 4px 9px;
+  cursor: pointer; transition: color 0.15s, border-color 0.15s; overflow: hidden;
+  white-space: nowrap; text-overflow: ellipsis;
+}
+.wk-rem-link:hover { color: var(--white); border-color: rgba(245,245,240,0.3); }
+.wk-rem-add { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+.wk-rem-add input {
+  flex: 1; min-width: 160px; background: var(--surface2); border: 1px solid var(--border); color: var(--white);
+  font-family: 'DM Mono', monospace; font-size: 13px; letter-spacing: 0.02em; padding: 10px 14px;
+  outline: none; transition: border-color 0.2s;
+}
+.wk-rem-add input:focus { border-color: rgba(245,245,240,0.35); }
+.wk-rem-add input::placeholder { color: var(--mid); }
+.wk-rem-add select {
+  background: var(--surface2); border: 1px solid var(--border); color: var(--white);
+  font-family: 'DM Mono', monospace; font-size: 12px; padding: 0 10px; outline: none;
+  max-width: 220px; appearance: none; cursor: pointer; transition: border-color 0.2s;
+}
+.wk-rem-add select:focus { border-color: rgba(245,245,240,0.35); }
+.wk-rem-add button {
+  background: none; border: 1px solid var(--border2); color: var(--mid); font-family: 'DM Mono', monospace;
+  font-size: 13px; letter-spacing: 0.1em; padding: 0 16px; cursor: pointer; transition: color 0.2s, border-color 0.2s;
+}
+.wk-rem-add button:hover { color: var(--white); border-color: rgba(245,245,240,0.35); }
+@media (max-width: 460px) { .wk-rem-add select { max-width: none; } }
+
 /* novo projeto */
 .wk-newproj { display: flex; gap: 10px; }
 .wk-newproj input {
@@ -423,6 +472,18 @@ textarea.modal-input { resize: vertical; min-height: 60px; line-height: 1.6; fon
         </div>
       </div>
 
+      <div class="card">
+        <div class="card-hd">
+          <div class="card-title">Lembretes</div>
+        </div>
+        <div id="wk-rem-list"></div>
+        <form class="wk-rem-add" id="wk-rem-add" autocomplete="off">
+          <input id="wk-rem-text" maxlength="200" placeholder="Novo lembrete" />
+          <select id="wk-rem-task" aria-label="Ligar a uma tarefa"></select>
+          <button type="submit">Adicionar</button>
+        </form>
+      </div>
+
       <form class="wk-newproj" id="newproj-form" autocomplete="off">
         <input id="newproj-input" maxlength="120" placeholder="Novo projeto — ex: Redesign do site" />
         <button type="submit" class="btn-sm primary">Adicionar</button>
@@ -615,9 +676,83 @@ function renderView() {
   document.getElementById('arch-wrap').style.display = v === 'lista' ? '' : 'none';
   renderStats();
   renderRail();
+  renderReminders();
   if (projModalId != null) renderProjModalList(projModalId);
   if (v === 'kanban') renderKanban(); else renderList();
 }
+
+/* ── LEMBRETES ──
+   Nota visível, opcionalmente ligada a uma tarefa. Some da lista quando
+   a tarefa ligada é marcada como entregue — calculado aqui no render, a
+   partir do estado atual da tarefa, não gravado no lembrete: se a tarefa
+   for desmarcada depois, o lembrete volta a aparecer sozinho. */
+function renderReminderTaskOptions() {
+  const sel = document.getElementById('wk-rem-task');
+  const cur = sel.value;
+  const projects = Store.getWorkProjects(false);
+  const opts = ['<option value="">Sem tarefa vinculada</option>'];
+  projects.forEach(p => {
+    const open = Store.getWorkTasks(p.id).filter(t => !t.done);
+    open.forEach(t => opts.push(`<option value="${t.id}">${esc(p.name)} · ${esc(t.title)}</option>`));
+  });
+  sel.innerHTML = opts.join('');
+  if ([...sel.options].some(o => o.value === cur)) sel.value = cur;
+}
+
+function renderReminders() {
+  renderReminderTaskOptions();
+  const listEl = document.getElementById('wk-rem-list');
+  const tasksById = new Map(Store.getWorkTasks().map(t => [t.id, t]));
+  const items = Store.getWorkReminders().filter(r => {
+    const t = r.taskId != null ? tasksById.get(r.taskId) : null;
+    return !(t && t.done);
+  });
+  if (!items.length) {
+    listEl.innerHTML = '<div class="wk-rem-empty">Nenhum lembrete. Adicione um abaixo.</div>';
+    return;
+  }
+  listEl.innerHTML = items.map(r => {
+    const t = r.taskId != null ? tasksById.get(r.taskId) : null;
+    const linkHTML = t
+      ? `<button type="button" class="wk-rem-link" data-act="jump" data-task="${t.id}" title="Abrir tarefa">↗ ${esc(Store.workProjectName(t.projectId))} · ${esc(t.title)}</button>`
+      : '';
+    return `<div class="wk-rem-row" data-id="${r.id}">
+      <div class="wk-rem-check" data-act="resolve" title="Resolver">✓</div>
+      <div class="wk-rem-body">
+        <div class="wk-rem-text">${esc(r.text)}</div>
+        ${linkHTML}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+document.getElementById('wk-rem-add').addEventListener('submit', e => {
+  e.preventDefault();
+  const tEl = document.getElementById('wk-rem-text');
+  const text = tEl.value.trim();
+  if (!text) { tEl.focus(); return; }
+  const taskSel = document.getElementById('wk-rem-task').value;
+  Store.addWorkReminder(text, taskSel ? Number(taskSel) : null);
+  tEl.value = '';
+  document.getElementById('wk-rem-task').value = '';
+  renderReminders();
+  tEl.focus();
+});
+
+document.getElementById('wk-rem-list').addEventListener('click', e => {
+  const jumpBtn = e.target.closest('[data-act="jump"]');
+  if (jumpBtn) { openEdit(Number(jumpBtn.dataset.task)); return; }
+  const checkBtn = e.target.closest('[data-act="resolve"]');
+  if (!checkBtn) return;
+  const row = checkBtn.closest('.wk-rem-row');
+  const id = Number(row.dataset.id);
+  row.classList.add('leaving');
+  setTimeout(() => {
+    const removed = Store.deleteWorkReminder(id);
+    renderReminders();
+    if (removed) window.p90toastUndo('Lembrete resolvido', () => { Store.restoreWorkReminder(removed); renderReminders(); });
+  }, 220);
+});
 
 /* ── RAIL DIREITA — lista de projetos ── */
 function projCounts(projId) {
