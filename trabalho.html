@@ -139,8 +139,9 @@
 }
 
 /* tarefa */
-.wk-task { display: flex; align-items: center; gap: 12px; padding: 10px 2px; border-bottom: 1px solid var(--border); }
+.wk-task { padding: 10px 2px; border-bottom: 1px solid var(--border); }
 .wk-task:last-of-type { border-bottom: none; }
+.wk-task-row { display: flex; align-items: center; gap: 12px; }
 .wk-check {
   width: 18px; height: 18px; border: 1px solid var(--border2); flex-shrink: 0; cursor: pointer;
   display: flex; align-items: center; justify-content: center; font-size: 12px; color: var(--white);
@@ -167,6 +168,53 @@
 .wk-task-link:hover { color: var(--white); }
 
 .wk-empty { font-size: 13px; color: var(--mid); line-height: 1.7; padding: 8px 0; }
+
+/* ── CHECKLIST DE FUROS (portado do BlastHole Manager) ──
+   Furo é marcável em dois eixos independentes — perfilado e topografado —
+   mais metragem opcional. Sem total fixo: adicionados aos poucos por
+   faixa (de/até), conforme o trabalho avança. Só na visão em lista. */
+.wk-hole-badges { display: flex; gap: 8px; margin-top: 5px; flex-wrap: wrap; }
+.wk-hole-badge {
+  font-size: 10px; letter-spacing: 0.06em; color: var(--mid); border: 1px solid var(--border2);
+  padding: 2px 7px; white-space: nowrap;
+}
+.wk-hole-badge.done { color: var(--green); border-color: rgba(134,239,172,0.35); }
+.wk-holes-body { margin: 12px 0 2px 30px; border-left: 1px solid var(--border); padding-left: 16px; }
+.wk-holes-add { display: flex; gap: 6px; margin-bottom: 10px; }
+.wk-holes-add input {
+  background: var(--surface2); border: 1px solid var(--border); color: var(--white);
+  font-family: 'DM Mono', monospace; font-size: 12px; padding: 7px 9px; outline: none;
+  width: 96px; transition: border-color 0.2s;
+}
+.wk-holes-add input:focus { border-color: rgba(245,245,240,0.35); }
+.wk-holes-add input::placeholder { color: var(--mid); }
+.wk-holes-add button {
+  background: none; border: 1px solid var(--border2); color: var(--mid); font-family: 'DM Mono', monospace;
+  font-size: 12px; letter-spacing: 0.06em; padding: 0 12px; cursor: pointer; transition: color 0.2s, border-color 0.2s;
+}
+.wk-holes-add button:hover { color: var(--white); border-color: rgba(245,245,240,0.35); }
+.wk-holes-empty { font-size: 12px; color: var(--mid); padding: 4px 0 10px; }
+.wk-holes-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+.wk-holes-table th {
+  font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--mid); text-align: left;
+  padding: 0 8px 6px 0; font-weight: 400;
+}
+.wk-holes-table td { padding: 5px 8px 5px 0; font-size: 12px; color: var(--white); border-bottom: 1px solid var(--border); }
+.wk-holes-table tr:last-child td { border-bottom: none; }
+.wk-holes-table tr.done td:first-child { color: var(--mid); text-decoration: line-through; }
+.wk-holes-table input[type="checkbox"] { accent-color: var(--white); width: 14px; height: 14px; cursor: pointer; }
+.wk-holes-meters {
+  width: 64px; background: var(--surface2); border: 1px solid var(--border); color: var(--white);
+  font-family: 'DM Mono', monospace; font-size: 12px; padding: 4px 6px; outline: none;
+}
+.wk-holes-meters:focus { border-color: rgba(245,245,240,0.35); }
+.wk-holes-table button { background: none; border: none; color: var(--mid); font-size: 12px; cursor: pointer; padding: 2px 5px; }
+.wk-holes-table button:hover { color: var(--white); }
+@media (max-width: 720px) {
+  .wk-holes-body { margin-left: 0; padding-left: 12px; }
+  .wk-holes-add { flex-wrap: wrap; }
+  .wk-holes-table { display: block; overflow-x: auto; }
+}
 
 /* quick-add */
 .wk-qa { display: flex; gap: 8px; margin-top: 10px; }
@@ -510,6 +558,44 @@ function saveCollapsed(set) {
   try { localStorage.setItem(CKEY, JSON.stringify([...set])); } catch (e) {}
 }
 
+/* ── checklist de furos — expandido é só de sessão, não persiste (mesmo
+   comportamento do BlastHole Manager: some ao recarregar a página) ── */
+const holesExpanded = new Set();
+function holesBadgesHTML(taskId) {
+  const p = Store.workHoleProgress(taskId);
+  if (!p.total) return '';
+  const profCls = p.profiled === p.total ? 'done' : '';
+  const survCls = p.surveyed === p.total ? 'done' : '';
+  return `<div class="wk-hole-badges">
+    <span class="wk-hole-badge ${profCls}">${p.profiled}/${p.total} perfilado${p.total === 1 ? '' : 's'}</span>
+    <span class="wk-hole-badge ${survCls}">${p.surveyed}/${p.total} topografado${p.total === 1 ? '' : 's'}</span>
+  </div>`;
+}
+function holesBodyHTML(taskId) {
+  const holes = Store.getWorkTaskHoles(taskId);
+  const rows = holes.length ? `<table class="wk-holes-table">
+    <thead><tr><th>Furo</th><th>Perfilado</th><th>Topografado</th><th>Metros</th><th></th></tr></thead>
+    <tbody>
+      ${holes.map(h => `
+        <tr class="${h.profiled ? 'done' : ''}">
+          <td>F${h.number}</td>
+          <td><input type="checkbox" ${h.profiled ? 'checked' : ''} data-act="holeprof" data-hole="${h.id}" title="perfilado"></td>
+          <td><input type="checkbox" ${h.surveyed ? 'checked' : ''} data-act="holesurv" data-hole="${h.id}" title="topografado"></td>
+          <td><input type="text" inputmode="decimal" class="wk-holes-meters" value="${h.meters != null ? h.meters : ''}" placeholder="0.0" data-act="holemeters" data-hole="${h.id}"></td>
+          <td><button type="button" data-act="holedel" data-hole="${h.id}" title="Remover">✕</button></td>
+        </tr>`).join('')}
+    </tbody>
+  </table>` : '<div class="wk-holes-empty">Nenhum furo ainda.</div>';
+  return `<div class="wk-holes-body">
+    <div class="wk-holes-add">
+      <input type="text" inputmode="numeric" placeholder="de" class="wk-holes-de">
+      <input type="text" inputmode="numeric" placeholder="até (opcional)" class="wk-holes-ate">
+      <button type="button" data-act="addholes">+ Adicionar furos</button>
+    </div>
+    ${rows}
+  </div>`;
+}
+
 /* ── visão ativa (lista | kanban) ── */
 const VKEY = 'p90_wk_view';
 function curView() {
@@ -689,16 +775,21 @@ function renderList() {
         ? `<span class="rel-fazendo">fazendo</span>${t.dueOn ? ' · ' + relLabel(t) : ''}`
         : relLabel(t);
       return `<div class="wk-task ${t.done ? 'done' : ''}" data-id="${t.id}">
-        <div class="wk-check" data-act="check" title="${t.done ? 'Desmarcar' : 'Marcar entregue'}">${t.done ? '✓' : ''}</div>
-        <div class="wk-task-body">
-          <div class="wk-task-title">${esc(t.title)}</div>
-          <div class="wk-task-due">${t.dueOn ? fmtDue(t.dueOn) + ' · ' : ''}${rel}</div>
+        <div class="wk-task-row">
+          <div class="wk-check" data-act="check" title="${t.done ? 'Desmarcar' : 'Marcar entregue'}">${t.done ? '✓' : ''}</div>
+          <div class="wk-task-body">
+            <div class="wk-task-title">${esc(t.title)}</div>
+            <div class="wk-task-due">${t.dueOn ? fmtDue(t.dueOn) + ' · ' : ''}${rel}</div>
+            ${holesBadgesHTML(t.id)}
+          </div>
+          <div class="wk-task-tools">
+            ${linkIcon(t, 'wk-task-link')}
+            <button data-act="holes" title="Furos">⛏</button>
+            <button data-act="edit" title="Editar">✎</button>
+            <button data-act="del" title="Excluir">✕</button>
+          </div>
         </div>
-        <div class="wk-task-tools">
-          ${linkIcon(t, 'wk-task-link')}
-          <button data-act="edit" title="Editar">✎</button>
-          <button data-act="del" title="Excluir">✕</button>
-        </div>
+        ${holesExpanded.has(t.id) ? holesBodyHTML(t.id) : ''}
       </div>`;
     };
 
@@ -836,7 +927,37 @@ listEl.addEventListener('click', e => {
     openEdit(taskId);
   } else if (act === 'del') {
     removeTask(taskId);
+  } else if (act === 'holes') {
+    if (holesExpanded.has(taskId)) holesExpanded.delete(taskId); else holesExpanded.add(taskId);
+    render();
+  } else if (act === 'addholes') {
+    const wrap = taskEl.querySelector('.wk-holes-add');
+    const de = wrap.querySelector('.wk-holes-de').value;
+    const ate = wrap.querySelector('.wk-holes-ate').value;
+    const res = Store.addWorkTaskHoles(taskId, de, ate);
+    if (res.error === 'range') toast('Preencha o número (ou a faixa) do furo');
+    else if (res.error === 'toobig') toast('Faixa grande demais pra adicionar de uma vez (máximo 200)');
+    else if (res.added === 0) toast('Nada adicionado — todos já estavam no checklist dessa tarefa');
+    else toast(`${res.added} furo${res.added === 1 ? '' : 's'} adicionado${res.added === 1 ? '' : 's'}` + (res.duplicated ? ` (${res.duplicated} já existia${res.duplicated === 1 ? '' : 'm'})` : ''));
+    render();
+  } else if (act === 'holeprof') {
+    Store.toggleWorkHoleProfiled(Number(btn.dataset.hole));
+    render();
+  } else if (act === 'holesurv') {
+    Store.toggleWorkHoleSurveyed(Number(btn.dataset.hole));
+    render();
+  } else if (act === 'holedel') {
+    const removed = Store.deleteWorkTaskHole(Number(btn.dataset.hole));
+    render();
+    if (removed) window.p90toastUndo(`Furo F${removed.number} removido`, () => { Store.restoreWorkTaskHole(removed, removed.taskId); render(); });
   }
+});
+
+listEl.addEventListener('change', e => {
+  const el = e.target.closest('[data-act="holemeters"]');
+  if (!el) return;
+  Store.setWorkHoleMeters(Number(el.dataset.hole), el.value);
+  render();
 });
 
 listEl.addEventListener('submit', e => {
@@ -879,7 +1000,7 @@ function startRename(projEl, projId) {
 function removeProject(projId) {
   const p = Store.getWorkProjects(true).find(x => x.id === projId);
   if (!p) return;
-  const tasks = Store.getWorkTasks(projId).map(t => ({ ...t }));
+  const tasks = Store.getWorkTasks(projId).map(t => ({ ...t, _holes: Store.getWorkTaskHoles(t.id).map(h => ({ ...h })) }));
   const n = tasks.length;
   Store.deleteWorkProject(projId);
   render();
@@ -890,7 +1011,10 @@ function removeProject(projId) {
       if (p.archived) Store.setWorkProjectArchived(newProj.id, true);
       tasks.forEach(t => {
         const nt = Store.addWorkTask(newProj.id, { title: t.title, dueOn: t.dueOn, link: t.link, notes: t.notes });
-        if (nt) Store.setWorkTaskStatus(nt.id, t.status);
+        if (nt) {
+          Store.setWorkTaskStatus(nt.id, t.status);
+          t._holes.forEach(h => Store.restoreWorkTaskHole(h, nt.id));
+        }
       });
       render();
     }
@@ -901,11 +1025,15 @@ function removeTask(taskId) {
   const t = Store.getWorkTasks().find(x => x.id === taskId);
   if (!t) return;
   const snapshot = { ...t };
+  const holes = Store.getWorkTaskHoles(taskId).map(h => ({ ...h }));
   Store.deleteWorkTask(taskId);
   render();
   window.p90toastUndo(`"${snapshot.title}" excluída`, () => {
     const nt = Store.addWorkTask(snapshot.projectId, { title: snapshot.title, dueOn: snapshot.dueOn, link: snapshot.link, notes: snapshot.notes });
-    if (nt) Store.setWorkTaskStatus(nt.id, snapshot.status);
+    if (nt) {
+      Store.setWorkTaskStatus(nt.id, snapshot.status);
+      holes.forEach(h => Store.restoreWorkTaskHole(h, nt.id));
+    }
     render();
   });
 }
@@ -1043,12 +1171,16 @@ document.getElementById('wtm-del').addEventListener('click', () => {
   const t = Store.getWorkTasks().find(x => x.id === id);
   if (!t) return;
   const snapshot = { ...t };
+  const holes = Store.getWorkTaskHoles(id).map(h => ({ ...h }));
   Store.deleteWorkTask(id);
   closeEdit();
   render();
   window.p90toastUndo(`"${snapshot.title}" excluída`, () => {
     const nt = Store.addWorkTask(snapshot.projectId, { title: snapshot.title, dueOn: snapshot.dueOn, link: snapshot.link, notes: snapshot.notes });
-    if (nt) Store.setWorkTaskStatus(nt.id, snapshot.status);
+    if (nt) {
+      Store.setWorkTaskStatus(nt.id, snapshot.status);
+      holes.forEach(h => Store.restoreWorkTaskHole(h, nt.id));
+    }
     render();
   });
 });

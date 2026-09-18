@@ -79,6 +79,7 @@ const Store = (() => {
       conversationTipsRead: {}, // { [tipIdx]: readDay } — Dicção/Conversação
       workProjects: [],
       workTasks:    [],
+      workTaskHoles: [],
     };
   }
 
@@ -457,6 +458,16 @@ const Store = (() => {
           createdAt: t.createdAt,
         });
       });
+    }
+    if (Array.isArray(data.workTaskHoles)) {
+      cache.workTaskHoles.length = 0;
+      data.workTaskHoles.forEach(h => cache.workTaskHoles.push({
+        id: h.id, taskId: h.taskId, number: h.number,
+        profiled: !!h.profiled, surveyed: !!h.surveyed,
+        meters: h.meters != null ? Number(h.meters) : null,
+        profiledAt: h.profiledAt || null, surveyedAt: h.surveyedAt || null,
+        createdAt: h.createdAt,
+      }));
     }
   }
 
@@ -3002,12 +3013,21 @@ const Store = (() => {
   function deleteWorkProject(id) {
     const pi = cache.workProjects.findIndex(p => p.id === id);
     if (pi !== -1) cache.workProjects.splice(pi, 1);
+    const taskIds = [];
     let removed = 0;
     for (let i = cache.workTasks.length - 1; i >= 0; i--) {
-      if (cache.workTasks[i].projectId === id) { cache.workTasks.splice(i, 1); removed++; }
+      if (cache.workTasks[i].projectId === id) { taskIds.push(cache.workTasks[i].id); cache.workTasks.splice(i, 1); removed++; }
+    }
+    for (let i = cache.workTaskHoles.length - 1; i >= 0; i--) {
+      if (taskIds.indexOf(cache.workTaskHoles[i].taskId) !== -1) cache.workTaskHoles.splice(i, 1);
     }
     _saveMirror();
     _push(async () => {
+      if (taskIds.length) {
+        const { error: e0 } = await window.sb.from('work_task_holes')
+          .delete().eq('user_id', _uid).in('task_id', taskIds);
+        if (e0) throw e0;
+      }
       if (removed) {
         const { error: e1 } = await window.sb.from('work_tasks')
           .delete().eq('user_id', _uid).eq('project_id', id);
@@ -3097,8 +3117,17 @@ const Store = (() => {
   function deleteWorkTask(id) {
     const i = cache.workTasks.findIndex(t => t.id === id);
     if (i !== -1) cache.workTasks.splice(i, 1);
+    let removedHoles = false;
+    for (let j = cache.workTaskHoles.length - 1; j >= 0; j--) {
+      if (cache.workTaskHoles[j].taskId === id) { cache.workTaskHoles.splice(j, 1); removedHoles = true; }
+    }
     _saveMirror();
     _push(async () => {
+      if (removedHoles) {
+        const { error: e0 } = await window.sb.from('work_task_holes')
+          .delete().eq('user_id', _uid).eq('task_id', id);
+        if (e0) throw e0;
+      }
       const { error } = await window.sb.from('work_tasks')
         .delete().eq('user_id', _uid).eq('id', id);
       if (error) throw error;
@@ -3133,6 +3162,123 @@ const Store = (() => {
     overdue.sort(_workTaskSort);
     soon.sort(_workTaskSort);
     return { overdue, soon };
+  }
+
+  /* ──────────────────────────────────────────
+     TRABALHO — checklist de furos por tarefa (portado do BlastHole Manager,
+     projeto irmão do usuário: furo é marcável em dois eixos independentes —
+     perfilado e topografado — mais uma metragem opcional. Sem "total" fixo:
+     os furos são adicionados aos poucos, por faixa (de/até).
+       cache.workTaskHoles: [{ id, taskId, number, profiled, surveyed, meters, profiledAt, surveyedAt, createdAt }]
+  ────────────────────────────────────────── */
+  function _pushWorkHole(h) {
+    _push(async () => {
+      const { error } = await window.sb.from('work_task_holes').upsert({
+        user_id: _uid, id: h.id, task_id: h.taskId, number: h.number,
+        profiled: !!h.profiled, surveyed: !!h.surveyed, meters: h.meters,
+        profiled_at: h.profiledAt || null, surveyed_at: h.surveyedAt || null,
+        created_at: h.createdAt,
+      }, { onConflict: 'user_id,id' });
+      if (error) throw error;
+    });
+  }
+
+  function getWorkTaskHoles(taskId) {
+    return cache.workTaskHoles
+      .filter(h => h.taskId === taskId)
+      .slice()
+      .sort((a, b) => a.number - b.number);
+  }
+
+  // Progresso de furos de uma tarefa — { profiled, surveyed, total }.
+  function workHoleProgress(taskId) {
+    const holes = getWorkTaskHoles(taskId);
+    return {
+      total: holes.length,
+      profiled: holes.filter(h => h.profiled).length,
+      surveyed: holes.filter(h => h.surveyed).length,
+    };
+  }
+
+  // Adiciona furos por faixa (de/até), pulando os que já existem nessa
+  // tarefa. Espelha adicionarFurosAoChecklist() do BlastHole Manager —
+  // mesmo limite de 200 por chamada, mesmo retorno {added, duplicated}
+  // pra UI poder avisar o que aconteceu.
+  function addWorkTaskHoles(taskId, from, to) {
+    const de = Number(from);
+    const ate = to == null || to === '' ? de : Number(to);
+    if (!Number.isFinite(de) || !Number.isFinite(ate) || ate < de) return { added: 0, duplicated: 0, error: 'range' };
+    if (ate - de > 200) return { added: 0, duplicated: 0, error: 'toobig' };
+
+    let added = 0, duplicated = 0;
+    for (let n = de; n <= ate; n++) {
+      const exists = cache.workTaskHoles.some(h => h.taskId === taskId && h.number === n);
+      if (exists) { duplicated++; continue; }
+      const id = (cache.workTaskHoles.reduce((m, h) => Math.max(m, h.id), 0) || 0) + 1;
+      const h = {
+        id, taskId, number: n, profiled: false, surveyed: false, meters: null,
+        profiledAt: null, surveyedAt: null, createdAt: new Date().toISOString(),
+      };
+      cache.workTaskHoles.push(h);
+      _pushWorkHole(h);
+      added++;
+    }
+    if (added) _saveMirror();
+    return { added, duplicated };
+  }
+
+  function toggleWorkHoleProfiled(id) {
+    const h = cache.workTaskHoles.find(x => x.id === id);
+    if (!h) return;
+    h.profiled = !h.profiled;
+    h.profiledAt = h.profiled ? new Date().toISOString() : null;
+    _saveMirror();
+    _pushWorkHole(h);
+  }
+
+  function toggleWorkHoleSurveyed(id) {
+    const h = cache.workTaskHoles.find(x => x.id === id);
+    if (!h) return;
+    h.surveyed = !h.surveyed;
+    h.surveyedAt = h.surveyed ? new Date().toISOString() : null;
+    _saveMirror();
+    _pushWorkHole(h);
+  }
+
+  function setWorkHoleMeters(id, valueText) {
+    const h = cache.workTaskHoles.find(x => x.id === id);
+    if (!h) return;
+    const v = String(valueText == null ? '' : valueText).trim().replace(',', '.');
+    const n = v === '' ? null : parseFloat(v);
+    h.meters = (n != null && !isNaN(n)) ? n : null;
+    _saveMirror();
+    _pushWorkHole(h);
+  }
+
+  function deleteWorkTaskHole(id) {
+    const i = cache.workTaskHoles.findIndex(h => h.id === id);
+    if (i === -1) return null;
+    const [removed] = cache.workTaskHoles.splice(i, 1);
+    _saveMirror();
+    _push(async () => {
+      const { error } = await window.sb.from('work_task_holes')
+        .delete().eq('user_id', _uid).eq('id', id);
+      if (error) throw error;
+    });
+    return removed;
+  }
+
+  // Restaura um furo removido (desfazer) — sempre com id novo, mesmo padrão
+  // de addWorkProject/addWorkTask (o resto do app também não tenta
+  // reaproveitar o id original num "desfazer"). `taskId` deixa remapear pro
+  // id novo da tarefa quando ela própria também foi recriada no desfazer.
+  function restoreWorkTaskHole(hole, taskId) {
+    const id = (cache.workTaskHoles.reduce((m, h) => Math.max(m, h.id), 0) || 0) + 1;
+    const h = { ...hole, id, taskId: taskId != null ? taskId : hole.taskId };
+    cache.workTaskHoles.push(h);
+    _saveMirror();
+    _pushWorkHole(h);
+    return h;
   }
 
   /* ──────────────────────────────────────────
@@ -4283,6 +4429,10 @@ const Store = (() => {
     setWorkProjectArchived, deleteWorkProject,
     getWorkTasks, addWorkTask, updateWorkTask, toggleWorkTaskDone,
     setWorkTaskStatus, deleteWorkTask, workTaskStatus, workTaskDaysUntil, workUpcoming,
+    // trabalho — checklist de furos por tarefa
+    getWorkTaskHoles, workHoleProgress, addWorkTaskHoles,
+    toggleWorkHoleProfiled, toggleWorkHoleSurveyed, setWorkHoleMeters,
+    deleteWorkTaskHole, restoreWorkTaskHole,
     // computed
     habitVal, scheduledOn, dayCompletionPct, maxStreak, countDays,
     allHabitsDone, currentStreak, computeAchievementProgress, computeLevels,
