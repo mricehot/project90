@@ -201,6 +201,7 @@
 
     <div class="topbar">
       <div class="page-title">Pendências <em>o que falta hoje.</em></div>
+      <button type="button" class="btn-sm" id="replan-btn" hidden title="Empurra tarefas e entregas atrasadas desta semana pro mesmo dia da semana que vem"></button>
     </div>
 
     <div class="pend-grid" style="margin-top:22px">
@@ -311,6 +312,14 @@ function fmtISO(iso) {
   if (!iso) return '';
   const d = new Date(iso + 'T00:00:00');
   return isNaN(d) ? '' : d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
+}
+function todayISO() { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+function addDaysISO(iso, n) { const d = new Date(iso + 'T00:00:00'); d.setDate(d.getDate() + n); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+function mondayOfWeekISO(iso) {
+  const d = new Date(iso + 'T00:00:00');
+  const dow = d.getDay(); // 0=dom .. 6=sáb
+  d.setDate(d.getDate() + (dow === 0 ? -6 : 1 - dow));
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
 }
 function taskSchedText(t) {
   const DOW = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
@@ -751,6 +760,52 @@ document.getElementById('shop-form').addEventListener('submit', e => {
   renderPendShopping();
 });
 
+/* ══ REPLANEJAR A SEMANA — empurra tarefas/entregas atrasadas desta
+   semana (segunda até ontem) pro mesmo dia da semana que vem. Não mexe
+   em tarefas recorrentes (não têm uma data fixa pra mover) nem em contas
+   fixas (recorrem por mês, já têm estado próprio por mês). ══ */
+function replanCandidates() {
+  const tISO = todayISO();
+  const monISO = mondayOfWeekISO(tISO);
+  const tasks = Store.getTasks().filter(t =>
+    !t.archived && t.sched === 'once' && t.anchor &&
+    Store.taskStatus(t) === 'overdue' && t.anchor >= monISO && t.anchor < tISO);
+  let acts = [];
+  if (typeof Store.getStudyActivities === 'function') {
+    const liveSubjIds = new Set(Store.getStudySubjects(false).map(s => s.id));
+    acts = Store.getStudyActivities().filter(a =>
+      liveSubjIds.has(a.subjectId) && a.dueOn &&
+      Store.studyActivityStatus(a) === 'atrasada' && a.dueOn >= monISO && a.dueOn < tISO);
+  }
+  return { tasks, acts };
+}
+function renderReplanBtn() {
+  const btn = document.getElementById('replan-btn');
+  if (!btn) return;
+  const { tasks, acts } = replanCandidates();
+  const n = tasks.length + acts.length;
+  btn.hidden = n === 0;
+  btn.textContent = `↻ Replanejar a semana (${n})`;
+}
+function replanWeek() {
+  const { tasks, acts } = replanCandidates();
+  const n = tasks.length + acts.length;
+  if (!n) return;
+  const snapshot = {
+    tasks: tasks.map(t => ({ id: t.id, anchor: t.anchor })),
+    acts: acts.map(a => ({ id: a.id, dueOn: a.dueOn })),
+  };
+  tasks.forEach(t => Store.updateTask(t.id, { anchor: addDaysISO(t.anchor, 7) }));
+  acts.forEach(a => Store.updateStudyActivity(a.id, { dueOn: addDaysISO(a.dueOn, 7) }));
+  renderAll();
+  window.p90toastUndo(`${n} ${n === 1 ? 'item replanejado' : 'itens replanejados'} pra semana que vem`, () => {
+    snapshot.tasks.forEach(s => Store.updateTask(s.id, { anchor: s.anchor }));
+    snapshot.acts.forEach(s => Store.updateStudyActivity(s.id, { dueOn: s.dueOn }));
+    renderAll();
+  });
+}
+document.getElementById('replan-btn').addEventListener('click', replanWeek);
+
 /* ══ RENDER ALL ══ */
 function renderAll() {
   realHabits = Store.getHabits();
@@ -761,6 +816,7 @@ function renderAll() {
   renderPendDemais();
   renderPendShopping();
   renderNightCard();
+  renderReplanBtn();
 }
 
 initSidebar();
