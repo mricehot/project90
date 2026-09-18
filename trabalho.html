@@ -716,9 +716,9 @@ function buildProjectReport(projId) {
     const survNo = holes.filter(h => !h.surveyed).map(h => 'F' + h.number);
     let block = `${t.title} (${holes.length} furo${holes.length === 1 ? '' : 's'})`;
     block += `\n  Perfilados: ${profOk.length ? profOk.join(', ') : '—'}`;
-    if (profNo.length) block += ` · pendentes: ${profNo.join(', ')}`;
+    block += `\n  Pendentes de perfilar: ${profNo.length ? profNo.join(', ') : '—'}`;
     block += `\n  Topografados: ${survOk.length ? survOk.join(', ') : '—'}`;
-    if (survNo.length) block += ` · pendentes: ${survNo.join(', ')}`;
+    block += `\n  Pendentes de topografar: ${survNo.length ? survNo.join(', ') : '—'}`;
     return block;
   });
 
