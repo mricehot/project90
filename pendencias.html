@@ -128,6 +128,22 @@
 @media (hover: none) { .pri-link { opacity: 0.7; } }
 .pri-link.linked { color: var(--white); border-color: var(--border2); }
 
+/* ── ÁGUA ── */
+.wt-row { display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px; }
+.wt-val { font-family: 'Bebas Neue', sans-serif; font-size: 34px; line-height: 1; }
+.wt-goal { font-size: 11px; letter-spacing: 0.1em; color: var(--mid); }
+.wt-bar-bg { height: 4px; background: var(--muted); margin-bottom: 14px; }
+.wt-bar-fill { height: 100%; background: #7dd3fc; transition: width 0.4s ease; }
+.wt-bar-fill.full { background: var(--green); }
+.wt-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+.wt-btn {
+  background: none; border: 1px solid var(--border2); color: var(--white); font-family: 'DM Mono', monospace;
+  font-size: 12px; letter-spacing: 0.06em; padding: 8px 14px; cursor: pointer; transition: border-color 0.15s, color 0.15s;
+}
+.wt-btn:hover { border-color: rgba(245,245,240,0.4); }
+.wt-btn.minus { color: var(--mid); }
+.wt-done { font-size: 13px; color: rgba(134,239,172,0.9); margin-top: 10px; }
+
 /* ── ROTINA NOTURNA ── */
 .nr-hd-right { display: inline-flex; align-items: center; gap: 10px; }
 .nr-switch { display: inline-flex; border: 1px solid var(--border2); flex-shrink: 0; }
@@ -194,6 +210,7 @@
       <a class="sb-item" href="treino.html"><span class="sb-item-icon">◲</span> Treino</a>
       <a class="sb-item" href="financeiro.html"><span class="sb-item-icon">◫</span> Financeiro</a>
       <a class="sb-item" href="trabalho.html"><span class="sb-item-icon">⚙</span> Trabalho</a>
+      <a class="sb-item" href="sistema.html"><span class="sb-item-icon">❖</span> Sistema</a>
       <details class="sb-group">
         <summary class="sb-group-toggle"><span class="sb-item-icon">◆</span> Conquistas<span class="sb-group-caret">›</span></summary>
         <a class="sb-item sb-subitem" href="conquistas.html"><span class="sb-item-icon">◆</span> Conquistas</a>
@@ -230,6 +247,15 @@
         </div>
         <div id="pri-carry"></div>
         <div id="pri-body"></div>
+      </div>
+
+      <!-- ÁGUA -->
+      <div class="card" id="water-card">
+        <div class="card-hd">
+          <span class="card-title">Água</span>
+          <span class="card-action" id="wt-pct"></span>
+        </div>
+        <div id="wt-body"></div>
       </div>
 
       <!-- FINANCEIRO -->
@@ -967,10 +993,35 @@ function replanWeek() {
 }
 document.getElementById('replan-btn').addEventListener('click', replanWeek);
 
+/* ══ ÁGUA — contador do dia; bater a meta marca o hábito Beber água ══ */
+function renderWaterCard() {
+  const body = document.getElementById('wt-body');
+  if (!body) return;
+  const ml = Store.getWaterMl(), goal = Store.waterGoalMl();
+  const pct = Math.min(100, Math.round(ml / goal * 100));
+  const fmt = v => v >= 1000 ? (v / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 2 }) + ' L' : v + ' ml';
+  document.getElementById('wt-pct').textContent = pct + '%';
+  body.innerHTML = `
+    <div class="wt-row"><span class="wt-val">${fmt(ml)}</span><span class="wt-goal">de ${fmt(goal)}</span></div>
+    <div class="wt-bar-bg"><div class="wt-bar-fill ${ml >= goal ? 'full' : ''}" style="width:${pct}%"></div></div>
+    <div class="wt-btns">
+      <button class="wt-btn minus" data-d="-250" title="Desfazer 250 ml">−250 ml</button>
+      <button class="wt-btn" data-d="250">+250 ml</button>
+      <button class="wt-btn" data-d="500">+500 ml</button>
+    </div>
+    ${ml >= goal ? '<div class="wt-done">Meta batida — hábito Beber água marcado ✓</div>' : ''}`;
+  body.querySelectorAll('.wt-btn').forEach(b => b.addEventListener('click', () => {
+    Store.addWater(Number(b.dataset.d));
+    renderWaterCard();
+    if (typeof renderPendHabitos === 'function') renderPendHabitos();
+  }));
+}
+
 /* ══ RENDER ALL ══ */
 function renderAll() {
   realHabits = Store.getHabits();
   renderPrioritiesCard();
+  renderWaterCard();
   renderPendFinanceiro();
   renderPendHabitos();
   renderPendTarefas();

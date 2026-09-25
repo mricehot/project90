@@ -77,6 +77,8 @@ const Store = (() => {
       shoppingItems: [],    // { id, label, bought, createdAt } — lista de compras do mercado
       studyReflections: {}, // { [dayNum]: { topicIdx, q1, q2, q3, free } } — Conhecimento/Reflexões
       conversationTipsRead: {}, // { [tipIdx]: readDay } — Dicção/Conversação
+      libReadDays: {},      // { [dayNum]: true } — dias com leitura registrada na Biblioteca
+      waterDays: {},        // { [dayNum]: ml } — água bebida por dia (hábito Beber água)
       workProjects: [],
       workTasks:    [],
       workTaskHoles: [],
@@ -435,6 +437,14 @@ const Store = (() => {
     if (data.studyReflections && typeof data.studyReflections === 'object') {
       Object.keys(cache.studyReflections).forEach(k => delete cache.studyReflections[k]);
       Object.assign(cache.studyReflections, data.studyReflections);
+    }
+    if (data.waterDays && typeof data.waterDays === 'object') {
+      Object.keys(cache.waterDays).forEach(k => delete cache.waterDays[k]);
+      Object.keys(data.waterDays).forEach(k => { cache.waterDays[k] = parseInt(data.waterDays[k], 10) || 0; });
+    }
+    if (data.libReadDays && typeof data.libReadDays === 'object') {
+      Object.keys(cache.libReadDays).forEach(k => delete cache.libReadDays[k]);
+      Object.keys(data.libReadDays).forEach(k => { cache.libReadDays[k] = true; });
     }
     if (data.conversationTipsRead && typeof data.conversationTipsRead === 'object') {
       Object.keys(cache.conversationTipsRead).forEach(k => delete cache.conversationTipsRead[k]);
@@ -916,6 +926,61 @@ const Store = (() => {
     return changed;
   }
 
+  // Meta diária de água em ml, lida do campo "meta" do hábito fixo Beber água
+  // ("2 L", "500 ml"…). Sem meta legível, 2000 ml.
+  function waterGoalMl() {
+    const h = cache.habits.find(x => x.coreKey === 'beber_agua');
+    const m = h && String(h.goal || '').match(/([\d.,]+)\s*(ml|l)\b/i);
+    if (!m) return 2000;
+    const v = parseFloat(m[1].replace(',', '.'));
+    if (!isFinite(v) || v <= 0) return 2000;
+    return Math.round(/^ml$/i.test(m[2]) ? v : v * 1000);
+  }
+
+  // "Beber água" (core_key = beber_agua) ganha 'done' em todo dia em que o
+  // total registrado (waterDays) bate a meta. Só adiciona, nunca remove.
+  function _reconcileWaterHabit() {
+    const h = cache.habits.find(x => x.coreKey === 'beber_agua');
+    if (!h) return false;
+    if (!Array.isArray(h.history)) h.history = [];
+    const start = (h.createdDay || 1) - 1;
+    const today = getCurrentDay();
+    const goal = waterGoalMl();
+    let changed = false;
+    Object.keys(cache.waterDays).forEach(k => {
+      const dayNum = Number(k);
+      if (!dayNum || dayNum > today || (cache.waterDays[k] || 0) < goal) return;
+      const idx = (dayNum - 1) - start;
+      if (idx < 0) return;
+      while (h.history.length <= idx) h.history.push('miss');
+      if (h.history[idx] !== 'done') { h.history[idx] = 'done'; changed = true; }
+    });
+    if (changed) _recalcStreak(h);
+    return changed;
+  }
+
+  // "Ler" (core_key = ler) ganha 'done' em todo dia com leitura registrada na
+  // Biblioteca (libReadDays: progresso avançado, livro concluído ou "Li hoje").
+  // Só adiciona 'done', nunca remove. Devolve true se mudou algo.
+  function _reconcileReadingHabit() {
+    const h = cache.habits.find(x => x.coreKey === 'ler');
+    if (!h) return false;
+    if (!Array.isArray(h.history)) h.history = [];
+    const start = (h.createdDay || 1) - 1;
+    const today = getCurrentDay();
+    let changed = false;
+    Object.keys(cache.libReadDays).forEach(k => {
+      const dayNum = Number(k);
+      if (!dayNum || dayNum > today) return;
+      const idx = (dayNum - 1) - start;
+      if (idx < 0) return;
+      while (h.history.length <= idx) h.history.push('miss');
+      if (h.history[idx] !== 'done') { h.history[idx] = 'done'; changed = true; }
+    });
+    if (changed) _recalcStreak(h);
+    return changed;
+  }
+
   // "Meditar / refletir" (core_key = meditar) ganha um 'done' automático em
   // todo dia com uma reflexão salva em Conhecimento/Reflexões (studyReflections)
   // — ver reflexoes-feature. Mesmo padrão de _reconcileJournalHabit(): só
@@ -1014,10 +1079,12 @@ const Store = (() => {
         const dirty4 = _reconcileTrainingHabit();
         const dirty5 = _reconcileBibleHabit();
         const dirty6 = _reconcileReflectionHabit();
+        const dirty7 = _reconcileReadingHabit();
+        const dirty8 = _reconcileWaterHabit();
         _saveMirror();
         _ready = true;
         window.dispatchEvent(new Event('p90:synced'));
-        if (dirty || dirty2 || dirty3 || dirty4 || dirty5 || dirty6) _persistHabits();
+        if (dirty || dirty2 || dirty3 || dirty4 || dirty5 || dirty6 || dirty7 || dirty8) _persistHabits();
       } finally {
         _hideBootScreen();
       }
@@ -3631,6 +3698,118 @@ const Store = (() => {
   }
 
   /* ──────────────────────────────────────────
+     SISTEMA (rank) — camada RPG opt-in, 100% DERIVADA do que já existe.
+     Nada é gravado: EXP, nível, rank e atributos são recalculados a cada
+     leitura a partir de hábitos, conquistas, diário etc. — retroativo,
+     não dá pra "trapacear" e nunca dessincroniza. Pesos e curva são
+     ajustáveis nas constantes abaixo.
+       EXP(nível n) acumulado = 20·n·(n+1)
+       Rank = mín(faixa do nível, faixa da consistência dos últimos 14 dias)
+  ────────────────────────────────────────── */
+  const SYS_RANKS = ['E', 'D', 'C', 'B', 'A', 'S'];
+  const SYS_LEVEL_BAND_START = [0, 5, 10, 15, 20, 25];   // nível mínimo de cada rank
+  const SYS_CONSIST_BAND_START = [0, 25, 45, 65, 80, 92]; // % mínimo (últimos 14 dias)
+  function _sysCum(n) { return 20 * n * (n + 1); }
+
+  function computeSystem() {
+    const today = getCurrentDay();
+    const habits = cache.habits;
+    const active = habits.filter(h => !h.paused);
+    const src = [];   // { label, count, per, exp }
+    const add = (label, count, per) => { if (count > 0) src.push({ label, count, per, exp: count * per }); };
+
+    let hDone = 0, hPart = 0, perfect = 0, nights = 0, last14 = [];
+    for (let i = 0; i < today; i++) {
+      active.forEach(h => { const v = habitVal(h, i); if (v === 1) hDone++; else if (v === 0.5) hPart++; });
+      if (allHabitsDone(habits, i)) perfect++;
+      if (nightRoutineComplete(i + 1)) nights++;
+      if (i >= today - 14) last14.push(dayCompletionPct(habits, i));
+    }
+    const achIds = Object.keys(cache.achievements || {});
+    const reviews = Object.keys(cache.weeklyReviews || {}).length;
+    const mastered = cache.vocabWords.filter(w => (w.srsBox || 1) >= 5).length;
+    const books = cache.library.books.filter(b => b.status === 'lido').length;
+    const speechPlan = Object.keys(cache.speechDays).filter(k => cache.speechDays[k] && cache.speechDays[k].done).length;
+
+    add('Hábitos concluídos', hDone, 10);
+    add('Hábitos parciais', hPart, 5);
+    add('Dias perfeitos (todos os hábitos)', perfect, 25);
+    add('Conquistas desbloqueadas', achIds.length, 150);
+    add('Revisões semanais', reviews, 80);
+    add('Palavras dominadas (caixa 5)', mastered, 40);
+    add('Noites com rotina completa', nights, 20);
+    add('Vitórias registradas', cache.wins.length, 15);
+    add('Entradas no diário', Object.keys(cache.journal).length, 15);
+    add('Reflexões escritas', Object.keys(cache.studyReflections).length, 15);
+    add('Treinos registrados', trainingSessionsCount(), 15);
+    add('Tarefas concluídas', taskDoneTotal(), 5);
+    add('Plano de dicção cumprido', speechPlan, 10);
+    add('Livros concluídos', books, 100);
+
+    const exp = src.reduce((s, x) => s + x.exp, 0);
+    let level = 0;
+    while (_sysCum(level + 1) <= exp) level++;
+    const floor = level ? _sysCum(level) : 0;
+    const need = _sysCum(level + 1) - floor;
+
+    // Rank: nível limitado pela consistência recente.
+    const consist = last14.length ? Math.round(last14.reduce((a, b) => a + b, 0) / last14.length) : 0;
+    let lvlIdx = 0, conIdx = 0;
+    SYS_LEVEL_BAND_START.forEach((m, i) => { if (level >= m) lvlIdx = i; });
+    SYS_CONSIST_BAND_START.forEach((m, i) => { if (consist >= m) conIdx = i; });
+    const rankIdx = Math.min(lvlIdx, conIdx);
+    const next = rankIdx < SYS_RANKS.length - 1 ? rankIdx + 1 : null;
+    const nextHint = next == null ? null : {
+      rank: SYS_RANKS[next],
+      needLevel: level < SYS_LEVEL_BAND_START[next] ? SYS_LEVEL_BAND_START[next] : null,
+      needConsistency: consist < SYS_CONSIST_BAND_START[next] ? SYS_CONSIST_BAND_START[next] : null,
+    };
+
+    // Atributos: sobem sozinhos com a atividade (nível de cada pilar).
+    const lv = computeLevels(habits, today).pillars;
+    const pl = p => (lv[p] ? lv[p].level : 1) - 1;
+    const attributes = {
+      forca:    10 + pl('Corpo') * 3,
+      vigor:    10 + Math.round(consist / 10) + Math.min(20, currentStreak(habits, today)),
+      foco:     10 + pl('Produção') * 3 + Math.floor(taskDoneTotal() / 5),
+      mente:    10 + pl('Mente') * 3 + Math.floor(Object.keys(cache.journal).length / 5),
+      espirito: 10 + pl('Conexão') * 3 + Math.floor(cache.wins.length / 3),
+    };
+
+    // Missão diária: os hábitos que valem hoje (marcar em Hábitos marca de verdade).
+    const idx = today - 1;
+    const due = active.filter(h => h.createdDay - 1 <= idx && scheduledOn(h, idx));
+    const items = due.map(h => ({ id: h.id, name: h.name, done: habitVal(h, idx) === 1 }));
+    const qDone = items.filter(x => x.done).length;
+    const quest = {
+      done: qDone, total: items.length, items,
+      rewardExp: qDone * 10 + (items.length && qDone === items.length ? 25 : 0),
+      complete: items.length > 0 && qDone === items.length,
+    };
+
+    // Títulos (derivados; equipar é do v2).
+    const has = id => achIds.indexOf(id) !== -1;
+    const sp = cache.speechStats || {};
+    const titles = [
+      { id: 'despertar',  name: 'O Despertar',       cond: 'Completar o dia 1',            unlocked: has('day1') },
+      { id: 'implacavel', name: 'Implacável',        cond: '30 dias seguidos',             unlocked: has('day30') },
+      { id: 'voz_firme',  name: 'Voz Firme',         cond: '30 sessões de dicção',         unlocked: (sp.sessionsPlayed || 0) >= 30 },
+      { id: 'poliglota',  name: 'Poliglota',         cond: '50 palavras dominadas',        unlocked: mastered >= 50 },
+      { id: 'sabio',      name: 'Sábio',             cond: '30 reflexões escritas',        unlocked: Object.keys(cache.studyReflections).length >= 30 },
+      { id: 'monarca',    name: 'Monarca das Sombras', cond: 'Completar o dia 90',         unlocked: has('day90') },
+    ];
+
+    const cls = has('day90') ? 'Monarca' : level >= 15 ? 'Caçador de Elite' : level >= 8 ? 'Caçador' : level >= 3 ? 'Aspirante' : 'Sem Classe';
+
+    return {
+      exp, level, expIntoLevel: exp - floor, expForNext: need,
+      rank: SYS_RANKS[rankIdx], rankIdx, rankNext: nextHint, consistency: consist,
+      levelBand: SYS_RANKS[lvlIdx], consistencyBand: SYS_RANKS[conIdx],
+      className: cls, attributes, quest, titles, breakdown: src.sort((a, b) => b.exp - a.exp),
+    };
+  }
+
+  /* ──────────────────────────────────────────
      FINANCEIRO — controle mensal (página financeiro.html)
      Ciclo = mês do calendário. cache.finance.* — ver _emptyCache.
   ────────────────────────────────────────── */
@@ -4238,6 +4417,7 @@ const Store = (() => {
   function updateLibBook(id, patch) {
     const b = cache.library.books.find(x => x.id === id);
     if (!b) return;
+    const prev = { mode: b.progressMode, page: b.currentPage || 0, pct: b.progressPct || 0 };
     if (patch.title != null)       b.title = String(patch.title).trim();
     if (patch.author != null)      b.author = String(patch.author).trim();
     if (patch.genre != null)       b.genre = patch.genre;
@@ -4253,6 +4433,9 @@ const Store = (() => {
       b.progressPct = null;
     }
     if (patch.notes != null)       b.notes = patch.notes;
+    // Avançar a página/porcentagem (no mesmo modo) conta como leitura do dia.
+    if (b.status === 'lendo' && b.progressMode === prev.mode &&
+        (b.progressMode === 'percent' ? (b.progressPct || 0) > prev.pct : (b.currentPage || 0) > prev.page)) logReadingDay();
     if (patch.status != null && patch.status !== b.status) setLibStatus(id, patch.status, true);
     _saveMirror();
     _push(async () => {
@@ -4270,10 +4453,31 @@ const Store = (() => {
   // Muda o status e ajusta datas/página (ou porcentagem) automaticamente:
   // "lendo" grava início (se ainda não tinha), "lido" grava fim e completa
   // o progresso — página atual = total, ou porcentagem = 100.
+  // Registra que hoje teve leitura (progresso avançado, livro concluído ou o
+  // botão "Li hoje") — é o que marca o hábito fixo "Ler". Guardado como uma
+  // linha por dia do desafio em lib_reading_days.
+  function logReadingDay(dayNum) {
+    const d = Number(dayNum) || getCurrentDay();
+    const isNew = !cache.libReadDays[d];
+    cache.libReadDays[d] = true;
+    const habitChanged = _reconcileReadingHabit();
+    _saveMirror();
+    if (habitChanged) _persistHabits();
+    if (isNew) _push(async () => {
+      const { error } = await window.sb.from('lib_reading_days').upsert({
+        user_id: _uid, day_num: d,
+      }, { onConflict: 'user_id,day_num' });
+      if (error) throw error;
+    });
+    return isNew;
+  }
+  function libReadToday() { return !!cache.libReadDays[getCurrentDay()]; }
+
   function setLibStatus(id, status, _skipSave) {
     const b = cache.library.books.find(x => x.id === id);
     if (!b || (b.status === status && !_skipSave)) return;
     const today = _localDate(0);
+    if (status === 'lido' && b.status !== 'lido') logReadingDay();
     b.status = status;
     if (status !== 'quero_ler' && !b.startedOn) b.startedOn = today;
     if (status === 'lido') {
@@ -4339,6 +4543,27 @@ const Store = (() => {
       avgRating, byGenre,
       pagesRead: lidos.reduce((s, b) => s + (b.totalPages || b.currentPage || 0), 0),
     };
+  }
+
+  /* ──────────────────────────────────────────
+     ÁGUA — total do dia em ml (cache.waterDays[dayNum]). Bater a meta do
+     hábito Beber água marca o hábito (ver _reconcileWaterHabit).
+  ────────────────────────────────────────── */
+  function getWaterMl(dayNum) { return cache.waterDays[dayNum != null ? dayNum : getCurrentDay()] || 0; }
+  function addWater(deltaMl) {
+    const d = getCurrentDay();
+    const next = Math.min(10000, Math.max(0, getWaterMl(d) + (parseInt(deltaMl, 10) || 0)));
+    cache.waterDays[d] = next;
+    const habitChanged = _reconcileWaterHabit();
+    _saveMirror();
+    if (habitChanged) _persistHabits();
+    _push(async () => {
+      const { error } = await window.sb.from('water_days').upsert({
+        user_id: _uid, day_num: d, ml: next, updated_at: new Date().toISOString(),
+      }, { onConflict: 'user_id,day_num' });
+      if (error) throw error;
+    });
+    return next;
   }
 
   /* ──────────────────────────────────────────
@@ -4566,7 +4791,8 @@ const Store = (() => {
     finPortfolioSeries, finAporteCumSeries, finFlowSeries, finSurplusCumSeries,
     // biblioteca
     getLibrary, getLibBooks, libGenres,
-    addLibBook, updateLibBook, setLibStatus, deleteLibBook,
+    addLibBook, updateLibBook, setLibStatus, deleteLibBook, logReadingDay, libReadToday,
+    getWaterMl, addWater, waterGoalMl,
     libGoalForYear, setLibGoal, libBooksReadInYear, libGoalProgress, libStats,
     // prioridades do dia
     getDayPriorities, setDayPriorities, toggleDayPriority, dayPrioritiesStreak,
@@ -4588,7 +4814,7 @@ const Store = (() => {
     // trabalho — lembretes
     getWorkReminders, addWorkReminder, deleteWorkReminder, restoreWorkReminder,
     // computed
-    habitVal, scheduledOn, dayCompletionPct, maxStreak, countDays,
+    habitVal, scheduledOn, dayCompletionPct, maxStreak, countDays, computeSystem,
     allHabitsDone, currentStreak, computeAchievementProgress, computeLevels,
   };
 
