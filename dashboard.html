@@ -589,13 +589,16 @@ function initIdleCard() {
   if (idleMounted || !window.P90IdleView || !document.getElementById('idle-arena')) return;
   idleMounted = true;
   const V = window.P90IdleView;
-  const sum = V.init();
-  const arena = V.mount(document.getElementById('idle-arena'), { hud: true });
-  if (sum && sum.rounds >= 10) {
-    arena.log('Enquanto você esteve fora: <b>+' + sum.kills.toLocaleString('pt-BR') + ' abates</b>, <b>+' + sum.gold.toLocaleString('pt-BR') + ' ouro</b>' +
-      (sum.drops ? ', <b>' + sum.drops + ' iten' + (sum.drops > 1 ? 's' : '') + '</b>' : '') + '.');
-  }
-  V.start();
+  // só inicia depois do carregamento do servidor (senão um cache local vazio recomeçaria o jogo do zero)
+  V.whenReady(function () {
+    const sum = V.init();
+    const arena = V.mount(document.getElementById('idle-arena'), { hud: true });
+    if (sum && sum.rounds >= 10) {
+      arena.log('Enquanto você esteve fora: <b>+' + sum.kills.toLocaleString('pt-BR') + ' abates</b>, <b>+' + sum.gold.toLocaleString('pt-BR') + ' ouro</b>' +
+        (sum.drops ? ', <b>' + sum.drops + ' iten' + (sum.drops > 1 ? 's' : '') + '</b>' : '') + '.');
+    }
+    V.start();
+  });
 }
 
 

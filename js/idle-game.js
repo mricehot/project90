@@ -362,6 +362,13 @@
     return ev;
   }
 
+  // Qual estado está à frente? energySpent só cresce, então é a medida de progresso:
+  // um jogo recém-criado (0) nunca ganha de um com progresso, mesmo com "last" mais novo.
+  function ahead(a, b) {
+    const ea = (a && a.energySpent) || 0, eb = (b && b.energySpent) || 0;
+    return ea > eb || (ea === eb && ((a && a.last) || 0) > ((b && b.last) || 0));
+  }
+
   // Recalcula o que rolou enquanto o app esteve fechado.
   function catchUp(st, ctx) {
     const now = ctx.now || Date.now();
@@ -411,7 +418,7 @@
     defaultState, normalize, monsterFor, playerStats, upgradeCost, buyUpgrade,
     SLOTS, EQ_POS, POS_LABEL, SLOT_INFO, RARITIES, BAG_MAX, DROP_CHANCE, itemValue, itemScore, equipItem, unequipItem, sellItem, sellWorse, replaced,
     SETS, SET_KEYS, setBonus, setCounts, PETS, PET_BY_KEY, PET_CHANCE, PET_BOSS_CHANCE, PET_MAX_LV, petPct, petBonus, activePet, setPet, petValue,
-    roundsToKill, canWin, pickFloor, energyEarned, energyAvail, stepRound, catchUp, weekKey,
+    roundsToKill, canWin, pickFloor, ahead, energyEarned, energyAvail, stepRound, catchUp, weekKey,
     worldBoss, claimWorldBoss, isBoss, BOSS_ROUNDS,
   };
 })();
