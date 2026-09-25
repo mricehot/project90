@@ -3387,6 +3387,23 @@ const Store = (() => {
     _pushWorkHole(h);
   }
 
+  // Marca (value=true) ou desmarca todos os furos de um leque de uma vez —
+  // field: 'profiled' | 'surveyed'. Retorna quantos furos mudaram.
+  function setWorkTaskHolesAll(taskId, field, value) {
+    if (field !== 'profiled' && field !== 'surveyed') return 0;
+    const at = field === 'profiled' ? 'profiledAt' : 'surveyedAt';
+    let n = 0;
+    cache.workTaskHoles.forEach(h => {
+      if (h.taskId !== taskId || !!h[field] === !!value) return;
+      h[field] = !!value;
+      h[at] = value ? new Date().toISOString() : null;
+      _pushWorkHole(h);
+      n++;
+    });
+    if (n) _saveMirror();
+    return n;
+  }
+
   function setWorkHoleMeters(id, valueText) {
     const h = cache.workTaskHoles.find(x => x.id === id);
     if (!h) return;
@@ -4809,7 +4826,7 @@ const Store = (() => {
     setWorkTaskStatus, deleteWorkTask, workTaskStatus, workTaskDaysUntil, workUpcoming, workHolesPending,
     // trabalho — checklist de furos por tarefa
     getWorkTaskHoles, workHoleProgress, addWorkTaskHoles,
-    toggleWorkHoleProfiled, toggleWorkHoleSurveyed, setWorkHoleMeters,
+    toggleWorkHoleProfiled, toggleWorkHoleSurveyed, setWorkHoleMeters, setWorkTaskHolesAll,
     deleteWorkTaskHole, restoreWorkTaskHole,
     // trabalho — lembretes
     getWorkReminders, addWorkReminder, deleteWorkReminder, restoreWorkReminder,

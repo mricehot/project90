@@ -21,73 +21,13 @@
 <script src="js/store.js"></script>
 <script src="js/achievements.js"></script>
 <style>
-
-.wk-main { display: grid; grid-template-columns: 1fr 280px; grid-template-rows: auto 1fr; height: 100vh; overflow: hidden; }
 .topbar {
   grid-column: 1 / -1;
   display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
   padding: 24px 32px 16px; border-bottom: 1px solid var(--border);
 }
-.wk-body {
-  grid-column: 1; grid-row: 2; overflow-y: auto; padding: 24px 32px;
-  display: flex; flex-direction: column; gap: 24px;
-}
-
-/* ── RAIL DIREITA — projetos ── */
-.wk-rail {
-  grid-column: 2; grid-row: 2; border-left: 1px solid var(--border); background: var(--surface);
-  display: flex; flex-direction: column; overflow: hidden;
-}
-.wk-rail-hd {
-  padding: 18px 20px 14px; border-bottom: 1px solid var(--border);
-  font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--mid);
-}
-.wk-rail-list { flex: 1; overflow-y: auto; }
-.wk-rail-item {
-  padding: 14px 20px; border-bottom: 1px solid var(--border); cursor: pointer;
-  transition: background 0.15s; display: flex; flex-direction: column; gap: 5px;
-}
-.wk-rail-item:hover { background: rgba(245,245,240,0.04); }
-.wk-rail-name { font-size: 13px; letter-spacing: 0.03em; color: var(--white); word-break: break-word; }
-.wk-rail-meta { font-size: 10px; letter-spacing: 0.08em; color: var(--mid); }
-.wk-rail-meta .over { color: var(--red); }
-.wk-rail-empty { padding: 16px 20px; font-size: 12px; color: var(--mid); line-height: 1.7; }
-.wk-rail-group-hd {
-  padding: 10px 20px 4px; font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--mid);
-}
-.wk-rail-group-hd:first-child { padding-top: 14px; }
-
-/* ── MODAL — tarefas do projeto ── */
-.modal.wk-proj-box { max-width: 540px; max-height: 86vh; display: flex; flex-direction: column; }
-.wpm-list { flex: 1; overflow-y: auto; margin: 4px -4px 0; padding: 0 4px; }
-.wpm-row { display: flex; align-items: center; gap: 12px; padding: 11px 2px; border-bottom: 1px solid var(--border); }
-.wpm-row:last-child { border-bottom: none; }
-.wpm-check {
-  width: 18px; height: 18px; border: 1px solid var(--border2); flex-shrink: 0; cursor: pointer;
-  display: flex; align-items: center; justify-content: center; font-size: 12px; color: var(--white); transition: background 0.15s;
-}
-.wpm-row.done .wpm-check { background: var(--white); color: var(--bg); border-color: var(--white); }
-.wpm-main { flex: 1; min-width: 0; cursor: pointer; }
-.wpm-title { font-size: 13px; line-height: 1.4; color: var(--white); }
-.wpm-row.done .wpm-title { color: var(--mid); text-decoration: line-through; }
-.wpm-due { font-size: 11px; letter-spacing: 0.06em; color: var(--mid); margin-top: 3px; }
-.wpm-due .rel-over { color: var(--red); }
-.wpm-due .rel-soon { color: var(--white); }
-.wpm-due .rel-done { color: var(--green); }
-.wpm-due .rel-fazendo { color: var(--white); }
-.wpm-link { color: var(--mid); text-decoration: none; font-size: 13px; flex-shrink: 0; padding: 2px 4px; }
-.wpm-link:hover { color: var(--white); }
-.wpm-empty { font-size: 13px; color: var(--mid); padding: 14px 2px; }
-.wpm-add { margin-top: 12px; }
 .page-title { font-family: 'DM Serif Display', serif; font-size: 26px; font-weight: 400; display: flex; align-items: baseline; gap: 10px; }
 .page-title em { font-style: italic; opacity: 0.45; font-size: 22px; }
-
-.g3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
-.stat-card { background: var(--surface); border: 1px solid var(--border); padding: 18px 20px; }
-.stat-lbl { font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--mid); margin-bottom: 8px; }
-.stat-val { font-family: 'Bebas Neue', sans-serif; font-size: 38px; line-height: 1; }
-.stat-val.warn { color: var(--red); }
-
 /* ── LEMBRETES ──
    Nota visível ligada (opcionalmente) a uma tarefa — sem horário, sem
    notificação. "Resolver" é excluir (com desfazer), por isso a linha
@@ -136,7 +76,6 @@
 }
 .wk-rem-add button:hover { color: var(--white); border-color: rgba(245,245,240,0.35); }
 @media (max-width: 460px) { .wk-rem-add select { max-width: none; } }
-
 /* novo projeto */
 .wk-newproj { display: flex; gap: 10px; flex-wrap: wrap; }
 .wk-newproj input {
@@ -146,38 +85,6 @@
 }
 .wk-newproj input:focus { border-color: rgba(245,245,240,0.35); }
 .wk-newproj input::placeholder { color: var(--mid); }
-
-/* tipo do projeto — "realce" (levantamento com furos, sem prazo, tarefa =
-   leque) vs "avulsa" (entrega comum, com prazo). Escolhido na criação;
-   pode ser trocado depois no modal do projeto (.wpm-kind). Separar os
-   dois é o que permite esconder o botão "⛏ Furos" de quem não é
-   levantamento, e agrupar a lista/régua em duas seções em vez de uma
-   mistura só. */
-.wk-kind-toggle { display: inline-flex; border: 1px solid var(--border2); flex-shrink: 0; }
-.wk-kind-toggle button {
-  background: none; border: none; color: var(--mid); font-family: 'DM Mono', monospace;
-  font-size: 11px; letter-spacing: 0.08em; padding: 0 13px; cursor: pointer;
-  transition: background 0.15s, color 0.15s;
-}
-.wk-kind-toggle button + button { border-left: 1px solid var(--border2); }
-.wk-kind-toggle button.active { background: var(--white); color: var(--bg); }
-
-.wk-group-hd {
-  font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--mid);
-  margin: 0 0 10px;
-}
-.wk-group-hd + .wk-group-hd,
-.wk-group-body + .wk-group-hd { margin-top: 26px; }
-
-.wk-kind-tag {
-  font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--mid);
-  border: 1px solid var(--border2); padding: 2px 6px; white-space: nowrap; flex-shrink: 0;
-}
-.wk-kind-tag.realce { color: var(--white); border-color: rgba(245,245,240,0.3); }
-
-.wpm-kind { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
-.wpm-kind-lbl { font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--mid); }
-
 /* projeto (accordion) */
 .wk-proj { border: 1px solid var(--border); background: var(--surface); margin-bottom: 12px; }
 .wk-proj-hd {
@@ -201,25 +108,6 @@
 .wk-proj-acts button:hover { color: var(--white); }
 .wk-proj-body { border-top: 1px solid var(--border); padding: 6px 16px 14px; }
 .wk-proj.collapsed .wk-proj-body { display: none; }
-
-/* renomear projeto de dentro do modal de tarefas — sempre visível (não
-   escondido atrás de hover), já que é o ponto de entrada mais comum pra
-   editar um projeto (clicando nele na régua direita). Mesma solução do
-   #fsm-rename da Faculdade. */
-.wpm-title-row { display: flex; align-items: center; gap: 10px; margin-bottom: 28px; }
-.wpm-title-row .modal-title { margin-bottom: 0; flex: 1; min-width: 0; }
-.wpm-rename-btn {
-  background: none; border: 1px solid var(--border2); color: var(--mid);
-  width: 26px; height: 26px; font-size: 13px; cursor: pointer; flex-shrink: 0;
-  display: inline-flex; align-items: center; justify-content: center;
-  transition: color 0.15s, border-color 0.15s;
-}
-.wpm-rename-btn:hover { color: var(--white); border-color: rgba(245,245,240,0.35); }
-.wpm-title-input {
-  flex: 1; min-width: 0; background: var(--surface2); border: 1px solid var(--border2); color: var(--white);
-  font-family: 'DM Serif Display', serif; font-size: 22px; padding: 6px 10px; outline: none;
-}
-
 /* tarefa */
 .wk-task { padding: 10px 2px; border-bottom: 1px solid var(--border); }
 .wk-task:last-of-type { border-bottom: none; }
@@ -250,54 +138,6 @@
 .wk-task-link:hover { color: var(--white); }
 
 .wk-empty { font-size: 13px; color: var(--mid); line-height: 1.7; padding: 8px 0; }
-
-/* ── CHECKLIST DE FUROS (portado do BlastHole Manager) ──
-   Furo é marcável em dois eixos independentes — perfilado e topografado —
-   mais metragem opcional. Sem total fixo: adicionados aos poucos por
-   faixa (de/até), conforme o trabalho avança. Só na visão em lista. */
-.wk-hole-badges { display: flex; gap: 8px; margin-top: 5px; flex-wrap: wrap; }
-.wk-hole-badge {
-  font-size: 10px; letter-spacing: 0.06em; color: var(--mid); border: 1px solid var(--border2);
-  padding: 2px 7px; white-space: nowrap;
-}
-.wk-hole-badge.done { color: var(--green); border-color: rgba(134,239,172,0.35); }
-.wk-holes-body { margin: 12px 0 2px 30px; border-left: 1px solid var(--border); padding-left: 16px; }
-.wk-holes-add { display: flex; gap: 6px; margin-bottom: 10px; }
-.wk-holes-add input {
-  background: var(--surface2); border: 1px solid var(--border); color: var(--white);
-  font-family: 'DM Mono', monospace; font-size: 12px; padding: 7px 9px; outline: none;
-  width: 96px; transition: border-color 0.2s;
-}
-.wk-holes-add input:focus { border-color: rgba(245,245,240,0.35); }
-.wk-holes-add input::placeholder { color: var(--mid); }
-.wk-holes-add button {
-  background: none; border: 1px solid var(--border2); color: var(--mid); font-family: 'DM Mono', monospace;
-  font-size: 12px; letter-spacing: 0.06em; padding: 0 12px; cursor: pointer; transition: color 0.2s, border-color 0.2s;
-}
-.wk-holes-add button:hover { color: var(--white); border-color: rgba(245,245,240,0.35); }
-.wk-holes-empty { font-size: 12px; color: var(--mid); padding: 4px 0 10px; }
-.wk-holes-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
-.wk-holes-table th {
-  font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--mid); text-align: left;
-  padding: 0 8px 6px 0; font-weight: 400;
-}
-.wk-holes-table td { padding: 5px 8px 5px 0; font-size: 12px; color: var(--white); border-bottom: 1px solid var(--border); }
-.wk-holes-table tr:last-child td { border-bottom: none; }
-.wk-holes-table tr.done td:first-child { color: var(--mid); text-decoration: line-through; }
-.wk-holes-table input[type="checkbox"] { accent-color: var(--white); width: 14px; height: 14px; cursor: pointer; }
-.wk-holes-meters {
-  width: 64px; background: var(--surface2); border: 1px solid var(--border); color: var(--white);
-  font-family: 'DM Mono', monospace; font-size: 12px; padding: 4px 6px; outline: none;
-}
-.wk-holes-meters:focus { border-color: rgba(245,245,240,0.35); }
-.wk-holes-table button { background: none; border: none; color: var(--mid); font-size: 12px; cursor: pointer; padding: 2px 5px; }
-.wk-holes-table button:hover { color: var(--white); }
-@media (max-width: 720px) {
-  .wk-holes-body { margin-left: 0; padding-left: 12px; }
-  .wk-holes-add { flex-wrap: wrap; }
-  .wk-holes-table { display: block; overflow-x: auto; }
-}
-
 /* quick-add */
 .wk-qa { display: flex; gap: 8px; margin-top: 10px; }
 .wk-qa input {
@@ -391,26 +231,104 @@
 .wtm-status button.active { background: var(--white); color: var(--bg); }
 textarea.modal-input { resize: vertical; min-height: 60px; line-height: 1.6; font-family: 'DM Mono', monospace; }
 
-@media (max-width: 1080px) {
-  .wk-main { grid-template-columns: 1fr 240px; }
+
+/* ── LAYOUT: duas colunas (Tarefas | Realces) ── */
+.wk-main { height: 100vh; overflow-y: auto; }
+.wk-body { padding: 24px 32px 72px; display: flex; flex-direction: column; gap: 22px; }
+.wk-cols { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 26px; align-items: start; }
+.wk-cols.kb .wk-col-tasks { grid-column: 1 / -1; }
+.wk-col { min-width: 0; }
+.wk-col-hd {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+  margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px solid var(--border2);
+}
+.wk-col-title { font-family: 'Bebas Neue', sans-serif; font-size: 26px; letter-spacing: 0.08em; line-height: 1; }
+.wk-col-sum { font-size: 11px; letter-spacing: 0.06em; color: var(--mid); line-height: 1.6; }
+.wk-col-sum b { color: var(--white); font-weight: 400; }
+.wk-col-sum .over { color: var(--red); }
+.wk-col-tools { display: flex; align-items: center; gap: 10px; }
+.wk-newproj { margin-bottom: 14px; }
+.wk-newproj input { min-width: 0; }
+
+/* progresso agregado do realce (sempre visível, mesmo recolhido) */
+.wk-proj-prog { padding: 0 16px 12px 40px; display: flex; flex-direction: column; gap: 5px; }
+.wk-prog { display: flex; align-items: center; gap: 10px; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--mid); }
+.wk-prog-lbl { width: 92px; flex-shrink: 0; }
+.wk-prog-track { flex: 1; height: 3px; background: var(--muted); }
+.wk-prog-track > span { display: block; height: 100%; background: rgba(245,245,240,0.7); transition: width 0.5s ease; }
+.wk-prog.s .wk-prog-track > span { background: var(--green); }
+.wk-prog-val { width: 70px; text-align: right; color: var(--white); letter-spacing: 0.04em; }
+.wk-prog-empty { font-size: 11px; color: var(--mid); }
+
+/* leque (tarefa de um realce) — botão de furos sempre visível */
+.wk-task-tools.always { opacity: 1; }
+.wk-lq-toggle {
+  background: none; border: 1px solid var(--border2); color: var(--mid); font-family: 'DM Mono', monospace;
+  font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; padding: 4px 9px; cursor: pointer; white-space: nowrap;
+  transition: color 0.15s, border-color 0.15s;
+}
+.wk-lq-toggle:hover, .wk-lq-toggle.on { color: var(--white); border-color: rgba(245,245,240,0.4); }
+
+.wk-hole-badges { display: flex; gap: 8px; margin-top: 5px; flex-wrap: wrap; }
+.wk-hole-badge {
+  font-size: 10px; letter-spacing: 0.06em; color: var(--mid); border: 1px solid var(--border2);
+  padding: 2px 7px; white-space: nowrap;
+}
+.wk-hole-badge.done { color: var(--green); border-color: rgba(134,239,172,0.35); }
+.wk-holes-empty { font-size: 12px; color: var(--mid); padding: 4px 0 10px; }
+
+/* grade de furos: cada furo tem P (perfilado) e T (topografado) + metros */
+.fu-body { margin: 10px 0 4px 30px; padding-left: 14px; border-left: 1px solid var(--border); }
+.fu-bar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.fu-add { display: flex; gap: 6px; }
+.fu-add input {
+  width: 78px; background: var(--surface2); border: 1px solid var(--border); color: var(--white);
+  font-family: 'DM Mono', monospace; font-size: 12px; padding: 6px 8px; outline: none;
+}
+.fu-add input:focus { border-color: rgba(245,245,240,0.35); }
+.fu-add input::placeholder { color: var(--mid); }
+.fu-btn, .fu-add button {
+  background: none; border: 1px solid var(--border2); color: var(--mid); font-family: 'DM Mono', monospace;
+  font-size: 11px; letter-spacing: 0.06em; padding: 6px 10px; cursor: pointer; transition: color 0.15s, border-color 0.15s;
+}
+.fu-btn:hover, .fu-add button:hover { color: var(--white); border-color: rgba(245,245,240,0.4); }
+.fu-bulk { display: flex; gap: 6px; flex-wrap: wrap; }
+.fu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(168px, 1fr)); gap: 6px; }
+.fu { display: flex; align-items: center; gap: 6px; border: 1px solid var(--border2); padding: 5px 6px; background: var(--surface2); }
+.fu.both { border-color: rgba(134,239,172,0.4); }
+.fu-n { width: 36px; font-size: 12px; flex-shrink: 0; }
+.fu-b {
+  width: 24px; height: 24px; flex-shrink: 0; background: none; border: 1px solid var(--border2); color: var(--mid);
+  font-family: 'DM Mono', monospace; font-size: 10px; cursor: pointer; transition: background 0.12s, color 0.12s;
+}
+.fu-b.on.p { background: var(--white); color: var(--bg); border-color: var(--white); }
+.fu-b.on.t { background: var(--green); color: var(--bg); border-color: var(--green); }
+.fu-m {
+  width: 100%; min-width: 0; flex: 1; background: none; border: none; border-bottom: 1px solid var(--border);
+  color: var(--white); font-family: 'DM Mono', monospace; font-size: 11px; padding: 3px 2px; outline: none;
+}
+.fu-m:focus { border-bottom-color: rgba(245,245,240,0.4); }
+.fu-m::placeholder { color: var(--mid); }
+.fu-x { background: none; border: none; color: var(--mid); font-size: 11px; cursor: pointer; padding: 2px 3px; flex-shrink: 0; }
+.fu-x:hover { color: var(--red); }
+.fu-leg { font-size: 10px; letter-spacing: 0.08em; color: var(--mid); margin-top: 8px; }
+.fu-leg b { color: var(--white); font-weight: 400; }
+
+@media (max-width: 1000px) {
+  .wk-cols { grid-template-columns: 1fr; }
 }
 @media (max-width: 900px) {
-  .wk-main { display: block; height: auto; overflow: visible; }
-  .wk-body { padding: 20px; }
-  .wk-rail { display: none; }
+  .wk-main { height: auto; overflow: visible; }
+  .topbar { padding: 20px; }
+  .wk-body { padding: 20px 20px 60px; }
 }
 @media (max-width: 720px) {
-  .g3 { grid-template-columns: 1fr 1fr; }
   .wk-qa { flex-wrap: wrap; }
   .wk-qa-title { flex-basis: 100%; }
-  /* kanban empilha as 3 colunas em telas estreitas */
   #wk-kanban { grid-template-columns: 1fr; }
   .kb-col-body { max-height: none; }
+  .fu-body { margin-left: 0; }
 }
-@media (max-width: 460px) {
-  .g3 { grid-template-columns: 1fr; }
-}
-
 </style>
 </head>
 <body>
@@ -486,27 +404,9 @@ textarea.modal-input { resize: vertical; min-height: 60px; line-height: 1.6; fon
 
     <div class="topbar">
       <div class="page-title">Trabalho <em>&amp; entregas.</em></div>
-      <div class="wk-viewsw" role="group" aria-label="Visualização">
-        <button type="button" class="wk-viewbtn" data-view="lista">Lista</button>
-        <button type="button" class="wk-viewbtn" data-view="kanban">Kanban</button>
-      </div>
     </div>
 
     <div class="wk-body">
-      <div class="g3">
-        <div class="stat-card">
-          <div class="stat-lbl">Pendentes</div>
-          <div class="stat-val" id="sc-pend">0</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-lbl">Atrasadas</div>
-          <div class="stat-val warn" id="sc-over">0</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-lbl">Entregues</div>
-          <div class="stat-val" id="sc-done">0</div>
-        </div>
-      </div>
 
       <div class="card">
         <div class="card-hd">
@@ -520,25 +420,49 @@ textarea.modal-input { resize: vertical; min-height: 60px; line-height: 1.6; fon
         </form>
       </div>
 
-      <form class="wk-newproj" id="newproj-form" autocomplete="off">
-        <input id="newproj-input" maxlength="120" placeholder="Novo projeto — ex: Redesign do site" />
-        <div class="wk-kind-toggle" id="newproj-kind" role="group" aria-label="Tipo do projeto">
-          <button type="button" data-kind="avulsa" class="active">Avulsa</button>
-          <button type="button" data-kind="realce">Realce</button>
-        </div>
-        <button type="submit" class="btn-sm primary">Adicionar</button>
-      </form>
+      <div class="wk-cols" id="wk-cols">
 
-      <div id="wk-list"></div>
-      <div id="wk-kanban" hidden></div>
+        <!-- COLUNA: TAREFAS -->
+        <section class="wk-col wk-col-tasks" aria-labelledby="col-tasks-t">
+          <div class="wk-col-hd">
+            <div>
+              <div class="wk-col-title" id="col-tasks-t">Tarefas</div>
+              <div class="wk-col-sum" id="sum-tasks"></div>
+            </div>
+            <div class="wk-col-tools">
+              <div class="wk-viewsw" role="group" aria-label="Visualização das tarefas">
+                <button type="button" class="wk-viewbtn" data-view="lista">Lista</button>
+                <button type="button" class="wk-viewbtn" data-view="kanban">Quadro</button>
+              </div>
+            </div>
+          </div>
+          <form class="wk-newproj" id="newproj-form" autocomplete="off">
+            <input id="newproj-input" maxlength="120" placeholder="Novo projeto — ex: Relatório mensal" />
+            <button type="submit" class="btn-sm primary">Adicionar</button>
+          </form>
+          <div id="wk-list"></div>
+          <div id="wk-kanban" hidden></div>
+        </section>
 
-      <label class="arch-toggle" id="arch-wrap"><input type="checkbox" id="show-arch" /> ver projetos arquivados</label>
+        <!-- COLUNA: REALCES -->
+        <section class="wk-col wk-col-realces" aria-labelledby="col-real-t">
+          <div class="wk-col-hd">
+            <div>
+              <div class="wk-col-title" id="col-real-t">Realces</div>
+              <div class="wk-col-sum" id="sum-realces"></div>
+            </div>
+          </div>
+          <form class="wk-newproj" id="newrealce-form" autocomplete="off">
+            <input id="newrealce-input" maxlength="120" placeholder="Novo realce — ex: Realce 1240 Norte" />
+            <button type="submit" class="btn-sm primary">Adicionar</button>
+          </form>
+          <div id="wk-realces"></div>
+        </section>
+
+      </div>
+
+      <label class="arch-toggle" id="arch-wrap"><input type="checkbox" id="show-arch" /> ver arquivados</label>
     </div>
-
-    <aside class="wk-rail">
-      <div class="wk-rail-hd">Projetos</div>
-      <div class="wk-rail-list" id="wk-rail-list"></div>
-    </aside>
 
   </main>
 </div>
@@ -574,33 +498,6 @@ textarea.modal-input { resize: vertical; min-height: 60px; line-height: 1.6; fon
     <div class="modal-footer">
       <button class="modal-btn ghost" type="button" id="wtm-del">Excluir</button>
       <button class="modal-btn primary" type="button" id="wtm-save">Salvar</button>
-    </div>
-  </div>
-</div>
-
-<!-- TAREFAS DO PROJETO -->
-<div class="modal-overlay" id="wk-proj-modal">
-  <div class="modal wk-proj-box" role="dialog" aria-modal="true" aria-labelledby="wpm-title">
-    <div class="wpm-title-row">
-      <div class="modal-title" id="wpm-title">Projeto</div>
-      <button type="button" class="wpm-rename-btn" id="wpm-rename" title="Renomear projeto">✎</button>
-    </div>
-    <div class="wpm-kind">
-      <span class="wpm-kind-lbl">Tipo</span>
-      <div class="wk-kind-toggle" id="wpm-kind" role="group" aria-label="Tipo do projeto">
-        <button type="button" data-kind="avulsa">Avulsa</button>
-        <button type="button" data-kind="realce">Realce</button>
-      </div>
-    </div>
-    <div class="wpm-list" id="wpm-list"></div>
-    <form class="wk-qa wpm-add" id="wpm-add" autocomplete="off">
-      <input class="wk-qa-title" id="wpm-add-title" maxlength="200" placeholder="Nova tarefa" />
-      <input class="wk-qa-date" id="wpm-add-date" type="date" />
-      <button type="submit">+</button>
-    </form>
-    <div class="modal-footer">
-      <button class="modal-btn ghost" type="button" id="wpm-report">📋 Copiar relatório</button>
-      <button class="modal-btn ghost" type="button" id="wpm-close">Fechar</button>
     </div>
   </div>
 </div>
@@ -656,7 +553,7 @@ function relLabel(t) {
   return `faltam ${n} dias`;
 }
 
-/* estado de collapse por projeto */
+/* ── estado de collapse por projeto/realce ── */
 const CKEY = 'p90_wk_collapsed';
 function collapsedSet() {
   try { return new Set(JSON.parse(localStorage.getItem(CKEY) || '[]')); } catch (e) { return new Set(); }
@@ -665,68 +562,394 @@ function saveCollapsed(set) {
   try { localStorage.setItem(CKEY, JSON.stringify([...set])); } catch (e) {}
 }
 
-/* ── checklist de furos — expandido é só de sessão, não persiste (mesmo
-   comportamento do BlastHole Manager: some ao recarregar a página) ── */
+/* leques com a grade de furos aberta — só de sessão */
 const holesExpanded = new Set();
-function holesBadgesHTML(taskId) {
-  const p = Store.workHoleProgress(taskId);
-  if (!p.total) return '';
-  const profCls = p.profiled === p.total ? 'done' : '';
-  const survCls = p.surveyed === p.total ? 'done' : '';
-  return `<div class="wk-hole-badges">
-    <span class="wk-hole-badge ${profCls}">${p.profiled}/${p.total} perfilado${p.total === 1 ? '' : 's'}</span>
-    <span class="wk-hole-badge ${survCls}">${p.surveyed}/${p.total} topografado${p.total === 1 ? '' : 's'}</span>
-  </div>`;
-}
-function holesBodyHTML(taskId) {
-  const holes = Store.getWorkTaskHoles(taskId);
-  const rows = holes.length ? `<table class="wk-holes-table">
-    <thead><tr><th>Furo</th><th>Perfilado</th><th>Topografado</th><th>Metros</th><th></th></tr></thead>
-    <tbody>
-      ${holes.map(h => `
-        <tr class="${h.profiled ? 'done' : ''}">
-          <td>F${h.number}</td>
-          <td><input type="checkbox" ${h.profiled ? 'checked' : ''} data-act="holeprof" data-hole="${h.id}" title="perfilado"></td>
-          <td><input type="checkbox" ${h.surveyed ? 'checked' : ''} data-act="holesurv" data-hole="${h.id}" title="topografado"></td>
-          <td><input type="text" inputmode="decimal" class="wk-holes-meters" value="${h.meters != null ? h.meters : ''}" placeholder="0.0" data-act="holemeters" data-hole="${h.id}"></td>
-          <td><button type="button" data-act="holedel" data-hole="${h.id}" title="Remover">✕</button></td>
-        </tr>`).join('')}
-    </tbody>
-  </table>` : '<div class="wk-holes-empty">Nenhum furo ainda.</div>';
-  return `<div class="wk-holes-body">
-    <div class="wk-holes-add">
-      <input type="text" inputmode="numeric" placeholder="de" class="wk-holes-de">
-      <input type="text" inputmode="numeric" placeholder="até (opcional)" class="wk-holes-ate">
-      <button type="button" data-act="addholes">+ Adicionar furos</button>
-    </div>
-    ${rows}
-  </div>`;
-}
 
-/* ── visão ativa (lista | kanban) ── */
+/* ── visão das tarefas (lista | quadro) ── */
 const VKEY = 'p90_wk_view';
 function curView() {
   try { return localStorage.getItem(VKEY) === 'kanban' ? 'kanban' : 'lista'; } catch (e) { return 'lista'; }
 }
 function setView(v) {
   try { localStorage.setItem(VKEY, v); } catch (e) {}
-  renderView();
+  render();
 }
 
-function render() { renderView(); }   // alias — usado por todos os handlers de mutação
-
-function renderView() {
+function render() {
   const v = curView();
   document.querySelectorAll('.wk-viewbtn').forEach(b => b.classList.toggle('active', b.dataset.view === v));
+  document.getElementById('wk-cols').classList.toggle('kb', v === 'kanban');
   document.getElementById('wk-list').hidden   = v !== 'lista';
   document.getElementById('wk-kanban').hidden = v !== 'kanban';
-  document.getElementById('arch-wrap').style.display = v === 'lista' ? '' : 'none';
-  renderStats();
-  renderRail();
+  document.getElementById('newproj-form').hidden = v !== 'lista';
+  renderSummaries();
   renderReminders();
-  if (projModalId != null) renderProjModalList(projModalId);
-  if (v === 'kanban') renderKanban(); else renderList();
+  if (v === 'kanban') renderKanban(); else renderTasksCol();
+  renderRealcesCol();
 }
+
+function linkIcon(t, cls) {
+  if (!t.link) return '';
+  return `<a class="${cls}" href="${esc(t.link)}" target="_blank" rel="noopener" title="Abrir link" onclick="event.stopPropagation()">↗</a>`;
+}
+
+/* ── resumos no topo de cada coluna ── */
+function renderSummaries() {
+  const avulsas = new Set(Store.getWorkProjects(false).filter(p => p.kind !== 'realce').map(p => p.id));
+  let pend = 0, over = 0, done = 0;
+  Store.getWorkTasks().forEach(t => {
+    if (!avulsas.has(t.projectId)) return;
+    if (t.done) { done++; return; }
+    if (Store.workTaskStatus(t) === 'atrasada') over++;
+    pend++;
+  });
+  document.getElementById('sum-tasks').innerHTML =
+    `<b>${pend}</b> pendente${pend === 1 ? '' : 's'}` +
+    (over ? ` · <span class="over">${over} atrasada${over === 1 ? '' : 's'}</span>` : '') +
+    ` · <b>${done}</b> entregue${done === 1 ? '' : 's'}`;
+
+  const real = Store.getWorkProjects(false).filter(p => p.kind === 'realce');
+  let tot = 0, pr = 0, su = 0, lq = 0;
+  real.forEach(p => Store.getWorkTasks(p.id).forEach(t => {
+    lq++;
+    const g = Store.workHoleProgress(t.id); tot += g.total; pr += g.profiled; su += g.surveyed;
+  }));
+  document.getElementById('sum-realces').innerHTML = real.length
+    ? `<b>${real.length}</b> realce${real.length === 1 ? '' : 's'} · <b>${lq}</b> leque${lq === 1 ? '' : 's'}` +
+      (tot ? ` · furos: <b>${pr}/${tot}</b> perfilados · <b>${su}/${tot}</b> topografados` : '')
+    : 'nenhum realce ainda';
+}
+
+/* ── cartão de projeto (coluna Tarefas) ── */
+function projectCardHTML(p, collapsed) {
+  const tasks = Store.getWorkTasks(p.id);
+  const pending = tasks.filter(t => !t.done);
+  const doneTasks = tasks.filter(t => t.done);
+  const nOver = pending.filter(t => Store.workTaskStatus(t) === 'atrasada').length;
+  const isCol = collapsed.has(p.id);
+
+  const countBits = [];
+  if (pending.length) countBits.push(pending.length + ' pendente' + (pending.length === 1 ? '' : 's'));
+  if (nOver) countBits.push('<span class="over">' + nOver + ' atrasada' + (nOver === 1 ? '' : 's') + '</span>');
+  if (!pending.length && !doneTasks.length) countBits.push('sem tarefas');
+
+  const rowHTML = t => {
+    const rel = t.status === 'fazendo' && !t.done
+      ? `<span class="rel-fazendo">fazendo</span>${t.dueOn ? ' · ' + relLabel(t) : ''}`
+      : relLabel(t);
+    return `<div class="wk-task ${t.done ? 'done' : ''}" data-id="${t.id}">
+      <div class="wk-task-row">
+        <div class="wk-check" data-act="check" title="${t.done ? 'Desmarcar' : 'Marcar entregue'}">${t.done ? '✓' : ''}</div>
+        <div class="wk-task-body">
+          <div class="wk-task-title">${esc(t.title)}</div>
+          <div class="wk-task-due">${t.dueOn ? fmtDue(t.dueOn) + ' · ' : ''}${rel}</div>
+        </div>
+        <div class="wk-task-tools">
+          ${linkIcon(t, 'wk-task-link')}
+          <button data-act="edit" title="Editar">✎</button>
+          <button data-act="del" title="Excluir">✕</button>
+        </div>
+      </div>
+    </div>`;
+  };
+
+  const body = isCol ? '' : `<div class="wk-proj-body">
+    ${(pending.map(rowHTML).join('') + doneTasks.map(rowHTML).join('')) ||
+      '<div class="wk-empty">Nenhuma tarefa. Adicione abaixo.</div>'}
+    <form class="wk-qa" data-proj="${p.id}" autocomplete="off">
+      <input class="wk-qa-title" maxlength="200" placeholder="Nova tarefa" />
+      <input class="wk-qa-date" type="date" />
+      <button type="submit">+</button>
+    </form>
+  </div>`;
+
+  return projShell(p, isCol, countBits.join(' · '), '', body);
+}
+
+/* ── cartão de realce (coluna Realces): progresso agregado + leques ── */
+function progRow(cls, label, n, tot) {
+  const pct = tot ? Math.round(n / tot * 100) : 0;
+  return `<div class="wk-prog ${cls}"><span class="wk-prog-lbl">${label}</span>
+    <span class="wk-prog-track"><span style="width:${pct}%"></span></span>
+    <span class="wk-prog-val">${n}/${tot} · ${pct}%</span></div>`;
+}
+
+function furosBodyHTML(taskId) {
+  const holes = Store.getWorkTaskHoles(taskId);
+  const g = Store.workHoleProgress(taskId);
+  const allP = g.total > 0 && g.profiled === g.total;
+  const allS = g.total > 0 && g.surveyed === g.total;
+  const meters = holes.reduce((s, h) => s + (h.meters || 0), 0);
+  return `<div class="fu-body">
+    <div class="fu-bar">
+      <form class="fu-add" data-task="${taskId}" autocomplete="off">
+        <input class="fu-de" inputmode="numeric" placeholder="furo" />
+        <input class="fu-ate" inputmode="numeric" placeholder="até (opc.)" />
+        <button type="submit">+ furos</button>
+      </form>
+      ${holes.length ? `<div class="fu-bulk">
+        <button type="button" class="fu-btn" data-act="allprof">${allP ? 'Desmarcar' : 'Perfilar'} todos</button>
+        <button type="button" class="fu-btn" data-act="allsurv">${allS ? 'Desmarcar' : 'Topografar'} todos</button>
+      </div>` : ''}
+    </div>
+    ${holes.length ? `<div class="fu-grid">${holes.map(h => `
+      <div class="fu ${h.profiled && h.surveyed ? 'both' : ''}">
+        <span class="fu-n">F${h.number}</span>
+        <button type="button" class="fu-b p ${h.profiled ? 'on' : ''}" data-act="holeprof" data-hole="${h.id}" title="Perfilado" aria-pressed="${!!h.profiled}">P</button>
+        <button type="button" class="fu-b t ${h.surveyed ? 'on' : ''}" data-act="holesurv" data-hole="${h.id}" title="Topografado" aria-pressed="${!!h.surveyed}">T</button>
+        <input class="fu-m" inputmode="decimal" placeholder="m" value="${h.meters != null ? h.meters : ''}" data-act="holemeters" data-hole="${h.id}" title="Metros" />
+        <button type="button" class="fu-x" data-act="holedel" data-hole="${h.id}" title="Remover furo">✕</button>
+      </div>`).join('')}</div>
+      <div class="fu-leg"><b>P</b> perfilado · <b>T</b> topografado${meters ? ` · <b>${Math.round(meters * 100) / 100} m</b> registrados` : ''}</div>`
+      : '<div class="wk-holes-empty">Nenhum furo ainda. Informe o número (ou uma faixa) acima.</div>'}
+  </div>`;
+}
+
+function realceCardHTML(p, collapsed) {
+  const tasks = Store.getWorkTasks(p.id);
+  const pending = tasks.filter(t => !t.done);
+  const doneTasks = tasks.filter(t => t.done);
+  const isCol = collapsed.has(p.id);
+  let tot = 0, pr = 0, su = 0;
+  tasks.forEach(t => { const g = Store.workHoleProgress(t.id); tot += g.total; pr += g.profiled; su += g.surveyed; });
+
+  const lequeHTML = t => {
+    const g = Store.workHoleProgress(t.id);
+    const open = holesExpanded.has(t.id);
+    const badge = g.total
+      ? `<div class="wk-hole-badges">
+          <span class="wk-hole-badge ${g.profiled === g.total ? 'done' : ''}">${g.profiled}/${g.total} perfilados</span>
+          <span class="wk-hole-badge ${g.surveyed === g.total ? 'done' : ''}">${g.surveyed}/${g.total} topografados</span>
+        </div>`
+      : '<div class="wk-task-due">sem furos</div>';
+    return `<div class="wk-task ${t.done ? 'done' : ''}" data-id="${t.id}">
+      <div class="wk-task-row">
+        <div class="wk-check" data-act="check" title="${t.done ? 'Reabrir leque' : 'Marcar leque concluído'}">${t.done ? '✓' : ''}</div>
+        <div class="wk-task-body">
+          <div class="wk-task-title">${esc(t.title)}</div>
+          ${badge}
+        </div>
+        <div class="wk-task-tools always">
+          <button type="button" class="wk-lq-toggle ${open ? 'on' : ''}" data-act="holes" aria-expanded="${open}">Furos ${open ? '▴' : '▾'}</button>
+          <button data-act="edit" title="Editar leque">✎</button>
+          <button data-act="del" title="Excluir leque">✕</button>
+        </div>
+      </div>
+      ${open ? furosBodyHTML(t.id) : ''}
+    </div>`;
+  };
+
+  const countBits = [];
+  countBits.push(tasks.length ? tasks.length + ' leque' + (tasks.length === 1 ? '' : 's') : 'sem leques');
+
+  const prog = `<div class="wk-proj-prog">${tot
+    ? progRow('p', 'Perfilados', pr, tot) + progRow('s', 'Topografados', su, tot)
+    : '<div class="wk-prog-empty">nenhum furo cadastrado ainda</div>'}</div>`;
+
+  const body = isCol ? '' : `<div class="wk-proj-body">
+    ${(pending.map(lequeHTML).join('') + doneTasks.map(lequeHTML).join('')) ||
+      '<div class="wk-empty">Nenhum leque. Adicione abaixo.</div>'}
+    <form class="wk-qa" data-proj="${p.id}" autocomplete="off">
+      <input class="wk-qa-title" maxlength="200" placeholder="Novo leque" />
+      <button type="submit">+</button>
+    </form>
+  </div>`;
+
+  return projShell(p, isCol, countBits.join(' · '), prog, body);
+}
+
+function projShell(p, isCol, count, prog, body) {
+  const other = p.kind === 'realce' ? 'Mover para Tarefas' : 'Mover para Realces';
+  return `<div class="wk-proj ${isCol ? 'collapsed' : ''}" data-proj="${p.id}">
+    <div class="wk-proj-hd" data-act="toggle">
+      <span class="wk-proj-caret">▼</span>
+      <span class="wk-proj-name">${esc(p.name)}${p.archived ? ' <span style="color:var(--mid)">(arquivado)</span>' : ''}</span>
+      <span class="wk-proj-count">${count}</span>
+      <span class="wk-proj-acts">
+        <button data-act="report" title="Copiar relatório">📋</button>
+        <button data-act="rename" title="Renomear">✎</button>
+        <button data-act="move" title="${other}">⇄</button>
+        <button data-act="archive" title="${p.archived ? 'Desarquivar' : 'Arquivar'}">${p.archived ? '↺' : '⊟'}</button>
+        <button data-act="delproj" title="Excluir">✕</button>
+      </span>
+    </div>
+    ${prog}
+    ${body}
+  </div>`;
+}
+
+function renderTasksCol() {
+  const showArch = document.getElementById('show-arch').checked;
+  const collapsed = collapsedSet();
+  const list = Store.getWorkProjects(showArch).filter(p => p.kind !== 'realce');
+  document.getElementById('wk-list').innerHTML = list.length
+    ? list.map(p => projectCardHTML(p, collapsed)).join('')
+    : '<div class="wk-empty">Nenhum projeto de tarefas ainda. Crie um acima e lance as tarefas com o prazo.</div>';
+}
+
+function renderRealcesCol() {
+  const showArch = document.getElementById('show-arch').checked;
+  const collapsed = collapsedSet();
+  const list = Store.getWorkProjects(showArch).filter(p => p.kind === 'realce');
+  document.getElementById('wk-realces').innerHTML = list.length
+    ? list.map(p => realceCardHTML(p, collapsed)).join('')
+    : '<div class="wk-empty">Nenhum realce ainda. Crie um acima, adicione os leques e depois os furos de cada leque.</div>';
+}
+
+/* ── eventos das duas colunas (delegação) ── */
+const colsEl = document.getElementById('wk-cols');
+
+colsEl.addEventListener('click', e => {
+  const btn = e.target.closest('[data-act]');
+  if (!btn || btn.dataset.act === 'holemeters') return;
+  const act = btn.dataset.act;
+  const projEl = e.target.closest('.wk-proj');
+  const projId = projEl ? Number(projEl.dataset.proj) : null;
+  const taskEl = e.target.closest('.wk-task');
+  const taskId = taskEl ? Number(taskEl.dataset.id) : null;
+
+  if (act === 'toggle') {
+    if (e.target.closest('.wk-proj-acts')) return;
+    const set = collapsedSet();
+    set.has(projId) ? set.delete(projId) : set.add(projId);
+    saveCollapsed(set);
+    render();
+  } else if (act === 'rename') {
+    e.stopPropagation();
+    startRename(projEl, projId);
+  } else if (act === 'archive') {
+    e.stopPropagation();
+    const p = Store.getWorkProjects(true).find(x => x.id === projId);
+    Store.setWorkProjectArchived(projId, !(p && p.archived));
+    render();
+  } else if (act === 'delproj') {
+    e.stopPropagation();
+    removeProject(projId);
+  } else if (act === 'move') {
+    e.stopPropagation();
+    const p = Store.getWorkProjects(true).find(x => x.id === projId);
+    if (!p) return;
+    const prev = p.kind, next = prev === 'realce' ? 'avulsa' : 'realce';
+    Store.setWorkProjectKind(projId, next);
+    render();
+    window.p90toastUndo(`"${p.name}" movido para ${next === 'realce' ? 'Realces' : 'Tarefas'}`, () => { Store.setWorkProjectKind(projId, prev); render(); });
+  } else if (act === 'report') {
+    e.stopPropagation();
+    reportFor(projId);
+  } else if (act === 'check') {
+    Store.toggleWorkTaskDone(taskId);
+    render();
+  } else if (act === 'edit') {
+    openEdit(taskId);
+  } else if (act === 'del') {
+    removeTask(taskId);
+  } else if (act === 'holes') {
+    if (holesExpanded.has(taskId)) holesExpanded.delete(taskId); else holesExpanded.add(taskId);
+    render();
+  } else if (act === 'holeprof') {
+    Store.toggleWorkHoleProfiled(Number(btn.dataset.hole));
+    render();
+  } else if (act === 'holesurv') {
+    Store.toggleWorkHoleSurveyed(Number(btn.dataset.hole));
+    render();
+  } else if (act === 'allprof' || act === 'allsurv') {
+    const field = act === 'allprof' ? 'profiled' : 'surveyed';
+    const g = Store.workHoleProgress(taskId);
+    const on = !(g.total > 0 && g[field] === g.total);
+    Store.setWorkTaskHolesAll(taskId, field, on);
+    render();
+  } else if (act === 'holedel') {
+    const removed = Store.deleteWorkTaskHole(Number(btn.dataset.hole));
+    render();
+    if (removed) window.p90toastUndo(`Furo F${removed.number} removido`, () => { Store.restoreWorkTaskHole(removed, removed.taskId); render(); });
+  }
+});
+
+colsEl.addEventListener('change', e => {
+  const el = e.target.closest('[data-act="holemeters"]');
+  if (!el) return;
+  Store.setWorkHoleMeters(Number(el.dataset.hole), el.value);
+  render();
+});
+
+colsEl.addEventListener('submit', e => {
+  const holeForm = e.target.closest('.fu-add');
+  if (holeForm) {
+    e.preventDefault();
+    const taskId = Number(holeForm.dataset.task);
+    const res = Store.addWorkTaskHoles(taskId, holeForm.querySelector('.fu-de').value, holeForm.querySelector('.fu-ate').value);
+    if (res.error === 'range') toast('Preencha o número (ou a faixa) do furo');
+    else if (res.error === 'toobig') toast('Faixa grande demais pra adicionar de uma vez (máximo 200)');
+    else if (res.added === 0) toast('Nada adicionado — esses furos já estavam no leque');
+    else toast(`${res.added} furo${res.added === 1 ? '' : 's'} adicionado${res.added === 1 ? '' : 's'}` + (res.duplicated ? ` (${res.duplicated} já existia${res.duplicated === 1 ? '' : 'm'})` : ''));
+    render();
+    const again = colsEl.querySelector(`.fu-add[data-task="${taskId}"] .fu-de`);
+    if (again) again.focus();
+    return;
+  }
+  const form = e.target.closest('.wk-qa');
+  if (!form) return;
+  e.preventDefault();
+  const projId = Number(form.dataset.proj);
+  const tEl = form.querySelector('.wk-qa-title');
+  const dEl = form.querySelector('.wk-qa-date');
+  const title = tEl.value.trim();
+  if (!title) { tEl.focus(); return; }
+  Store.addWorkTask(projId, { title, dueOn: (dEl && dEl.value) || null });
+  render();
+  const again = colsEl.querySelector(`.wk-qa[data-proj="${projId}"] .wk-qa-title`);
+  if (again) again.focus();
+});
+
+function reportFor(projId) {
+  const p = Store.getWorkProjects(true).find(x => x.id === projId);
+  if (!p) return;
+  if (!Store.getWorkTasks(projId).length) { toast(p.kind === 'realce' ? 'Nenhum leque neste realce ainda' : 'Nenhuma tarefa neste projeto ainda'); return; }
+  copyText(buildProjectReport(projId)).then(ok => toast(ok ? 'Relatório copiado ✓' : 'Não consegui copiar — tenta de novo'));
+}
+
+function startRename(projEl, projId) {
+  const nameEl = projEl.querySelector('.wk-proj-name');
+  if (!nameEl || projEl.querySelector('.wk-proj-name-input')) return;
+  const cur = (Store.getWorkProjects(true).find(x => x.id === projId) || {}).name || '';
+  const inp = document.createElement('input');
+  inp.className = 'wk-proj-name-input';
+  inp.value = cur; inp.maxLength = 120;
+  nameEl.replaceWith(inp);
+  inp.focus(); inp.select();
+  const commit = () => {
+    const v = inp.value.trim();
+    if (v && v !== cur) { Store.renameWorkProject(projId, v); }
+    render();
+  };
+  inp.addEventListener('keydown', ev => {
+    if (ev.key === 'Enter') { ev.preventDefault(); commit(); }
+    if (ev.key === 'Escape') render();
+  });
+  inp.addEventListener('blur', commit);
+}
+
+/* ── novo projeto (tarefas) / novo realce ── */
+function bindNewProject(formId, inputId, kind, msg) {
+  document.getElementById(formId).addEventListener('submit', e => {
+    e.preventDefault();
+    const inp = document.getElementById(inputId);
+    const v = inp.value.trim();
+    if (!v) return;
+    Store.addWorkProject(v, kind);
+    inp.value = '';
+    toast(msg);
+    render();
+  });
+}
+bindNewProject('newproj-form', 'newproj-input', 'avulsa', 'Projeto adicionado');
+bindNewProject('newrealce-form', 'newrealce-input', 'realce', 'Realce adicionado');
+
+document.getElementById('show-arch').addEventListener('change', render);
+document.querySelector('.wk-viewsw').addEventListener('click', e => {
+  const b = e.target.closest('.wk-viewbtn');
+  if (b) setView(b.dataset.view);
+});
 
 /* ── LEMBRETES ──
    Nota visível, opcionalmente ligada a uma tarefa. Some da lista quando
@@ -801,101 +1024,6 @@ document.getElementById('wk-rem-list').addEventListener('click', e => {
   }, 220);
 });
 
-/* ── RAIL DIREITA — lista de projetos ── */
-function projCounts(projId) {
-  const tasks = Store.getWorkTasks(projId);
-  const pending = tasks.filter(t => !t.done);
-  const over = pending.filter(t => Store.workTaskStatus(t) === 'atrasada').length;
-  return { total: tasks.length, pending: pending.length, over, done: tasks.length - pending.length };
-}
-
-function renderRail() {
-  const el = document.getElementById('wk-rail-list');
-  if (!el) return;
-  const projects = Store.getWorkProjects(false);
-  if (!projects.length) {
-    el.innerHTML = '<div class="wk-rail-empty">Nenhum projeto ainda. Adicione um no campo à esquerda.</div>';
-    return;
-  }
-  const itemHTML = p => {
-    const c = projCounts(p.id);
-    const isRealce = p.kind === 'realce';
-    let meta;
-    if (!c.total) meta = isRealce ? 'sem leques' : 'sem tarefas';
-    else if (!c.pending) meta = 'tudo entregue';
-    else {
-      meta = c.pending + ' pendente' + (c.pending === 1 ? '' : 's');
-      if (c.over) meta += ' · <span class="over">' + c.over + ' atrasada' + (c.over === 1 ? '' : 's') + '</span>';
-    }
-    return `<div class="wk-rail-item" data-proj="${p.id}">
-      <span class="wk-rail-name">${esc(p.name)}</span>
-      <span class="wk-rail-meta">${meta}</span>
-    </div>`;
-  };
-  const realce = projects.filter(p => p.kind === 'realce');
-  const avulsa = projects.filter(p => p.kind !== 'realce');
-  let html = '';
-  if (realce.length) html += '<div class="wk-rail-group-hd">Realces</div>' + realce.map(itemHTML).join('');
-  if (avulsa.length) html += '<div class="wk-rail-group-hd">Avulsas</div>' + avulsa.map(itemHTML).join('');
-  el.innerHTML = html;
-}
-
-/* ── MODAL: tarefas de um projeto ── */
-let projModalId = null;
-
-function renderProjModalList(projId) {
-  const listEl = document.getElementById('wpm-list');
-  const p = Store.getWorkProjects(true).find(x => x.id === projId);
-  const isRealce = p && p.kind === 'realce';
-  const tasks = Store.getWorkTasks(projId);
-  const pending = tasks.filter(t => !t.done);
-  const doneTasks = tasks.filter(t => t.done);
-  const rows = [...pending, ...doneTasks];
-  if (!rows.length) {
-    listEl.innerHTML = `<div class="wpm-empty">${isRealce ? 'Nenhum leque neste realce. Adicione abaixo.' : 'Nenhuma tarefa neste projeto. Adicione abaixo.'}</div>`;
-    return;
-  }
-  listEl.innerHTML = rows.map(t => {
-    const rel = t.status === 'fazendo' && !t.done
-      ? `<span class="rel-fazendo">fazendo</span>${t.dueOn ? ' · ' + relLabel(t) : ''}`
-      : relLabel(t);
-    return `<div class="wpm-row ${t.done ? 'done' : ''}" data-id="${t.id}">
-      <div class="wpm-check" data-act="check" title="${t.done ? 'Desmarcar' : 'Marcar entregue'}">${t.done ? '✓' : ''}</div>
-      <div class="wpm-main" data-act="edit">
-        <div class="wpm-title">${esc(t.title)}</div>
-        <div class="wpm-due">${t.dueOn ? fmtDue(t.dueOn) + ' · ' : ''}${rel}</div>
-      </div>
-      ${linkIcon(t, 'wpm-link')}
-    </div>`;
-  }).join('');
-}
-
-function openProjModal(projId) {
-  const p = Store.getWorkProjects(true).find(x => x.id === projId);
-  if (!p) return;
-  projModalId = projId;
-  document.getElementById('wpm-title').textContent = p.name;
-  document.querySelectorAll('#wpm-kind button').forEach(b => b.classList.toggle('active', b.dataset.kind === (p.kind || 'avulsa')));
-  document.getElementById('wpm-add-title').placeholder = p.kind === 'realce' ? 'Novo leque' : 'Nova tarefa';
-  document.getElementById('wpm-add-title').value = '';
-  document.getElementById('wpm-add-date').value = '';
-  renderProjModalList(projId);
-  document.getElementById('wk-proj-modal').classList.add('open');
-}
-function closeProjModal() {
-  document.getElementById('wk-proj-modal').classList.remove('open');
-  projModalId = null;
-}
-document.getElementById('wpm-kind').addEventListener('click', e => {
-  const b = e.target.closest('button[data-kind]');
-  if (!b || projModalId == null) return;
-  Store.setWorkProjectKind(projModalId, b.dataset.kind);
-  document.querySelectorAll('#wpm-kind button').forEach(x => x.classList.toggle('active', x === b));
-  document.getElementById('wpm-add-title').placeholder = b.dataset.kind === 'realce' ? 'Novo leque' : 'Nova tarefa';
-  renderProjModalList(projModalId);
-  render();
-});
-
 /* ── relatório do projeto — texto pronto pra colar em WhatsApp/e-mail,
    com tarefas entregues/pendentes e progresso de furos (agregado e por
    tarefa). Mesmo formato do relatório do BlastHole Manager, só que
@@ -960,156 +1088,6 @@ async function copyText(text) {
       return false;
     }
   }
-}
-
-document.getElementById('wpm-report').addEventListener('click', async () => {
-  if (projModalId == null) return;
-  const tasks = Store.getWorkTasks(projModalId);
-  const p = Store.getWorkProjects(true).find(x => x.id === projModalId);
-  if (!tasks.length) { toast((p && p.kind === 'realce') ? 'Nenhum leque neste realce ainda' : 'Nenhuma tarefa neste projeto ainda'); return; }
-  const ok = await copyText(buildProjectReport(projModalId));
-  toast(ok ? 'Relatório copiado ✓' : 'Não consegui copiar — tenta de novo');
-});
-
-/* Renomear o projeto de dentro do modal — mesma lógica de startRename(),
-   só que trocando o <div class="modal-title"> em vez do card da lista. */
-function startProjModalRename() {
-  if (projModalId == null) return;
-  const titleEl = document.getElementById('wpm-title');
-  if (titleEl.querySelector('.wpm-title-input')) return;
-  const p = Store.getWorkProjects(true).find(x => x.id === projModalId);
-  if (!p) return;
-  const cur = p.name;
-  titleEl.textContent = '';
-  const inp = document.createElement('input');
-  inp.className = 'wpm-title-input';
-  inp.maxLength = 120;
-  inp.value = cur;
-  titleEl.appendChild(inp);
-  inp.focus(); inp.select();
-  let done = false;
-  const commit = () => {
-    if (done) return;
-    done = true;
-    const v = inp.value.trim();
-    if (v && v !== cur) Store.renameWorkProject(projModalId, v);
-    titleEl.textContent = (v || cur);
-    render();
-  };
-  inp.addEventListener('keydown', ev => {
-    if (ev.key === 'Enter') { ev.preventDefault(); commit(); }
-    if (ev.key === 'Escape') { done = true; titleEl.textContent = cur; }
-  });
-  inp.addEventListener('blur', commit);
-}
-document.getElementById('wpm-rename').addEventListener('click', startProjModalRename);
-
-// Estatísticas do topo contam só atividades avulsas — leques de um
-// realce são acompanhados pelo próprio indicador de furos (badges na
-// lista + "furos pendentes" em Pendências), não pelas contagens de
-// tarefa/entrega genéricas.
-function renderStats() {
-  let pend = 0, over = 0, done = 0;
-  const liveIds = new Set(Store.getWorkProjects(false).filter(p => p.kind !== 'realce').map(p => p.id));
-  Store.getWorkTasks().forEach(t => {
-    if (!liveIds.has(t.projectId)) return;
-    if (t.done) { done++; return; }
-    if (Store.workTaskStatus(t) === 'atrasada') over++;
-    pend++;
-  });
-  document.getElementById('sc-pend').textContent = pend;
-  document.getElementById('sc-over').textContent = over;
-  document.getElementById('sc-done').textContent = done;
-}
-
-function linkIcon(t, cls) {
-  if (!t.link) return '';
-  return `<a class="${cls}" href="${esc(t.link)}" target="_blank" rel="noopener" title="Abrir link" onclick="event.stopPropagation()">↗</a>`;
-}
-
-function projectCardHTML(p, collapsed) {
-  const isRealce = p.kind === 'realce';
-  const tasks = Store.getWorkTasks(p.id);
-  const pending = tasks.filter(t => !t.done);
-  const doneTasks = tasks.filter(t => t.done);
-  const nOver = pending.filter(t => Store.workTaskStatus(t) === 'atrasada').length;
-  const isCol = collapsed.has(p.id);
-
-  const countBits = [];
-  if (pending.length) countBits.push(pending.length + ' pendente' + (pending.length === 1 ? '' : 's'));
-  if (nOver) countBits.push('<span class="over">' + nOver + ' atrasada' + (nOver === 1 ? '' : 's') + '</span>');
-  if (!pending.length && !doneTasks.length) countBits.push(isRealce ? 'sem leques' : 'sem tarefas');
-
-  const rowHTML = t => {
-    const rel = t.status === 'fazendo' && !t.done
-      ? `<span class="rel-fazendo">fazendo</span>${t.dueOn ? ' · ' + relLabel(t) : ''}`
-      : relLabel(t);
-    // Furos só existem em projetos "realce" — em "avulsa" o botão/badges
-    // nem aparecem, pra não confundir tarefa comum com leque de furos.
-    return `<div class="wk-task ${t.done ? 'done' : ''}" data-id="${t.id}">
-      <div class="wk-task-row">
-        <div class="wk-check" data-act="check" title="${t.done ? 'Desmarcar' : 'Marcar entregue'}">${t.done ? '✓' : ''}</div>
-        <div class="wk-task-body">
-          <div class="wk-task-title">${esc(t.title)}</div>
-          <div class="wk-task-due">${t.dueOn ? fmtDue(t.dueOn) + ' · ' : ''}${rel}</div>
-          ${isRealce ? holesBadgesHTML(t.id) : ''}
-        </div>
-        <div class="wk-task-tools">
-          ${linkIcon(t, 'wk-task-link')}
-          ${isRealce ? '<button data-act="holes" title="Furos">⛏</button>' : ''}
-          <button data-act="edit" title="Editar">✎</button>
-          <button data-act="del" title="Excluir">✕</button>
-        </div>
-      </div>
-      ${isRealce && holesExpanded.has(t.id) ? holesBodyHTML(t.id) : ''}
-    </div>`;
-  };
-
-  const body = isCol ? '' : `<div class="wk-proj-body">
-    ${(pending.map(rowHTML).join('') + doneTasks.map(rowHTML).join('')) ||
-      `<div class="wk-empty">${isRealce ? 'Nenhum leque' : 'Nenhuma tarefa'}. Adicione abaixo.</div>`}
-    <form class="wk-qa" data-proj="${p.id}" autocomplete="off">
-      <input class="wk-qa-title" maxlength="200" placeholder="${isRealce ? 'Novo leque' : 'Nova tarefa'}" />
-      <input class="wk-qa-date" type="date" />
-      <button type="submit">+</button>
-    </form>
-  </div>`;
-
-  return `<div class="wk-proj ${isCol ? 'collapsed' : ''}" data-proj="${p.id}">
-    <div class="wk-proj-hd" data-act="toggle">
-      <span class="wk-proj-caret">▼</span>
-      <span class="wk-proj-name">${esc(p.name)}${p.archived ? ' <span style="color:var(--mid)">(arquivado)</span>' : ''}</span>
-      <span class="wk-proj-count">${countBits.join(' · ')}</span>
-      <span class="wk-proj-acts">
-        <button data-act="rename" title="Renomear">✎</button>
-        <button data-act="archive" title="${p.archived ? 'Desarquivar' : 'Arquivar'}">${p.archived ? '↺' : '⊟'}</button>
-        <button data-act="delproj" title="Excluir projeto">✕</button>
-      </span>
-    </div>
-    ${body}
-  </div>`;
-}
-
-function renderList() {
-  const showArch = document.getElementById('show-arch').checked;
-  const projects = Store.getWorkProjects(showArch);
-  const collapsed = collapsedSet();
-  const list = document.getElementById('wk-list');
-
-  if (!projects.length) {
-    list.innerHTML = '<div class="wk-empty">Nenhum projeto ainda. Adicione o primeiro no campo acima e vá lançando as tarefas com o prazo.</div>';
-    return;
-  }
-
-  // Realces (levantamento com furos) e atividades avulsas (entrega comum)
-  // são visualmente separados em duas seções — evita misturar leque de
-  // furos com tarefa de entrega no mesmo bloco confuso.
-  const realce = projects.filter(p => p.kind === 'realce');
-  const avulsa = projects.filter(p => p.kind !== 'realce');
-  let html = '';
-  if (realce.length) html += '<div class="wk-group-hd">Realces</div>' + realce.map(p => projectCardHTML(p, collapsed)).join('');
-  if (avulsa.length) html += '<div class="wk-group-hd">Atividades avulsas</div>' + avulsa.map(p => projectCardHTML(p, collapsed)).join('');
-  list.innerHTML = html;
 }
 
 /* ── KANBAN ── */
@@ -1186,112 +1164,6 @@ function renderKanban() {
   }
 }
 
-/* ── delegação de eventos na lista ── */
-const listEl = document.getElementById('wk-list');
-
-listEl.addEventListener('click', e => {
-  const btn = e.target.closest('[data-act]');
-  if (!btn) return;
-  const act = btn.dataset.act;
-  const projEl = e.target.closest('.wk-proj');
-  const projId = projEl ? Number(projEl.dataset.proj) : null;
-  const taskEl = e.target.closest('.wk-task');
-  const taskId = taskEl ? Number(taskEl.dataset.id) : null;
-
-  if (act === 'toggle') {
-    if (e.target.closest('.wk-proj-acts')) return;
-    const set = collapsedSet();
-    set.has(projId) ? set.delete(projId) : set.add(projId);
-    saveCollapsed(set);
-    render();
-  } else if (act === 'rename') {
-    e.stopPropagation();
-    startRename(projEl, projId);
-  } else if (act === 'archive') {
-    e.stopPropagation();
-    const p = Store.getWorkProjects(true).find(x => x.id === projId);
-    Store.setWorkProjectArchived(projId, !(p && p.archived));
-    render();
-  } else if (act === 'delproj') {
-    e.stopPropagation();
-    removeProject(projId);
-  } else if (act === 'check') {
-    Store.toggleWorkTaskDone(taskId);
-    render();
-  } else if (act === 'edit') {
-    openEdit(taskId);
-  } else if (act === 'del') {
-    removeTask(taskId);
-  } else if (act === 'holes') {
-    if (holesExpanded.has(taskId)) holesExpanded.delete(taskId); else holesExpanded.add(taskId);
-    render();
-  } else if (act === 'addholes') {
-    const wrap = taskEl.querySelector('.wk-holes-add');
-    const de = wrap.querySelector('.wk-holes-de').value;
-    const ate = wrap.querySelector('.wk-holes-ate').value;
-    const res = Store.addWorkTaskHoles(taskId, de, ate);
-    if (res.error === 'range') toast('Preencha o número (ou a faixa) do furo');
-    else if (res.error === 'toobig') toast('Faixa grande demais pra adicionar de uma vez (máximo 200)');
-    else if (res.added === 0) toast('Nada adicionado — todos já estavam no checklist dessa tarefa');
-    else toast(`${res.added} furo${res.added === 1 ? '' : 's'} adicionado${res.added === 1 ? '' : 's'}` + (res.duplicated ? ` (${res.duplicated} já existia${res.duplicated === 1 ? '' : 'm'})` : ''));
-    render();
-  } else if (act === 'holeprof') {
-    Store.toggleWorkHoleProfiled(Number(btn.dataset.hole));
-    render();
-  } else if (act === 'holesurv') {
-    Store.toggleWorkHoleSurveyed(Number(btn.dataset.hole));
-    render();
-  } else if (act === 'holedel') {
-    const removed = Store.deleteWorkTaskHole(Number(btn.dataset.hole));
-    render();
-    if (removed) window.p90toastUndo(`Furo F${removed.number} removido`, () => { Store.restoreWorkTaskHole(removed, removed.taskId); render(); });
-  }
-});
-
-listEl.addEventListener('change', e => {
-  const el = e.target.closest('[data-act="holemeters"]');
-  if (!el) return;
-  Store.setWorkHoleMeters(Number(el.dataset.hole), el.value);
-  render();
-});
-
-listEl.addEventListener('submit', e => {
-  const form = e.target.closest('.wk-qa');
-  if (!form) return;
-  e.preventDefault();
-  const projId = Number(form.dataset.proj);
-  const tEl = form.querySelector('.wk-qa-title');
-  const dEl = form.querySelector('.wk-qa-date');
-  const title = tEl.value.trim();
-  if (!title) { tEl.focus(); return; }
-  Store.addWorkTask(projId, { title, dueOn: dEl.value || null });
-  render();
-  // re-foca o quick-add do mesmo projeto
-  const again = listEl.querySelector(`.wk-qa[data-proj="${projId}"] .wk-qa-title`);
-  if (again) again.focus();
-});
-
-function startRename(projEl, projId) {
-  const nameEl = projEl.querySelector('.wk-proj-name');
-  if (!nameEl || projEl.querySelector('.wk-proj-name-input')) return;
-  const cur = (Store.getWorkProjects(true).find(x => x.id === projId) || {}).name || '';
-  const inp = document.createElement('input');
-  inp.className = 'wk-proj-name-input';
-  inp.value = cur; inp.maxLength = 120;
-  nameEl.replaceWith(inp);
-  inp.focus(); inp.select();
-  const commit = () => {
-    const v = inp.value.trim();
-    if (v && v !== cur) { Store.renameWorkProject(projId, v); }
-    render();
-  };
-  inp.addEventListener('keydown', ev => {
-    if (ev.key === 'Enter') { ev.preventDefault(); commit(); }
-    if (ev.key === 'Escape') render();
-  });
-  inp.addEventListener('blur', commit);
-}
-
 function removeProject(projId) {
   const p = Store.getWorkProjects(true).find(x => x.id === projId);
   if (!p) return;
@@ -1302,7 +1174,7 @@ function removeProject(projId) {
   window.p90toastUndo(
     `"${p.name}" excluído` + (n ? ` (${n} tarefa${n === 1 ? '' : 's'})` : ''),
     () => {
-      const newProj = Store.addWorkProject(p.name);
+      const newProj = Store.addWorkProject(p.name, p.kind);
       if (p.archived) Store.setWorkProjectArchived(newProj.id, true);
       tasks.forEach(t => {
         const nt = Store.addWorkTask(newProj.id, { title: t.title, dueOn: t.dueOn, link: t.link, notes: t.notes });
@@ -1332,33 +1204,6 @@ function removeTask(taskId) {
     render();
   });
 }
-
-/* ── novo projeto ── */
-let newProjKind = 'avulsa';
-document.getElementById('newproj-kind').addEventListener('click', e => {
-  const b = e.target.closest('button[data-kind]');
-  if (!b) return;
-  newProjKind = b.dataset.kind;
-  document.querySelectorAll('#newproj-kind button').forEach(x => x.classList.toggle('active', x === b));
-});
-document.getElementById('newproj-form').addEventListener('submit', e => {
-  e.preventDefault();
-  const inp = document.getElementById('newproj-input');
-  const v = inp.value.trim();
-  if (!v) return;
-  Store.addWorkProject(v, newProjKind);
-  inp.value = '';
-  toast('Projeto adicionado');
-  render();
-});
-
-document.getElementById('show-arch').addEventListener('change', render);
-
-/* ── alternador de visão ── */
-document.querySelector('.wk-viewsw').addEventListener('click', e => {
-  const b = e.target.closest('.wk-viewbtn');
-  if (b) setView(b.dataset.view);
-});
 
 /* ── KANBAN: adicionar tarefa + drag-and-drop ── */
 const kbEl = document.getElementById('wk-kanban');
@@ -1493,46 +1338,6 @@ document.getElementById('wk-task-modal').addEventListener('click', e => {
 });
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape' && document.getElementById('wk-task-modal').classList.contains('open')) closeEdit();
-});
-
-/* ── rail + modal de projeto ── */
-document.getElementById('wk-rail-list').addEventListener('click', e => {
-  const item = e.target.closest('.wk-rail-item');
-  if (item) openProjModal(Number(item.dataset.proj));
-});
-
-document.getElementById('wpm-list').addEventListener('click', e => {
-  if (e.target.closest('.wpm-link')) return;
-  const row = e.target.closest('.wpm-row');
-  if (!row) return;
-  const id = Number(row.dataset.id);
-  if (e.target.closest('[data-act="check"]')) {
-    Store.toggleWorkTaskDone(id);
-    render();
-  } else if (e.target.closest('[data-act="edit"]')) {
-    closeProjModal();
-    openEdit(id);
-  }
-});
-
-document.getElementById('wpm-add').addEventListener('submit', e => {
-  e.preventDefault();
-  if (projModalId == null) return;
-  const tEl = document.getElementById('wpm-add-title');
-  const title = tEl.value.trim();
-  if (!title) { tEl.focus(); return; }
-  Store.addWorkTask(projModalId, { title, dueOn: document.getElementById('wpm-add-date').value || null });
-  tEl.value = ''; document.getElementById('wpm-add-date').value = '';
-  render();
-  tEl.focus();
-});
-
-document.getElementById('wpm-close').addEventListener('click', closeProjModal);
-document.getElementById('wk-proj-modal').addEventListener('click', e => {
-  if (e.target === e.currentTarget) closeProjModal();
-});
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape' && document.getElementById('wk-proj-modal').classList.contains('open')) closeProjModal();
 });
 
 function init() { initSidebar(); render(); }
