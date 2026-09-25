@@ -35,6 +35,7 @@
     return {
       v: 1, best: 0, gold: 0, kills: 0, bosses: 0, energySpent: 0,
       up: { atk: 0, def: 0, lck: 0 }, enc: null, last: now || Date.now(),
+      rng: Math.floor(Math.random() * 4294967295) + 1, inv: [], eq: emptyEq(), nextId: 1,
       week: { key: '', dmg: 0, hp: 0, claimed: false }, offline: null,
     };
   }
@@ -44,6 +45,10 @@
     const s = Object.assign(d, st);
     s.up = Object.assign({ atk: 0, def: 0, lck: 0 }, st.up || {});
     s.week = Object.assign({ key: '', dmg: 0, hp: 0, claimed: false }, st.week || {});
+    s.eq = Object.assign(emptyEq(), st.eq || {});
+    if (!Array.isArray(s.inv)) s.inv = [];
+    if (!s.rng) s.rng = Math.floor(Math.random() * 4294967295) + 1;
+    if (!s.nextId) s.nextId = 1 + s.inv.reduce((m, i) => Math.max(m, i.id || 0), 0);
     return s;
   }
 
@@ -61,19 +66,21 @@
   }
 
   /* ── herói: poder vem do Sistema (nível + atributos) + melhorias ── */
-  function playerStats(sys, up) {
+  function playerStats(sys, st) {
+    const up = st.up, b = eqBonus(st.eq);
     const attrs = sys && sys.attributes ? Object.keys(sys.attributes).reduce((s, k) => s + sys.attributes[k], 0) : 50;
     const lvl = sys ? sys.level : 0;
     return {
-      atk: 6 + lvl * 5 + Math.floor(attrs / 12) + up.atk * 4,
-      hp:  60 + lvl * 25 + up.def * 18,
-      goldMul: 1 + 0.05 * up.lck,
+      atk: 6 + lvl * 5 + Math.floor(attrs / 12) + up.atk * 4 + b.atk,
+      hp:  60 + lvl * 25 + up.def * 18 + b.hp,
+      goldMul: 1 + 0.05 * up.lck + b.gold / 100,
+      bonus: b,
     };
   }
   const UPGRADES = {
-    atk: { name: 'Arma',      icon: '⚔️', desc: '+4 de ataque por nível',  base: 25, growth: 1.09 },
-    def: { name: 'Armadura',  icon: '🛡️', desc: '+18 de vida por nível',   base: 25, growth: 1.09 },
-    lck: { name: 'Amuleto',   icon: '🍀', desc: '+5% de ouro por nível',   base: 50, growth: 1.09},
+    atk: { name: 'Força',     icon: '⚔️', desc: '+4 de ataque por nível',  base: 25, growth: 1.09 },
+    def: { name: 'Vigor',     icon: '🛡️', desc: '+18 de vida por nível',   base: 25, growth: 1.09 },
+    lck: { name: 'Sorte',     icon: '🍀', desc: '+5% de ouro por nível',   base: 50, growth: 1.09},
   };
   function upgradeCost(kind, lvl) { const u = UPGRADES[kind]; return Math.round(u.base * Math.pow(u.growth, lvl)); }
   function buyUpgrade(st, kind) {
@@ -81,6 +88,96 @@
     const cost = upgradeCost(kind, st.up[kind]);
     if (st.gold < cost) return false;
     st.gold -= cost; st.up[kind]++; return true;
+  }
+
+  /* ── equipamentos e drops ──
+     5 espaços. Monstros comuns têm DROP_CHANCE de soltar um item; chefes
+     sempre soltam (nunca comum, raridade melhor). O sorteio usa um PRNG
+     semeado guardado no estado (st.rng), então rodadas ao vivo e recalculadas
+     offline dão exatamente os mesmos drops. */
+  const SLOTS = ['arma', 'elmo', 'armadura', 'botas', 'amuleto'];
+  const SLOT_INFO = {
+    arma:     { label: 'Arma',     icon: '🗡️', names: ['Adaga', 'Espada', 'Machado', 'Lança', 'Cajado'] },
+    elmo:     { label: 'Elmo',     icon: '⛑️', names: ['Capuz', 'Elmo', 'Coroa'] },
+    armadura: { label: 'Armadura', icon: '🛡️', names: ['Couraça', 'Cota de malha', 'Manto'] },
+    botas:    { label: 'Botas',    icon: '🥾', names: ['Botas', 'Grevas', 'Sandálias'] },
+    amuleto:  { label: 'Amuleto',  icon: '📿', names: ['Amuleto', 'Talismã', 'Anel'] },
+  };
+  const RARITIES = [
+    { key: 'comum',    label: 'Comum',    mul: 1,    w: 60,  adj: 'Gasto' },
+    { key: 'incomum',  label: 'Incomum',  mul: 1.35, w: 28,  adj: 'de Ferro' },
+    { key: 'raro',     label: 'Raro',     mul: 1.8,  w: 9,   adj: 'de Prata' },
+    { key: 'epico',    label: 'Épico',    mul: 2.5,  w: 2.5, adj: 'Rúnico' },
+    { key: 'lendario', label: 'Lendário', mul: 3.5,  w: 0.5, adj: 'do Monarca' },
+  ];
+  const DROP_CHANCE = 0.04, BAG_MAX = 30;
+  function emptyEq() { return { arma: null, elmo: null, armadura: null, botas: null, amuleto: null }; }
+
+  function rand(st) {                                   // mulberry32, estado em st.rng
+    st.rng = (st.rng + 0x6D2B79F5) | 0;
+    let t = Math.imul(st.rng ^ (st.rng >>> 15), 1 | st.rng);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  }
+  function itemStats(slot, ilvl, r) {
+    const m = RARITIES[r].mul;
+    const atk = Math.round((4 + ilvl * 1.6) * m), hp = Math.round((20 + ilvl * 7) * m), gold = Math.round((2 + ilvl * 0.15) * m);
+    if (slot === 'arma')     return { atk, hp: 0, gold: 0 };
+    if (slot === 'elmo')     return { atk: 0, hp: Math.round(hp * 0.6), gold: 0 };
+    if (slot === 'armadura') return { atk: 0, hp, gold: 0 };
+    if (slot === 'botas')    return { atk: Math.round(atk * 0.4), hp: Math.round(hp * 0.4), gold: 0 };
+    return { atk: Math.round(atk * 0.3), hp: 0, gold };                                   // amuleto
+  }
+  function itemValue(it) { return 5 + Math.round(it.ilvl * 3 * Math.pow(it.rarity + 1, 1.5)); }
+  function makeItem(st, slot, rarity, ilvl) {
+    const info = SLOT_INFO[slot], base = info.names[Math.floor(rand(st) * info.names.length)];
+    const s = itemStats(slot, ilvl, rarity);
+    let adj = RARITIES[rarity].adj;                        // concorda com o gênero/número do nome-base
+    if (/(a|as)$/.test(base) && !/^d[eo] /.test(adj)) adj = adj.replace(/o$/, 'a');
+    if (/s$/.test(base) && !/^d[eo] /.test(adj)) adj += 's';
+    return { id: st.nextId++, slot, rarity, ilvl, name: base + ' ' + adj, atk: s.atk, hp: s.hp, gold: s.gold };
+  }
+  // Sorteia o drop de um abate. Devolve o item ou null.
+  function rollDrop(st, floor, boss) {
+    if (!boss && rand(st) >= DROP_CHANCE) return null;
+    const boost = 1 + floor / 40;
+    const ws = RARITIES.map((r, i) => (boss && i === 0) ? 0 : r.w * (i >= 2 ? boost * (boss ? 3 : 1) : 1));
+    let x = rand(st) * ws.reduce((a, b) => a + b, 0), r = 0;
+    for (; r < ws.length - 1; r++) { if (x < ws[r]) break; x -= ws[r]; }
+    const slot = SLOTS[Math.floor(rand(st) * SLOTS.length)];
+    return makeItem(st, slot, r, floor);
+  }
+  function eqBonus(eq) {
+    const b = { atk: 0, hp: 0, gold: 0 };
+    SLOTS.forEach(s => { const it = eq && eq[s]; if (it) { b.atk += it.atk; b.hp += it.hp; b.gold += it.gold; } });
+    return b;
+  }
+  function itemScore(it) { return it ? it.atk + it.hp / 4 + it.gold * 3 : 0; }
+  function equipItem(st, id) {
+    const i = st.inv.findIndex(x => x.id === id);
+    if (i < 0) return false;
+    const it = st.inv.splice(i, 1)[0], prev = st.eq[it.slot];
+    st.eq[it.slot] = it;
+    if (prev) st.inv.push(prev);
+    return true;
+  }
+  function unequipItem(st, slot) {
+    const it = st.eq[slot];
+    if (!it || st.inv.length >= BAG_MAX) return false;
+    st.eq[slot] = null; st.inv.push(it); return true;
+  }
+  function sellItem(st, id) {
+    const i = st.inv.findIndex(x => x.id === id);
+    if (i < 0) return 0;
+    const g = itemValue(st.inv[i]); st.inv.splice(i, 1); st.gold += g; return g;
+  }
+  // Vende comuns/incomuns que não superam o item equipado no mesmo espaço.
+  function sellWorse(st) {
+    let g = 0;
+    st.inv.slice().forEach(it => {
+      if (it.rarity <= 1 && itemScore(it) <= itemScore(st.eq[it.slot])) g += sellItem(st, it.id);
+    });
+    return g;
   }
 
   /* ── combate ── */
@@ -133,6 +230,11 @@
       st.gold += gain; st.kills++;
       ev.killed = true; ev.gold = gain;
       if (st.enc.f > st.best) { st.best = st.enc.f; ev.newFloor = true; if (m.boss) st.bosses++; }
+      const drop = rollDrop(st, st.enc.f, m.boss);
+      if (drop) {
+        if (st.inv.length >= BAG_MAX) { const g = itemValue(drop); st.gold += g; ev.sold = { item: drop, gold: g }; }
+        else { st.inv.push(drop); ev.drop = drop; }
+      }
       st.enc = null;
     }
     return ev;
@@ -145,14 +247,15 @@
     const capped = elapsed > OFFLINE_CAP_ROUNDS * ROUND_MS;
     let rounds = Math.min(Math.floor(elapsed / ROUND_MS), OFFLINE_CAP_ROUNDS);
     const before = { gold: st.gold, kills: st.kills, best: st.best, spent: st.energySpent };
-    let ran = 0, dry = false;
+    let ran = 0, dry = false, drops = 0;
     while (rounds-- > 0) {
       const ev = stepRound(st, { stats: ctx.stats, exp: ctx.exp, now });
       if (!ev) { dry = true; break; }
+      if (ev.drop || ev.sold) drops++;
       ran++;
     }
     st.last = now;
-    const sum = { rounds: ran, kills: st.kills - before.kills, gold: st.gold - before.gold, floors: st.best - before.best, capped, dry, elapsed };
+    const sum = { rounds: ran, kills: st.kills - before.kills, gold: st.gold - before.gold, floors: st.best - before.best, drops, capped, dry, elapsed };
     return sum;
   }
 
@@ -182,6 +285,7 @@
   window.P90Idle = {
     ROUND_MS, OFFLINE_CAP_H, ENERGY_PER_EXP, UPGRADES,
     defaultState, normalize, monsterFor, playerStats, upgradeCost, buyUpgrade,
+    SLOTS, SLOT_INFO, RARITIES, BAG_MAX, DROP_CHANCE, itemValue, itemScore, equipItem, unequipItem, sellItem, sellWorse,
     roundsToKill, canWin, pickFloor, energyEarned, energyAvail, stepRound, catchUp, weekKey,
     worldBoss, claimWorldBoss, isBoss, BOSS_ROUNDS,
   };
