@@ -251,6 +251,7 @@
         <div class="lib-card" id="reading-card">
           <div class="lc-hd">
             <span class="lc-title">Lendo agora</span>
+            <button class="lc-add" id="log-read" title="Registra que você leu hoje e marca o hábito Ler">✓ Li hoje</button>
           </div>
           <div id="reading-list"></div>
         </div>
@@ -490,6 +491,10 @@ function renderGoal() {
 function renderReading() {
   const list = Store.getLibBooks().filter(b => b.status === 'lendo');
   document.getElementById('reading-card').style.display = list.length ? '' : 'none';
+  const lr = document.getElementById('log-read');
+  const readToday = Store.libReadToday();
+  lr.textContent = readToday ? 'Leitura de hoje registrada ✓' : '✓ Li hoje';
+  lr.disabled = readToday;
   document.getElementById('reading-list').innerHTML = list.map(b => {
     const isPct = b.progressMode === 'percent';
     const pct = isPct ? (b.progressPct || 0) : (b.totalPages ? Math.min(100, Math.round(b.currentPage / b.totalPages * 100)) : 0);
@@ -606,6 +611,11 @@ document.getElementById('bk-rating').addEventListener('click', e => {
 document.getElementById('bk-rating-clear').addEventListener('click', () => setBookRating(0));
 
 document.getElementById('add-book').addEventListener('click', () => openBookModal(null));
+document.getElementById('log-read').addEventListener('click', () => {
+  Store.logReadingDay();
+  renderAll();
+  toast('Leitura de hoje registrada — hábito Ler marcado');
+});
 
 document.getElementById('bk-save').addEventListener('click', () => {
   const title = document.getElementById('bk-name').value.trim();

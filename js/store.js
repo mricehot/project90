@@ -77,6 +77,7 @@ const Store = (() => {
       shoppingItems: [],    // { id, label, bought, createdAt } — lista de compras do mercado
       studyReflections: {}, // { [dayNum]: { topicIdx, q1, q2, q3, free } } — Conhecimento/Reflexões
       conversationTipsRead: {}, // { [tipIdx]: readDay } — Dicção/Conversação
+      libReadDays: {},      // { [dayNum]: true } — dias com leitura registrada na Biblioteca
       workProjects: [],
       workTasks:    [],
       workTaskHoles: [],
@@ -435,6 +436,10 @@ const Store = (() => {
     if (data.studyReflections && typeof data.studyReflections === 'object') {
       Object.keys(cache.studyReflections).forEach(k => delete cache.studyReflections[k]);
       Object.assign(cache.studyReflections, data.studyReflections);
+    }
+    if (data.libReadDays && typeof data.libReadDays === 'object') {
+      Object.keys(cache.libReadDays).forEach(k => delete cache.libReadDays[k]);
+      Object.keys(data.libReadDays).forEach(k => { cache.libReadDays[k] = true; });
     }
     if (data.conversationTipsRead && typeof data.conversationTipsRead === 'object') {
       Object.keys(cache.conversationTipsRead).forEach(k => delete cache.conversationTipsRead[k]);
@@ -916,6 +921,28 @@ const Store = (() => {
     return changed;
   }
 
+  // "Ler" (core_key = ler) ganha 'done' em todo dia com leitura registrada na
+  // Biblioteca (libReadDays: progresso avançado, livro concluído ou "Li hoje").
+  // Só adiciona 'done', nunca remove. Devolve true se mudou algo.
+  function _reconcileReadingHabit() {
+    const h = cache.habits.find(x => x.coreKey === 'ler');
+    if (!h) return false;
+    if (!Array.isArray(h.history)) h.history = [];
+    const start = (h.createdDay || 1) - 1;
+    const today = getCurrentDay();
+    let changed = false;
+    Object.keys(cache.libReadDays).forEach(k => {
+      const dayNum = Number(k);
+      if (!dayNum || dayNum > today) return;
+      const idx = (dayNum - 1) - start;
+      if (idx < 0) return;
+      while (h.history.length <= idx) h.history.push('miss');
+      if (h.history[idx] !== 'done') { h.history[idx] = 'done'; changed = true; }
+    });
+    if (changed) _recalcStreak(h);
+    return changed;
+  }
+
   // "Meditar / refletir" (core_key = meditar) ganha um 'done' automático em
   // todo dia com uma reflexão salva em Conhecimento/Reflexões (studyReflections)
   // — ver reflexoes-feature. Mesmo padrão de _reconcileJournalHabit(): só
@@ -1014,10 +1041,11 @@ const Store = (() => {
         const dirty4 = _reconcileTrainingHabit();
         const dirty5 = _reconcileBibleHabit();
         const dirty6 = _reconcileReflectionHabit();
+        const dirty7 = _reconcileReadingHabit();
         _saveMirror();
         _ready = true;
         window.dispatchEvent(new Event('p90:synced'));
-        if (dirty || dirty2 || dirty3 || dirty4 || dirty5 || dirty6) _persistHabits();
+        if (dirty || dirty2 || dirty3 || dirty4 || dirty5 || dirty6 || dirty7) _persistHabits();
       } finally {
         _hideBootScreen();
       }
@@ -4238,6 +4266,7 @@ const Store = (() => {
   function updateLibBook(id, patch) {
     const b = cache.library.books.find(x => x.id === id);
     if (!b) return;
+    const prev = { mode: b.progressMode, page: b.currentPage || 0, pct: b.progressPct || 0 };
     if (patch.title != null)       b.title = String(patch.title).trim();
     if (patch.author != null)      b.author = String(patch.author).trim();
     if (patch.genre != null)       b.genre = patch.genre;
@@ -4253,6 +4282,9 @@ const Store = (() => {
       b.progressPct = null;
     }
     if (patch.notes != null)       b.notes = patch.notes;
+    // Avançar a página/porcentagem (no mesmo modo) conta como leitura do dia.
+    if (b.status === 'lendo' && b.progressMode === prev.mode &&
+        (b.progressMode === 'percent' ? (b.progressPct || 0) > prev.pct : (b.currentPage || 0) > prev.page)) logReadingDay();
     if (patch.status != null && patch.status !== b.status) setLibStatus(id, patch.status, true);
     _saveMirror();
     _push(async () => {
@@ -4270,10 +4302,31 @@ const Store = (() => {
   // Muda o status e ajusta datas/página (ou porcentagem) automaticamente:
   // "lendo" grava início (se ainda não tinha), "lido" grava fim e completa
   // o progresso — página atual = total, ou porcentagem = 100.
+  // Registra que hoje teve leitura (progresso avançado, livro concluído ou o
+  // botão "Li hoje") — é o que marca o hábito fixo "Ler". Guardado como uma
+  // linha por dia do desafio em lib_reading_days.
+  function logReadingDay(dayNum) {
+    const d = Number(dayNum) || getCurrentDay();
+    const isNew = !cache.libReadDays[d];
+    cache.libReadDays[d] = true;
+    const habitChanged = _reconcileReadingHabit();
+    _saveMirror();
+    if (habitChanged) _persistHabits();
+    if (isNew) _push(async () => {
+      const { error } = await window.sb.from('lib_reading_days').upsert({
+        user_id: _uid, day_num: d,
+      }, { onConflict: 'user_id,day_num' });
+      if (error) throw error;
+    });
+    return isNew;
+  }
+  function libReadToday() { return !!cache.libReadDays[getCurrentDay()]; }
+
   function setLibStatus(id, status, _skipSave) {
     const b = cache.library.books.find(x => x.id === id);
     if (!b || (b.status === status && !_skipSave)) return;
     const today = _localDate(0);
+    if (status === 'lido' && b.status !== 'lido') logReadingDay();
     b.status = status;
     if (status !== 'quero_ler' && !b.startedOn) b.startedOn = today;
     if (status === 'lido') {
@@ -4566,7 +4619,7 @@ const Store = (() => {
     finPortfolioSeries, finAporteCumSeries, finFlowSeries, finSurplusCumSeries,
     // biblioteca
     getLibrary, getLibBooks, libGenres,
-    addLibBook, updateLibBook, setLibStatus, deleteLibBook,
+    addLibBook, updateLibBook, setLibStatus, deleteLibBook, logReadingDay, libReadToday,
     libGoalForYear, setLibGoal, libBooksReadInYear, libGoalProgress, libStats,
     // prioridades do dia
     getDayPriorities, setDayPriorities, toggleDayPriority, dayPrioritiesStreak,
