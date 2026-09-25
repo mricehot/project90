@@ -78,6 +78,7 @@ const Store = (() => {
       studyReflections: {}, // { [dayNum]: { topicIdx, q1, q2, q3, free } } — Conhecimento/Reflexões
       conversationTipsRead: {}, // { [tipIdx]: readDay } — Dicção/Conversação
       libReadDays: {},      // { [dayNum]: true } — dias com leitura registrada na Biblioteca
+      waterDays: {},        // { [dayNum]: ml } — água bebida por dia (hábito Beber água)
       workProjects: [],
       workTasks:    [],
       workTaskHoles: [],
@@ -436,6 +437,10 @@ const Store = (() => {
     if (data.studyReflections && typeof data.studyReflections === 'object') {
       Object.keys(cache.studyReflections).forEach(k => delete cache.studyReflections[k]);
       Object.assign(cache.studyReflections, data.studyReflections);
+    }
+    if (data.waterDays && typeof data.waterDays === 'object') {
+      Object.keys(cache.waterDays).forEach(k => delete cache.waterDays[k]);
+      Object.keys(data.waterDays).forEach(k => { cache.waterDays[k] = parseInt(data.waterDays[k], 10) || 0; });
     }
     if (data.libReadDays && typeof data.libReadDays === 'object') {
       Object.keys(cache.libReadDays).forEach(k => delete cache.libReadDays[k]);
@@ -921,6 +926,39 @@ const Store = (() => {
     return changed;
   }
 
+  // Meta diária de água em ml, lida do campo "meta" do hábito fixo Beber água
+  // ("2 L", "500 ml"…). Sem meta legível, 2000 ml.
+  function waterGoalMl() {
+    const h = cache.habits.find(x => x.coreKey === 'beber_agua');
+    const m = h && String(h.goal || '').match(/([\d.,]+)\s*(ml|l)\b/i);
+    if (!m) return 2000;
+    const v = parseFloat(m[1].replace(',', '.'));
+    if (!isFinite(v) || v <= 0) return 2000;
+    return Math.round(/^ml$/i.test(m[2]) ? v : v * 1000);
+  }
+
+  // "Beber água" (core_key = beber_agua) ganha 'done' em todo dia em que o
+  // total registrado (waterDays) bate a meta. Só adiciona, nunca remove.
+  function _reconcileWaterHabit() {
+    const h = cache.habits.find(x => x.coreKey === 'beber_agua');
+    if (!h) return false;
+    if (!Array.isArray(h.history)) h.history = [];
+    const start = (h.createdDay || 1) - 1;
+    const today = getCurrentDay();
+    const goal = waterGoalMl();
+    let changed = false;
+    Object.keys(cache.waterDays).forEach(k => {
+      const dayNum = Number(k);
+      if (!dayNum || dayNum > today || (cache.waterDays[k] || 0) < goal) return;
+      const idx = (dayNum - 1) - start;
+      if (idx < 0) return;
+      while (h.history.length <= idx) h.history.push('miss');
+      if (h.history[idx] !== 'done') { h.history[idx] = 'done'; changed = true; }
+    });
+    if (changed) _recalcStreak(h);
+    return changed;
+  }
+
   // "Ler" (core_key = ler) ganha 'done' em todo dia com leitura registrada na
   // Biblioteca (libReadDays: progresso avançado, livro concluído ou "Li hoje").
   // Só adiciona 'done', nunca remove. Devolve true se mudou algo.
@@ -1042,10 +1080,11 @@ const Store = (() => {
         const dirty5 = _reconcileBibleHabit();
         const dirty6 = _reconcileReflectionHabit();
         const dirty7 = _reconcileReadingHabit();
+        const dirty8 = _reconcileWaterHabit();
         _saveMirror();
         _ready = true;
         window.dispatchEvent(new Event('p90:synced'));
-        if (dirty || dirty2 || dirty3 || dirty4 || dirty5 || dirty6 || dirty7) _persistHabits();
+        if (dirty || dirty2 || dirty3 || dirty4 || dirty5 || dirty6 || dirty7 || dirty8) _persistHabits();
       } finally {
         _hideBootScreen();
       }
@@ -4395,6 +4434,27 @@ const Store = (() => {
   }
 
   /* ──────────────────────────────────────────
+     ÁGUA — total do dia em ml (cache.waterDays[dayNum]). Bater a meta do
+     hábito Beber água marca o hábito (ver _reconcileWaterHabit).
+  ────────────────────────────────────────── */
+  function getWaterMl(dayNum) { return cache.waterDays[dayNum != null ? dayNum : getCurrentDay()] || 0; }
+  function addWater(deltaMl) {
+    const d = getCurrentDay();
+    const next = Math.min(10000, Math.max(0, getWaterMl(d) + (parseInt(deltaMl, 10) || 0)));
+    cache.waterDays[d] = next;
+    const habitChanged = _reconcileWaterHabit();
+    _saveMirror();
+    if (habitChanged) _persistHabits();
+    _push(async () => {
+      const { error } = await window.sb.from('water_days').upsert({
+        user_id: _uid, day_num: d, ml: next, updated_at: new Date().toISOString(),
+      }, { onConflict: 'user_id,day_num' });
+      if (error) throw error;
+    });
+    return next;
+  }
+
+  /* ──────────────────────────────────────────
      PRIORIDADES DO DIA (Top 3) — card no Dashboard.
      cache.dailyPriorities[dayNum] = [{text, done, taskId}, ...] até 3 slots
      fixos. taskId (opcional) vincula o slot a uma tarefa real de Tarefas —
@@ -4620,6 +4680,7 @@ const Store = (() => {
     // biblioteca
     getLibrary, getLibBooks, libGenres,
     addLibBook, updateLibBook, setLibStatus, deleteLibBook, logReadingDay, libReadToday,
+    getWaterMl, addWater, waterGoalMl,
     libGoalForYear, setLibGoal, libBooksReadInYear, libGoalProgress, libStats,
     // prioridades do dia
     getDayPriorities, setDayPriorities, toggleDayPriority, dayPrioritiesStreak,
