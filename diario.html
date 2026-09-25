@@ -583,7 +583,7 @@ body { overflow: hidden; }
 var DAY  = Store.getCurrentDay();
 var DAYS = Store.getTotalDays();
 
-var TODAY = new Date(); TODAY.setHours(0,0,0,0);
+var TODAY = Store.now(); TODAY.setHours(0,0,0,0);
 var START_DATE = Store.getStartDate();
 
 var MONTHS_PT  = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
@@ -612,7 +612,7 @@ function fmtDateShort(d) { return d.getDate()+' '+MONTHS_ABR[d.getMonth()]; }
 
 /* ── INIT ── */
 function init() {
-  var now=new Date();
+  var now=Store.now();
   document.getElementById('today-lbl').textContent = DAYS_PT[now.getDay()]+', '+now.getDate()+' '+MONTHS_ABR[now.getMonth()];
 
   var pct = Math.round(DAY/DAYS*100);
