@@ -15,11 +15,13 @@
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/base.css">
 <link rel="stylesheet" href="css/components.css">
+<link rel="stylesheet" href="css/idle.css">
 <script src="js/supabase-config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/supabase.js"></script>
 <script src="js/store.js"></script>
 <script src="js/idle-game.js"></script>
+<script src="js/idle-view.js"></script>
 <script src="js/achievements.js"></script>
 <style>
 .sys-main { padding: 30px 40px 72px; overflow-y: auto; display: flex; flex-direction: column; gap: 22px; }
@@ -109,100 +111,6 @@
 }
 .sys-tab + .sys-tab { border-left: 1px solid var(--border2); }
 .sys-tab.on { background: var(--white); color: var(--bg); }
-
-/* ── MASMORRA (jogo idle) ── */
-.gm-grid { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 22px; align-items: start; }
-.gm-col { display: flex; flex-direction: column; gap: 22px; min-width: 0; }
-.gm-hud { display: flex; flex-wrap: wrap; gap: 8px 22px; margin-bottom: 14px; font-size: 11px; letter-spacing: 0.08em; color: var(--mid); }
-.gm-hud b { color: var(--white); font-weight: 400; font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 0.04em; margin-left: 4px; }
-.gm-hud .en b { color: var(--green); }
-.gm-ebar { height: 2px; background: var(--muted); margin: -4px 0 14px; }
-.gm-ebar > span { display: block; height: 100%; background: var(--green); mix-blend-mode: screen; transition: width 0.6s ease; }
-
-.gm-stage {
-  position: relative; height: 210px; border: 1px solid var(--border); background: var(--surface2); overflow: hidden;
-  box-shadow: inset 0 0 60px rgba(245,245,240,0.03);
-  background-image: linear-gradient(to bottom, transparent 72%, rgba(245,245,240,0.04) 72%), repeating-linear-gradient(90deg, transparent 0 39px, rgba(245,245,240,0.025) 39px 40px);
-}
-.gm-stage.boss { box-shadow: inset 0 0 70px rgba(245,245,240,0.07); border-color: var(--border2); }
-.gm-floor { position: absolute; top: 10px; left: 14px; font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--mid); }
-.gm-floor b { color: var(--white); font-weight: 400; }
-.gm-floor .bossTag { color: var(--green); margin-left: 8px; }
-.gm-actor { position: absolute; bottom: 24px; width: 120px; text-align: center; }
-.gm-hero { left: 14%; }
-.gm-mon  { right: 14%; }
-.gm-sprite { font-size: 58px; line-height: 1; filter: grayscale(1) brightness(1.35) contrast(1.1); display: inline-block; }
-.gm-mon .gm-sprite { transform: scaleX(-1); }
-.gm-mon.boss .gm-sprite { font-size: 78px; }
-.gm-hp { height: 3px; background: var(--muted); width: 84px; margin: 8px auto 4px; }
-.gm-hp > i { display: block; height: 100%; width: 100%; background: rgba(245,245,240,0.75); transition: width 0.25s ease; }
-.gm-mon .gm-hp > i { background: var(--red); }
-.gm-name { font-size: 10px; letter-spacing: 0.1em; color: var(--mid); text-transform: uppercase; white-space: nowrap; }
-.gm-fx { position: absolute; inset: 0; pointer-events: none; }
-.gm-float { position: absolute; font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 0.04em; color: var(--white); }
-.gm-float.gold { color: var(--green); font-size: 20px; }
-.gm-float.crit { font-size: 28px; }
-.gm-rest { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; text-align: center;
-  background: rgba(8,8,8,0.72); font-size: 12px; letter-spacing: 0.1em; color: var(--mid); line-height: 1.8; padding: 20px; }
-.gm-stage.resting .gm-rest { display: flex; }
-.gm-stage.resting .gm-hero .gm-sprite { filter: grayscale(1) brightness(0.6); }
-.gm-log { margin-top: 12px; font-size: 11px; letter-spacing: 0.04em; color: var(--mid); min-height: 18px; }
-.gm-log b { color: var(--green); font-weight: 400; }
-.gm-away { margin-bottom: 14px; padding: 10px 14px; border: 1px dashed var(--border2); font-size: 12px; line-height: 1.7; color: var(--mid); display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; }
-.gm-away b { color: var(--green); font-weight: 400; }
-.gm-away button { background: none; border: none; color: var(--mid); cursor: pointer; font-size: 13px; }
-.gm-ctl { display: flex; gap: 8px; margin-top: 14px; }
-.gm-btn {
-  background: none; border: 1px solid var(--border2); color: var(--white); font-family: 'DM Mono', monospace; font-size: 11px;
-  letter-spacing: 0.1em; text-transform: uppercase; padding: 8px 14px; cursor: pointer; transition: border-color 0.15s, color 0.15s;
-}
-.gm-btn:hover:not(:disabled) { border-color: rgba(245,245,240,0.4); }
-.gm-btn:disabled { color: var(--mid); cursor: default; }
-.gm-btn.claim { border-color: var(--green); color: var(--green); }
-
-.up-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
-.up-row:last-child { border-bottom: none; }
-.up-ico { font-size: 22px; width: 30px; text-align: center; filter: grayscale(1) brightness(1.3); }
-.up-main { flex: 1; min-width: 0; }
-.up-name { font-size: 13px; }
-.up-name em { font-style: normal; color: var(--mid); font-size: 11px; margin-left: 6px; }
-.up-desc { font-size: 10px; letter-spacing: 0.06em; color: var(--mid); margin-top: 3px; }
-.gm-stats { display: flex; gap: 18px; flex-wrap: wrap; font-size: 11px; letter-spacing: 0.08em; color: var(--mid); margin-bottom: 4px; }
-.gm-stats b { color: var(--white); font-weight: 400; font-family: 'Bebas Neue', sans-serif; font-size: 20px; margin-left: 4px; }
-
-.wb-hd { display: flex; align-items: center; gap: 14px; margin-bottom: 12px; }
-.wb-emoji { font-size: 40px; filter: grayscale(1) brightness(1.3); }
-.wb-name { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 0.06em; line-height: 1; }
-.wb-sub { font-size: 10px; letter-spacing: 0.1em; color: var(--mid); margin-top: 4px; text-transform: uppercase; }
-.wb-bar { height: 6px; background: var(--muted); display: flex; margin: 10px 0 8px; }
-.wb-bar .y { background: var(--green); }
-.wb-leg { display: flex; justify-content: space-between; gap: 10px; font-size: 11px; letter-spacing: 0.06em; color: var(--mid); flex-wrap: wrap; }
-.wb-leg b { color: var(--white); font-weight: 400; }
-.wb-leg .me b { color: var(--green); }
-
-
-@media (prefers-reduced-motion: no-preference) {
-  @keyframes gmBob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
-  @keyframes gmLunge { 0% { transform: translateX(0); } 40% { transform: translateX(46px); } 100% { transform: translateX(0); } }
-  @keyframes gmLungeL { 0% { transform: translateX(0); } 40% { transform: translateX(-38px); } 100% { transform: translateX(0); } }
-  @keyframes gmHit { 0% { transform: scaleX(-1) translateX(0); } 25% { transform: scaleX(-1) translateX(9px); filter: grayscale(1) brightness(3); } 60% { transform: scaleX(-1) translateX(-5px); } 100% { transform: scaleX(-1) translateX(0); } }
-  @keyframes gmHurt { 0% { transform: translateX(0); } 25% { transform: translateX(-8px); filter: grayscale(1) brightness(3); } 100% { transform: translateX(0); } }
-  @keyframes gmDie { 0% { opacity: 1; transform: scaleX(-1) scale(1) rotate(0); } 100% { opacity: 0; transform: scaleX(-1) scale(0.5) rotate(18deg) translateY(20px); } }
-  @keyframes gmSpawn { 0% { opacity: 0; transform: scaleX(-1) translateX(40px); } 100% { opacity: 1; transform: scaleX(-1) translateX(0); } }
-  @keyframes gmFloat { 0% { opacity: 0; transform: translateY(6px) scale(0.8); } 15% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-46px) scale(1); } }
-  @keyframes gmZzz { 0%,100% { opacity: .3; } 50% { opacity: 1; } }
-  .gm-hero .gm-sprite { animation: gmBob 2.2s ease-in-out infinite; }
-  .gm-mon .gm-sprite { animation: gmSpawn 0.35s ease-out; }
-  .gm-hero.atk .gm-sprite { animation: gmLunge 0.42s ease-out; }
-  .gm-hero.hurt .gm-sprite { animation: gmHurt 0.3s ease-out; }
-  .gm-mon.hit .gm-sprite { animation: gmHit 0.34s ease-out; }
-  .gm-mon.die .gm-sprite { animation: gmDie 0.45s ease-in forwards; }
-  .gm-float { animation: gmFloat 1s ease-out forwards; }
-  .gm-stage.boss .gm-mon .gm-sprite { text-shadow: 0 0 24px rgba(245,245,240,0.35); }
-  .gm-stage.resting .gm-rest b { animation: gmZzz 1.6s ease-in-out infinite; }
-}
-@media (max-width: 1080px) { .gm-grid { grid-template-columns: 1fr; } }
-@media (max-width: 520px) { .gm-actor { width: 96px; } .gm-sprite { font-size: 46px; } .gm-mon.boss .gm-sprite { font-size: 60px; } }
 
 .app, .sys-main { position: relative; z-index: 1; }
 </style>
@@ -304,14 +212,7 @@
               <span>Abates<b id="gm-kills">0</b></span>
             </div>
             <div class="gm-ebar"><span id="gm-ebar" style="width:0%"></span></div>
-            <div class="gm-stage" id="gm-stage">
-              <div class="gm-floor" id="gm-floor"></div>
-              <div class="gm-actor gm-hero" id="gm-hero"><div class="gm-sprite">🥷</div><div class="gm-hp"><i id="gm-hero-hp"></i></div><div class="gm-name">Você</div></div>
-              <div class="gm-actor gm-mon" id="gm-mon"><div class="gm-sprite" id="gm-mon-sprite">🐀</div><div class="gm-hp"><i id="gm-mon-hp"></i></div><div class="gm-name" id="gm-mon-name"></div></div>
-              <div class="gm-fx" id="gm-fx"></div>
-              <div class="gm-rest" id="gm-rest"><div><b>zzz</b><br>Sem energia — o herói descansa.<br>Cumpra seus hábitos para recarregar.</div></div>
-            </div>
-            <div class="gm-log" id="gm-log"></div>
+            <div id="gm-arena"></div>
             <div class="gm-ctl"><button type="button" class="gm-btn" id="gm-pause">Pausar</button></div>
           </div>
 
@@ -331,6 +232,15 @@
             <div class="sys-hd"><span class="sys-lbl">Herói</span><span class="sys-meta" id="hr-src"></span></div>
             <div class="gm-stats"><span>Ataque<b id="hr-atk">0</b></span><span>Vida<b id="hr-hp">0</b></span><span>Ouro ×<b id="hr-gm">1</b></span></div>
             <div id="up-list"></div>
+          </div>
+
+          <!-- EQUIPAMENTO + MOCHILA -->
+          <div class="sys-card" id="eq-card">
+            <div class="sys-hd"><span class="sys-lbl">Equipamento</span><span class="sys-meta" id="eq-bonus"></span></div>
+            <div id="eq-slots"></div>
+            <div class="sys-hd" style="margin-top:22px"><span class="sys-lbl">Mochila</span><span class="sys-meta" id="bag-count"></span></div>
+            <div id="bag-list"></div>
+            <div class="gm-ctl"><button type="button" class="gm-btn" id="bag-sellworse" title="Vende os itens comuns/incomuns que não superam o equipado">Vender piores</button></div>
           </div>
         </div>
 
@@ -504,22 +414,14 @@ document.getElementById('lu-ok').addEventListener('click', () => document.getEle
 document.getElementById('lvlup-modal').addEventListener('click', e => { if (e.target === e.currentTarget) e.currentTarget.classList.remove('open'); });
 
 /* ═══════════════════════════════════════════
-   MASMORRA — jogo idle (lógica em js/idle-game.js)
-   O herói luta sozinho; cada rodada gasta 1 de energia, e a energia vem
-   do EXP dos hábitos. Ao vivo: uma rodada animada a cada ROUND_MS. Ao
-   abrir/voltar à aba: recalcula o que aconteceu fora (mesmas rodadas).
+   MASMORRA — jogo idle. A arena animada e o loop vivem em js/idle-view.js
+   (compartilhados com o card do Dashboard); regras em js/idle-game.js.
+   Aqui ficam só os cards: melhorias, equipamento/mochila, chefe semanal.
 ═══════════════════════════════════════════ */
-const G = window.P90Idle;
-let gs = null;                                  // estado do jogo
-let gCache = { S: null, stats: null, exp: 0 };  // Sistema (pesado) — recalculado de vez em quando
-let gRunning = true, gInited = false, gTimer = null, gTab = 'status', gMonHp = 1;
+const G = window.P90Idle, V = window.P90IdleView;
+let gTab = 'status', gInited = false, arena = null, newBagIds = new Set();
 
 function fmt(n) { return Math.round(n).toLocaleString('pt-BR'); }
-function refreshSys() {
-  const S = Store.computeSystem();
-  gCache = { S, exp: S.exp, stats: G.playerStats(S, gs ? gs.up : { atk: 0, def: 0, lck: 0 }) };
-}
-function gSave() { Store.saveIdleState(gs); }
 function fmtDur(ms) {
   const m = Math.round(ms / 60000);
   if (m < 60) return m + ' min';
@@ -527,62 +429,22 @@ function fmtDur(ms) {
   return h < 24 ? h + 'h' + (m % 60 ? String(m % 60).padStart(2, '0') : '') : Math.floor(h / 24) + 'd ' + (h % 24) + 'h';
 }
 
-function gFloat(text, cls, xPct, yPx) {
-  const fx = document.getElementById('gm-fx');
-  const el = document.createElement('div');
-  el.className = 'gm-float ' + (cls || '');
-  el.textContent = text;
-  el.style.left = xPct + '%'; el.style.top = yPx + 'px';
-  fx.appendChild(el);
-  setTimeout(() => el.remove(), 1050);
-}
-function gAnim(id, cls, ms) {
-  const el = document.getElementById(id);
-  el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls);
-  setTimeout(() => el.classList.remove(cls), ms);
-}
-
-function gShowMonster(f, ratio) {
-  const m = G.monsterFor(f);
-  const monEl = document.getElementById('gm-mon');
-  const sprite = document.getElementById('gm-mon-sprite');
-  sprite.textContent = m.emoji;
-  document.getElementById('gm-mon-name').textContent = m.name;
-  monEl.classList.toggle('boss', m.boss);
-  document.getElementById('gm-stage').classList.toggle('boss', m.boss);
-  gMonHp = ratio == null ? 1 : ratio;
-  document.getElementById('gm-mon-hp').style.width = Math.round(gMonHp * 100) + '%';
-  document.getElementById('gm-floor').innerHTML =
-    'Andar <b>' + f + '</b>' + (m.boss ? '<span class="bossTag">CHEFE</span>' : '') + (f <= gs.best ? ' · farmando' : '');
-  return m;
-}
-
-function gRestore() {
-  // Mostra o monstro do encontro em andamento (ou o próximo).
-  const f = gs.enc ? gs.enc.f : G.pickFloor(gCache.stats, gs);
-  const m = G.monsterFor(f);
-  const need = G.roundsToKill(gCache.stats, m);
-  gShowMonster(f, gs.enc ? Math.max(0, 1 - gs.enc.done / need) : 1);
-  document.getElementById('gm-hero-hp').style.width = '100%';
-}
-
 function gRenderHud() {
-  const avail = G.energyAvail(gs, gCache.exp);
-  const earned = G.energyEarned(gCache.exp);
+  const gs = V.gs(), C = V.cache();
+  const avail = G.energyAvail(gs, C.exp), earned = G.energyEarned(C.exp);
   document.getElementById('gm-energy').textContent = fmt(avail);
   document.getElementById('gm-ebar').style.width = (earned ? Math.round(avail / earned * 100) : 0) + '%';
   document.getElementById('gm-gold').textContent = fmt(gs.gold);
   document.getElementById('gm-kills').textContent = fmt(gs.kills);
   document.getElementById('gm-best').innerHTML = 'Recorde: andar <b style="color:var(--white);font-weight:400">' + gs.best + '</b> · ≈ ' + fmtDur(avail * G.ROUND_MS) + ' de combate';
-  document.getElementById('gm-stage').classList.toggle('resting', avail <= 0);
 }
 
 function gRenderHero() {
-  const st = gCache.stats;
+  const gs = V.gs(), C = V.cache(), st = C.stats;
   document.getElementById('hr-atk').textContent = st.atk;
   document.getElementById('hr-hp').textContent = st.hp;
   document.getElementById('hr-gm').textContent = st.goldMul.toFixed(2).replace('.', ',');
-  document.getElementById('hr-src').textContent = 'Nível ' + gCache.S.level + ' · rank ' + gCache.S.rank;
+  document.getElementById('hr-src').textContent = 'Nível ' + C.S.level + ' · rank ' + C.S.rank;
   document.getElementById('up-list').innerHTML = Object.keys(G.UPGRADES).map(k => {
     const u = G.UPGRADES[k], lvl = gs.up[k], cost = G.upgradeCost(k, lvl);
     return '<div class="up-row"><span class="up-ico">' + u.icon + '</span><div class="up-main"><div class="up-name">' + u.name +
@@ -591,9 +453,43 @@ function gRenderHero() {
   }).join('');
 }
 
+/* "ATQ 45 (+12)" — cada atributo do item comparado ao equipado no mesmo espaço */
+function statText(it, cur) {
+  const parts = [];
+  [['atk', 'ATQ', ''], ['hp', 'VIDA', ''], ['gold', 'OURO', '%']].forEach(a => {
+    const v = it[a[0]], c = cur ? cur[a[0]] : 0;
+    if (!v && !c) return;
+    const d = v - c;
+    parts.push(a[1] + ' ' + (v ? '+' + v : '0') + a[2] + (cur || true ? ' <span class="' + (d > 0 ? 'up' : d < 0 ? 'down' : '') + '">(' + (d > 0 ? '+' : '') + d + a[2] + ')</span>' : ''));
+  });
+  return parts.join(' · ') || '—';
+}
+
+function gRenderEquip() {
+  const gs = V.gs(), b = V.cache().stats.bonus;
+  document.getElementById('eq-bonus').textContent = '+' + b.atk + ' atq · +' + b.hp + ' vida' + (b.gold ? ' · +' + b.gold + '% ouro' : '');
+  document.getElementById('eq-slots').innerHTML = G.SLOTS.map(s => {
+    const it = gs.eq[s], info = G.SLOT_INFO[s];
+    if (!it) return '<div class="eq-slot empty"><span class="eq-ico">' + info.icon + '</span><div class="eq-main"><div class="eq-name">' + info.label + '<em>vazio</em></div><div class="eq-stats">Nenhum item equipado</div></div></div>';
+    return '<div class="eq-slot r' + it.rarity + '"><span class="eq-ico">' + info.icon + '</span><div class="eq-main"><div class="eq-name">' + esc(it.name) +
+      '<em>' + G.RARITIES[it.rarity].label + ' · andar ' + it.ilvl + '</em></div><div class="eq-stats">' + statText(it, null).replace(/ <span class="[^"]*">\([^)]*\)<\/span>/g, '') + '</div></div>' +
+      '<div class="eq-btns"><button type="button" class="eq-btn sell" data-unequip="' + s + '">Tirar</button></div></div>';
+  }).join('');
+  const bag = gs.inv.slice().sort((a, b) => b.rarity - a.rarity || b.ilvl - a.ilvl || b.id - a.id);
+  document.getElementById('bag-count').textContent = gs.inv.length + '/' + G.BAG_MAX;
+  document.getElementById('bag-list').innerHTML = bag.length ? bag.map(it => {
+    const info = G.SLOT_INFO[it.slot], cur = gs.eq[it.slot];
+    return '<div class="bag-row r' + it.rarity + (newBagIds.has(it.id) ? ' new' : '') + '"><span class="eq-ico">' + info.icon + '</span><div class="eq-main"><div class="eq-name">' + esc(it.name) +
+      '<em>' + G.RARITIES[it.rarity].label + ' · andar ' + it.ilvl + '</em></div><div class="eq-stats">' + statText(it, cur) + '</div></div>' +
+      '<div class="eq-btns"><button type="button" class="eq-btn" data-equip="' + it.id + '">Equipar</button>' +
+      '<button type="button" class="eq-btn sell" data-sell="' + it.id + '" title="Vender">' + fmt(G.itemValue(it)) + '</button></div></div>';
+  }).join('') : '<div class="bag-empty">Mochila vazia. Monstros têm ' + Math.round(G.DROP_CHANCE * 100) + '% de chance de soltar um item; chefes sempre soltam.</div>';
+  newBagIds = new Set();
+}
+
 function gRenderBoss() {
-  const now = Date.now(), wb = G.worldBoss(now, gs);
-  const hp = wb.hp || Math.round(G.BOSS_ROUNDS * gCache.stats.atk);
+  const gs = V.gs(), C = V.cache(), now = Date.now(), wb = G.worldBoss(now, gs);
+  const hp = wb.hp || Math.round(G.BOSS_ROUNDS * C.stats.atk);
   document.getElementById('wb-emoji').textContent = wb.emoji;
   document.getElementById('wb-name').textContent = wb.name;
   document.getElementById('wb-sub').textContent = 'vida ' + fmt(hp) + ' · recompensa ' + fmt(wb.reward) + ' ouro';
@@ -608,110 +504,65 @@ function gRenderBoss() {
   msg.textContent = claimed ? 'Recompensa resgatada ✓' : wb.defeated ? '' : 'Todo dano do herói nesta semana conta contra o chefe.';
 }
 
-function gRenderAll() { gRenderHud(); gRenderHero(); gRenderBoss(); }
+function gRenderAll() { gRenderHud(); gRenderHero(); gRenderEquip(); gRenderBoss(); }
 
 function gAway(sum) {
   const el = document.getElementById('gm-away');
   if (!sum || sum.rounds < 10) { el.hidden = true; return; }
   el.innerHTML = '<div>Enquanto você esteve fora (' + fmtDur(sum.elapsed) + (sum.capped ? ', limite de ' + G.OFFLINE_CAP_H + 'h' : '') + '): <b>+' + fmt(sum.kills) +
     ' abates</b>, <b>+' + fmt(sum.gold) + ' ouro</b>' + (sum.floors ? ', <b>+' + sum.floors + ' andar' + (sum.floors > 1 ? 'es' : '') + '</b>' : '') +
+    (sum.drops ? ', <b>' + sum.drops + ' iten' + (sum.drops > 1 ? 's' : '') + '</b>' : '') +
     (sum.dry ? '. A energia acabou — cumpra os hábitos para o herói voltar a lutar.' : '.') + '</div><button type="button" title="Fechar">✕</button>';
   el.hidden = false;
   el.querySelector('button').onclick = () => { el.hidden = true; };
 }
 
-function gLog(html) { document.getElementById('gm-log').innerHTML = html; }
-
-function gTick() {
-  gTimer = null;
-  if (gTab !== 'game' || document.hidden) return;
-  if (gRunning) {
-    const now = Date.now();
-    const ev = G.stepRound(gs, { stats: gCache.stats, exp: gCache.exp, now });
-    gs.last = now;
-    if (!ev) {
-      gRenderHud();
-    } else {
-      const m = ev.monster;
-      gAnim('gm-hero', 'atk', 450);
-      setTimeout(() => {
-        gAnim('gm-mon', 'hit', 360);
-        gFloat('-' + ev.dmg, '', 66 + Math.random() * 8, 40 + Math.random() * 30);
-        gMonHp = ev.killed ? 0 : Math.max(0, 1 - ev.done / ev.need);
-        document.getElementById('gm-mon-hp').style.width = Math.round(gMonHp * 100) + '%';
-      }, 200);
-      if (!ev.killed) {
-        setTimeout(() => {
-          gAnim('gm-hero', 'hurt', 320);
-          gFloat('-' + m.atk, '', 20 + Math.random() * 8, 50 + Math.random() * 30);
-          const hpRatio = Math.max(0.05, 1 - (m.atk * ev.done) / gCache.stats.hp);
-          document.getElementById('gm-hero-hp').style.width = Math.round(hpRatio * 100) + '%';
-        }, 620);
-      } else {
-        setTimeout(() => {
-          gAnim('gm-mon', 'die', 460);
-          gFloat('+' + ev.gold + ' ouro', 'gold', 62, 20);
-          gLog((m.boss ? '<b>Chefe derrotado!</b> ' : '') + m.name + ' abatido · <b>+' + ev.gold + ' ouro</b>' + (ev.newFloor ? ' · <b>novo andar!</b>' : ''));
-          gRenderHero();
-        }, 300);
-        setTimeout(() => {
-          document.getElementById('gm-hero-hp').style.width = '100%';
-          gShowMonster(G.pickFloor(gCache.stats, gs), 1);
-        }, 900);
-      }
-      gRenderHud();
-      if (ev.killed) gRenderBoss();
-      gSave();
-    }
-  }
-  gTimer = setTimeout(gTick, G.ROUND_MS);
-}
-
-function gStart() { if (!gTimer) gTimer = setTimeout(gTick, 800); }
-function gStop() { if (gTimer) { clearTimeout(gTimer); gTimer = null; } }
-
-function gCatchUpAndRender(showAway) {
-  refreshSys();
-  const sum = G.catchUp(gs, { stats: gCache.stats, exp: gCache.exp, now: Date.now() });
-  gSave();
-  gRestore(); gRenderAll();
-  if (showAway) gAway(sum);
-  if (gCache.exp && G.energyAvail(gs, gCache.exp) > 0) gLog('O herói está lutando…');
-  else gLog('Sem energia — cumpra seus hábitos para recarregar.');
-}
-
 function gInit() {
-  if (gInited) { gCatchUpAndRender(true); return; }
-  gInited = true;
-  gs = G.normalize(Store.getIdleState(), Date.now());
-  gCatchUpAndRender(true);
-  document.getElementById('gm-pause').addEventListener('click', e => {
-    gRunning = !gRunning;
-    e.currentTarget.textContent = gRunning ? 'Pausar' : 'Retomar';
-    gLog(gRunning ? 'O herói está lutando…' : 'Combate pausado.');
-    if (gRunning) gs.last = Date.now();
-  });
-  document.getElementById('up-list').addEventListener('click', e => {
-    const b = e.target.closest('[data-up]');
-    if (!b || !G.buyUpgrade(gs, b.dataset.up)) return;
-    gCache.stats = G.playerStats(gCache.S, gs.up);
-    gSave(); gRenderHud(); gRenderHero();
-    gLog('<b>' + G.UPGRADES[b.dataset.up].name + '</b> melhorada!');
-  });
-  document.getElementById('wb-claim').addEventListener('click', () => {
-    const got = G.claimWorldBoss(gs, Date.now());
-    if (got) { gSave(); gRenderHud(); gRenderHero(); gRenderBoss(); gLog('<b>Chefe da semana:</b> +' + fmt(got) + ' ouro!'); }
-  });
-  setInterval(() => { if (gTab === 'game' && !document.hidden) gRenderBoss(); }, 60000);
-  setInterval(() => { if (gTab === 'game' && !document.hidden) { const S = Store.computeSystem(); gCache.S = S; gCache.exp = S.exp; gCache.stats = G.playerStats(S, gs.up); } }, 30000);
+  if (!gInited) {
+    gInited = true;
+    const sum = V.init();
+    arena = V.mount(document.getElementById('gm-arena'), { hud: false });
+    V.on(e => {
+      if (gTab !== 'game') return;
+      if (e.type === 'round') {
+        gRenderHud();
+        const ev = e.ev;
+        if (ev && ev.killed) { gRenderHero(); gRenderBoss(); }
+        if (ev && (ev.drop || ev.sold)) { if (ev.drop) newBagIds.add(ev.drop.id); gRenderEquip(); }
+      } else if (e.type === 'sync') { gRenderAll(); gAway(e.sum); }
+      else { gRenderAll(); }
+    });
+    document.getElementById('gm-pause').addEventListener('click', e => {
+      const run = !V.isRunning();
+      V.setRunning(run);
+      e.currentTarget.textContent = run ? 'Pausar' : 'Retomar';
+      arena.log(run ? 'O herói está lutando…' : 'Combate pausado.');
+    });
+    document.getElementById('up-list').addEventListener('click', e => {
+      const b = e.target.closest('[data-up]');
+      if (!b || !G.buyUpgrade(V.gs(), b.dataset.up)) return;
+      V.recalc(); V.save(); arena.refreshInfo(); gRenderHud(); gRenderHero(); gRenderEquip();
+      arena.log('<b>' + G.UPGRADES[b.dataset.up].name + '</b> melhorada!');
+    });
+    document.getElementById('eq-card').addEventListener('click', e => {
+      const gs = V.gs();
+      const eq = e.target.closest('[data-equip]'), sell = e.target.closest('[data-sell]'), un = e.target.closest('[data-unequip]');
+      if (eq && G.equipItem(gs, Number(eq.dataset.equip))) arena.log('<b>Equipado!</b>');
+      else if (sell) { const g = G.sellItem(gs, Number(sell.dataset.sell)); if (g) arena.log('Item vendido por <b>+' + fmt(g) + '</b> ouro.'); }
+      else if (un) { if (!G.unequipItem(gs, un.dataset.unequip)) { arena.log('Mochila cheia.'); return; } }
+      else if (e.target.closest('#bag-sellworse')) { const g = G.sellWorse(gs); arena.log(g ? 'Itens piores vendidos por <b>+' + fmt(g) + '</b> ouro.' : 'Nenhum item pior que o equipado.'); }
+      else return;
+      V.recalc(); V.save(); arena.refreshInfo(); gRenderAll();
+    });
+    document.getElementById('wb-claim').addEventListener('click', () => {
+      const got = G.claimWorldBoss(V.gs(), Date.now());
+      if (got) { V.save(); gRenderHud(); gRenderBoss(); arena.log('<b>Chefe da semana:</b> +' + fmt(got) + ' ouro!'); }
+    });
+    gRenderAll(); gAway(sum);
+    arena.log(G.energyAvail(V.gs(), V.cache().exp) > 0 ? 'O herói está lutando…' : 'Sem energia — cumpra seus hábitos para recarregar.');
+  } else { V.resync(); }
+  V.start();
 }
-
-document.addEventListener('visibilitychange', () => {
-  if (!gInited) return;
-  if (document.hidden) { Store.flushIdleState(); gStop(); }
-  else if (gTab === 'game') { gCatchUpAndRender(true); gStart(); }
-});
-window.addEventListener('pagehide', () => { if (gInited) { gSave(); Store.flushIdleState(); } });
 
 /* abas Status | Masmorra */
 function setTab(t) {
@@ -720,7 +571,7 @@ function setTab(t) {
   document.querySelectorAll('.sys-tab').forEach(b => { const on = b.dataset.tab === t; b.classList.toggle('on', on); b.setAttribute('aria-selected', String(on)); });
   document.getElementById('tab-status').hidden = t !== 'status';
   document.getElementById('tab-game').hidden = t !== 'game';
-  if (t === 'game') { gInit(); gStart(); } else { gStop(); if (gInited) { gSave(); Store.flushIdleState(); } }
+  if (t === 'game') gInit(); else if (gInited) { V.stop(); V.save(); Store.flushIdleState(); }
 }
 document.querySelector('.sys-tabs').addEventListener('click', e => {
   const b = e.target.closest('.sys-tab'); if (b) setTab(b.dataset.tab);
@@ -728,7 +579,7 @@ document.querySelector('.sys-tabs').addEventListener('click', e => {
 
 initSidebar();
 render();
-window.addEventListener('p90:synced', () => { initSidebar(); render(); if (gInited) gCatchUpAndRender(false); });
+window.addEventListener('p90:synced', () => { initSidebar(); render(); });
 try { if (localStorage.getItem('p90_sys_tab') === 'game') setTab('game'); } catch (e) {}
 
 /* ── fundo (grade sutil) ── */

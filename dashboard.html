@@ -15,6 +15,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/base.css">
 <link rel="stylesheet" href="css/components.css">
+<link rel="stylesheet" href="css/idle.css">
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
@@ -384,6 +385,14 @@ body { overflow: hidden; }
       </div>
     </a>
 
+    <div class="card idle-card" id="idle-card">
+      <div class="card-hd">
+        <a class="card-title" href="sistema.html" title="Abrir a Masmorra">Masmorra</a>
+        <a class="card-action" href="sistema.html">abrir →</a>
+      </div>
+      <div id="idle-arena"></div>
+    </div>
+
     <!-- NÍVEIS POR PILAR -->
     <div class="levels" id="levels"></div>
 
@@ -461,6 +470,8 @@ body { overflow: hidden; }
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/supabase.js"></script>
 <script src="js/store.js"></script>
+<script src="js/idle-game.js"></script>
+<script src="js/idle-view.js"></script>
 <script src="js/achievements.js"></script>
 <script src="js/quotes.js"></script>
 <script src="js/idb.js"></script>
@@ -528,6 +539,7 @@ function init() {
   renderNudge();
   renderWeeklyNudge();
   renderSystemCard();
+  initIdleCard();
   renderLevels();
   renderCountersCard();
 }
@@ -566,6 +578,24 @@ function renderSystemCard() {
   set('sc2-quest', S.quest.total ? 'Missão ' + S.quest.done + '/' + S.quest.total : '');
   const bar = document.getElementById('sc2-bar');
   if (bar) bar.style.width = (S.expForNext ? Math.min(100, Math.round(S.expIntoLevel / S.expForNext * 100)) : 100) + '%';
+}
+
+
+/* ═══════════════════════════════
+   MASMORRA — card com o herói lutando ao vivo (arena em js/idle-view.js)
+═══════════════════════════════ */
+let idleMounted = false;
+function initIdleCard() {
+  if (idleMounted || !window.P90IdleView || !document.getElementById('idle-arena')) return;
+  idleMounted = true;
+  const V = window.P90IdleView;
+  const sum = V.init();
+  const arena = V.mount(document.getElementById('idle-arena'), { hud: true });
+  if (sum && sum.rounds >= 10) {
+    arena.log('Enquanto você esteve fora: <b>+' + sum.kills.toLocaleString('pt-BR') + ' abates</b>, <b>+' + sum.gold.toLocaleString('pt-BR') + ' ouro</b>' +
+      (sum.drops ? ', <b>' + sum.drops + ' iten' + (sum.drops > 1 ? 's' : '') + '</b>' : '') + '.');
+  }
+  V.start();
 }
 
 
