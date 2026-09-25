@@ -148,3 +148,40 @@
   .bag-row.new { animation: bagNew 1.6s ease-out; }
 }
 @media (max-width: 520px) { .eq-btns { flex-direction: column; } }
+
+/* ── guerreiro (SVG em camadas) + pet ── */
+.gm-sprite.gm-body { filter: none; font-size: 0; line-height: 0; }
+.gm-warrior { width: 62px; height: 95px; display: block; overflow: visible; }
+.gm-pet { left: calc(14% - 6px); width: 44px; bottom: 56px; z-index: 1; }
+.gm-pet .gm-sprite { font-size: 30px; }
+.gm-hero { z-index: 2; }
+.gm-pet[hidden] { display: none; }
+.gm-hero .gm-hp { margin-top: 6px; }
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes gmSwing { 0% { transform: rotate(0); } 35% { transform: rotate(78deg); } 100% { transform: rotate(0); } }
+  @keyframes gmFlash { 0% { filter: brightness(3.2) drop-shadow(0 0 10px #fff); } 100% { filter: none; } }
+  @keyframes gmAura { 0%,100% { opacity: .55; } 50% { opacity: 1; } }
+  .gm-hero.atk .wp { animation: gmSwing 0.42s ease-out; }
+  .gm-hero.flash .gm-sprite { animation: gmFlash 0.7s ease-out; }
+  .gm-warrior .aura { animation: gmAura 2.4s ease-in-out infinite; }
+  .gm-pet .gm-sprite { animation: gmBob 1.7s ease-in-out infinite 0.4s; }
+  .gm-pet.atk .gm-sprite { animation: gmLunge 0.42s ease-out; }
+}
+@media (max-width: 520px) { .gm-warrior { width: 50px; height: 77px; } .gm-pet { width: 34px; bottom: 50px; } .gm-pet .gm-sprite { font-size: 24px; } }
+
+/* conjuntos + pets (aba Masmorra) */
+.eq-set { font-style: normal; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; margin-left: 8px; }
+.set-row { padding: 10px 0; border-bottom: 1px solid var(--border); }
+.set-row:last-child { border-bottom: none; }
+.set-row.none { opacity: 0.45; }
+.set-hd { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; font-size: 13px; }
+.set-hd b { font-weight: 400; }
+.set-hd span { font-size: 10px; letter-spacing: 0.1em; color: var(--mid); text-transform: uppercase; }
+.set-tier { font-size: 11px; letter-spacing: 0.04em; color: var(--mid); margin-top: 3px; }
+.set-tier.on { color: var(--green); }
+.pet-row { display: flex; align-items: center; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--border); }
+.pet-row:last-child { border-bottom: none; }
+.pet-ico { font-size: 26px; width: 34px; text-align: center; filter: grayscale(1) brightness(1.3); flex-shrink: 0; }
+.pet-row.locked { opacity: 0.4; }
+.pet-row.locked .pet-ico { filter: grayscale(1) brightness(0.3); }
+.pet-row.on .eq-name::after { content: ' · ativo'; color: var(--green); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; }
