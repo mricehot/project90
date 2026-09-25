@@ -445,7 +445,14 @@ const Store = (() => {
       Object.keys(cache.studyReflections).forEach(k => delete cache.studyReflections[k]);
       Object.assign(cache.studyReflections, data.studyReflections);
     }
-    if (data.idleState && typeof data.idleState === 'object') cache.idleState = data.idleState;
+    if (data.idleState && typeof data.idleState === 'object') {
+      // Não troca um estado local mais adiantado (push ainda não enviado) por um mais antigo do servidor.
+      // energySpent só cresce, então é a medida de progresso (o mesmo critério do P90Idle.ahead).
+      const loc = cache.idleState, srv = data.idleState;
+      const en = x => (x && x.energySpent) || 0;
+      const localAhead = loc && (en(loc) > en(srv) || (en(loc) === en(srv) && (loc.last || 0) > (srv.last || 0)));
+      if (localAhead) saveIdleState(loc); else cache.idleState = srv;
+    }
     if (data.waterDays && typeof data.waterDays === 'object') {
       Object.keys(cache.waterDays).forEach(k => delete cache.waterDays[k]);
       Object.keys(data.waterDays).forEach(k => { cache.waterDays[k] = parseInt(data.waterDays[k], 10) || 0; });

@@ -37,7 +37,7 @@
   function pullMirror() {
     try {
       const c = JSON.parse(localStorage.getItem('p90_cache') || '{}');
-      if (c.idleState && c.idleState.last > gs.last) {
+      if (c.idleState && G.ahead(c.idleState, gs)) {
         gs = G.normalize(c.idleState, Date.now()); recalc();
         arenas.forEach(a => a.restore()); emit({ type: 'pull' });
       }
@@ -45,8 +45,20 @@
   }
 
   /* ── ciclo de vida ── */
+  /* ── espera o carregamento do servidor ──
+     Iniciar antes do bootstrap criava um jogo novo (cache local vazio) que depois
+     sobrescrevia o progresso salvo no servidor. Por isso o jogo só começa depois
+     que o Store termina de carregar (com sucesso ou não — offline usa o espelho). */
+  let settled = false; const waiters = [];
+  function whenReady(fn) { if (settled) fn(); else waiters.push(fn); }
+  (function () {
+    const done = () => { settled = true; waiters.splice(0).forEach(f => { try { f(); } catch (e) { console.error(e); } }); };
+    try { Promise.resolve(Store.bootstrap()).then(done, done); } catch (e) { done(); }
+  })();
+
   function init() {
     if (inited) return lastSum;
+    if (!settled) return null;
     gs = G.normalize(Store.getIdleState(), Date.now());
     refreshSys();
     lastSum = G.catchUp(gs, { stats: C.stats, exp: C.exp, now: Date.now(), recalc: () => G.playerStats(C.S, gs) });
@@ -61,7 +73,7 @@
   function resync() {
     if (!inited) return;
     const srv = Store.getIdleState();
-    if (srv && srv.last > gs.last) gs = G.normalize(srv, Date.now());
+    if (srv && G.ahead(srv, gs)) gs = G.normalize(srv, Date.now());
     refreshSys();
     lastSum = G.catchUp(gs, { stats: C.stats, exp: C.exp, now: Date.now(), recalc: () => G.playerStats(C.S, gs) });
     recalc();
@@ -78,19 +90,21 @@
 
   function tick() {
     timer = null;
-    if (document.hidden || !anyVisible()) return;
-    if (running) {
-      if (holdLock()) {
-        const now = Date.now();
-        const ev = G.stepRound(gs, { stats: C.stats, exp: C.exp, now });
-        gs.last = now;
-        arenas.forEach(a => a.play(ev));
-        if (ev && ev.pet && !ev.pet.sold) recalc();
-        if (ev) save();
-        emit({ type: 'round', ev });
-      } else pullMirror();
-    }
-    timer = setTimeout(tick, G.ROUND_MS);
+    try {
+      if (document.hidden || !anyVisible()) { timer = setTimeout(tick, 1000); return; }   // segue de olho: nenhum evento perdido mata o laço
+      if (running) {
+        if (holdLock()) {
+          const now = Date.now();
+          const ev = G.stepRound(gs, { stats: C.stats, exp: C.exp, now });
+          gs.last = now;
+          if (ev && ev.pet && !ev.pet.sold) recalc();
+          if (ev) save();
+          arenas.forEach(a => { try { a.play(ev); } catch (e) { console.error('[Masmorra] animação:', e); } });
+          emit({ type: 'round', ev });
+        } else pullMirror();
+      }
+    } catch (e) { console.error('[Masmorra] rodada:', e); }
+    if (!timer) timer = setTimeout(tick, G.ROUND_MS);
   }
   function start() { if (inited && !timer) timer = setTimeout(tick, 600); }
   function stop() { if (timer) { clearTimeout(timer); timer = null; } }
@@ -317,7 +331,7 @@
   }
 
   window.P90IdleView = {
-    init, mount, start, stop, on, emit, save, recalc, refreshSys, setRunning, resync, warriorSVG,
+    init, whenReady, mount, start, stop, on, emit, save, recalc, refreshSys, setRunning, resync, warriorSVG,
     gs: () => gs, cache: () => C, away: () => lastSum, isRunning: () => running,
   };
 })();
