@@ -79,6 +79,7 @@ const Store = (() => {
       conversationTipsRead: {}, // { [tipIdx]: readDay } — Dicção/Conversação
       libReadDays: {},      // { [dayNum]: true } — dias com leitura registrada na Biblioteca
       waterDays: {},        // { [dayNum]: ml } — água bebida por dia (hábito Beber água)
+      idleState: null,      // estado do jogo idle (Sistema › Masmorra) — ver js/idle-game.js
       workProjects: [],
       workTasks:    [],
       workTaskHoles: [],
@@ -438,6 +439,7 @@ const Store = (() => {
       Object.keys(cache.studyReflections).forEach(k => delete cache.studyReflections[k]);
       Object.assign(cache.studyReflections, data.studyReflections);
     }
+    if (data.idleState && typeof data.idleState === 'object') cache.idleState = data.idleState;
     if (data.waterDays && typeof data.waterDays === 'object') {
       Object.keys(cache.waterDays).forEach(k => delete cache.waterDays[k]);
       Object.keys(data.waterDays).forEach(k => { cache.waterDays[k] = parseInt(data.waterDays[k], 10) || 0; });
@@ -4584,6 +4586,33 @@ const Store = (() => {
   }
 
   /* ──────────────────────────────────────────
+     JOGO IDLE (Sistema › Masmorra) — um único blob jsonb por usuário
+     (idle_state). O jogo grava com frequência, então o envio ao Supabase é
+     coalescido: no máximo um upsert a cada ~4 s; flushIdleState() força.
+  ────────────────────────────────────────── */
+  let _idleTimer = null;
+  function getIdleState() { return cache.idleState; }
+  function _idlePush() {
+    _idleTimer = null;
+    const st = cache.idleState;
+    if (!st) return;
+    _push(async () => {
+      const { error } = await window.sb.from('idle_state').upsert({
+        user_id: _uid, state: st, updated_at: new Date().toISOString(),
+      }, { onConflict: 'user_id' });
+      if (error) throw error;
+    });
+  }
+  function saveIdleState(st) {
+    cache.idleState = st;
+    _saveMirror();
+    if (!_idleTimer) _idleTimer = setTimeout(_idlePush, 4000);
+  }
+  function flushIdleState() {
+    if (_idleTimer) { clearTimeout(_idleTimer); _idlePush(); }
+  }
+
+  /* ──────────────────────────────────────────
      PRIORIDADES DO DIA (Top 3) — card no Dashboard.
      cache.dailyPriorities[dayNum] = [{text, done, taskId}, ...] até 3 slots
      fixos. taskId (opcional) vincula o slot a uma tarefa real de Tarefas —
@@ -4809,7 +4838,7 @@ const Store = (() => {
     // biblioteca
     getLibrary, getLibBooks, libGenres,
     addLibBook, updateLibBook, setLibStatus, deleteLibBook, logReadingDay, libReadToday,
-    getWaterMl, addWater, waterGoalMl,
+    getWaterMl, addWater, waterGoalMl, getIdleState, saveIdleState, flushIdleState,
     libGoalForYear, setLibGoal, libBooksReadInYear, libGoalProgress, libStats,
     // prioridades do dia
     getDayPriorities, setDayPriorities, toggleDayPriority, dayPrioritiesStreak,
