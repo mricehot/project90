@@ -482,10 +482,11 @@ function toast(msg) {
 const DAY  = Store.getCurrentDay();
 const DAYS = Store.getTotalDays();
 const ROUND_LEN = 10;
+const QUIZ_OPTIONS = 5;   // 1 correta + 4 alternativas com significados de outras palavras
 
 // Significados-fallback genéricos, usados como alternativas erradas quando o
-// usuário ainda não tem palavras suficientes cadastradas para gerar 3 opções
-// plausíveis a partir do próprio vocabulário.
+// usuário ainda não tem palavras suficientes cadastradas para gerar as 4
+// alternativas erradas a partir do próprio vocabulário.
 const FALLBACK_MEANINGS = [
   'Estado de espírito calmo e ponderado diante de situações difíceis.',
   'Capacidade de se adaptar rapidamente a mudanças inesperadas.',
@@ -873,12 +874,13 @@ function buildQuizOptions(correctWord, allWords) {
     allWords.filter(w => w.id !== correctWord.id && w.meaning && w.meaning.trim() !== correct.trim())
             .map(w => w.meaning)
   );
+  const need = QUIZ_OPTIONS - 1;
   const distractors = [];
-  otherMeanings.forEach(m => { if (distractors.length < 2 && !distractors.includes(m)) distractors.push(m); });
+  otherMeanings.forEach(m => { if (distractors.length < need && !distractors.includes(m)) distractors.push(m); });
 
-  if (distractors.length < 2) {
+  if (distractors.length < need) {
     const pool = shuffle(FALLBACK_MEANINGS.filter(m => m !== correct && !distractors.includes(m)));
-    while (distractors.length < 2 && pool.length) distractors.push(pool.pop());
+    while (distractors.length < need && pool.length) distractors.push(pool.pop());
   }
 
   return shuffle([{ text: correct, correct: true }, ...distractors.map(t => ({ text: t, correct: false }))]);
