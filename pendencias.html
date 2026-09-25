@@ -104,6 +104,21 @@
 .pri-input::placeholder { color: var(--mid); }
 .pri-row.done .pri-input { color: var(--mid); text-decoration: line-through; }
 .pri-done-msg { font-size: 13px; color: rgba(134,239,172,0.9); line-height: 1.6; padding: 10px 0 4px; }
+
+/* sugestão: trazer pra hoje o que ficou sem concluir ontem */
+.pri-carry { margin-bottom: 12px; padding: 10px 12px; border: 1px dashed var(--border2); background: var(--surface2); }
+.pri-carry-hd { font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--mid); margin-bottom: 6px; }
+.pri-carry-row { display: flex; align-items: center; gap: 10px; padding: 5px 0; }
+.pri-carry-text { flex: 1; min-width: 0; font-size: 13px; line-height: 1.4; }
+.pri-carry-btn {
+  background: none; border: 1px solid var(--border2); color: var(--white); font-family: 'DM Mono', monospace;
+  font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; padding: 5px 9px; cursor: pointer; white-space: nowrap;
+  transition: border-color 0.15s;
+}
+.pri-carry-btn:hover:not(:disabled) { border-color: rgba(245,245,240,0.4); }
+.pri-carry-btn:disabled { color: var(--mid); cursor: default; }
+.pri-carry-x { background: none; border: none; color: var(--mid); font-size: 13px; cursor: pointer; padding: 2px 5px; }
+.pri-carry-x:hover { color: var(--white); }
 .pri-link {
   flex-shrink: 0; max-width: 108px; background: var(--surface2); border: 1px solid var(--border);
   color: var(--mid); font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.02em;
@@ -213,6 +228,7 @@
           <span class="card-title">Prioridades do dia <span class="h-badge hot" id="pri-streak" style="margin-left:8px"></span></span>
           <span class="card-action" id="pri-count"></span>
         </div>
+        <div id="pri-carry"></div>
         <div id="pri-body"></div>
       </div>
 
@@ -380,9 +396,68 @@ function _priTaskOptions(selectedId) {
   return '<option value="">— texto livre —</option>' +
     tasks.map(t => `<option value="${t.id}" ${t.id === selectedId ? 'selected' : ''}>${esc(t.title)}</option>`).join('');
 }
+/* Prioridades de ontem que ficaram sem concluir: só sugere (nunca preenche
+   sozinho) e o usuário traz pra um slot vazio de hoje com um clique. "Dispensar"
+   vale só pro dia de hoje, guardado no navegador. */
+const CARRY_KEY = 'p90_pri_carry_dismissed';
+function _carryDismissed() {
+  try {
+    const o = JSON.parse(localStorage.getItem(CARRY_KEY) || '{}');
+    return o.day === DAY && Array.isArray(o.texts) ? o.texts : [];
+  } catch (e) { return []; }
+}
+function _carryDismiss(text) {
+  try { localStorage.setItem(CARRY_KEY, JSON.stringify({ day: DAY, texts: [..._carryDismissed(), text] })); } catch (e) {}
+}
+function _carryCandidates() {
+  if (DAY <= 1) return [];
+  const today = Store.getDayPriorities(DAY).filter(s => s && s.text).map(s => s.text.trim().toLowerCase());
+  const dismissed = _carryDismissed();
+  return Store.getDayPriorities(DAY - 1).filter(s => {
+    if (!s || !s.text || s.done) return false;
+    if (today.includes(s.text.trim().toLowerCase()) || dismissed.includes(s.text)) return false;
+    if (s.taskId) {   // tarefa vinculada que já foi concluída/removida não precisa voltar
+      const t = Store.getTasks().find(x => x.id === s.taskId);
+      if (!t) return false;
+      const st = Store.taskStatus(t);
+      if (st === 'done' || st === 'done-today') return false;
+    }
+    return true;
+  });
+}
+function renderPriCarry() {
+  const el = document.getElementById('pri-carry');
+  if (!el) return;
+  const cands = _carryCandidates();
+  if (!cands.length) { el.innerHTML = ''; return; }
+  const free = [0, 1, 2].filter(i => !(Store.getDayPriorities(DAY)[i] || {}).text).length;
+  el.innerHTML = `<div class="pri-carry">
+    <div class="pri-carry-hd">Ficou de ontem</div>
+    ${cands.map((s, i) => `<div class="pri-carry-row">
+      <span class="pri-carry-text">${esc(s.text)}</span>
+      <button class="pri-carry-btn" data-i="${i}" ${free ? '' : 'disabled title="Os 3 slots de hoje já estão preenchidos"'}>Trazer p/ hoje</button>
+      <button class="pri-carry-x" data-x="${i}" title="Dispensar">✕</button>
+    </div>`).join('')}
+  </div>`;
+  el.querySelectorAll('.pri-carry-btn').forEach(b => b.addEventListener('click', () => carryPriority(cands[Number(b.dataset.i)])));
+  el.querySelectorAll('.pri-carry-x').forEach(b => b.addEventListener('click', () => {
+    _carryDismiss(cands[Number(b.dataset.x)].text);
+    renderPriCarry();
+  }));
+}
+function carryPriority(src) {
+  const items = [0, 1, 2].map(i => Store.getDayPriorities(DAY)[i] || { text: '', done: false, taskId: null });
+  const slot = items.findIndex(s => !s.text);
+  if (slot === -1) return;
+  items[slot] = { text: src.text, done: false, taskId: src.taskId || null };
+  Store.setDayPriorities(DAY, items);
+  renderPrioritiesCard();
+}
+
 function renderPrioritiesCard() {
   const body = document.getElementById('pri-body');
   if (!body) return;
+  renderPriCarry();
   const items = Store.getDayPriorities(DAY);
   const slots = [0, 1, 2].map(i => items[i] || { text: '', done: false, taskId: null });
   const filled = slots.filter(s => s.text);
