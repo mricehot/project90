@@ -224,6 +224,18 @@
             <div class="wb-leg"><span class="me">Seu dano <b id="wb-me-n">0</b></span><span>Vida restante <b id="wb-hp-n">0</b></span></div>
             <div class="gm-ctl"><button type="button" class="gm-btn claim" id="wb-claim" hidden>Resgatar recompensa</button><span class="gm-log" id="wb-msg"></span></div>
           </div>
+
+          <!-- PETS -->
+          <div class="sys-card" id="pet-card">
+            <div class="sys-hd"><span class="sys-lbl">Pets</span><span class="sys-meta" id="pet-count"></span></div>
+            <div id="pet-list"></div>
+          </div>
+
+          <!-- CONJUNTOS -->
+          <div class="sys-card" id="set-card">
+            <div class="sys-hd"><span class="sys-lbl">Conjuntos</span><span class="sys-meta">2 · 4 · 6 peças</span></div>
+            <div id="set-list"></div>
+          </div>
         </div>
 
         <div class="gm-col">
@@ -468,23 +480,51 @@ function statText(it, cur) {
 function gRenderEquip() {
   const gs = V.gs(), b = V.cache().stats.bonus;
   document.getElementById('eq-bonus').textContent = '+' + b.atk + ' atq · +' + b.hp + ' vida' + (b.gold ? ' · +' + b.gold + '% ouro' : '');
-  document.getElementById('eq-slots').innerHTML = G.SLOTS.map(s => {
-    const it = gs.eq[s], info = G.SLOT_INFO[s];
-    if (!it) return '<div class="eq-slot empty"><span class="eq-ico">' + info.icon + '</span><div class="eq-main"><div class="eq-name">' + info.label + '<em>vazio</em></div><div class="eq-stats">Nenhum item equipado</div></div></div>';
+  const setTag = it => it.set ? '<em class="eq-set" style="color:' + G.SETS[it.set].color + '">' + G.SETS[it.set].name + '</em>' : '';
+  document.getElementById('eq-slots').innerHTML = G.EQ_POS.map(s => {
+    const it = gs.eq[s], type = s.replace(/\d$/, ''), info = G.SLOT_INFO[type], label = G.POS_LABEL[s] || info.label;
+    if (!it) return '<div class="eq-slot empty"><span class="eq-ico">' + info.icon + '</span><div class="eq-main"><div class="eq-name">' + label + '<em>vazio</em></div><div class="eq-stats">Nenhum item equipado</div></div></div>';
     return '<div class="eq-slot r' + it.rarity + '"><span class="eq-ico">' + info.icon + '</span><div class="eq-main"><div class="eq-name">' + esc(it.name) +
-      '<em>' + G.RARITIES[it.rarity].label + ' · andar ' + it.ilvl + '</em></div><div class="eq-stats">' + statText(it, null).replace(/ <span class="[^"]*">\([^)]*\)<\/span>/g, '') + '</div></div>' +
+      '<em>' + G.RARITIES[it.rarity].label + ' · andar ' + it.ilvl + '</em>' + setTag(it) + '</div><div class="eq-stats">' + statText(it, null).replace(/ <span class="[^"]*">\([^)]*\)<\/span>/g, '') + '</div></div>' +
       '<div class="eq-btns"><button type="button" class="eq-btn sell" data-unequip="' + s + '">Tirar</button></div></div>';
   }).join('');
   const bag = gs.inv.slice().sort((a, b) => b.rarity - a.rarity || b.ilvl - a.ilvl || b.id - a.id);
   document.getElementById('bag-count').textContent = gs.inv.length + '/' + G.BAG_MAX;
   document.getElementById('bag-list').innerHTML = bag.length ? bag.map(it => {
-    const info = G.SLOT_INFO[it.slot], cur = gs.eq[it.slot];
+    const info = G.SLOT_INFO[it.slot], cur = G.replaced(gs, it.slot);
     return '<div class="bag-row r' + it.rarity + (newBagIds.has(it.id) ? ' new' : '') + '"><span class="eq-ico">' + info.icon + '</span><div class="eq-main"><div class="eq-name">' + esc(it.name) +
-      '<em>' + G.RARITIES[it.rarity].label + ' · andar ' + it.ilvl + '</em></div><div class="eq-stats">' + statText(it, cur) + '</div></div>' +
+      '<em>' + G.RARITIES[it.rarity].label + ' · andar ' + it.ilvl + '</em>' + setTag(it) + '</div><div class="eq-stats">' + statText(it, cur) + '</div></div>' +
       '<div class="eq-btns"><button type="button" class="eq-btn" data-equip="' + it.id + '">Equipar</button>' +
       '<button type="button" class="eq-btn sell" data-sell="' + it.id + '" title="Vender">' + fmt(G.itemValue(it)) + '</button></div></div>';
   }).join('') : '<div class="bag-empty">Mochila vazia. Monstros têm ' + Math.round(G.DROP_CHANCE * 100) + '% de chance de soltar um item; chefes sempre soltam.</div>';
   newBagIds = new Set();
+}
+
+/* bônus de uma espécie/conjunto: "+8% ATQ · +3% VIDA" */
+function pctText(o) {
+  return [['atk', 'ATQ'], ['hp', 'VIDA'], ['gold', 'OURO']].filter(a => o[a[0]]).map(a => '+' + String(o[a[0]]).replace('.', ',') + '% ' + a[1]).join(' · ');
+}
+
+function gRenderSets() {
+  const gs = V.gs(), cnt = G.setCounts(gs.eq);
+  document.getElementById('set-list').innerHTML = G.SET_KEYS.map(k => {
+    const S = G.SETS[k], n = cnt[k] || 0;
+    return '<div class="set-row' + (n ? '' : ' none') + '"><div class="set-hd"><b style="color:' + S.color + '">Conjunto ' + esc(S.name) + '</b><span>' + n + ' peça' + (n === 1 ? '' : 's') + '</span></div>' +
+      S.tiers.map(t => '<div class="set-tier' + (n >= t.n ? ' on' : '') + '">' + (n >= t.n ? '✓ ' : '') + t.n + ' peças — ' + pctText(t) + '</div>').join('') + '</div>';
+  }).join('');
+}
+
+function gRenderPets() {
+  const gs = V.gs();
+  document.getElementById('pet-count').textContent = gs.pets.length + '/' + G.PETS.length + ' na coleção';
+  const order = G.PETS.slice().sort((a, b) => b.r - a.r);
+  document.getElementById('pet-list').innerHTML = order.map(d => {
+    const own = gs.pets.find(p => p.sp === d.k), on = own && gs.pet === d.k;
+    if (!own) return '<div class="pet-row locked"><span class="pet-ico">' + d.emoji + '</span><div class="eq-main"><div class="eq-name">???<em>' + G.RARITIES[d.r].label + '</em></div><div class="eq-stats">Ainda não encontrado</div></div></div>';
+    return '<div class="pet-row r' + d.r + (on ? ' on' : '') + '"><span class="pet-ico">' + d.emoji + '</span><div class="eq-main"><div class="eq-name">' + esc(d.name) +
+      '<em>' + G.RARITIES[d.r].label + ' · nv ' + own.lv + (own.lv >= G.PET_MAX_LV ? ' (máx)' : '') + '</em></div><div class="eq-stats">' + pctText(G.petPct(d.k, own.lv)) + '</div></div>' +
+      '<div class="eq-btns">' + (on ? '' : '<button type="button" class="eq-btn" data-pet="' + d.k + '">Ativar</button>') + '</div></div>';
+  }).join('');
 }
 
 function gRenderBoss() {
@@ -504,7 +544,7 @@ function gRenderBoss() {
   msg.textContent = claimed ? 'Recompensa resgatada ✓' : wb.defeated ? '' : 'Todo dano do herói nesta semana conta contra o chefe.';
 }
 
-function gRenderAll() { gRenderHud(); gRenderHero(); gRenderEquip(); gRenderBoss(); }
+function gRenderAll() { gRenderHud(); gRenderHero(); gRenderEquip(); gRenderSets(); gRenderPets(); gRenderBoss(); }
 
 function gAway(sum) {
   const el = document.getElementById('gm-away');
@@ -512,6 +552,7 @@ function gAway(sum) {
   el.innerHTML = '<div>Enquanto você esteve fora (' + fmtDur(sum.elapsed) + (sum.capped ? ', limite de ' + G.OFFLINE_CAP_H + 'h' : '') + '): <b>+' + fmt(sum.kills) +
     ' abates</b>, <b>+' + fmt(sum.gold) + ' ouro</b>' + (sum.floors ? ', <b>+' + sum.floors + ' andar' + (sum.floors > 1 ? 'es' : '') + '</b>' : '') +
     (sum.drops ? ', <b>' + sum.drops + ' iten' + (sum.drops > 1 ? 's' : '') + '</b>' : '') +
+    (sum.pets && sum.pets.length ? ', <b>' + sum.pets.map(p => G.PET_BY_KEY[p.sp].emoji + (p.isNew ? ' novo pet' : ' nv ' + p.lv)).join(', ') + '</b>' : '') +
     (sum.dry ? '. A energia acabou — cumpra os hábitos para o herói voltar a lutar.' : '.') + '</div><button type="button" title="Fechar">✕</button>';
   el.hidden = false;
   el.querySelector('button').onclick = () => { el.hidden = true; };
@@ -528,6 +569,7 @@ function gInit() {
         gRenderHud();
         const ev = e.ev;
         if (ev && ev.killed) { gRenderHero(); gRenderBoss(); }
+        if (ev && ev.pet) gRenderPets();
         if (ev && (ev.drop || ev.sold)) { if (ev.drop) newBagIds.add(ev.drop.id); gRenderEquip(); }
       } else if (e.type === 'sync') { gRenderAll(); gAway(e.sum); }
       else { gRenderAll(); }
@@ -553,6 +595,12 @@ function gInit() {
       else if (e.target.closest('#bag-sellworse')) { const g = G.sellWorse(gs); arena.log(g ? 'Itens piores vendidos por <b>+' + fmt(g) + '</b> ouro.' : 'Nenhum item pior que o equipado.'); }
       else return;
       V.recalc(); V.save(); arena.refreshInfo(); gRenderAll();
+    });
+    document.getElementById('pet-card').addEventListener('click', e => {
+      const b = e.target.closest('[data-pet]');
+      if (!b || !G.setPet(V.gs(), b.dataset.pet)) return;
+      V.recalc(); V.save(); arena.refreshInfo(); gRenderAll();
+      arena.log('<b>' + G.PET_BY_KEY[b.dataset.pet].name + '</b> agora luta ao seu lado.');
     });
     document.getElementById('wb-claim').addEventListener('click', () => {
       const got = G.claimWorldBoss(V.gs(), Date.now());
