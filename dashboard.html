@@ -216,6 +216,20 @@ body { overflow: hidden; }
 }
 
 /* ── NÍVEIS POR PILAR ── */
+.sys-card { display: flex; align-items: center; gap: 18px; background: var(--surface); border: 1px solid var(--border); padding: 16px 20px; text-decoration: none; color: inherit; box-shadow: inset 0 0 60px rgba(245,245,240,0.03); transition: border-color 0.2s; }
+.sys-card:hover { border-color: var(--border2); }
+.sys-hex-mini { width: 54px; height: 62px; flex-shrink: 0; background: var(--border2); clip-path: polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%); position: relative; display: flex; align-items: center; justify-content: center; }
+.sys-hex-mini::before { content: ''; position: absolute; inset: 1px; background: var(--surface2); clip-path: polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%); }
+.sys-hex-mini span { position: relative; font-family: 'Bebas Neue', sans-serif; font-size: 26px; }
+.sys-card-main { flex: 1; min-width: 0; }
+.sys-card-top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.sys-card-lbl { font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--mid); }
+.sys-card-rank { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--mid); }
+.sys-card-rank b { color: var(--white); font-family: 'Bebas Neue', sans-serif; font-size: 18px; font-weight: 400; letter-spacing: 0.06em; }
+.sys-card-rank span { color: var(--green); margin-left: 6px; }
+.sys-card-bar { height: 2px; background: var(--muted); margin: 8px 0 6px; }
+.sys-card-bar span { display: block; height: 100%; background: var(--green); mix-blend-mode: screen; transition: width 0.7s ease; }
+.sys-card-meta { display: flex; justify-content: space-between; gap: 10px; font-size: 10px; letter-spacing: 0.1em; color: var(--mid); flex-wrap: wrap; }
 .levels { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1px; background: var(--border); }
 .lvl-cell { background: var(--surface); padding: 13px 14px; }
 .lvl-cell.overall { background: var(--surface2); }
@@ -310,6 +324,7 @@ body { overflow: hidden; }
       <a class="sb-item" href="treino.html"><span class="sb-item-icon">◲</span> Treino</a>
       <a class="sb-item" href="financeiro.html"><span class="sb-item-icon">◫</span> Financeiro</a>
       <a class="sb-item" href="trabalho.html"><span class="sb-item-icon">⚙</span> Trabalho</a>
+      <a class="sb-item" href="sistema.html"><span class="sb-item-icon">❖</span> Sistema</a>
       <details class="sb-group">
         <summary class="sb-group-toggle"><span class="sb-item-icon">◆</span> Conquistas<span class="sb-group-caret">›</span></summary>
         <a class="sb-item sb-subitem" href="conquistas.html"><span class="sb-item-icon">◆</span> Conquistas</a>
@@ -356,6 +371,15 @@ body { overflow: hidden; }
       <div class="stat-card"><div class="stat-lbl">Streak atual</div><div class="stat-val" id="sc-streak">—</div><div class="stat-sub">Máximo: <span id="sc-max">—</span> dias · <span id="sc-freezes">—</span> <span id="sc-freezes-lbl">folgas</span></div></div>
       <div class="stat-card"><div class="stat-lbl">Hábitos hoje</div><div class="stat-val" id="sc-today">—</div><div class="stat-delta" id="sc-today-msg"></div></div>
     </div>
+
+    <a class="sys-card" id="system-card" href="sistema.html" title="Abrir o Sistema">
+      <div class="sys-hex-mini"><span id="sc2-level">0</span></div>
+      <div class="sys-card-main">
+        <div class="sys-card-top"><span class="sys-card-lbl">Sistema · <span id="sc2-class"></span></span><span class="sys-card-rank">Rank <b id="sc2-rank">E</b><span id="sc2-up"></span></span></div>
+        <div class="sys-card-bar"><span id="sc2-bar" style="width:0%"></span></div>
+        <div class="sys-card-meta"><span id="sc2-exp"></span><span id="sc2-quest"></span></div>
+      </div>
+    </a>
 
     <!-- NÍVEIS POR PILAR -->
     <div class="levels" id="levels"></div>
@@ -500,6 +524,7 @@ function init() {
   renderProgressChart();
   renderNudge();
   renderWeeklyNudge();
+  renderSystemCard();
   renderLevels();
   renderCountersCard();
 }
@@ -524,6 +549,22 @@ function renderLevels() {
     cell('Nível geral', L.total, 'overall') +
     ['Corpo', 'Mente', 'Produção', 'Conexão'].map(p => cell(p, L.pillars[p] || empty)).join('');
 }
+
+/* ═══════════════════════════════
+   SISTEMA — card de nível/rank (tudo derivado, ver Store.computeSystem)
+═══════════════════════════════ */
+function renderSystemCard() {
+  if (!document.getElementById('system-card') || !Store.computeSystem) return;
+  const S = Store.computeSystem();
+  const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  set('sc2-level', S.level); set('sc2-class', S.className); set('sc2-rank', S.rank);
+  set('sc2-up', S.rankNext ? '↑ ' + S.rankNext.rank : '');
+  set('sc2-exp', S.exp.toLocaleString('pt-BR') + ' EXP · ' + S.expIntoLevel + '/' + S.expForNext);
+  set('sc2-quest', S.quest.total ? 'Missão ' + S.quest.done + '/' + S.quest.total : '');
+  const bar = document.getElementById('sc2-bar');
+  if (bar) bar.style.width = (S.expForNext ? Math.min(100, Math.round(S.expIntoLevel / S.expForNext * 100)) : 100) + '%';
+}
+
 
 /* ═══════════════════════════════
    NUDGE — alerta de check-in / streak em risco + lembrete opt-in

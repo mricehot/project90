@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#080808">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Project 90">
+<title>Project 90 — Sistema</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/components.css">
+<script src="js/supabase-config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase.js"></script>
+<script src="js/store.js"></script>
+<script src="js/achievements.js"></script>
+<style>
+.sys-main { padding: 30px 40px 72px; overflow-y: auto; display: flex; flex-direction: column; gap: 22px; }
+.sys-grid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 22px; align-items: start; }
+.sys-col { display: flex; flex-direction: column; gap: 22px; min-width: 0; }
+.sys-card { background: var(--surface); border: 1px solid var(--border); padding: 22px 24px; }
+.sys-hd { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+.sys-lbl { font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--mid); }
+.sys-meta { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--mid); }
+.sys-meta b { color: var(--green); font-weight: 400; }
+
+/* janela de status — o "brilho do sistema" é branco, nunca colorido */
+.sys-status { box-shadow: inset 0 0 60px rgba(245,245,240,0.03); }
+.sys-top { display: flex; align-items: center; gap: 22px; margin-bottom: 20px; }
+.sys-hex {
+  width: 92px; height: 104px; flex-shrink: 0; background: var(--border2);
+  clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
+  display: flex; align-items: center; justify-content: center; position: relative;
+}
+.sys-hex::before { content: ''; position: absolute; inset: 1px; background: var(--surface2);
+  clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%); }
+.sys-hex-in { position: relative; text-align: center; }
+.sys-hex-lbl { font-size: 8px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--mid); }
+.sys-hex-num { font-family: 'Bebas Neue', sans-serif; font-size: 44px; line-height: 0.95; }
+.sys-id { flex: 1; min-width: 0; }
+.sys-rank { font-family: 'Bebas Neue', sans-serif; font-size: 34px; letter-spacing: 0.06em; line-height: 1; }
+.sys-rank small { font-size: 12px; letter-spacing: 0.16em; color: var(--mid); margin-left: 8px; font-family: 'DM Mono', monospace; }
+.sys-rank .up { color: var(--green); font-size: 13px; letter-spacing: 0.1em; margin-left: 10px; font-family: 'DM Mono', monospace; }
+.sys-line { font-size: 12px; letter-spacing: 0.04em; color: var(--mid); margin-top: 6px; line-height: 1.6; }
+.sys-line b { color: var(--white); font-weight: 400; }
+.sys-bar { height: 2px; background: var(--muted); margin: 6px 0 4px; }
+.sys-bar > span { display: block; height: 100%; background: var(--green); mix-blend-mode: screen; transition: width 0.7s cubic-bezier(0.16,1,0.3,1); }
+.sys-barmeta { display: flex; justify-content: space-between; font-size: 10px; letter-spacing: 0.1em; color: var(--mid); }
+.sys-consist { margin-top: 14px; font-size: 11px; letter-spacing: 0.04em; color: var(--mid); line-height: 1.7; }
+.sys-consist b { color: var(--white); font-weight: 400; }
+
+/* missão diária */
+.q-row { display: flex; align-items: center; gap: 12px; padding: 9px 2px; border-bottom: 1px solid var(--border); font-size: 13px; }
+.q-row:last-of-type { border-bottom: none; }
+.q-chk { width: 16px; height: 16px; border: 1px solid var(--border2); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 11px; }
+.q-row.done .q-chk { background: var(--green); border-color: var(--green); color: var(--bg); }
+.q-row.done .q-name { color: var(--mid); text-decoration: line-through; }
+.q-foot { display: flex; justify-content: space-between; gap: 10px; margin-top: 14px; font-size: 11px; letter-spacing: 0.08em; color: var(--mid); flex-wrap: wrap; }
+.q-foot b { color: var(--green); font-weight: 400; }
+.q-foot a { color: var(--mid); text-decoration: none; text-transform: uppercase; letter-spacing: 0.12em; font-size: 10px; }
+.q-foot a:hover { color: var(--white); }
+.sys-empty { font-size: 12px; color: var(--mid); line-height: 1.8; padding: 4px 0; }
+
+/* atributos */
+.a-row { display: flex; align-items: center; gap: 12px; padding: 8px 0; }
+.a-name { width: 78px; flex-shrink: 0; font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--mid); }
+.a-track { flex: 1; height: 2px; background: var(--muted); }
+.a-track > span { display: block; height: 100%; background: rgba(245,245,240,0.6); transition: width 0.7s ease; }
+.a-val { width: 34px; text-align: right; font-family: 'Bebas Neue', sans-serif; font-size: 22px; line-height: 1; }
+
+/* títulos */
+.t-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.t-chip { border: 1px solid var(--border2); padding: 11px 12px; min-width: 0; }
+.t-chip.locked { border-style: dashed; border-color: var(--border); }
+.t-name { font-size: 12px; letter-spacing: 0.04em; }
+.t-chip.locked .t-name { color: var(--mid); }
+.t-cond { font-size: 10px; letter-spacing: 0.06em; color: var(--mid); margin-top: 4px; }
+.t-chip.on .t-cond { color: var(--green); }
+
+/* origem do EXP */
+.b-row { display: flex; align-items: baseline; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
+.b-row:last-child { border-bottom: none; }
+.b-lbl { flex: 1; min-width: 0; }
+.b-cnt { color: var(--mid); font-size: 11px; white-space: nowrap; }
+.b-exp { width: 64px; text-align: right; color: var(--green); font-family: 'DM Mono', monospace; }
+
+.sys-legend { font-size: 11px; color: var(--mid); line-height: 1.8; }
+.sys-legend b { color: var(--white); font-weight: 400; }
+
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes sysflicker { 0%,100%{opacity:1} 92%{opacity:1} 93%{opacity:.15} 94%{opacity:1} 96%{opacity:.08} 97%{opacity:1} }
+  .sys-flick { animation: sysflicker 1.4s 1; }
+}
+@media (max-width: 1080px) { .sys-grid { grid-template-columns: 1fr; } }
+@media (max-width: 900px) { body { overflow: auto; } .sys-main { padding: 20px; } }
+@media (max-width: 520px) { .sys-top { flex-direction: column; align-items: flex-start; } .t-grid { grid-template-columns: 1fr; } }
+.app, .sys-main { position: relative; z-index: 1; }
+</style>
+</head>
+<body>
+
+<div id="cur"></div>
+<div id="cur-ring"></div>
+<div class="toast" id="toast"></div>
+
+<div class="app">
+
+  <aside class="sidebar">
+    <div class="sb-logo">
+      <a href="index.html" class="sb-logomark">Project 90</a>
+      <div class="sb-logosub">Transformação pessoal</div>
+    </div>
+    <div class="sb-day">
+      <div class="sb-daynum" id="sb-daynum">34</div>
+      <div class="sb-daylbl">de 90 dias</div>
+      <div style="display:flex;justify-content:space-between;font-size:11px;letter-spacing:0.1em;color:var(--mid);margin-top:10px">
+        <span>Progresso</span><span id="sb-pct">38%</span>
+      </div>
+      <div class="sb-prog-bar-bg"><div class="sb-prog-bar-fill" id="sb-fill" style="width:0%"></div></div>
+      <div class="sb-prog-meta"><span id="sb-days-left">56 restantes</span><span id="sb-pct2">38%</span></div>
+    </div>
+    <nav class="sb-nav">
+      <a class="sb-item" href="dashboard.html"><span class="sb-item-icon">◈</span> Dashboard</a>
+      <details class="sb-group">
+        <summary class="sb-group-toggle"><span class="sb-item-icon">⚑</span> Pendências<span class="sb-group-caret">›</span></summary>
+        <a class="sb-item sb-subitem" href="pendencias.html"><span class="sb-item-icon">⚑</span> Pendências</a>
+        <a class="sb-item sb-subitem" href="calendario.html"><span class="sb-item-icon">⊞</span> Calendário</a>
+      </details>
+      <a class="sb-item" href="habitos.html"><span class="sb-item-icon">◉</span> Hábitos</a>
+      <a class="sb-item" href="metricas.html"><span class="sb-item-icon">△</span> Métricas</a>
+      <a class="sb-item" href="diario.html"><span class="sb-item-icon">◻</span> Diário</a>
+      <details class="sb-group">
+        <summary class="sb-group-toggle"><span class="sb-item-icon">✦</span> Conhecimento<span class="sb-group-caret">›</span></summary>
+        <a class="sb-item sb-subitem" href="vocabulario.html"><span class="sb-item-icon">▤</span> Vocabulário</a>
+        <a class="sb-item sb-subitem" href="biblioteca.html"><span class="sb-item-icon">❐</span> Biblioteca</a>
+        <a class="sb-item sb-subitem" href="reflexoes.html"><span class="sb-item-icon">☯</span> Reflexões</a>
+      </details>
+      <details class="sb-group">
+        <summary class="sb-group-toggle"><span class="sb-item-icon">◗</span> Comunicação<span class="sb-group-caret">›</span></summary>
+        <a class="sb-item sb-subitem" href="diccao.html"><span class="sb-item-icon">◗</span> Dicção</a>
+        <a class="sb-item sb-subitem" href="conversacao.html"><span class="sb-item-icon">❞</span> Conversação</a>
+      </details>
+      <a class="sb-item" href="biblia.html"><span class="sb-item-icon">✝</span> Bíblia</a>
+      <a class="sb-item" href="tarefas.html"><span class="sb-item-icon">✓</span> Tarefas</a>
+      <a class="sb-item" href="faculdade.html"><span class="sb-item-icon">▦</span> Faculdade</a>
+      <a class="sb-item" href="treino.html"><span class="sb-item-icon">◲</span> Treino</a>
+      <a class="sb-item" href="financeiro.html"><span class="sb-item-icon">◫</span> Financeiro</a>
+      <a class="sb-item" href="trabalho.html"><span class="sb-item-icon">⚙</span> Trabalho</a>
+      <a class="sb-item active" href="sistema.html"><span class="sb-item-icon">❖</span> Sistema</a>
+      <details class="sb-group">
+        <summary class="sb-group-toggle"><span class="sb-item-icon">◆</span> Conquistas<span class="sb-group-caret">›</span></summary>
+        <a class="sb-item sb-subitem" href="conquistas.html"><span class="sb-item-icon">◆</span> Conquistas</a>
+        <a class="sb-item sb-subitem" href="vitorias.html"><span class="sb-item-icon">✪</span> Vitórias</a>
+        <a class="sb-item sb-subitem" href="jornada.html"><span class="sb-item-icon">◐</span> Jornada</a>
+      </details>
+    </nav>
+    <div class="sb-bottom">
+      <div class="sb-streak">
+        <span class="sb-streak-icon">🔥</span>
+        <div>
+          <div class="sb-streak-val" id="sb-streak-val">12</div>
+          <div class="sb-streak-lbl">Dias seguidos</div>
+        </div>
+      </div>
+      <a href="login.html" class="sb-logout">← Sair</a>
+    </div>
+  </aside>
+
+  <main class="sys-main">
+
+    <div class="topbar">
+      <div class="page-title">Sistema <em>seu nível real.</em></div>
+    </div>
+
+    <div class="sys-grid">
+
+      <div class="sys-col">
+
+        <!-- JANELA DE STATUS -->
+        <div class="sys-card sys-status">
+          <div class="sys-hd">
+            <span class="sys-lbl">Janela de status</span>
+            <span class="sys-meta" id="st-class"></span>
+          </div>
+          <div class="sys-top">
+            <div class="sys-hex"><div class="sys-hex-in"><div class="sys-hex-lbl">Nível</div><div class="sys-hex-num" id="st-level">0</div></div></div>
+            <div class="sys-id">
+              <div class="sys-rank">Rank <span id="st-rank">E</span><small id="st-band"></small><span class="up" id="st-up"></span></div>
+              <div class="sys-line" id="st-title"></div>
+              <div class="sys-bar"><span id="st-bar" style="width:0%"></span></div>
+              <div class="sys-barmeta"><span id="st-exp">0 EXP</span><span id="st-next">0 / 0</span></div>
+            </div>
+          </div>
+          <div class="sys-consist" id="st-consist"></div>
+        </div>
+
+        <!-- ORIGEM DO EXP -->
+        <div class="sys-card">
+          <div class="sys-hd"><span class="sys-lbl">De onde vem seu EXP</span><span class="sys-meta" id="bd-total"></span></div>
+          <div id="bd-list"></div>
+        </div>
+
+      </div>
+
+      <div class="sys-col">
+
+        <!-- MISSÃO DIÁRIA -->
+        <div class="sys-card">
+          <div class="sys-hd"><span class="sys-lbl">Missão diária</span><span class="sys-meta" id="q-count"></span></div>
+          <div id="q-list"></div>
+          <div class="q-foot"><span id="q-reward"></span><a href="habitos.html">Marcar em Hábitos →</a></div>
+        </div>
+
+        <!-- ATRIBUTOS -->
+        <div class="sys-card">
+          <div class="sys-hd"><span class="sys-lbl">Atributos</span></div>
+          <div id="attr-list"></div>
+        </div>
+
+        <!-- TÍTULOS -->
+        <div class="sys-card">
+          <div class="sys-hd"><span class="sys-lbl">Títulos</span><span class="sys-meta" id="ti-count"></span></div>
+          <div class="t-grid" id="ti-list"></div>
+        </div>
+
+        <div class="sys-legend">
+          <b>Como funciona:</b> nada é digitado — EXP, nível e rank são calculados sozinhos a partir do que você já faz (hábitos, diário, conquistas, treino…).
+          O rank é o seu nível <b>limitado pela consistência dos últimos 14 dias</b>: não adianta ter muito EXP se a última quinzena foi fraca.
+        </div>
+
+      </div>
+
+    </div>
+
+  </main>
+</div>
+
+<!-- SUBIU DE NÍVEL -->
+<div class="modal-overlay" id="lvlup-modal">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="lu-title" style="text-align:center;box-shadow:0 0 80px rgba(245,245,240,0.05)">
+    <div class="sys-lbl" style="margin-bottom:14px">Notificação do sistema</div>
+    <div class="modal-title" id="lu-title" style="margin-bottom:6px">Nível <span id="lu-num" class="sys-flick">0</span></div>
+    <div class="sys-line" id="lu-sub"></div>
+    <div class="modal-footer" style="justify-content:center;margin-top:22px">
+      <button class="modal-btn primary" type="button" id="lu-ok">Continuar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ── CURSOR ── */
+(function() {
+  const cur = document.getElementById('cur'), ring = document.getElementById('cur-ring');
+  let mx=0,my=0,rx=0,ry=0;
+  document.addEventListener('mousemove', e => { mx=e.clientX; my=e.clientY; cur.style.transform=`translate(${mx-3}px,${my-3}px)`; });
+  (function tick(){ rx+=(mx-rx-15)*0.1; ry+=(my-ry-15)*0.1; ring.style.transform=`translate(${rx}px,${ry}px)`; requestAnimationFrame(tick); })();
+})();
+
+function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+const DAY  = Store.getCurrentDay();
+const DAYS = Store.getTotalDays();
+
+function initSidebar() {
+  const pct = Math.round(DAY / DAYS * 100);
+  document.getElementById('sb-daynum').textContent = DAY;
+  document.getElementById('sb-pct').textContent = pct + '%';
+  document.getElementById('sb-pct2').textContent = pct + '%';
+  document.getElementById('sb-days-left').textContent = (DAYS - DAY) + ' restantes';
+  document.getElementById('sb-streak-val').textContent = Store.currentStreak(Store.getHabits(), DAY);
+  setTimeout(() => { document.getElementById('sb-fill').style.width = pct + '%'; }, 400);
+}
+
+const ATTRS = [
+  ['forca', 'Força'], ['vigor', 'Vigor'], ['foco', 'Foco'], ['mente', 'Mente'], ['espirito', 'Espírito'],
+];
+
+function render() {
+  const S = Store.computeSystem();
+  document.getElementById('st-level').textContent = S.level;
+  document.getElementById('st-rank').textContent = S.rank;
+  document.getElementById('st-class').textContent = S.className;
+  document.getElementById('st-band').textContent = S.levelBand !== S.rank ? 'nível pede ' + S.levelBand : '';
+  const up = S.rankNext;
+  document.getElementById('st-up').textContent = up ? '↑ ' + up.rank : '';
+  const eq = S.titles.filter(t => t.unlocked);
+  document.getElementById('st-title').innerHTML = eq.length ? 'Título: <b>' + esc(eq[eq.length - 1].name) + '</b>' : 'Nenhum título ainda';
+  const pct = S.expForNext ? Math.min(100, Math.round(S.expIntoLevel / S.expForNext * 100)) : 100;
+  document.getElementById('st-bar').style.width = pct + '%';
+  document.getElementById('st-exp').textContent = S.exp.toLocaleString('pt-BR') + ' EXP';
+  document.getElementById('st-next').textContent = S.expIntoLevel.toLocaleString('pt-BR') + ' / ' + S.expForNext.toLocaleString('pt-BR') + ' para o nível ' + (S.level + 1);
+
+  let c = 'Consistência (últimos 14 dias): <b>' + S.consistency + '%</b>';
+  if (up) {
+    const need = [];
+    if (up.needLevel != null) need.push('nível <b>' + up.needLevel + '</b>');
+    if (up.needConsistency != null) need.push('consistência <b>' + up.needConsistency + '%</b>');
+    c += need.length ? ' · para o rank <b>' + up.rank + '</b>: ' + need.join(' e ') : ' · rank <b>' + up.rank + '</b> à vista';
+  } else c += ' · rank máximo';
+  document.getElementById('st-consist').innerHTML = c;
+
+  document.getElementById('bd-total').innerHTML = '<b>' + S.exp.toLocaleString('pt-BR') + '</b> no total';
+  document.getElementById('bd-list').innerHTML = S.breakdown.length
+    ? S.breakdown.map(b => '<div class="b-row"><span class="b-lbl">' + esc(b.label) + '</span><span class="b-cnt">' + b.count + ' × ' + b.per + '</span><span class="b-exp">+' + b.exp.toLocaleString('pt-BR') + '</span></div>').join('')
+    : '<div class="sys-empty">Nada ainda. Conclua um hábito e o primeiro EXP aparece aqui.</div>';
+
+  const q = S.quest;
+  document.getElementById('q-count').innerHTML = q.total ? '<b>' + q.done + '/' + q.total + '</b>' : '';
+  document.getElementById('q-list').innerHTML = q.total
+    ? q.items.map(i => '<div class="q-row ' + (i.done ? 'done' : '') + '"><span class="q-chk">' + (i.done ? '✓' : '') + '</span><span class="q-name">' + esc(i.name) + '</span></div>').join('')
+    : '<div class="sys-empty">Nenhum hábito previsto para hoje.</div>';
+  document.getElementById('q-reward').innerHTML = q.total ? 'Hoje: <b>+' + q.rewardExp + ' EXP</b>' + (q.complete ? ' · missão completa' : ' · +25 se fechar todas') : '';
+
+  const max = Math.max(40, ...ATTRS.map(a => S.attributes[a[0]]));
+  document.getElementById('attr-list').innerHTML = ATTRS.map(a =>
+    '<div class="a-row"><span class="a-name">' + a[1] + '</span><span class="a-track"><span style="width:' + Math.round(S.attributes[a[0]] / max * 100) + '%"></span></span><span class="a-val">' + S.attributes[a[0]] + '</span></div>').join('');
+
+  document.getElementById('ti-count').innerHTML = '<b>' + eq.length + '</b>/' + S.titles.length;
+  document.getElementById('ti-list').innerHTML = S.titles.map(t =>
+    '<div class="t-chip ' + (t.unlocked ? 'on' : 'locked') + '"><div class="t-name">' + esc(t.name) + '</div><div class="t-cond">' + (t.unlocked ? '✓ ' : '') + esc(t.cond) + '</div></div>').join('');
+
+  checkLevelUp(S);
+}
+
+/* Subiu de nível desde a última visita? Compara com o último nível visto neste navegador. */
+function checkLevelUp(S) {
+  let seen = null;
+  try { seen = localStorage.getItem('p90_sys_level_seen'); } catch (e) {}
+  const write = () => { try { localStorage.setItem('p90_sys_level_seen', String(S.level)); } catch (e) {} };
+  if (seen == null) { write(); return; }
+  if (S.level <= Number(seen)) { if (S.level < Number(seen)) write(); return; }
+  document.getElementById('lu-num').textContent = S.level;
+  document.getElementById('lu-sub').innerHTML = 'Rank <b>' + S.rank + '</b> · ' + esc(S.className);
+  document.getElementById('lvlup-modal').classList.add('open');
+  write();
+}
+document.getElementById('lu-ok').addEventListener('click', () => document.getElementById('lvlup-modal').classList.remove('open'));
+document.getElementById('lvlup-modal').addEventListener('click', e => { if (e.target === e.currentTarget) e.currentTarget.classList.remove('open'); });
+
+initSidebar();
+render();
+window.addEventListener('p90:synced', () => { initSidebar(); render(); });
+
+/* ── fundo (grade sutil) ── */
+(function(){
+  const canvas=document.createElement('canvas');
+  canvas.style.cssText='position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;';
+  document.body.insertBefore(canvas,document.body.firstChild);
+  const ctx=canvas.getContext('2d'),SIZE=80;
+  let W,H,cols,rows,nodes,t=0;
+  function resize(){W=canvas.width=window.innerWidth;H=canvas.height=window.innerHeight;cols=Math.ceil(W/SIZE)+2;rows=Math.ceil(H/SIZE)+2;nodes=[];for(let r=0;r<rows;r++)for(let c=0;c<cols;c++)nodes.push({phase:Math.random()*Math.PI*2});}
+  function draw(){ctx.clearRect(0,0,W,H);ctx.lineWidth=.4;const offX=(t*6)%SIZE,offY=(t*3)%SIZE;for(let c=0;c<cols;c++){const x=c*SIZE-offX,w=.5+.5*Math.sin(t*.4+c*.35);ctx.strokeStyle='rgba(245,245,240,'+(0.006+w*0.012)+')';ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}for(let r=0;r<rows;r++){const y=r*SIZE-offY,w=.5+.5*Math.sin(t*.35+r*.4+1.2);ctx.strokeStyle='rgba(245,245,240,'+(0.006+w*0.012)+')';ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}t+=.006;requestAnimationFrame(draw);}
+  window.addEventListener('resize',resize);resize();if (!matchMedia('(prefers-reduced-motion: reduce)').matches) draw();
+})();
+</script>
+<script src="js/pwa.js"></script>
+</body>
+</html>

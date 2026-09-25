@@ -3631,6 +3631,118 @@ const Store = (() => {
   }
 
   /* ──────────────────────────────────────────
+     SISTEMA (rank) — camada RPG opt-in, 100% DERIVADA do que já existe.
+     Nada é gravado: EXP, nível, rank e atributos são recalculados a cada
+     leitura a partir de hábitos, conquistas, diário etc. — retroativo,
+     não dá pra "trapacear" e nunca dessincroniza. Pesos e curva são
+     ajustáveis nas constantes abaixo.
+       EXP(nível n) acumulado = 20·n·(n+1)
+       Rank = mín(faixa do nível, faixa da consistência dos últimos 14 dias)
+  ────────────────────────────────────────── */
+  const SYS_RANKS = ['E', 'D', 'C', 'B', 'A', 'S'];
+  const SYS_LEVEL_BAND_START = [0, 5, 10, 15, 20, 25];   // nível mínimo de cada rank
+  const SYS_CONSIST_BAND_START = [0, 25, 45, 65, 80, 92]; // % mínimo (últimos 14 dias)
+  function _sysCum(n) { return 20 * n * (n + 1); }
+
+  function computeSystem() {
+    const today = getCurrentDay();
+    const habits = cache.habits;
+    const active = habits.filter(h => !h.paused);
+    const src = [];   // { label, count, per, exp }
+    const add = (label, count, per) => { if (count > 0) src.push({ label, count, per, exp: count * per }); };
+
+    let hDone = 0, hPart = 0, perfect = 0, nights = 0, last14 = [];
+    for (let i = 0; i < today; i++) {
+      active.forEach(h => { const v = habitVal(h, i); if (v === 1) hDone++; else if (v === 0.5) hPart++; });
+      if (allHabitsDone(habits, i)) perfect++;
+      if (nightRoutineComplete(i + 1)) nights++;
+      if (i >= today - 14) last14.push(dayCompletionPct(habits, i));
+    }
+    const achIds = Object.keys(cache.achievements || {});
+    const reviews = Object.keys(cache.weeklyReviews || {}).length;
+    const mastered = cache.vocabWords.filter(w => (w.srsBox || 1) >= 5).length;
+    const books = cache.library.books.filter(b => b.status === 'lido').length;
+    const speechPlan = Object.keys(cache.speechDays).filter(k => cache.speechDays[k] && cache.speechDays[k].done).length;
+
+    add('Hábitos concluídos', hDone, 10);
+    add('Hábitos parciais', hPart, 5);
+    add('Dias perfeitos (todos os hábitos)', perfect, 25);
+    add('Conquistas desbloqueadas', achIds.length, 150);
+    add('Revisões semanais', reviews, 80);
+    add('Palavras dominadas (caixa 5)', mastered, 40);
+    add('Noites com rotina completa', nights, 20);
+    add('Vitórias registradas', cache.wins.length, 15);
+    add('Entradas no diário', Object.keys(cache.journal).length, 15);
+    add('Reflexões escritas', Object.keys(cache.studyReflections).length, 15);
+    add('Treinos registrados', trainingSessionsCount(), 15);
+    add('Tarefas concluídas', taskDoneTotal(), 5);
+    add('Plano de dicção cumprido', speechPlan, 10);
+    add('Livros concluídos', books, 100);
+
+    const exp = src.reduce((s, x) => s + x.exp, 0);
+    let level = 0;
+    while (_sysCum(level + 1) <= exp) level++;
+    const floor = level ? _sysCum(level) : 0;
+    const need = _sysCum(level + 1) - floor;
+
+    // Rank: nível limitado pela consistência recente.
+    const consist = last14.length ? Math.round(last14.reduce((a, b) => a + b, 0) / last14.length) : 0;
+    let lvlIdx = 0, conIdx = 0;
+    SYS_LEVEL_BAND_START.forEach((m, i) => { if (level >= m) lvlIdx = i; });
+    SYS_CONSIST_BAND_START.forEach((m, i) => { if (consist >= m) conIdx = i; });
+    const rankIdx = Math.min(lvlIdx, conIdx);
+    const next = rankIdx < SYS_RANKS.length - 1 ? rankIdx + 1 : null;
+    const nextHint = next == null ? null : {
+      rank: SYS_RANKS[next],
+      needLevel: level < SYS_LEVEL_BAND_START[next] ? SYS_LEVEL_BAND_START[next] : null,
+      needConsistency: consist < SYS_CONSIST_BAND_START[next] ? SYS_CONSIST_BAND_START[next] : null,
+    };
+
+    // Atributos: sobem sozinhos com a atividade (nível de cada pilar).
+    const lv = computeLevels(habits, today).pillars;
+    const pl = p => (lv[p] ? lv[p].level : 1) - 1;
+    const attributes = {
+      forca:    10 + pl('Corpo') * 3,
+      vigor:    10 + Math.round(consist / 10) + Math.min(20, currentStreak(habits, today)),
+      foco:     10 + pl('Produção') * 3 + Math.floor(taskDoneTotal() / 5),
+      mente:    10 + pl('Mente') * 3 + Math.floor(Object.keys(cache.journal).length / 5),
+      espirito: 10 + pl('Conexão') * 3 + Math.floor(cache.wins.length / 3),
+    };
+
+    // Missão diária: os hábitos que valem hoje (marcar em Hábitos marca de verdade).
+    const idx = today - 1;
+    const due = active.filter(h => h.createdDay - 1 <= idx && scheduledOn(h, idx));
+    const items = due.map(h => ({ id: h.id, name: h.name, done: habitVal(h, idx) === 1 }));
+    const qDone = items.filter(x => x.done).length;
+    const quest = {
+      done: qDone, total: items.length, items,
+      rewardExp: qDone * 10 + (items.length && qDone === items.length ? 25 : 0),
+      complete: items.length > 0 && qDone === items.length,
+    };
+
+    // Títulos (derivados; equipar é do v2).
+    const has = id => achIds.indexOf(id) !== -1;
+    const sp = cache.speechStats || {};
+    const titles = [
+      { id: 'despertar',  name: 'O Despertar',       cond: 'Completar o dia 1',            unlocked: has('day1') },
+      { id: 'implacavel', name: 'Implacável',        cond: '30 dias seguidos',             unlocked: has('day30') },
+      { id: 'voz_firme',  name: 'Voz Firme',         cond: '30 sessões de dicção',         unlocked: (sp.sessionsPlayed || 0) >= 30 },
+      { id: 'poliglota',  name: 'Poliglota',         cond: '50 palavras dominadas',        unlocked: mastered >= 50 },
+      { id: 'sabio',      name: 'Sábio',             cond: '30 reflexões escritas',        unlocked: Object.keys(cache.studyReflections).length >= 30 },
+      { id: 'monarca',    name: 'Monarca das Sombras', cond: 'Completar o dia 90',         unlocked: has('day90') },
+    ];
+
+    const cls = has('day90') ? 'Monarca' : level >= 15 ? 'Caçador de Elite' : level >= 8 ? 'Caçador' : level >= 3 ? 'Aspirante' : 'Sem Classe';
+
+    return {
+      exp, level, expIntoLevel: exp - floor, expForNext: need,
+      rank: SYS_RANKS[rankIdx], rankIdx, rankNext: nextHint, consistency: consist,
+      levelBand: SYS_RANKS[lvlIdx], consistencyBand: SYS_RANKS[conIdx],
+      className: cls, attributes, quest, titles, breakdown: src.sort((a, b) => b.exp - a.exp),
+    };
+  }
+
+  /* ──────────────────────────────────────────
      FINANCEIRO — controle mensal (página financeiro.html)
      Ciclo = mês do calendário. cache.finance.* — ver _emptyCache.
   ────────────────────────────────────────── */
@@ -4588,7 +4700,7 @@ const Store = (() => {
     // trabalho — lembretes
     getWorkReminders, addWorkReminder, deleteWorkReminder, restoreWorkReminder,
     // computed
-    habitVal, scheduledOn, dayCompletionPct, maxStreak, countDays,
+    habitVal, scheduledOn, dayCompletionPct, maxStreak, countDays, computeSystem,
     allHabitsDone, currentStreak, computeAchievementProgress, computeLevels,
   };
 
