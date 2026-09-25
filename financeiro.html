@@ -733,7 +733,7 @@ function parseMoney(s) {
   return isFinite(n) ? n : 0;
 }
 function todayISO() {
-  const d = new Date();
+  const d = Store.now();
   return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
 }
 function fmtDay(iso) {
@@ -932,7 +932,7 @@ function renderFixed(s) {
   document.getElementById('fixed-meta').innerHTML = fixed.length
     ? `<b>${s.fixedPaidCount}</b>/${s.fixedActiveCount} pagos · <b>${fmtBRL0(s.fixedPaidTotal)}</b> de ${fmtBRL0(s.fixedTotal)}`
     : '';
-  const today = new Date();
+  const today = Store.now();
   const curMonth = isCurrentYm();
 
   document.getElementById('fixed-list').innerHTML = fixed.length

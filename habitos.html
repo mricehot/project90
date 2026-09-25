@@ -417,7 +417,7 @@ function initSidebar() {
 
   const days   = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
   const months = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
-  const now    = new Date();
+  const now    = Store.now();
   document.getElementById('today-lbl').textContent   = `${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]}`;
   document.getElementById('topbar-date').textContent = `Dia ${DAY} / ${DAYS}`;
 }
@@ -515,7 +515,7 @@ function renderList(containerId, list) {
 }
 
 function habitCardHTML(h) {
-  const today  = new Date().getDay();
+  const today  = Store.now().getDay();
   const isDone = h.history[h.history.length - 1] === 'done';
   const pct    = h.history.length ? Math.round(h.history.filter(s => s === 'done').length / h.history.length * 100) : 0;
   const weekDots = DAYS_LABELS.map((lbl, i) => {

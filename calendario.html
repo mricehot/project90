@@ -253,7 +253,7 @@ const DAYS_PT   = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
 const DAYS_FULL = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
 const DOW_LABELS = ['D','S','T','Q','Q','S','S'];
 
-const TODAY = new Date(); TODAY.setHours(0, 0, 0, 0);
+const TODAY = Store.now(); TODAY.setHours(0, 0, 0, 0);
 function pad2(n) { return String(n).padStart(2, '0'); }
 function isoOf(y, m, d) { return y + '-' + pad2(m + 1) + '-' + pad2(d); }
 function dateFromIso(iso) { return new Date(iso + 'T00:00:00'); }
