@@ -623,6 +623,7 @@
       <div class="m-seg" id="iv-kind">
         <button type="button" data-k="aporte" class="on">Aporte</button>
         <button type="button" data-k="dividendo">Dividendo</button>
+        <button type="button" data-k="inicial" title="Ações/cotas que você já tinha antes de usar o sistema">Já tinha</button>
       </div>
     </div>
     <div class="m-row">
@@ -631,7 +632,7 @@
         <input class="modal-input" id="iv-ticker" placeholder="MXRF11" maxlength="12" />
       </div>
       <div class="modal-field">
-        <label class="modal-lbl" for="iv-amt">Valor (R$)</label>
+        <label class="modal-lbl" for="iv-amt"><span id="iv-amt-lbl">Valor (R$)</span></label>
         <input class="modal-input" id="iv-amt" inputmode="decimal" placeholder="0,00" />
       </div>
     </div>
@@ -1068,10 +1069,10 @@ function renderInvest(s) {
     ? list.map(v => `
       <div class="frow" data-id="${v.id}">
         <div class="frow-main">
-          <div class="frow-name">${esc(v.ticker || (v.kind === 'aporte' ? 'Aporte' : 'Dividendo'))}</div>
-          <div class="frow-sub">${fmtDay(v.onDate)} · ${v.kind === 'aporte' ? 'aporte' : 'dividendo'}${v.quantity ? ' · ' + v.quantity + ' cota' + (v.quantity === 1 ? '' : 's') : ''}</div>
+          <div class="frow-name">${esc(v.ticker || (v.kind === 'aporte' ? 'Aporte' : v.kind === 'inicial' ? 'Posição inicial' : 'Dividendo'))}</div>
+          <div class="frow-sub">${fmtDay(v.onDate)} · ${v.kind === 'aporte' ? 'aporte' : v.kind === 'inicial' ? 'posição inicial (não conta como aporte)' : 'dividendo'}${v.quantity ? ' · ' + v.quantity + ' cota' + (v.quantity === 1 ? '' : 's') : ''}</div>
         </div>
-        <span class="frow-amt ${v.kind === 'dividendo' ? 'in' : ''}">${v.kind === 'dividendo' ? '+ ' : ''}${fmtBRL(v.amount)}</span>
+        <span class="frow-amt ${v.kind === 'dividendo' ? 'in' : v.kind === 'inicial' ? 'dim' : ''}">${v.kind === 'dividendo' ? '+ ' : ''}${fmtBRL(v.amount)}</span>
         <div class="frow-acts">
           <button class="fbtn danger" data-act="del-inv" title="Excluir">✕</button>
         </div>
@@ -1255,14 +1256,23 @@ let invKind = 'aporte';
 function setInvKind(k) {
   invKind = k;
   document.querySelectorAll('#iv-kind button').forEach(b => b.classList.toggle('on', b.dataset.k === k));
-  const isAporte = k === 'aporte';
-  document.getElementById('iv-cotas-row').hidden = !isAporte;
-  document.getElementById('iv-hint').hidden = !isAporte;
+  const isAporte = k === 'aporte', isInicial = k === 'inicial';
+  document.getElementById('iv-cotas-row').hidden = !(isAporte || isInicial);
+  document.getElementById('iv-hint').hidden = !(isAporte || isInicial);
+  document.getElementById('iv-amt-lbl').textContent = isInicial ? 'Custo total (R$) — opcional' : 'Valor (R$)';
+  document.getElementById('iv-hint').textContent = isInicial
+    ? 'Cotas que você já tinha antes de usar o sistema: entram na carteira e no custo (o ganho não começa negativo), mas não contam como aporte nem como saída do mês. Sem o custo, usa cotas × preço da cota.'
+    : 'O aporte soma essas cotas na sua posição do fundo.';
 }
 document.querySelectorAll('#iv-kind button').forEach(b => b.addEventListener('click', () => setInvKind(b.dataset.k)));
 document.getElementById('iv-save').addEventListener('click', () => {
   const amt = parseMoney(document.getElementById('iv-amt').value);
-  if (amt <= 0) { toast('Informe o valor'); return; }
+  if (invKind === 'inicial') {
+    const q = parseMoney(document.getElementById('iv-qty').value), p = parseMoney(document.getElementById('iv-price').value);
+    if (!document.getElementById('iv-ticker').value.trim()) { toast('Informe o ticker'); return; }
+    if (q <= 0) { toast('Informe quantas cotas você já tinha'); return; }
+    if (amt <= 0 && p <= 0) { toast('Informe o custo total ou o preço da cota'); return; }
+  } else if (amt <= 0) { toast('Informe o valor'); return; }
   Store.addFinInvestment({
     kind: invKind,
     ticker: document.getElementById('iv-ticker').value,

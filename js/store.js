@@ -65,7 +65,7 @@ const Store = (() => {
         fixedPaid:    [],   // { fixedId, ym, paidOn, amount }
         installments: [],   // { id, label, total, nInstallments, firstYm, installmentAmount, category, createdAt }
         expenses:     [],   // { id, spentOn, ym, label, amount, category, createdAt }
-        investments:  [],   // { id, kind:'aporte'|'dividendo', onDate, ym, ticker, amount, quantity, createdAt }
+        investments:  [],   // { id, kind:'aporte'|'dividendo'|'inicial', onDate, ym, ticker, amount, quantity, createdAt }
         goals:        [],   // { id, label, target, saved, monthlyPlan, deadline, done, createdAt }
         snapshots:    {},   // { [ym]: portfolioValue } — histórico do valor da carteira
         holdings:     [],   // { ticker, cotas, price, priceUpdatedAt } — posição em cada FII
@@ -385,7 +385,7 @@ const Store = (() => {
         label: e.label || '', amount: num(e.amount), category: e.category || 'Outros', createdAt: e.createdAt,
       }));
       _rebuild('investments', v => ({
-        id: v.id, kind: v.kind === 'dividendo' ? 'dividendo' : 'aporte',
+        id: v.id, kind: (v.kind === 'dividendo' || v.kind === 'inicial') ? v.kind : 'aporte',
         onDate: String(v.onDate || '').slice(0, 10), ym: v.ym, ticker: v.ticker || '',
         amount: num(v.amount), quantity: num(v.quantity), createdAt: v.createdAt,
       }));
@@ -4249,13 +4249,15 @@ const Store = (() => {
     const onDate = f.onDate || _localDate(0);
     const row = {
       id: _finNextId(cache.finance.investments),
-      kind: f.kind === 'dividendo' ? 'dividendo' : 'aporte',
+      kind: (f.kind === 'dividendo' || f.kind === 'inicial') ? f.kind : 'aporte',
       onDate, ym: finYm(onDate),
       ticker: (f.ticker || '').trim().toUpperCase(),
       amount: _money(f.amount),
       quantity: _money(f.quantity),
       createdAt: new Date().toISOString(),
     };
+    // posição inicial sem custo informado: usa cotas × preço (o ganho começa em zero, nunca negativo)
+    if (row.kind === 'inicial' && row.amount <= 0 && row.quantity > 0 && f.price > 0) row.amount = _money(row.quantity * f.price);
     cache.finance.investments.unshift(row);
     _saveMirror();
     _finPush('fin_investments', {
@@ -4263,7 +4265,7 @@ const Store = (() => {
       ticker: row.ticker, amount: row.amount, quantity: row.quantity, created_at: row.createdAt,
     });
     // um aporte com ticker soma cotas na posição do fundo (e grava o preço se veio)
-    if (row.kind === 'aporte' && row.ticker && (row.quantity > 0 || f.price > 0)) {
+    if (row.kind !== 'dividendo' && row.ticker && (row.quantity > 0 || f.price > 0)) {
       const cur = _finHolding(row.ticker);
       const patch = {};
       if (row.quantity > 0) patch.cotas = _money((cur ? cur.cotas : 0) + row.quantity);
@@ -4291,7 +4293,7 @@ const Store = (() => {
   }
   function finInvestTotals() {
     const inv = cache.finance.investments;
-    const aportado  = _sum(inv.filter(v => v.kind === 'aporte'), v => v.amount);
+    const aportado  = _sum(inv.filter(v => v.kind === 'aporte' || v.kind === 'inicial'), v => v.amount);   // custo total (inclui o que já tinha)
     const dividendos = _sum(inv.filter(v => v.kind === 'dividendo'), v => v.amount);
     const carteira  = finPortfolioValue();
     const ganho     = _money(carteira + dividendos - aportado);
@@ -4494,7 +4496,7 @@ const Store = (() => {
   // Aportes acumulados (custo) por mês.
   function finAporteCumSeries(maxN) {
     const months = _finMonths(maxN);
-    const ap = cache.finance.investments.filter(v => v.kind === 'aporte');
+    const ap = cache.finance.investments.filter(v => v.kind === 'aporte' || v.kind === 'inicial');
     let cum = 0;
     return months.map(ym => {
       cum = _money(cum + _sum(ap.filter(v => v.ym === ym), v => v.amount));
