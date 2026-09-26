@@ -753,11 +753,12 @@ const Store = (() => {
       '<div style="background:var(--surface,#111);border:1px solid var(--border2,rgba(245,245,240,.16));' +
       'max-width:440px;width:100%;padding:36px 40px;">' +
         '<div style="font-family:\'DM Serif Display\',serif;font-size:24px;color:var(--white,#f5f5f0);margin-bottom:16px;">' +
-          'Resetar hábitos?' +
+          'Resetar o progresso?' +
         '</div>' +
         '<p style="font-size:12px;line-height:1.9;color:var(--mid,#999);margin-bottom:8px;">' +
-          'Isso zera <b style="color:var(--white,#f5f5f0)">os hábitos e a sequência deles</b> ' +
-          'e reinicia o calendário no dia 1. Os hábitos fixos voltam ao estado inicial.' +
+          'Isso zera <b style="color:var(--white,#f5f5f0)">o progresso do dia 1 ao 90</b> ' +
+          '(marcações e sequências dos hábitos) e reinicia o calendário no dia 1. ' +
+          '<b style="color:var(--white,#f5f5f0)">Nenhum hábito é apagado</b> — nomes, frequências e metas ficam como estão.' +
         '</p>' +
         '<p style="font-size:12px;line-height:1.9;color:var(--mid,#999);margin-bottom:8px;">' +
           'Diário, tarefas, treino, vocabulário, dicção, Bíblia, conquistas e o restante ' +
