@@ -168,6 +168,14 @@
 }
 .pg-empty { font-size: 13px; color: var(--mid); line-height: 1.7; padding: 8px 0; }
 .pg-cap { font-size: 10px; letter-spacing: 0.08em; color: var(--muted); text-align: right; margin-top: 4px; }
+.pg-hist { margin-top: 10px; }
+.pg-hist > summary { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--mid); cursor: pointer; padding: 4px 0; }
+.pg-hist-row { display: flex; align-items: center; gap: 10px; padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
+.pg-hist-row:last-child { border-bottom: none; }
+.pg-hist-row .ph-d { color: var(--mid); width: 64px; flex-shrink: 0; }
+.pg-hist-row .ph-v { flex: 1; }
+.pg-hist-row button { background: none; border: none; color: var(--mid); cursor: pointer; font-size: 14px; padding: 2px 6px; }
+.pg-hist-row button:hover { color: var(--white); }
 
 /* split sugerido pela rotação (marca discreta) */
 .tr-sbtn.suggested:not(.active) { box-shadow: inset 0 -2px 0 var(--mid); }
@@ -649,6 +657,16 @@ function _lineChart(prev, canvas, series) {
   });
 }
 
+/* histórico de registros (com ✕ para apagar) — pesagens e cargas */
+const histOpen = { bw: false, lc: false };
+function histHTML(kind, series) {
+  if (!series.length) return '';
+  const rows = series.slice().sort((a, b) => b.day - a.day).map(p =>
+    `<div class="pg-hist-row"><span class="ph-d">Dia ${p.day}</span><span class="ph-v">${fmtKg(p.kg)} kg</span>` +
+    `<button type="button" data-hist-del="${kind}" data-day="${p.day}" data-kg="${p.kg}" title="Apagar este registro" aria-label="Apagar registro do dia ${p.day}">✕</button></div>`).join('');
+  return `<details class="pg-hist" data-h="${kind}"${histOpen[kind] ? ' open' : ''}><summary>Registros · ${series.length}</summary>${rows}</details>`;
+}
+
 function renderProgress() {
   /* ── peso corporal ── */
   const bwWrap = document.getElementById('bw-wrap');
@@ -675,7 +693,7 @@ function renderProgress() {
   }
 
   if (series.length >= 1) {
-    bwWrap.innerHTML = '<div class="pg-chart"><canvas id="bw-canvas"></canvas></div><div class="pg-cap">kg × dia do desafio</div>';
+    bwWrap.innerHTML = '<div class="pg-chart"><canvas id="bw-canvas"></canvas></div><div class="pg-cap">kg × dia do desafio</div>' + histHTML('bw', series);
     bwChart = _lineChart(bwChart, document.getElementById('bw-canvas'), series);
   } else {
     if (bwChart) { bwChart.destroy(); bwChart = null; }
@@ -720,13 +738,14 @@ function renderProgress() {
   }
 
   if (s.length >= 2) {
-    lcWrap.innerHTML = '<div class="pg-chart"><canvas id="lc-canvas"></canvas></div><div class="pg-cap">kg × dia do desafio</div>';
+    lcWrap.innerHTML = '<div class="pg-chart"><canvas id="lc-canvas"></canvas></div><div class="pg-cap">kg × dia do desafio</div>' + histHTML('lc', s);
     lcChart = _lineChart(lcChart, document.getElementById('lc-canvas'), s);
   } else {
     if (lcChart) { lcChart.destroy(); lcChart = null; }
     lcWrap.innerHTML = `<div class="pg-empty">${s.length === 1
       ? 'Uma sessão com carga registrada. Registre em outra pra ver a curva.'
       : 'Sem carga registrada nesse exercício ainda.'}</div>`;
+    lcWrap.innerHTML += histHTML('lc', s);
   }
 }
 
@@ -770,6 +789,26 @@ document.getElementById('bw-input').addEventListener('change', () => {
   renderProgress();
 });
 document.getElementById('lc-select').addEventListener('change', renderProgress);
+// apagar registros do histórico (pesagens e cargas) com desfazer
+document.getElementById('progress-card').addEventListener('toggle', e => {
+  const d = e.target.closest && e.target.closest('.pg-hist');
+  if (d) histOpen[d.dataset.h] = d.open;
+}, true);
+document.getElementById('progress-card').addEventListener('click', e => {
+  const b = e.target.closest('[data-hist-del]');
+  if (!b) return;
+  const kind = b.dataset.histDel, day = Number(b.dataset.day), kg = Number(b.dataset.kg);
+  if (kind === 'bw') {
+    Store.setBodyWeight('', day);
+    renderProgress();
+    window.p90toastUndo('Pesagem apagada', () => { Store.setBodyWeight(kg, day); renderProgress(); });
+  } else {
+    const exId = Number(document.getElementById('lc-select').value);
+    Store.setTrainingWeight(exId, '', day);
+    renderToday(); renderProgress();
+    window.p90toastUndo('Carga apagada', () => { Store.setTrainingWeight(exId, kg, day); renderToday(); renderProgress(); });
+  }
+});
 
 // tabs dos planos
 document.querySelectorAll('.plan-tab').forEach(b => {

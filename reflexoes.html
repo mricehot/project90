@@ -249,6 +249,7 @@ body { overflow: hidden; }
     <div class="rv-meta" id="rv-meta"></div>
     <div id="rv-body"></div>
     <div class="modal-footer">
+      <button class="modal-btn" id="rv-del" type="button" title="Apagar esta reflexão">Apagar reflexão</button>
       <button class="modal-btn primary" id="rv-close">Fechar</button>
     </div>
   </div>
@@ -383,6 +384,7 @@ function renderRail() {
 function openView(n) {
   const e = Store.getStudyReflection(n);
   if (!e) return;
+  rvDay = n;
   const d = dayToDate(n);
   document.getElementById('rv-topic').textContent = TOPICS[e.topicIdx] || '—';
   document.getElementById('rv-meta').textContent = 'Dia ' + n + ' · ' + DAYS_PT[d.getDay()] + ', ' + fmtDateShort(d);
@@ -400,6 +402,20 @@ function openView(n) {
 
   document.getElementById('rv-overlay').classList.add('open');
 }
+let rvDay = null;
+document.getElementById('rv-del').addEventListener('click', () => {
+  if (rvDay == null) return;
+  const n = rvDay, snap = Store.deleteStudyReflection(n);
+  if (!snap) return;
+  document.getElementById('rv-overlay').classList.remove('open');
+  if (n === DAY) loadToday();
+  renderStats(); renderRail();
+  window.p90toastUndo('Reflexão apagada', () => {
+    Store.saveStudyReflection(n, snap);
+    if (n === DAY) loadToday();
+    renderStats(); renderRail();
+  });
+});
 document.getElementById('rv-close').addEventListener('click', () => {
   document.getElementById('rv-overlay').classList.remove('open');
 });
