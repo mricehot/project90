@@ -119,6 +119,12 @@ a.tc-row.vc-row:hover .tc-name { text-decoration: underline; text-underline-offs
 .pri-input::placeholder { color: var(--mid); }
 .pri-row.done .pri-input { color: var(--mid); text-decoration: line-through; }
 .pri-done-msg { font-size: 13px; color: rgba(134,239,172,0.9); line-height: 1.6; padding: 10px 0 4px; }
+.pri-row { transition: opacity 0.26s ease, transform 0.26s ease, max-height 0.26s ease, padding 0.26s ease; max-height: 80px; overflow: hidden; }
+.pri-row.leaving { opacity: 0; transform: translateX(14px); max-height: 0; padding-top: 0; padding-bottom: 0; border-bottom-width: 0; }
+@media (prefers-reduced-motion: reduce) { .pri-row { transition: none; } }
+.pri-donetoggle { display: block; width: 100%; text-align: left; background: none; border: none; border-top: 1px solid var(--border); margin-top: 6px; padding: 10px 2px 6px; color: var(--mid); font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; cursor: pointer; }
+.pri-donetoggle:hover { color: var(--white); }
+.pri-text { flex: 1; min-width: 0; font-size: 13px; line-height: 1.4; color: var(--mid); text-decoration: line-through; }
 
 /* sugestão: trazer pra hoje o que ficou sem concluir ontem */
 .pri-carry { margin-bottom: 12px; padding: 10px 12px; border: 1px dashed var(--border2); background: var(--surface2); }
@@ -533,6 +539,13 @@ function carryPriority(src) {
   renderPrioritiesCard();
 }
 
+let priDoneOpen = false;
+try { priDoneOpen = localStorage.getItem('p90_pri_done_open') === '1'; } catch (e) {}
+function togglePriDone() {
+  priDoneOpen = !priDoneOpen;
+  try { localStorage.setItem('p90_pri_done_open', priDoneOpen ? '1' : '0'); } catch (e) {}
+  renderPrioritiesCard();
+}
 function renderPrioritiesCard() {
   const body = document.getElementById('pri-body');
   if (!body) return;
@@ -544,18 +557,30 @@ function renderPrioritiesCard() {
   document.getElementById('pri-count').textContent = filled.length ? `${doneCount}/${filled.length}` : '';
   _renderPriStreak();
 
-  body.innerHTML = slots.map((s, i) => `
-    <div class="pri-row ${s.done ? 'done' : ''}">
-      <div class="nr-check ${s.done ? 'done' : ''}" onclick="togglePriority(${i})" title="${s.done ? 'Desmarcar' : 'Concluir'}">${s.done ? '✓' : ''}</div>
+  const rowHTML = (s, i) => `
+    <div class="pri-row" data-slot="${i}">
+      <div class="nr-check" onclick="togglePriority(${i})" title="Concluir"></div>
       <input class="pri-input" data-idx="${i}" value="${esc(s.text)}" maxlength="120" ${s.taskId ? 'readonly' : ''}
              placeholder="Prioridade ${i + 1}${i === 0 ? ' — o que mais importa hoje?' : ''}" />
       <select class="pri-link ${s.taskId ? 'linked' : ''}" data-idx="${i}" title="Vincular a uma tarefa existente">
         ${_priTaskOptions(s.taskId)}
       </select>
       ${s.text ? `<button class="nr-del pri-clear" type="button" data-idx="${i}" title="Limpar prioridade" aria-label="Limpar prioridade ${i + 1}">✕</button>` : ''}
-    </div>`).join('') +
-    (filled.length && doneCount === filled.length
-      ? '<div class="pri-done-msg">Prioridades do dia batidas ✓</div>' : '');
+    </div>`;
+  const pending = slots.map((s, i) => ({ s, i })).filter(x => !x.s.done);
+  const finished = slots.map((s, i) => ({ s, i })).filter(x => x.s.done && x.s.text);
+  const allDone = filled.length > 0 && doneCount === filled.length;
+
+  body.innerHTML = pending.map(x => rowHTML(x.s, x.i)).join('') +
+    (allDone ? '<div class="pri-done-msg">Prioridades do dia batidas ✓</div>' : '') +
+    (finished.length
+      ? `<button type="button" class="pri-donetoggle" onclick="togglePriDone()" aria-expanded="${priDoneOpen}">${priDoneOpen ? '▾' : '▸'} Concluídas hoje · ${finished.length}</button>` +
+        (priDoneOpen ? finished.map(x => `
+    <div class="pri-row done" data-slot="${x.i}">
+      <div class="nr-check done" onclick="togglePriority(${x.i})" title="Desmarcar">✓</div>
+      <div class="pri-text">${esc(x.s.text)}</div>
+    </div>`).join('') : '')
+      : '');
 
   body.querySelectorAll('.pri-input').forEach(inp => {
     inp.addEventListener('keydown', e => { if (e.key === 'Enter') inp.blur(); });
@@ -585,7 +610,7 @@ function savePriorityText(idx, text) {
   Store.setDayPriorities(DAY, items);
 
   const saved = Store.getDayPriorities(DAY)[idx];
-  const row = document.querySelectorAll('#pri-body .pri-row')[idx];
+  const row = document.querySelector('#pri-body .pri-row[data-slot="' + idx + '"]');
   if (row) {
     row.classList.toggle('done', saved.done);
     const chk = row.querySelector('.nr-check');
@@ -637,9 +662,15 @@ function togglePriority(idx) {
       renderPendTarefas();
     }
   }
+  const willBeDone = !(it && it.done);
   Store.toggleDayPriority(DAY, idx);
-  renderPrioritiesCard();
+  const row = document.querySelector('#pri-body .pri-row[data-slot="' + idx + '"]');
+  if (willBeDone && row && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    row.classList.add('leaving');
+    setTimeout(renderPrioritiesCard, 280);   // some da lista depois da animação
+  } else renderPrioritiesCard();
 }
+
 
 /* ══ ROTINA NOTURNA — checklist de antes de dormir (zera toda noite) ══ */
 function _nrRoman(n) { return n === 2 ? 'II' : 'I'; }
