@@ -1242,6 +1242,20 @@ const Store = (() => {
     });
   }
 
+  // Apaga a entrada do diário de um dia (cache + servidor). Devolve o snapshot apagado (p/ desfazer) ou null.
+  function deleteJournalEntry(dayNum) {
+    const snap = cache.journal[dayNum];
+    if (snap == null) return null;
+    delete cache.journal[dayNum];
+    _saveMirror();
+    _push(async () => {
+      const { error } = await window.sb.from('journal_entries')
+        .delete().eq('user_id', _uid).eq('day_num', Number(dayNum));
+      if (error) throw error;
+    });
+    return snap;
+  }
+
   /* ──────────────────────────────────────────
      REVISÃO SEMANAL
   ────────────────────────────────────────── */
@@ -1260,6 +1274,20 @@ const Store = (() => {
       }, { onConflict: 'user_id,week_num' });
       if (error) throw error;
     });
+  }
+
+
+  function deleteWeeklyReview(weekNum) {
+    const snap = cache.weeklyReviews[weekNum];
+    if (snap == null) return null;
+    delete cache.weeklyReviews[weekNum];
+    _saveMirror();
+    _push(async () => {
+      const { error } = await window.sb.from('weekly_reviews')
+        .delete().eq('user_id', _uid).eq('week_num', Number(weekNum));
+      if (error) throw error;
+    });
+    return snap;
   }
 
   /* ──────────────────────────────────────────
@@ -4751,6 +4779,20 @@ const Store = (() => {
     });
   }
 
+
+  function deleteStudyReflection(dayNum) {
+    const snap = cache.studyReflections[dayNum];
+    if (snap == null) return null;
+    delete cache.studyReflections[dayNum];
+    _saveMirror();
+    _push(async () => {
+      const { error } = await window.sb.from('study_reflections')
+        .delete().eq('user_id', _uid).eq('day_num', Number(dayNum));
+      if (error) throw error;
+    });
+    return snap;
+  }
+
   /* ──────────────────────────────────────────
      CONVERSAÇÃO (Dicção) — biblioteca de dicas de comunicação
      (js/conversation-tips.js, conteúdo estático). Só o estado "lida" é
@@ -4790,6 +4832,7 @@ const Store = (() => {
     // ciclo de vida
     bootstrap, isReady, resetProgress,
     // meta
+    deleteJournalEntry, deleteWeeklyReview, deleteStudyReflection,
     getMeta, saveMeta, getTotalDays, getStartDate, getCurrentDay, useFreeze,
     // dados
     getHabits, saveHabits,

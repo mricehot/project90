@@ -461,6 +461,7 @@ body { overflow: hidden; }
           </div>
           <div class="save-bar">
             <div class="save-status" id="wr-status">—</div>
+            <button class="btn-sm" id="wr-del" type="button" hidden title="Apagar a revisão desta semana">Apagar</button>
             <button class="btn-sm primary" id="wr-save">Salvar revisão</button>
           </div>
         </div>
@@ -525,6 +526,7 @@ body { overflow: hidden; }
 
       <div class="save-bar">
         <div class="save-status" id="save-status">Sem entrada ainda</div>
+        <button class="btn-sm" id="btn-del-2" type="button" hidden title="Apagar a entrada deste dia">Apagar</button>
         <button class="btn-sm primary" id="btn-save-2">Salvar entrada</button>
       </div>
 
@@ -558,6 +560,7 @@ body { overflow: hidden; }
     <div class="jm-body" id="jm-body"></div>
     <div class="jm-footer">
       <button class="jm-btn ghost" id="jm-close">Fechar</button>
+      <button class="jm-btn ghost" id="jm-del" title="Apagar esta entrada do diário">Apagar entrada</button>
       <button class="jm-btn primary" id="jm-open">Abrir no editor</button>
     </div>
   </div>
@@ -686,6 +689,13 @@ function renderWeeklyReview() {
   document.getElementById('wr-friction').value = r.friction || '';
   document.getElementById('wr-focus').value    = r.focus || '';
   document.getElementById('wr-status').textContent = reviews[wrSelectedWeek] ? 'Revisão salva' : 'Ainda não revisada';
+  var _wd = document.getElementById('wr-del'); _wd.hidden = !reviews[wrSelectedWeek];
+  _wd.onclick = function () {
+    var wk = wrSelectedWeek, snap = Store.deleteWeeklyReview(wk);
+    if (!snap) return;
+    renderWeeklyReview();
+    window.p90toastUndo('Revisão apagada', function () { Store.saveWeeklyReview(wk, snap); wrSelectedWeek = wk; renderWeeklyReview(); });
+  };
 
   var scoreEl = document.getElementById('wr-score');
   scoreEl.innerHTML = [1, 2, 3, 4, 5].map(function (n) {
@@ -814,6 +824,36 @@ function saveCurrentDay() {
   showToast('Entrada salva ✓');
 }
 
+
+/* ── APAGAR ENTRADA ── */
+function deleteEntry(n) {
+  if (n == null || !entries[n]) return;
+  var snap = JSON.parse(JSON.stringify(entries[n]));
+  Store.deleteJournalEntry(n);
+  entries = Store.getJournal();
+  if (currentDay === n) loadDayIntoEditor(n);
+  renderEntriesList();
+  renderCalendar();
+  updateDelBtn();
+  if (document.getElementById('jm-overlay').classList.contains('open')) {
+    if (Object.keys(entries).length) openHistoryModal(); else closeHistoryModal();
+  }
+  window.p90toastUndo('Entrada apagada', function () {
+    Store.saveJournalEntry(n, snap);
+    entries = Store.getJournal();
+    if (currentDay === n) loadDayIntoEditor(n);
+    renderEntriesList();
+    renderCalendar();
+    updateDelBtn();
+  });
+}
+function updateDelBtn() {
+  var b = document.getElementById('btn-del-2');
+  if (b) b.hidden = !entries[currentDay];
+}
+document.getElementById('jm-del').addEventListener('click', function () { deleteEntry(jmDay); });
+document.getElementById('btn-del-2').addEventListener('click', function () { deleteEntry(currentDay); });
+
 /* ── DIRTY STATE ── */
 function setDirty(dirty) {
   isDirty = dirty;
@@ -826,6 +866,7 @@ function setDirty(dirty) {
   } else {
     dot.classList.remove('visible');
     var hasEntry = !!entries[currentDay];
+    var _db = document.getElementById('btn-del-2'); if (_db) _db.hidden = !hasEntry;
     st.textContent = hasEntry ? '✓ Salvo' : 'Sem entrada ainda';
     st.className   = hasEntry ? 'save-status saved' : 'save-status';
   }

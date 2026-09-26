@@ -125,6 +125,7 @@
   padding: 5px 6px; outline: none; opacity: 0; transition: opacity 0.15s; cursor: pointer;
 }
 .pri-row:hover .pri-link, .pri-link:focus, .pri-link.linked { opacity: 1; }
+.pri-row:hover .pri-clear, .pri-clear:focus-visible { opacity: 1; }
 @media (hover: none) { .pri-link { opacity: 0.7; } }
 .pri-link.linked { color: var(--white); border-color: var(--border2); }
 
@@ -502,6 +503,7 @@ function renderPrioritiesCard() {
       <select class="pri-link ${s.taskId ? 'linked' : ''}" data-idx="${i}" title="Vincular a uma tarefa existente">
         ${_priTaskOptions(s.taskId)}
       </select>
+      ${s.text ? `<button class="nr-del pri-clear" type="button" data-idx="${i}" title="Limpar prioridade" aria-label="Limpar prioridade ${i + 1}">✕</button>` : ''}
     </div>`).join('') +
     (filled.length && doneCount === filled.length
       ? '<div class="pri-done-msg">Prioridades do dia batidas ✓</div>' : '');
@@ -510,6 +512,17 @@ function renderPrioritiesCard() {
     inp.addEventListener('keydown', e => { if (e.key === 'Enter') inp.blur(); });
     inp.addEventListener('blur', () => savePriorityText(Number(inp.dataset.idx), inp.value));
   });
+  body.querySelectorAll('.pri-clear').forEach(b => b.addEventListener('click', () => {
+    const i = Number(b.dataset.idx), items = [0, 1, 2].map(k => Store.getDayPriorities(DAY)[k] || { text: '', done: false, taskId: null });
+    const snap = items[i];
+    items[i] = { text: '', done: false, taskId: null };
+    Store.setDayPriorities(DAY, items);
+    renderPrioritiesCard();
+    window.p90toastUndo('Prioridade removida', () => {
+      const cur = [0, 1, 2].map(k => Store.getDayPriorities(DAY)[k] || { text: '', done: false, taskId: null });
+      cur[i] = snap; Store.setDayPriorities(DAY, cur); renderPrioritiesCard();
+    });
+  }));
   body.querySelectorAll('.pri-link').forEach(sel => {
     sel.addEventListener('change', () => linkPriorityTask(Number(sel.dataset.idx), sel.value));
   });
