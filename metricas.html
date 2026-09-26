@@ -415,7 +415,7 @@ function baseOpts(ymin,ymax){
 function init(){
   var days=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
   var months=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
-  var now=Store.now();
+  var now=new Date();
   document.getElementById('today-lbl').textContent=days[now.getDay()]+', '+now.getDate()+' '+months[now.getMonth()];
   document.getElementById('topbar-date').textContent='Dia '+DAY+' / '+DAYS;
 
@@ -529,7 +529,7 @@ function renderBarChart(){
   var avg=Math.round(slice.reduce(function(a,b){return a+b;},0)/slice.length);
   var maxIdx=slice.indexOf(Math.max.apply(null,slice));
   var minIdx=slice.indexOf(Math.min.apply(null,slice));
-  var now=Store.now();
+  var now=new Date();
   function dn(idx){return DAYS_SHORT[((now.getDay()-(period-1)+idx+700)%7)];}
   document.getElementById('week-avg').textContent=avg+'%';
   document.getElementById('best-day').textContent=dn(maxIdx);

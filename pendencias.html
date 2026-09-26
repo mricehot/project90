@@ -359,7 +359,7 @@ function fmtISO(iso) {
   const d = new Date(iso + 'T00:00:00');
   return isNaN(d) ? '' : d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
 }
-function todayISO() { const d = Store.now(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+function todayISO() { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
 function addDaysISO(iso, n) { const d = new Date(iso + 'T00:00:00'); d.setDate(d.getDate() + n); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
 function mondayOfWeekISO(iso) {
   const d = new Date(iso + 'T00:00:00');
@@ -565,7 +565,7 @@ function togglePriority(idx) {
     const t = Store.getTasks().find(x => x.id === it.taskId);
     if (t) {
       const done = Store.getTaskDone(t.id) || [];
-      const now = Store.now();
+      const now = new Date();
       const localISO = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
       if (t.sched === 'once') {
         if (!it.done) Store.completeTask(t.id); else if (done.length) Store.uncompleteTask(t.id, done[done.length - 1]);
@@ -661,7 +661,7 @@ function renderPendFinanceiro() {
     body.innerHTML = '<div class="tc-line">Nenhum gasto fixo cadastrado.</div>';
     return;
   }
-  const todayDate = Store.now().getDate();
+  const todayDate = new Date().getDate();
   const ym = Store.finYm();
   const due = Store.getFinance().fixed
     .filter(f => f.active && f.dueDay <= todayDate && !Store.finFixedPaidMark(f.id, ym))

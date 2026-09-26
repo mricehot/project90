@@ -24,12 +24,6 @@ const Store = (() => {
   const MIRROR_KEY        = 'p90_cache';
   const DEFAULT_TOTAL_DAYS = 90;
 
-  // O "dia" do desafio vira às 5h da manhã (não à meia-noite): quem chega tarde
-  // ainda consegue fechar os hábitos do dia anterior. _now() é o relógio
-  // lógico — use-o (Store.now()) para qualquer "hoje"; new Date() é só relógio real.
-  const DAY_START_HOUR = 5;
-  function _now() { return new Date(Date.now() - DAY_START_HOUR * 3600000); }
-
   /* ──────────────────────────────────────────
      CACHE
   ────────────────────────────────────────── */
@@ -1157,15 +1151,14 @@ const Store = (() => {
 
   function getStartDate() {
     if (cache.meta.startDate) return new Date(cache.meta.startDate);
-    const today = _now(); today.setHours(0, 0, 0, 0);
+    const today = new Date(); today.setHours(0, 0, 0, 0);
     return today;
   }
 
-  // Dia calculado no cliente (fuso do navegador, virada às 5h) — o valor que o
-  // servidor manda em cache.currentDay não conhece a virada às 5h em bases não migradas.
   function getCurrentDay() {
+    if (cache.currentDay) return Math.min(Math.max(cache.currentDay, 1), getTotalDays());
     const start = getStartDate();
-    const today = _now(); today.setHours(0, 0, 0, 0);
+    const today = new Date(); today.setHours(0, 0, 0, 0);
     const diffDays = Math.round((today - start) / 86400000) + 1;
     return Math.min(Math.max(diffDays, 1), getTotalDays());
   }
@@ -2416,7 +2409,7 @@ const Store = (() => {
      PLANO DE LEITURA DA BÍBLIA (js/bible-plan.js)
   ────────────────────────────────────────── */
   function _localDate(offsetDays) {
-    const d = _now();
+    const d = new Date();
     if (offsetDays) d.setDate(d.getDate() + offsetDays);
     return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
   }
@@ -3850,7 +3843,7 @@ const Store = (() => {
   function _sum(arr, f) { return _money(arr.reduce((s, x) => s + (f ? f(x) : x), 0)); }
 
   function finYm(dateStr) {
-    const d = dateStr ? new Date(dateStr + 'T00:00:00') : _now();
+    const d = dateStr ? new Date(dateStr + 'T00:00:00') : new Date();
     if (isNaN(d)) return _localDate(0).slice(0, 7);
     return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
   }
@@ -4797,7 +4790,7 @@ const Store = (() => {
     // ciclo de vida
     bootstrap, isReady, resetProgress,
     // meta
-    getMeta, saveMeta, getTotalDays, getStartDate, getCurrentDay, now: _now, DAY_START_HOUR, useFreeze,
+    getMeta, saveMeta, getTotalDays, getStartDate, getCurrentDay, useFreeze,
     // dados
     getHabits, saveHabits,
     getJournal, saveJournal, getJournalEntry, saveJournalEntry,

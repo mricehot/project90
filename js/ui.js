@@ -118,7 +118,7 @@ function initTopbarDate(dateElId, dayElId) {
   const meta    = Store.getMeta();
   const DAYS_PT = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
   const MONTHS  = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
-  const now     = Store.now();
+  const now     = new Date();
 
   const dateEl = document.getElementById(dateElId);
   const dayEl  = document.getElementById(dayElId);
