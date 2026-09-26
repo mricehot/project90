@@ -605,7 +605,7 @@ function initIdleCard() {
 /* ═══════════════════════════════
    NUDGE — alerta de check-in / streak em risco + lembrete opt-in
 ═══════════════════════════════ */
-function _todayKey() { return 'p90_' + Store.now().toDateString(); }
+function _todayKey() { return 'p90_' + new Date().toDateString(); }
 function _readReminder() {
   try { const r = localStorage.getItem('p90_reminder'); return r ? JSON.parse(r) : null; } catch (e) { return null; }
 }
@@ -657,7 +657,7 @@ function renderNudge() {
   const done   = dueRaw.filter(h => Store.habitVal(h, day - 1) > 0).length;
   const total  = dueRaw.length;
   const streak = Store.currentStreak(Store.getHabits(), day);
-  const hour   = Store.now().getHours();
+  const hour   = new Date().getHours();
   const left   = total - done;
 
   // dispensado hoje? só o alerta some; se o dia ficou completo, mostramos o positivo.
@@ -820,7 +820,7 @@ setInterval(_maybeNotify, 5 * 60 * 1000);
 function initTopbar() {
   const days   = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
   const months = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
-  const now    = Store.now();
+  const now    = new Date();
   document.getElementById('today-lbl').textContent   = `${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]}`;
   document.getElementById('topbar-date').textContent = `Dia ${DAY} / ${DAYS}`;
 }
@@ -1017,7 +1017,7 @@ function renderCountersCard() {
   if (!el || typeof Store.getStreakCounters !== 'function') return;
   const list = Store.getStreakCounters();
   const today = (function () {
-    const d = Store.now();
+    const d = new Date();
     return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
   })();
 
@@ -1100,7 +1100,7 @@ function wireAddToggle(btnId, formId, inputId) {
 /* ─ WEEKLY CHART ─ */
 function renderWeeklyChart() {
   const DAYS_LABELS = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
-  const now  = Store.now();
+  const now  = new Date();
   const data = Array.from({length:7}, (_,i) => {
     const vals = habits.map(h => h.history[DAY-7+i] ?? 0);
     return vals.length ? Math.round(vals.reduce((a,b)=>a+b,0)/vals.length*100) : 0;

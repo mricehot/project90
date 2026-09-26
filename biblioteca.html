@@ -413,7 +413,7 @@ function toast(msg) {
 
 const DAY = Store.getCurrentDay();
 const DAYS = Store.getTotalDays();
-let YEAR = Store.now().getFullYear();
+let YEAR = new Date().getFullYear();
 let FILTER = 'todos';
 let editingId = null;
 
@@ -421,7 +421,7 @@ function esc(s) {
   return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
 function todayISO() {
-  const d = Store.now();
+  const d = new Date();
   return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
 }
 function fmtDay(iso) {
