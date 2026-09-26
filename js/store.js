@@ -49,6 +49,8 @@ const Store = (() => {
       streakCounters: [],
       nightHabits:   [],
       nightRoutine:  {},
+      homeHabits:    [],   // "Ao chegar em casa": [{ id, label, createdAt }]
+      homeRoutine:   {},   // { [dayNum]: [ids marcados] }
       studySubjects:   [],
       studyActivities: [],
       trainingExercises: [],
@@ -255,6 +257,17 @@ const Store = (() => {
         const ids = Array.isArray(v) ? v : (v && Array.isArray(v.ids) ? v.ids : []);
         const routine = (v && v.routine === 2) ? 2 : 1;
         cache.nightRoutine[k] = { ids: ids.slice(), routine };
+      });
+    }
+    if (Array.isArray(data.homeHabits)) {
+      cache.homeHabits.length = 0;
+      data.homeHabits.forEach(h => cache.homeHabits.push({ id: h.id, label: h.label, createdAt: h.createdAt }));
+    }
+    if (data.homeRoutineDays && typeof data.homeRoutineDays === 'object') {
+      Object.keys(cache.homeRoutine).forEach(k => delete cache.homeRoutine[k]);
+      Object.keys(data.homeRoutineDays).forEach(k => {
+        const v = data.homeRoutineDays[k];
+        cache.homeRoutine[k] = Array.isArray(v) ? v.slice() : [];
       });
     }
     if (Array.isArray(data.studySubjects)) {
@@ -1289,6 +1302,100 @@ const Store = (() => {
       if (error) throw error;
     });
     return snap;
+  }
+
+  /* ──────────────────────────────────────────
+     AO CHEGAR EM CASA — checklist do que fazer assim que chega (Pendências).
+     Uma lista só; as marcações zeram todo dia (guardadas por dia do desafio).
+       cache.homeHabits:  [{ id, label, createdAt }]
+       cache.homeRoutine: { [dayNum]: [ids marcados] }
+  ────────────────────────────────────────── */
+  function getHomeHabits() {
+    return cache.homeHabits.slice()
+      .sort((a, b) => (String(a.createdAt).localeCompare(String(b.createdAt))) || (a.id - b.id));
+  }
+
+  function _pushHomeHabit(h) {
+    _push(async () => {
+      const { error } = await window.sb.from('home_habits').upsert({
+        user_id: _uid, id: h.id, label: h.label, created_at: h.createdAt,
+      }, { onConflict: 'user_id,id' });
+      if (error) throw error;
+    });
+  }
+
+  function addHomeHabit(label) {
+    const t = String(label || '').trim();
+    if (!t) return null;
+    const id = (cache.homeHabits.reduce((m, h) => Math.max(m, h.id), 0) || 0) + 1;
+    const h = { id, label: t, createdAt: new Date().toISOString() };
+    cache.homeHabits.push(h);
+    _saveMirror();
+    _pushHomeHabit(h);
+    return h;
+  }
+
+  // Desfazer de deleteHomeHabit: recoloca o item com o mesmo id/ordem.
+  function restoreHomeHabit(h) {
+    if (!h || cache.homeHabits.some(x => x.id === h.id)) return null;
+    cache.homeHabits.push({ id: h.id, label: h.label, createdAt: h.createdAt });
+    _saveMirror();
+    _pushHomeHabit(h);
+    return h;
+  }
+
+  function renameHomeHabit(id, label) {
+    const h = cache.homeHabits.find(x => x.id === id);
+    if (!h) return;
+    h.label = String(label || '').trim() || h.label;
+    _saveMirror();
+    _pushHomeHabit(h);
+  }
+
+  function deleteHomeHabit(id) {
+    const idx = cache.homeHabits.findIndex(h => h.id === id);
+    if (idx === -1) return null;
+    const snap = cache.homeHabits.splice(idx, 1)[0];
+    Object.keys(cache.homeRoutine).forEach(k => {
+      const ids = cache.homeRoutine[k];
+      const i = Array.isArray(ids) ? ids.indexOf(id) : -1;
+      if (i !== -1) { ids.splice(i, 1); _pushHomeRoutineDay(k); }
+    });
+    _saveMirror();
+    _push(async () => {
+      const { error } = await window.sb.from('home_habits')
+        .delete().eq('user_id', _uid).eq('id', id);
+      if (error) throw error;
+    });
+    return snap;
+  }
+
+  // Ids marcados num dia (default: hoje).
+  function getHomeRoutine(dayNum) {
+    const d = dayNum == null ? getCurrentDay() : dayNum;
+    const ids = cache.homeRoutine[d];
+    return Array.isArray(ids) ? ids.slice() : [];
+  }
+
+  function _pushHomeRoutineDay(dayNum) {
+    const ids = Array.isArray(cache.homeRoutine[dayNum]) ? cache.homeRoutine[dayNum] : [];
+    _push(async () => {
+      const { error } = await window.sb.from('home_routine_days').upsert({
+        user_id: _uid, day_num: Number(dayNum), done_ids: ids, updated_at: new Date().toISOString(),
+      }, { onConflict: 'user_id,day_num' });
+      if (error) throw error;
+    });
+  }
+
+  function toggleHomeHabitDone(itemId, dayNum) {
+    const d = dayNum == null ? getCurrentDay() : dayNum;
+    const ids = getHomeRoutine(d);
+    const i = ids.indexOf(itemId);
+    if (i === -1) ids.push(itemId); else ids.splice(i, 1);
+    cache.homeRoutine[d] = ids;
+    _saveMirror();
+    _pushHomeRoutineDay(d);
+    return i === -1;
   }
 
   /* ──────────────────────────────────────────
@@ -4834,6 +4941,7 @@ const Store = (() => {
     bootstrap, isReady, resetProgress,
     // meta
     deleteJournalEntry, deleteWeeklyReview, deleteStudyReflection,
+    getHomeHabits, addHomeHabit, restoreHomeHabit, renameHomeHabit, deleteHomeHabit, getHomeRoutine, toggleHomeHabitDone,
     getMeta, saveMeta, getTotalDays, getStartDate, getCurrentDay, useFreeze,
     // dados
     getHabits, saveHabits,
