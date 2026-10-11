@@ -1,0 +1,48 @@
+name: Supabase keep-alive
+
+# O plano free do Supabase pausa o projeto depois de ~7 dias sem atividade
+# (e com ele pausado o login falha com DNS_PROBE_FINISHED_NXDOMAIN).
+# Este job faz uma leitura leve no banco uma vez por dia para o projeto
+# contar como ativo. Se o projeto JÁ estiver pausado, a leitura falha e o
+# GitHub avisa por e-mail que o workflow quebrou — é o alarme.
+#
+# Usa só o URL e a chave pública (anon/publishable) que já estão em
+# js/supabase-config.js; não precisa de segredo.
+
+on:
+  schedule:
+    - cron: '17 9 * * *'   # todo dia às 09:17 UTC (06:17 em Brasília)
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Baixa o repositório
+        uses: actions/checkout@v4
+
+      - name: Lê o banco (1 linha de hábitos)
+        run: |
+          URL=$(grep -oP 'SUPABASE_URL\s*=\s*"\K[^"]+' js/supabase-config.js)
+          KEY=$(grep -oP 'SUPABASE_ANON_KEY\s*=\s*"\K[^"]+' js/supabase-config.js)
+          if [ -z "$URL" ] || [ -z "$KEY" ]; then
+            echo "::error::Não achei SUPABASE_URL/SUPABASE_ANON_KEY em js/supabase-config.js"
+            exit 1
+          fi
+          echo "Projeto: $URL"
+          for i in 1 2 3; do
+            CODE=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 20 \
+              -H "apikey: $KEY" -H "Authorization: Bearer $KEY" \
+              "$URL/rest/v1/habits?select=id&limit=1" 2>/dev/null || true)
+            echo "tentativa $i: HTTP $CODE"
+            case "$CODE" in
+              2??) echo "Projeto ativo."; exit 0 ;;
+            esac
+            sleep 20
+          done
+          echo "::error::O Supabase não respondeu (HTTP $CODE). O projeto pode estar pausado: restaure em supabase.com/dashboard."
+          exit 1
