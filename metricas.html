@@ -73,10 +73,11 @@ body { overflow: hidden; }
 .hm-legend { display: flex; align-items: center; gap: 14px; margin-top: 12px; flex-wrap: wrap; }
 .leg-item { display: flex; align-items: center; gap: 6px; font-size: 10px; letter-spacing: 0.12em; color: var(--mid); }
 .leg-dot { width: 8px; height: 8px; border-radius: 2px; }
-.hm-stats { flex: 1; min-width: 240px; display: flex; gap: 1px; background: var(--border); }
-.hm-stat  { flex: 1; background: var(--surface2); padding: 16px 14px; }
+.hm-stats { flex: 1; min-width: min(240px, 100%); display: flex; gap: 1px; background: var(--border); }
+.hm-stat  { flex: 1; min-width: 0; background: var(--surface2); padding: 16px 10px; }
 .hm-stat b { display: block; font-family: var(--font-ui); font-weight: 500; font-size: 22px; line-height: 1; font-weight: 400; }
 .hm-stat span { display: block; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--mid); margin-top: 5px; }
+@media (max-width: 520px) { .hm-stats { flex-wrap: wrap; } .hm-stat { flex: 1 1 calc(50% - 1px); } }
 
 /* ── CONSISTENCY TABLE ── */
 .hc-row { display: flex; align-items: center; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--border); }
