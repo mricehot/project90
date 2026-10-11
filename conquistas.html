@@ -12,7 +12,7 @@
 <meta name="apple-mobile-web-app-title" content="Project 90">
 <title>Project 90 — Conquistas</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Bebas+Neue&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/base.css">
 <link rel="stylesheet" href="css/components.css">
 <script src="js/supabase-config.js"></script>
@@ -26,17 +26,17 @@
 .con-main { padding: 32px 36px; overflow-y: auto; display: flex; flex-direction: column; gap: 32px; }
 
 .topbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
-.page-title { font-family: 'DM Serif Display', serif; font-size: 26px; font-weight: 400; display: flex; align-items: baseline; gap: 10px; }
+.page-title { font-family: var(--font-ui); font-weight: 500; font-size: 22px; font-weight: 400; display: flex; align-items: baseline; gap: 10px; }
 .page-title em { font-style: italic; opacity: 0.45; font-size: 22px; }
 
 /* ── STAT CARDS ── */
 .g4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
 .stat-card { background: var(--surface); border: 1px solid var(--border); padding: 20px 22px; }
 .stat-lbl { font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--mid); margin-bottom: 8px; }
-.stat-val { font-family: 'Bebas Neue', sans-serif; font-size: 44px; line-height: 1; }
+.stat-val { font-family: var(--font-ui); font-weight: 500; font-size: 32px; line-height: 1; }
 .stat-sub { font-size: 11px; letter-spacing: 0.1em; color: var(--mid); margin-top: 6px; }
 .stat-delta { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; letter-spacing: 0.1em; margin-top: 6px; }
-.stat-delta.up { color: #86efac; }
+.stat-delta.up { color: #f5f5f0; }
 
 /* ── OVERALL PROGRESS BANNER ── */
 .progress-banner {
@@ -45,7 +45,7 @@
   display: grid; grid-template-columns: 1fr auto; gap: 24px; align-items: center;
 }
 .pb-left {}
-.pb-title { font-family: 'DM Serif Display', serif; font-size: 18px; font-weight: 400; margin-bottom: 6px; }
+.pb-title { font-family: var(--font-ui); font-weight: 500; font-size: 18px; font-weight: 400; margin-bottom: 6px; }
 .pb-title em { font-style: italic; opacity: 0.4; }
 .pb-sub { font-size: 11px; letter-spacing: 0.1em; color: var(--mid); margin-bottom: 16px; }
 .pb-bar-bg { height: 2px; background: var(--muted); }
@@ -54,7 +54,7 @@
 .pb-marker { font-size: 10px; letter-spacing: 0.1em; color: var(--mid); }
 .pb-marker.reached { color: var(--white); }
 .pb-right { text-align: right; }
-.pb-big { font-family: 'Bebas Neue', sans-serif; font-size: 64px; line-height: 0.9; }
+.pb-big { font-family: var(--font-ui); font-weight: 500; font-size: 46px; line-height: 0.9; }
 .pb-big-sub { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--mid); margin-top: 6px; }
 
 /* ── CATEGORY SECTION ── */
@@ -89,7 +89,7 @@
 /* ghost number watermark */
 .ach-ghost {
   position: absolute; bottom: -8px; right: 6px;
-  font-family: 'Bebas Neue', sans-serif; font-size: 56px; line-height: 1;
+  font-family: var(--font-ui); font-weight: 500; font-size: 40px; line-height: 1;
   color: rgba(245,245,240,0.03); pointer-events: none; user-select: none;
   transition: color 0.3s;
 }
@@ -134,17 +134,17 @@
 }
 .ach-prog-req { font-size: 10px; letter-spacing: 0.1em; color: var(--mid); }
 .ach-prog-pct { font-size: 10px; letter-spacing: 0.1em; color: var(--mid); }
-.ach-prog-pct.done { color: #86efac; }
+.ach-prog-pct.done { color: #f5f5f0; }
 .ach-prog-bg { height: 1px; background: var(--muted); }
 .ach-prog-fill { height: 100%; background: var(--white); transition: width 1s cubic-bezier(0.16,1,0.3,1); }
-.ach-card.unlocked .ach-prog-fill { background: #86efac; }
+.ach-card.unlocked .ach-prog-fill { background: #f5f5f0; }
 
 /* unlocked badge */
 .ach-badge {
   position: absolute; top: 12px; right: 12px;
   font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase;
-  padding: 2px 7px; border: 1px solid rgba(134,239,172,0.3);
-  color: #86efac; background: rgba(134,239,172,0.07);
+  padding: 2px 7px; border: 1px solid rgba(245,245,240,0.3);
+  color: #f5f5f0; background: rgba(245,245,240,0.07);
   opacity: 0; transition: opacity 0.3s;
 }
 .ach-card.unlocked .ach-badge { opacity: 1; }
@@ -169,7 +169,7 @@
 .nu-bar-fill { height: 100%; background: var(--white); transition: width 1s cubic-bezier(0.16,1,0.3,1); }
 .nu-meta { display: flex; justify-content: space-between; margin-top: 6px; font-size: 10px; letter-spacing: 0.1em; color: var(--mid); }
 .nu-right { text-align: right; flex-shrink: 0; }
-.nu-pct { font-family: 'Bebas Neue', sans-serif; font-size: 32px; line-height: 1; }
+.nu-pct { font-family: var(--font-ui); font-weight: 500; font-size: 27px; line-height: 1; }
 .nu-sub { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--mid); margin-top: 2px; }
 
 /* ── UNLOCK ANIMATION OVERLAY ── */
@@ -192,20 +192,20 @@
 .unlock-overlay.show .unlock-modal { transform: scale(1); }
 .unlock-icon { font-size: 52px; display: block; margin-bottom: 20px; animation: popIn 0.5s cubic-bezier(0.16,1,0.3,1) 0.2s both; }
 @keyframes popIn { from { transform: scale(0.4); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-.unlock-eyebrow { font-size: 10px; letter-spacing: 0.3em; text-transform: uppercase; color: #86efac; margin-bottom: 10px; }
-.unlock-title { font-family: 'DM Serif Display', serif; font-size: 26px; font-weight: 400; margin-bottom: 8px; }
+.unlock-eyebrow { font-size: 10px; letter-spacing: 0.3em; text-transform: uppercase; color: #f5f5f0; margin-bottom: 10px; }
+.unlock-title { font-family: var(--font-ui); font-weight: 500; font-size: 22px; font-weight: 400; margin-bottom: 8px; }
 .unlock-title em { font-style: italic; opacity: 0.5; }
 .unlock-desc { font-size: 13px; letter-spacing: 0.04em; color: var(--mid); line-height: 1.7; margin-bottom: 32px; }
 .unlock-close {
   padding: 11px 32px; background: var(--white); color: var(--bg);
-  border: none; font-family: 'DM Mono', monospace; font-size: 12px;
+  border: none; font-family: var(--font-ui); font-size: 12px;
   letter-spacing: 0.16em; text-transform: uppercase; cursor: pointer;
   transition: opacity 0.2s;
 }
 .unlock-close:hover { opacity: 0.85; }
 .unlock-points {
-  font-family: 'Bebas Neue', sans-serif; font-size: 28px; line-height: 1;
-  color: #86efac; margin-bottom: 24px; letter-spacing: 0.06em;
+  font-family: var(--font-ui); font-weight: 500; font-size: 24px; line-height: 1;
+  color: #f5f5f0; margin-bottom: 24px; letter-spacing: 0.06em;
 }
 .unlock-queue {
   margin-top: 16px; font-size: 10px; letter-spacing: 0.2em;
@@ -271,38 +271,33 @@
     </div>
 
     <nav class="sb-nav">
-      <a class="sb-item" href="dashboard.html"><span class="sb-item-icon">◈</span> Dashboard</a>
+      <a class="sb-item" href="hoje.html"><span class="sb-item-icon">☀</span> Hoje</a>
       <details class="sb-group">
-        <summary class="sb-group-toggle"><span class="sb-item-icon">⚑</span> Pendências<span class="sb-group-caret">›</span></summary>
+        <summary class="sb-group-toggle"><span class="sb-item-icon">⚑</span> Planejar<span class="sb-group-caret">›</span></summary>
         <a class="sb-item sb-subitem" href="pendencias.html"><span class="sb-item-icon">⚑</span> Pendências</a>
         <a class="sb-item sb-subitem" href="calendario.html"><span class="sb-item-icon">⊞</span> Calendário</a>
-      </details>
-      <details class="sb-group">
-        <summary class="sb-group-toggle"><span class="sb-item-icon">◉</span> Rotina<span class="sb-group-caret">›</span></summary>
-        <a class="sb-item sb-subitem" href="habitos.html"><span class="sb-item-icon">◉</span> Hábitos</a>
         <a class="sb-item sb-subitem" href="tarefas.html"><span class="sb-item-icon">✓</span> Tarefas</a>
+        <a class="sb-item sb-subitem" href="faculdade.html"><span class="sb-item-icon">▦</span> Faculdade</a>
+        <a class="sb-item sb-subitem" href="trabalho.html"><span class="sb-item-icon">⚙</span> Trabalho</a>
       </details>
-      <a class="sb-item" href="metricas.html"><span class="sb-item-icon">△</span> Métricas</a>
-      <a class="sb-item" href="diario.html"><span class="sb-item-icon">◻</span> Diário</a>
       <details class="sb-group">
-        <summary class="sb-group-toggle"><span class="sb-item-icon">✦</span> Conhecimento<span class="sb-group-caret">›</span></summary>
+        <summary class="sb-group-toggle"><span class="sb-item-icon">△</span> Evoluir<span class="sb-group-caret">›</span></summary>
+        <a class="sb-item sb-subitem" href="dashboard.html"><span class="sb-item-icon">◈</span> Dashboard</a>
+        <a class="sb-item sb-subitem" href="habitos.html"><span class="sb-item-icon">◉</span> Hábitos</a>
+        <a class="sb-item sb-subitem" href="metricas.html"><span class="sb-item-icon">△</span> Métricas</a>
+        <a class="sb-item sb-subitem" href="diario.html"><span class="sb-item-icon">◻</span> Diário</a>
+        <a class="sb-item sb-subitem" href="treino.html"><span class="sb-item-icon">◲</span> Treino</a>
+        <a class="sb-item sb-subitem" href="biblia.html"><span class="sb-item-icon">✝</span> Bíblia</a>
         <a class="sb-item sb-subitem" href="vocabulario.html"><span class="sb-item-icon">▤</span> Vocabulário</a>
         <a class="sb-item sb-subitem" href="biblioteca.html"><span class="sb-item-icon">❐</span> Biblioteca</a>
         <a class="sb-item sb-subitem" href="reflexoes.html"><span class="sb-item-icon">☯</span> Reflexões</a>
-      </details>
-      <details class="sb-group">
-        <summary class="sb-group-toggle"><span class="sb-item-icon">◗</span> Comunicação<span class="sb-group-caret">›</span></summary>
         <a class="sb-item sb-subitem" href="diccao.html"><span class="sb-item-icon">◗</span> Dicção</a>
         <a class="sb-item sb-subitem" href="conversacao.html"><span class="sb-item-icon">❞</span> Conversação</a>
       </details>
-      <a class="sb-item" href="biblia.html"><span class="sb-item-icon">✝</span> Bíblia</a>
-      <a class="sb-item" href="faculdade.html"><span class="sb-item-icon">▦</span> Faculdade</a>
-      <a class="sb-item" href="treino.html"><span class="sb-item-icon">◲</span> Treino</a>
-      <a class="sb-item" href="financeiro.html"><span class="sb-item-icon">◫</span> Financeiro</a>
-      <a class="sb-item" href="trabalho.html"><span class="sb-item-icon">⚙</span> Trabalho</a>
-      <a class="sb-item" href="sistema.html"><span class="sb-item-icon">❖</span> Sistema</a>
+      <a class="sb-item" href="financeiro.html"><span class="sb-item-icon">◫</span> Dinheiro</a>
       <details class="sb-group" open>
-        <summary class="sb-group-toggle has-active"><span class="sb-item-icon">◆</span> Conquistas<span class="sb-group-caret">›</span></summary>
+        <summary class="sb-group-toggle has-active"><span class="sb-item-icon">❖</span> Jogo<span class="sb-group-caret">›</span></summary>
+        <a class="sb-item sb-subitem" href="sistema.html"><span class="sb-item-icon">❖</span> Sistema</a>
         <a class="sb-item sb-subitem active" href="conquistas.html"><span class="sb-item-icon">◆</span> Conquistas</a>
         <a class="sb-item sb-subitem" href="vitorias.html"><span class="sb-item-icon">✪</span> Vitórias</a>
         <a class="sb-item sb-subitem" href="jornada.html"><span class="sb-item-icon">◐</span> Jornada</a>
@@ -505,7 +500,7 @@ function showUnlockModal(a) {
   document.getElementById('ul-title').innerHTML    = `${a.name} <em>desbloqueada.</em>`;
   document.getElementById('ul-desc').textContent   = a.desc;
   document.getElementById('ul-points').textContent = `+${a.points} pts`;
-  document.getElementById('ul-points').style.color = '#86efac';
+  document.getElementById('ul-points').style.color = '#f5f5f0';
   document.getElementById('ul-btn').textContent    = unlockQueue.length > 0 ? `Próxima →` : 'Continuar →';
   document.getElementById('ul-queue').textContent  =
     unlockQueue.length > 0 ? `mais ${unlockQueue.length} conquista${unlockQueue.length > 1 ? 's' : ''}` : '';

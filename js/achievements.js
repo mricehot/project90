@@ -144,20 +144,20 @@ function _ensureAchievementToastStyles() {
     .p90-ach-toast {
       position: fixed; right: 20px; bottom: 20px; z-index: 2147483000;
       display: flex; align-items: center; gap: 14px;
-      background: var(--surface, #111); border: 1px solid rgba(134,239,172,0.35);
+      background: var(--surface, #111); border: 1px solid rgba(245,245,240,0.35);
       padding: 14px 18px; max-width: 340px; cursor: pointer;
-      font-family: 'DM Mono', monospace; color: var(--white, #f5f5f0);
+      font-family: var(--font-ui); color: var(--white, #f5f5f0);
       transform: translateY(12px); opacity: 0; pointer-events: none;
       transition: transform 0.35s cubic-bezier(0.16,1,0.3,1), opacity 0.35s;
       box-shadow: 0 12px 32px rgba(0,0,0,0.35);
     }
     .p90-ach-toast.show { transform: translateY(0); opacity: 1; pointer-events: all; }
-    .p90-ach-toast:hover { border-color: rgba(134,239,172,0.6); }
+    .p90-ach-toast:hover { border-color: rgba(245,245,240,0.6); }
     .p90-ach-toast-icon { font-size: 22px; flex-shrink: 0; }
     .p90-ach-toast-body { flex: 1; min-width: 0; }
-    .p90-ach-toast-eyebrow { font-size: 8px; letter-spacing: 0.2em; text-transform: uppercase; color: #86efac; margin-bottom: 3px; }
+    .p90-ach-toast-eyebrow { font-size: 8px; letter-spacing: 0.2em; text-transform: uppercase; color: #f5f5f0; margin-bottom: 3px; }
     .p90-ach-toast-name { font-size: 12px; letter-spacing: 0.03em; line-height: 1.4; }
-    .p90-ach-toast-pts { font-family: 'Bebas Neue', sans-serif; font-size: 16px; color: #86efac; flex-shrink: 0; }
+    .p90-ach-toast-pts { font-family: var(--font-ui); font-weight: 500; font-size: 16px; color: #f5f5f0; flex-shrink: 0; }
   `;
   document.head.appendChild(style);
 }

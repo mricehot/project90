@@ -699,6 +699,28 @@ const Store = (() => {
     shell.insertBefore(bar, shell.firstChild);
     shell.appendChild(backdrop);
 
+    // Barra inferior com os 5 destinos (só aparece no celular — ver components.css).
+    // O menu ☰ continua dando acesso a todas as páginas.
+    const DEST = [
+      { label: 'Hoje',     icon: '☀', href: 'hoje.html',        pages: ['hoje.html'] },
+      { label: 'Planejar', icon: '⚑', href: 'pendencias.html',  pages: ['pendencias.html', 'calendario.html', 'tarefas.html', 'faculdade.html', 'trabalho.html'] },
+      { label: 'Evoluir',  icon: '△', href: 'habitos.html',     pages: ['dashboard.html', 'habitos.html', 'metricas.html', 'diario.html', 'treino.html', 'biblia.html', 'vocabulario.html', 'biblioteca.html', 'reflexoes.html', 'diccao.html', 'conversacao.html'] },
+      { label: 'Dinheiro', icon: '◫', href: 'financeiro.html',  pages: ['financeiro.html'] },
+      { label: 'Jogo',     icon: '❖', href: 'sistema.html',     pages: ['sistema.html', 'conquistas.html', 'vitorias.html', 'jornada.html'] },
+    ];
+    const curPage = location.pathname.split('/').pop() || 'index.html';
+    if (!document.querySelector('.bottom-nav') && DEST.some(d => d.pages.indexOf(curPage) !== -1)) {
+      const bn = document.createElement('nav');
+      bn.className = 'bottom-nav';
+      bn.setAttribute('aria-label', 'Navegação principal');
+      bn.innerHTML = DEST.map(d => {
+        const on = d.pages.indexOf(curPage) !== -1;
+        return '<a href="' + d.href + '"' + (on ? ' class="on" aria-current="page"' : '') + '>' +
+          '<span class="bn-i" aria-hidden="true">' + d.icon + '</span><span class="bn-l">' + d.label + '</span></a>';
+      }).join('');
+      shell.appendChild(bn);
+    }
+
     const btn = bar.querySelector('.hamburger');
     const open = () => {
       document.body.classList.add('nav-open');
@@ -3429,6 +3451,43 @@ const Store = (() => {
     return { overdue, soon };
   }
 
+  // Tudo que vence de amanhã até `win` dias, por data: tarefas, faculdade,
+  // trabalho e contas fixas ainda não pagas. Alimenta "Vencimentos"
+  // (Pendências) e "Próximos dias" (Hoje). O que vence hoje ou já passou
+  // fica de fora de propósito — isso mora nos cards de "hoje".
+  function upcomingDue(win) {
+    const base = new Date(_localDate(0) + 'T00:00:00');
+    const daysTo = iso => Math.round((new Date(iso + 'T00:00:00') - base) / 86400000);
+    const out = [];
+    const push = (iso, kind, title, sub, href, extra) => {
+      const n = daysTo(iso);
+      if (n >= 1 && n <= win) out.push(Object.assign({ iso, n, kind, title, sub: sub || '', href }, extra || {}));
+    };
+    cache.tasks.filter(t => !t.archived).forEach(t => {
+      const due = taskNextDue(t);
+      if (due) push(due, 'Tarefa', t.title, '', 'tarefas.html', { task: t });
+    });
+    studyUpcoming(win).soon.forEach(a => {
+      if (a.dueOn) push(a.dueOn, 'Faculdade', a.title, studySubjectName(a.subjectId), 'faculdade.html');
+    });
+    workUpcoming(win).soon.forEach(t => {
+      if (t.dueOn) push(t.dueOn, 'Trabalho', t.title, workProjectName(t.projectId), 'trabalho.html');
+    });
+    const y = base.getFullYear(), m = base.getMonth();
+    const pad = v => String(v).padStart(2, '0');
+    (cache.finance.fixed || []).filter(f => f.active && f.dueDay).forEach(f => {
+      [m, m + 1].forEach(mm => {
+        const last = new Date(y, mm + 1, 0).getDate();
+        const d = new Date(y, mm, Math.min(f.dueDay, last));
+        const ym = d.getFullYear() + '-' + pad(d.getMonth() + 1);
+        if (!finFixedPaidMark(f.id, ym)) {
+          push(ym + '-' + pad(d.getDate()), 'Conta', f.label, 'R$ ' + Math.round(f.amount).toLocaleString('pt-BR'), 'financeiro.html');
+        }
+      });
+    });
+    return out.sort((a, b) => a.iso.localeCompare(b.iso) || a.title.localeCompare(b.title));
+  }
+
   // Furos ainda pendentes (perfilar e/ou topografar) em tarefas abertas de
   // projetos 'realce' não arquivados — o equivalente de workUpcoming() pra
   // quem não tem prazo (realce é acompanhado pelo progresso dos furos, não
@@ -4943,6 +5002,7 @@ const Store = (() => {
     bootstrap, isReady, resetProgress,
     // meta
     deleteJournalEntry, deleteWeeklyReview, deleteStudyReflection,
+    upcomingDue,
     getHomeHabits, addHomeHabit, restoreHomeHabit, renameHomeHabit, deleteHomeHabit, getHomeRoutine, toggleHomeHabitDone,
     getMeta, saveMeta, getTotalDays, getStartDate, getCurrentDay, useFreeze,
     // dados
@@ -5045,7 +5105,7 @@ window.p90confirm = function (message, opts) {
     ov.style.cssText =
       'position:fixed;inset:0;z-index:2147483000;background:rgba(8,8,8,.85);' +
       'display:flex;align-items:center;justify-content:center;padding:24px;' +
-      "font-family:'DM Mono',monospace;";
+      "font-family: 'Inter',monospace;";
     ov.innerHTML =
       '<div role="alertdialog" aria-modal="true" style="background:var(--surface,#111);' +
       'border:1px solid var(--border2,rgba(245,245,240,.16));max-width:400px;width:100%;padding:32px 34px;">' +

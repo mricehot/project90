@@ -12,7 +12,7 @@
 <meta name="apple-mobile-web-app-title" content="Project 90">
 <title>Project 90 — Bíblia</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Bebas+Neue&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/base.css">
 <link rel="stylesheet" href="css/components.css">
 <script src="js/supabase-config.js"></script>
@@ -61,9 +61,9 @@
 .bib-rail-empty { padding: 16px 20px; font-size: 12px; color: var(--mid); line-height: 1.7; }
 
 /* ── MODAL — leitura da passagem ── */
-.bpv-ref { font-family: 'DM Serif Display', serif; font-size: 24px; color: var(--white); }
+.bpv-ref { font-family: var(--font-ui); font-weight: 500; font-size: 20px; color: var(--white); }
 .bpv-text {
-  font-family: 'DM Serif Display', serif; font-size: 16px; line-height: 1.8; color: var(--white);
+  font-family: var(--font-ui); font-weight: 500; font-size: 16px; line-height: 1.8; color: var(--white);
   white-space: pre-wrap; word-break: break-word;
   padding: 16px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); margin: 16px 0;
   max-height: 40vh; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--muted) transparent;
@@ -75,13 +75,13 @@
 .bpf-row .modal-field.book { flex: 2; }
 
 .topbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
-.page-title { font-family: 'DM Serif Display', serif; font-size: 26px; font-weight: 400; display: flex; align-items: baseline; gap: 10px; }
+.page-title { font-family: var(--font-ui); font-weight: 500; font-size: 22px; font-weight: 400; display: flex; align-items: baseline; gap: 10px; }
 .page-title em { font-style: italic; opacity: 0.45; font-size: 22px; }
 
 .g4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
 .stat-card { background: var(--surface); border: 1px solid var(--border); padding: 20px 22px; }
 .stat-lbl { font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--mid); margin-bottom: 8px; }
-.stat-val { font-family: 'Bebas Neue', sans-serif; font-size: 40px; line-height: 1; }
+.stat-val { font-family: var(--font-ui); font-weight: 500; font-size: 29px; line-height: 1; }
 .stat-sub { font-size: 11px; letter-spacing: 0.1em; color: var(--mid); margin-top: 6px; }
 
 /* ── LEITURA DE HOJE ── */
@@ -91,16 +91,16 @@
 }
 .tc-body { flex: 1; min-width: 220px; }
 .tc-eyebrow { font-size: 10px; letter-spacing: 0.24em; text-transform: uppercase; color: var(--mid); margin-bottom: 6px; }
-.tc-ref { font-family: 'DM Serif Display', serif; font-size: 30px; line-height: 1.2; color: var(--white); }
+.tc-ref { font-family: var(--font-ui); font-weight: 500; font-size: 26px; line-height: 1.2; color: var(--white); }
 .tc-day { font-size: 12px; letter-spacing: 0.1em; color: var(--mid); margin-top: 6px; }
 .tc-btn {
   padding: 15px 30px; background: var(--white); color: var(--bg); border: none;
-  font-family: 'DM Mono', monospace; font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase;
+  font-family: var(--font-ui); font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase;
   cursor: pointer; transition: opacity 0.2s, transform 0.15s; flex-shrink: 0;
 }
 .tc-btn:hover:not(:disabled) { opacity: 0.85; transform: translateY(-1px); }
 .tc-btn:disabled { opacity: 0.35; cursor: default; }
-.tc-btn.done { background: rgba(134,239,172,0.12); color: #86efac; }
+.tc-btn.done { background: rgba(245,245,240,0.12); color: #f5f5f0; }
 
 .bib-bar-bg { height: 3px; background: var(--muted); margin-top: 16px; }
 .bib-bar-fill { height: 100%; background: var(--white); transition: width 0.9s cubic-bezier(0.16,1,0.3,1); }
@@ -109,10 +109,10 @@
 /* ── TOOLBAR + LISTA ── */
 .bib-toolbar { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
 .bib-filter { display: flex; align-items: center; gap: 8px; font-size: 12px; letter-spacing: 0.06em; color: var(--mid); cursor: pointer; }
-.bib-filter input { accent-color: #86efac; width: 15px; height: 15px; cursor: pointer; }
+.bib-filter input { accent-color: #f5f5f0; width: 15px; height: 15px; cursor: pointer; }
 .bib-jump {
   background: var(--surface2); border: 1px solid var(--border2); color: var(--white);
-  font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+  font-family: var(--font-ui); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
   padding: 9px 16px; cursor: pointer; transition: border-color 0.2s;
 }
 .bib-jump:hover { border-color: rgba(245,245,240,0.35); }
@@ -134,7 +134,7 @@
 .bk-head {
   width: 100%; display: flex; align-items: center; gap: 12px; padding: 13px 14px;
   background: none; border: none; cursor: pointer; text-align: left; color: var(--white);
-  font-family: 'DM Mono', monospace; transition: background 0.15s;
+  font-family: var(--font-ui); transition: background 0.15s;
 }
 .bk-head:hover { background: rgba(245,245,240,0.03); }
 .bk-chev { flex-shrink: 0; width: 10px; font-size: 11px; color: var(--mid); transition: transform 0.2s; }
@@ -143,9 +143,9 @@
 .bk-days { flex-shrink: 0; font-size: 11px; letter-spacing: 0.1em; color: var(--mid); }
 .bk-prog { flex-shrink: 0; width: 54px; height: 2px; background: var(--muted); }
 .bk-prog-fill { display: block; height: 100%; background: var(--white); transition: width 0.6s cubic-bezier(0.16,1,0.3,1); }
-.bk-read { flex-shrink: 0; min-width: 40px; text-align: right; font-family: 'Bebas Neue', sans-serif; font-size: 14px; color: var(--mid); }
-.bk-group.all-read .bk-read { color: #86efac; }
-.bk-group.all-read .bk-prog-fill { background: #86efac; }
+.bk-read { flex-shrink: 0; min-width: 40px; text-align: right; font-family: var(--font-ui); font-weight: 500; font-size: 14px; color: var(--mid); }
+.bk-group.all-read .bk-read { color: #f5f5f0; }
+.bk-group.all-read .bk-prog-fill { background: #f5f5f0; }
 .bk-body { display: none; }
 .bk-group.open .bk-body { display: block; }
 .bk-body .bib-row { padding-left: 38px; }
@@ -155,8 +155,8 @@
   display: flex; align-items: center; justify-content: center; cursor: pointer;
   font-size: 12px; color: var(--bg); background: none; transition: background 0.15s, border-color 0.15s;
 }
-.bib-row.read .bib-check { background: #86efac; border-color: #86efac; }
-.bib-daynum { font-family: 'Bebas Neue', sans-serif; font-size: 15px; color: var(--mid); width: 42px; flex-shrink: 0; }
+.bib-row.read .bib-check { background: #f5f5f0; border-color: #f5f5f0; }
+.bib-daynum { font-family: var(--font-ui); font-weight: 500; font-size: 15px; color: var(--mid); width: 42px; flex-shrink: 0; }
 .bib-row.current .bib-daynum { color: var(--white); }
 .bib-ref { font-size: 13.5px; letter-spacing: 0.02em; color: var(--white); }
 
@@ -200,38 +200,33 @@
       <div class="sb-prog-meta"><span id="sb-days-left">56 restantes</span><span id="sb-pct2">38%</span></div>
     </div>
     <nav class="sb-nav">
-      <a class="sb-item" href="dashboard.html"><span class="sb-item-icon">◈</span> Dashboard</a>
+      <a class="sb-item" href="hoje.html"><span class="sb-item-icon">☀</span> Hoje</a>
       <details class="sb-group">
-        <summary class="sb-group-toggle"><span class="sb-item-icon">⚑</span> Pendências<span class="sb-group-caret">›</span></summary>
+        <summary class="sb-group-toggle"><span class="sb-item-icon">⚑</span> Planejar<span class="sb-group-caret">›</span></summary>
         <a class="sb-item sb-subitem" href="pendencias.html"><span class="sb-item-icon">⚑</span> Pendências</a>
         <a class="sb-item sb-subitem" href="calendario.html"><span class="sb-item-icon">⊞</span> Calendário</a>
-      </details>
-      <details class="sb-group">
-        <summary class="sb-group-toggle"><span class="sb-item-icon">◉</span> Rotina<span class="sb-group-caret">›</span></summary>
-        <a class="sb-item sb-subitem" href="habitos.html"><span class="sb-item-icon">◉</span> Hábitos</a>
         <a class="sb-item sb-subitem" href="tarefas.html"><span class="sb-item-icon">✓</span> Tarefas</a>
+        <a class="sb-item sb-subitem" href="faculdade.html"><span class="sb-item-icon">▦</span> Faculdade</a>
+        <a class="sb-item sb-subitem" href="trabalho.html"><span class="sb-item-icon">⚙</span> Trabalho</a>
       </details>
-      <a class="sb-item" href="metricas.html"><span class="sb-item-icon">△</span> Métricas</a>
-      <a class="sb-item" href="diario.html"><span class="sb-item-icon">◻</span> Diário</a>
-      <details class="sb-group">
-        <summary class="sb-group-toggle"><span class="sb-item-icon">✦</span> Conhecimento<span class="sb-group-caret">›</span></summary>
+      <details class="sb-group" open>
+        <summary class="sb-group-toggle has-active"><span class="sb-item-icon">△</span> Evoluir<span class="sb-group-caret">›</span></summary>
+        <a class="sb-item sb-subitem" href="dashboard.html"><span class="sb-item-icon">◈</span> Dashboard</a>
+        <a class="sb-item sb-subitem" href="habitos.html"><span class="sb-item-icon">◉</span> Hábitos</a>
+        <a class="sb-item sb-subitem" href="metricas.html"><span class="sb-item-icon">△</span> Métricas</a>
+        <a class="sb-item sb-subitem" href="diario.html"><span class="sb-item-icon">◻</span> Diário</a>
+        <a class="sb-item sb-subitem" href="treino.html"><span class="sb-item-icon">◲</span> Treino</a>
+        <a class="sb-item sb-subitem active" href="biblia.html"><span class="sb-item-icon">✝</span> Bíblia</a>
         <a class="sb-item sb-subitem" href="vocabulario.html"><span class="sb-item-icon">▤</span> Vocabulário</a>
         <a class="sb-item sb-subitem" href="biblioteca.html"><span class="sb-item-icon">❐</span> Biblioteca</a>
         <a class="sb-item sb-subitem" href="reflexoes.html"><span class="sb-item-icon">☯</span> Reflexões</a>
-      </details>
-      <details class="sb-group">
-        <summary class="sb-group-toggle"><span class="sb-item-icon">◗</span> Comunicação<span class="sb-group-caret">›</span></summary>
         <a class="sb-item sb-subitem" href="diccao.html"><span class="sb-item-icon">◗</span> Dicção</a>
         <a class="sb-item sb-subitem" href="conversacao.html"><span class="sb-item-icon">❞</span> Conversação</a>
       </details>
-      <a class="sb-item active" href="biblia.html"><span class="sb-item-icon">✝</span> Bíblia</a>
-      <a class="sb-item" href="faculdade.html"><span class="sb-item-icon">▦</span> Faculdade</a>
-      <a class="sb-item" href="treino.html"><span class="sb-item-icon">◲</span> Treino</a>
-      <a class="sb-item" href="financeiro.html"><span class="sb-item-icon">◫</span> Financeiro</a>
-      <a class="sb-item" href="trabalho.html"><span class="sb-item-icon">⚙</span> Trabalho</a>
-      <a class="sb-item" href="sistema.html"><span class="sb-item-icon">❖</span> Sistema</a>
+      <a class="sb-item" href="financeiro.html"><span class="sb-item-icon">◫</span> Dinheiro</a>
       <details class="sb-group">
-        <summary class="sb-group-toggle"><span class="sb-item-icon">◆</span> Conquistas<span class="sb-group-caret">›</span></summary>
+        <summary class="sb-group-toggle"><span class="sb-item-icon">❖</span> Jogo<span class="sb-group-caret">›</span></summary>
+        <a class="sb-item sb-subitem" href="sistema.html"><span class="sb-item-icon">❖</span> Sistema</a>
         <a class="sb-item sb-subitem" href="conquistas.html"><span class="sb-item-icon">◆</span> Conquistas</a>
         <a class="sb-item sb-subitem" href="vitorias.html"><span class="sb-item-icon">✪</span> Vitórias</a>
         <a class="sb-item sb-subitem" href="jornada.html"><span class="sb-item-icon">◐</span> Jornada</a>

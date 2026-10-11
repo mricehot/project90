@@ -62,13 +62,13 @@
   max-width: var(--max); margin: 0 auto; padding: 0 var(--gut); height: 64px;
   display: flex; align-items: center; justify-content: space-between;
 }
-.nav-logo { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 0.14em; color: var(--white); text-decoration: none; }
+.nav-logo { font-family: var(--font-ui); font-weight: 500; font-size: 20px; letter-spacing: 0.14em; color: var(--white); text-decoration: none; }
 .nav-links { display: flex; gap: 36px; list-style: none; }
 .nav-links a { font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--mid); text-decoration: none; transition: color 0.2s; }
 .nav-links a:hover { color: var(--white); }
 .nav-cta {
   display: inline-block; padding: 10px 24px; background: var(--white); color: var(--bg);
-  font-family: 'DM Mono', monospace; font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase;
+  font-family: var(--font-ui); font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase;
   text-decoration: none; border: none; cursor: pointer; transition: opacity 0.2s;
 }
 .nav-cta:hover { opacity: 0.82; }
@@ -76,7 +76,7 @@
 /* ── BUTTONS ── */
 .btn-primary {
   display: inline-block; padding: 15px 40px; background: var(--white); color: var(--bg);
-  font-family: 'DM Mono', monospace; font-size: 13px; letter-spacing: 0.16em; text-transform: uppercase;
+  font-family: var(--font-ui); font-size: 13px; letter-spacing: 0.16em; text-transform: uppercase;
   text-decoration: none; border: none; cursor: pointer;
   transition: transform 0.18s, box-shadow 0.18s;
 }
@@ -91,7 +91,7 @@
 
 .btn-sm {
   padding: 10px 20px; border: 1px solid var(--border2); background: none;
-  color: var(--mid); font-family: 'DM Mono', monospace; font-size: 12px;
+  color: var(--mid); font-family: var(--font-ui); font-size: 12px;
   letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer;
   transition: color 0.2s, border-color 0.2s, background 0.2s;
 }
@@ -104,7 +104,7 @@
 .field-lbl  { font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--mid); display: block; margin-bottom: 8px; }
 .field-input {
   width: 100%; background: var(--surface); border: 1px solid rgba(245,245,240,0.1);
-  color: var(--white); font-family: 'DM Mono', monospace; font-weight: 300;
+  color: var(--white); font-family: var(--font-ui); font-weight: 300;
   font-size: 14px; letter-spacing: 0.05em; padding: 13px 16px; outline: none; transition: border-color 0.2s;
 }
 .field-input:focus { border-color: rgba(245,245,240,0.35); }
@@ -119,7 +119,7 @@
 .form-success {
   font-size: 12px; letter-spacing: 0.08em; color: var(--green);
   margin-top: 8px; display: none; padding: 10px 14px;
-  border: 1px solid rgba(134,239,172,0.2); background: rgba(134,239,172,0.05);
+  border: 1px solid rgba(245,245,240,0.2); background: rgba(245,245,240,0.05);
 }
 .form-success.show { display: block; }
 
@@ -139,7 +139,7 @@
 /* ── STAT CARD ── */
 .stat-card  { background: var(--surface); border: 1px solid var(--border); padding: 20px 22px; }
 .stat-lbl   { font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--mid); margin-bottom: 8px; }
-.stat-val   { font-family: 'Bebas Neue', sans-serif; font-size: 44px; line-height: 1; }
+.stat-val   { font-family: var(--font-ui); font-weight: 500; font-size: 32px; line-height: 1; }
 .stat-sub   { font-size: 11px; letter-spacing: 0.1em; color: var(--mid); margin-top: 6px; }
 .stat-delta { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; letter-spacing: 0.1em; margin-top: 6px; }
 .stat-delta.up { color: var(--green); }
@@ -154,11 +154,11 @@
   display: flex; flex-direction: column; height: 100vh; overflow: hidden;
 }
 .sb-logo     { padding: 28px 24px 24px; border-bottom: 1px solid var(--border); }
-.sb-logomark { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 0.12em; text-decoration: none; color: var(--white); display: block; }
+.sb-logomark { font-family: var(--font-ui); font-weight: 500; font-size: 22px; letter-spacing: 0.12em; text-decoration: none; color: var(--white); display: block; }
 .sb-logosub  { font-size: 11px; letter-spacing: 0.2em; color: var(--mid); text-transform: uppercase; margin-top: 2px; }
 
 .sb-day      { padding: 20px 24px; border-bottom: 1px solid var(--border); }
-.sb-daynum   { font-family: 'Bebas Neue', sans-serif; font-size: 56px; line-height: 1; }
+.sb-daynum   { font-family: var(--font-ui); font-weight: 500; font-size: 40px; line-height: 1; }
 .sb-daylbl   { font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--mid); margin-top: 2px; }
 .sb-prog-bar-bg   { height: 2px; background: var(--muted); border-radius: 1px; margin-top: 10px; }
 .sb-prog-bar-fill { height: 100%; background: var(--white); border-radius: 1px; transition: width 1s cubic-bezier(0.16,1,0.3,1); }
@@ -200,12 +200,12 @@
 
 .sb-streak      { display: flex; align-items: center; gap: 8px; background: var(--surface2); border: 1px solid var(--border2); padding: 10px 14px; margin-bottom: 16px; }
 .sb-streak-icon { font-size: 16px; }
-.sb-streak-val  { font-family: 'Bebas Neue', sans-serif; font-size: 20px; line-height: 1; }
+.sb-streak-val  { font-family: var(--font-ui); font-weight: 500; font-size: 20px; line-height: 1; }
 .sb-streak-lbl  { font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--mid); margin-top: 1px; }
 
 /* ── TOPBAR (app pages) ── */
 .topbar       { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
-.page-title   { font-family: 'DM Serif Display', serif; font-size: 26px; font-weight: 400; display: flex; align-items: baseline; gap: 10px; }
+.page-title   { font-family: var(--font-ui); font-weight: 500; font-size: 22px; font-weight: 400; display: flex; align-items: baseline; gap: 10px; }
 .page-title em { font-style: italic; opacity: 0.45; font-size: 22px; }
 .topbar-right { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .date-tag     { font-size: 12px; letter-spacing: 0.12em; color: var(--mid); }
@@ -247,27 +247,27 @@
   transform: translateY(16px); transition: transform 0.3s cubic-bezier(0.16,1,0.3,1);
 }
 .modal-overlay.open .modal { transform: translateY(0); }
-.modal-title { font-family: 'DM Serif Display', serif; font-size: 22px; font-weight: 400; margin-bottom: 28px; }
+.modal-title { font-family: var(--font-ui); font-weight: 500; font-size: 22px; font-weight: 400; margin-bottom: 28px; }
 .modal-title em { font-style: italic; opacity: 0.4; }
 .modal-field { margin-bottom: 18px; }
 .modal-lbl   { font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--mid); display: block; margin-bottom: 8px; }
 .modal-input {
   width: 100%; background: var(--surface2); border: 1px solid var(--border); color: var(--white);
-  font-family: 'DM Mono', monospace; font-weight: 300; font-size: 14px; letter-spacing: 0.04em;
+  font-family: var(--font-ui); font-weight: 300; font-size: 14px; letter-spacing: 0.04em;
   padding: 12px 14px; outline: none; transition: border-color 0.2s;
 }
 .modal-input:focus { border-color: rgba(245,245,240,0.35); }
 .modal-input::placeholder { color: var(--mid); }
 .modal-select {
   width: 100%; background: var(--surface2); border: 1px solid var(--border); color: var(--white);
-  font-family: 'DM Mono', monospace; font-weight: 300; font-size: 14px;
+  font-family: var(--font-ui); font-weight: 300; font-size: 14px;
   padding: 12px 14px; outline: none; cursor: pointer; transition: border-color 0.2s; appearance: none;
 }
 .modal-select:focus { border-color: rgba(245,245,240,0.35); }
 .modal-select option { background: var(--surface2); }
 .modal-footer { display: flex; gap: 10px; margin-top: 28px; }
 .modal-btn {
-  flex: 1; padding: 13px; font-family: 'DM Mono', monospace; font-size: 12px;
+  flex: 1; padding: 13px; font-family: var(--font-ui); font-size: 12px;
   letter-spacing: 0.16em; text-transform: uppercase; cursor: pointer; border: none;
   transition: opacity 0.2s, transform 0.15s;
 }
@@ -293,6 +293,7 @@
 /* ── MOBILE NAV (barra superior + drawer) ── */
 .mobile-topbar   { display: none; }
 .sidebar-backdrop { display: none; }
+.bottom-nav { display: none; }
 
 /* ── RESPONSIVE ── */
 @media (max-width: 900px) {
@@ -312,7 +313,7 @@
     background: var(--surface); border-bottom: 1px solid var(--border);
   }
   .mobile-topbar .mt-logo {
-    font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 0.12em;
+    font-family: var(--font-ui); font-weight: 500; font-size: 18px; letter-spacing: 0.12em;
     color: var(--white); text-decoration: none;
   }
   .mobile-topbar .mt-page {
@@ -347,6 +348,23 @@
   }
   .sidebar-backdrop.show { opacity: 1; pointer-events: auto; }
 
+
+  /* barra inferior: os 5 destinos */
+  .bottom-nav {
+    display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 95;
+    background: var(--surface); border-top: 1px solid var(--border2);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .bottom-nav a {
+    flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
+    padding: 9px 0 8px; color: var(--mid); text-decoration: none;
+    border-top: 2px solid transparent; margin-top: -1px;
+  }
+  .bottom-nav a.on { color: var(--white); border-top-color: var(--white); }
+  .bn-i { font-size: 17px; line-height: 1; }
+  .bn-l { font-size: 10.5px; letter-spacing: 0.04em; }
+  body { padding-bottom: calc(58px + env(safe-area-inset-bottom)); }
+  .toast { bottom: calc(76px + env(safe-area-inset-bottom)); }
   .g2, .g21 { grid-template-columns: 1fr; }
   .g4 { grid-template-columns: 1fr 1fr; }
 }
@@ -359,3 +377,35 @@
 @media (max-width: 1180px) {
   .g2, .g21 { grid-template-columns: 1fr; }
 }
+
+/* ═══════════════════════════════════════════════
+   BENTO — blocos arredondados, preto e cinza.
+   Só adiciona raio de canto (as cores/espaços ficam com cada página);
+   sem cor de destaque: o antigo verde virou o branco do texto.
+═══════════════════════════════════════════════ */
+.card, .stat-card, .sb-streak, .ach-card, .cal2-day-group, .ct-tip, .ex-card, .fin-card, .fin-hero,
+.jr-card, .kb-card, .lib-card, .next-up, .nudge, .prac-box, .prac-cta, .progress-banner, .quiz-box,
+.quiz-cta, .rd-item, .refl-form, .sys-card, .today-card, .week-review, .word-card, .jm-result { border-radius: 14px; }
+.modal, .unlock-modal { border-radius: 18px; }
+.dcc-filter, .dcc-search, .dcc-sort, .j-field, .jm-search, .voc-search, .voc-sort, .rq-field,
+.field-input, .modal-input, .modal-select, .modal-textarea, .card-add-input, .jm-select, .wr-select,
+.exp-quick input, .exp-quick select, .fac-newsubj input, .fac-qa input, .fsm-title-input, .fu-add input,
+.kb-add input, .kb-add select, .ml-add input, .pe-add input, .bw-form input, .pg-select, .nudge-pop select,
+.win-add-input, .wk-newproj input, .wk-qa input, .wk-rem-add input, .wk-rem-add select, .tx-kg,
+.rv-grade, .quiz-opt, .pri-link, .wk-rem-link, .bib-jump { border-radius: 8px; }
+.sb-streak-icon { filter: grayscale(1); }
+
+/* Bloco invertido (claro sobre escuro) — o item de foco da página.
+   Reaponta os tokens, então tudo que usa var(--white)/var(--mid)/var(--border)
+   dentro dele vira escuro sobre claro sozinho. */
+.tile-inv {
+  --white: #0a0a0a; --mid: #5c5c5c; --bg: #f5f5f0;
+  --surface: #f5f5f0; --surface2: #e6e6e1; --muted: #cbcbc4;
+  --border: rgba(10,10,10,0.12); --border2: rgba(10,10,10,0.28);
+  --green: #0a0a0a; --red: #b42318;
+  background: #f5f5f0; color: #0a0a0a; border-color: #f5f5f0;
+}
+body .page-title, body .hj-greet { font-weight: 500; letter-spacing: -0.01em; }
+.habit-card, .ct-cat, .empty-state, .gm-stage, .cal2-rail, .fac-rail, .refl-rail, .bib-rail, .qadd { border-radius: 14px; }
+.jm-box { border-radius: 18px; }
+.btn-sm, .modal-btn, .field-btn { border-radius: 8px; }

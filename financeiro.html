@@ -12,7 +12,7 @@
 <meta name="apple-mobile-web-app-title" content="Project 90">
 <title>Project 90 — Financeiro</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Bebas+Neue&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/base.css">
 <link rel="stylesheet" href="css/components.css">
 <script src="js/supabase-config.js"></script>
@@ -25,14 +25,14 @@
 .fin-main { padding: 30px 40px 72px; overflow-y: auto; display: flex; flex-direction: column; gap: 22px; }
 
 .topbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
-.page-title { font-family: 'DM Serif Display', serif; font-size: 26px; font-weight: 400; display: flex; align-items: baseline; gap: 10px; }
+.page-title { font-family: var(--font-ui); font-weight: 500; font-size: 22px; font-weight: 400; display: flex; align-items: baseline; gap: 10px; }
 .page-title em { font-style: italic; opacity: 0.45; font-size: 22px; }
 
 /* ── NAV DE MÊS ── */
 .mnav { display: flex; align-items: center; gap: 4px; }
 .mnav button {
   background: var(--surface2); border: 1px solid var(--border2); color: var(--white);
-  font-family: 'DM Mono', monospace; font-size: 12px; letter-spacing: 0.04em;
+  font-family: var(--font-ui); font-size: 12px; letter-spacing: 0.04em;
   padding: 9px 12px; cursor: pointer; transition: border-color 0.2s, color 0.2s;
 }
 .mnav button:hover { border-color: rgba(245,245,240,0.35); }
@@ -42,9 +42,11 @@
 
 /* ── HERO — SOBRA DO MÊS ── */
 .fin-hero { background: var(--surface); border: 1px solid var(--border2); padding: 24px 28px; }
+.fin-hero { --seg-fix: rgba(245,245,240,0.72); --seg-par: rgba(245,245,240,0.46); --seg-var: rgba(245,245,240,0.26); --seg-inv: #f5f5f0; }
+.fin-hero.tile-inv { --seg-fix: rgba(10,10,10,0.72); --seg-par: rgba(10,10,10,0.46); --seg-var: rgba(10,10,10,0.26); --seg-inv: #0a0a0a; }
 .fh-top { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
 .fh-lbl { font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--mid); }
-.fh-val { font-family: 'Bebas Neue', sans-serif; font-size: 52px; line-height: 1; }
+.fh-val { font-family: var(--font-ui); font-weight: 500; font-size: 37px; line-height: 1; }
 .fh-val.neg { color: var(--red); }
 .fh-val.pos { color: var(--green); }
 .fh-rate { font-size: 11px; letter-spacing: 0.06em; color: var(--mid); }
@@ -52,10 +54,10 @@
 
 .alloc { display: flex; height: 10px; margin: 18px 0 8px; background: var(--surface2); border: 1px solid var(--border); overflow: hidden; }
 .alloc > span { display: block; height: 100%; }
-.alloc .a-fix { background: rgba(245,245,240,0.72); }
-.alloc .a-par { background: rgba(245,245,240,0.46); }
-.alloc .a-var { background: rgba(245,245,240,0.26); }
-.alloc .a-inv { background: #86efac; }
+.alloc .a-fix { background: var(--seg-fix); }
+.alloc .a-par { background: var(--seg-par); }
+.alloc .a-var { background: var(--seg-var); }
+.alloc .a-inv { background: var(--seg-inv); }
 .alloc .a-sob { background: var(--muted); }
 .alloc-leg { display: flex; flex-wrap: wrap; gap: 14px; font-size: 10px; letter-spacing: 0.06em; color: var(--mid); }
 .alloc-leg span { display: inline-flex; align-items: center; gap: 6px; }
@@ -64,7 +66,7 @@
 .g4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
 .stat-card { background: var(--surface); border: 1px solid var(--border); padding: 16px 18px; }
 .stat-lbl { font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--mid); margin-bottom: 7px; }
-.stat-val { font-family: 'Bebas Neue', sans-serif; font-size: 32px; line-height: 1; }
+.stat-val { font-family: var(--font-ui); font-weight: 500; font-size: 27px; line-height: 1; }
 .stat-val.neg { color: var(--red); } .stat-val.pos { color: var(--green); }
 .stat-sub { font-size: 10px; letter-spacing: 0.08em; color: var(--mid); margin-top: 6px; }
 
@@ -73,12 +75,12 @@
 .fin-col { display: flex; flex-direction: column; gap: 22px; min-width: 0; }
 .fin-card { background: var(--surface); border: 1px solid var(--border); padding: 22px 24px; }
 .fc-hd { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
-.fc-title { font-family: 'DM Serif Display', serif; font-size: 17px; }
+.fc-title { font-family: var(--font-ui); font-weight: 500; font-size: 17px; }
 .fc-meta { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--mid); }
 .fc-meta b { color: var(--white); font-weight: 400; }
 .fc-add {
   background: none; border: 1px solid var(--border2); color: var(--mid);
-  font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
+  font-family: var(--font-ui); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
   padding: 8px 13px; cursor: pointer; transition: color 0.15s, border-color 0.15s;
 }
 .fc-add:hover { color: var(--white); border-color: rgba(245,245,240,0.35); }
@@ -91,9 +93,9 @@
 .frow-name { font-size: 13px; letter-spacing: 0.02em; color: var(--white); }
 .frow-sub  { font-size: 10px; letter-spacing: 0.06em; color: var(--mid); margin-top: 3px; }
 .frow-main { flex: 1; min-width: 0; }
-.frow-amt  { font-family: 'DM Mono', monospace; font-size: 13px; color: var(--white); white-space: nowrap; }
+.frow-amt  { font-family: var(--font-ui); font-size: 13px; color: var(--white); white-space: nowrap; }
 .frow-amt.dim { color: var(--mid); }
-.frow-amt.in { color: #86efac; }
+.frow-amt.in { color: #f5f5f0; }
 .frow-acts { display: flex; gap: 4px; flex-shrink: 0; opacity: 0; transition: opacity 0.15s; }
 .frow:hover .frow-acts, .frow:focus-within .frow-acts { opacity: 1; }
 @media (hover: none) { .frow-acts { opacity: 1; } }
@@ -110,16 +112,16 @@
   cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 11px; color: var(--bg);
   transition: background 0.15s, border-color 0.15s;
 }
-.fchk.on { background: #86efac; border-color: #86efac; }
+.fchk.on { background: #f5f5f0; border-color: #f5f5f0; }
 
 .pill { font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--mid); border: 1px solid var(--border); padding: 2px 6px; white-space: nowrap; }
 .pill.over { color: var(--red); border-color: rgba(252,165,165,0.4); }
 .pill.soon { color: var(--white); border-color: var(--border2); }
-.pill.ok   { color: #86efac; border-color: rgba(134,239,172,0.4); }
+.pill.ok   { color: #f5f5f0; border-color: rgba(245,245,240,0.4); }
 
 .fbar-bg { height: 3px; background: var(--muted); margin-top: 7px; }
 .fbar-fill { height: 100%; background: var(--white); transition: width 0.7s cubic-bezier(0.16,1,0.3,1); }
-.fbar-fill.done { background: #86efac; }
+.fbar-fill.done { background: #f5f5f0; }
 
 .fin-empty { font-size: 12px; color: var(--mid); line-height: 1.8; padding: 6px 0; }
 
@@ -127,7 +129,7 @@
 .exp-quick { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
 .exp-quick input, .exp-quick select {
   background: var(--surface2); border: 1px solid var(--border); color: var(--white);
-  font-family: 'DM Mono', monospace; font-weight: 300; font-size: 12px; padding: 9px 11px; outline: none;
+  font-family: var(--font-ui); font-weight: 300; font-size: 12px; padding: 9px 11px; outline: none;
 }
 .exp-quick input:focus, .exp-quick select:focus { border-color: rgba(245,245,240,0.35); }
 .exp-quick .eq-label { flex: 1; min-width: 140px; }
@@ -135,7 +137,7 @@
 .exp-quick .eq-date { width: 130px; }
 .exp-quick .eq-add {
   background: var(--white); color: var(--bg); border: none; padding: 9px 16px; cursor: pointer;
-  font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+  font-family: var(--font-ui); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
 }
 
 .cat-bars { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 7px; }
@@ -143,7 +145,7 @@
 .cat-row .cat-name { width: 92px; flex-shrink: 0; text-transform: uppercase; }
 .cat-row .cat-track { flex: 1; height: 3px; background: var(--surface2); }
 .cat-row .cat-fill { height: 100%; background: rgba(245,245,240,0.6); }
-.cat-row .cat-amt { width: 96px; text-align: right; color: var(--white); font-family: 'DM Mono', monospace; }
+.cat-row .cat-amt { width: 96px; text-align: right; color: var(--white); font-family: var(--font-ui); }
 
 /* ── EVOLUÇÃO / GRÁFICOS ── */
 .evo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
@@ -154,8 +156,8 @@
 
 .inv-tot { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--border); margin-bottom: 14px; }
 .inv-tot > div { background: var(--surface2); padding: 12px 12px; }
-.inv-tot b { display: block; font-family: 'Bebas Neue', sans-serif; font-size: 22px; line-height: 1; }
-.inv-tot b.in { color: #86efac; } .inv-tot b.neg { color: var(--red); }
+.inv-tot b { display: block; font-family: var(--font-ui); font-weight: 500; font-size: 22px; line-height: 1; }
+.inv-tot b.in { color: #f5f5f0; } .inv-tot b.neg { color: var(--red); }
 .inv-tot span { display: block; font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--mid); margin-top: 5px; }
 .inv-edit { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--mid); cursor: pointer; background: none; border: none; }
 .inv-edit:hover { color: var(--white); }
@@ -164,12 +166,12 @@
 .hold-list { display: flex; flex-direction: column; }
 .hold-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border); }
 .hold-row:last-child { border-bottom: none; }
-.hold-tk { font-family: 'DM Mono', monospace; font-size: 12px; letter-spacing: 0.04em; color: var(--white); width: 74px; flex-shrink: 0; }
+.hold-tk { font-family: var(--font-ui); font-size: 12px; letter-spacing: 0.04em; color: var(--white); width: 74px; flex-shrink: 0; }
 .hold-mid { flex: 1; min-width: 0; font-size: 10px; letter-spacing: 0.03em; color: var(--mid); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .hold-warn { color: var(--red); font-weight: 400; }
 .hold-bar { width: 60px; height: 3px; background: var(--surface2); flex-shrink: 0; }
-.hold-bar > span { display: block; height: 100%; background: #86efac; }
-.hold-val { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--white); width: 92px; text-align: right; flex-shrink: 0; }
+.hold-bar > span { display: block; height: 100%; background: #f5f5f0; }
+.hold-val { font-family: var(--font-ui); font-size: 12px; color: var(--white); width: 92px; text-align: right; flex-shrink: 0; }
 .hold-foot { font-size: 10px; letter-spacing: 0.04em; color: var(--mid); margin: 8px 0 2px; }
 .lnk { background: none; border: none; color: var(--white); text-decoration: underline; cursor: pointer; font: inherit; padding: 0; }
 
@@ -178,7 +180,7 @@
 .price-row .pr-tk { width: 96px; flex-shrink: 0; }
 .price-row .pr-cotas { width: 84px; flex-shrink: 0; }
 .price-row .pr-price { flex: 1; min-width: 70px; }
-.price-row .pr-val { width: 96px; flex-shrink: 0; text-align: right; font-family: 'DM Mono', monospace; font-size: 12px; color: var(--white); padding-bottom: 12px; }
+.price-row .pr-val { width: 96px; flex-shrink: 0; text-align: right; font-family: var(--font-ui); font-size: 12px; color: var(--white); padding-bottom: 12px; }
 .price-row .pr-del { background: none; border: 1px solid transparent; color: var(--mid); cursor: pointer; padding: 0 6px 12px; font-size: 13px; }
 .price-row .pr-del:hover { color: var(--red); }
 #pr-list .modal-lbl { font-size: 9px; margin-bottom: 5px; }
@@ -189,7 +191,7 @@
 .m-seg { display: flex; gap: 0; }
 .m-seg button {
   flex: 1; padding: 11px; background: var(--surface2); border: 1px solid var(--border2); color: var(--mid);
-  font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer;
+  font-family: var(--font-ui); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer;
   border-right-width: 0;
 }
 .m-seg button:last-child { border-right-width: 1px; }
@@ -239,38 +241,33 @@
       <div class="sb-prog-meta"><span id="sb-days-left">56 restantes</span><span id="sb-pct2">38%</span></div>
     </div>
     <nav class="sb-nav">
-      <a class="sb-item" href="dashboard.html"><span class="sb-item-icon">◈</span> Dashboard</a>
+      <a class="sb-item" href="hoje.html"><span class="sb-item-icon">☀</span> Hoje</a>
       <details class="sb-group">
-        <summary class="sb-group-toggle"><span class="sb-item-icon">⚑</span> Pendências<span class="sb-group-caret">›</span></summary>
+        <summary class="sb-group-toggle"><span class="sb-item-icon">⚑</span> Planejar<span class="sb-group-caret">›</span></summary>
         <a class="sb-item sb-subitem" href="pendencias.html"><span class="sb-item-icon">⚑</span> Pendências</a>
         <a class="sb-item sb-subitem" href="calendario.html"><span class="sb-item-icon">⊞</span> Calendário</a>
-      </details>
-      <details class="sb-group">
-        <summary class="sb-group-toggle"><span class="sb-item-icon">◉</span> Rotina<span class="sb-group-caret">›</span></summary>
-        <a class="sb-item sb-subitem" href="habitos.html"><span class="sb-item-icon">◉</span> Hábitos</a>
         <a class="sb-item sb-subitem" href="tarefas.html"><span class="sb-item-icon">✓</span> Tarefas</a>
+        <a class="sb-item sb-subitem" href="faculdade.html"><span class="sb-item-icon">▦</span> Faculdade</a>
+        <a class="sb-item sb-subitem" href="trabalho.html"><span class="sb-item-icon">⚙</span> Trabalho</a>
       </details>
-      <a class="sb-item" href="metricas.html"><span class="sb-item-icon">△</span> Métricas</a>
-      <a class="sb-item" href="diario.html"><span class="sb-item-icon">◻</span> Diário</a>
       <details class="sb-group">
-        <summary class="sb-group-toggle"><span class="sb-item-icon">✦</span> Conhecimento<span class="sb-group-caret">›</span></summary>
+        <summary class="sb-group-toggle"><span class="sb-item-icon">△</span> Evoluir<span class="sb-group-caret">›</span></summary>
+        <a class="sb-item sb-subitem" href="dashboard.html"><span class="sb-item-icon">◈</span> Dashboard</a>
+        <a class="sb-item sb-subitem" href="habitos.html"><span class="sb-item-icon">◉</span> Hábitos</a>
+        <a class="sb-item sb-subitem" href="metricas.html"><span class="sb-item-icon">△</span> Métricas</a>
+        <a class="sb-item sb-subitem" href="diario.html"><span class="sb-item-icon">◻</span> Diário</a>
+        <a class="sb-item sb-subitem" href="treino.html"><span class="sb-item-icon">◲</span> Treino</a>
+        <a class="sb-item sb-subitem" href="biblia.html"><span class="sb-item-icon">✝</span> Bíblia</a>
         <a class="sb-item sb-subitem" href="vocabulario.html"><span class="sb-item-icon">▤</span> Vocabulário</a>
         <a class="sb-item sb-subitem" href="biblioteca.html"><span class="sb-item-icon">❐</span> Biblioteca</a>
         <a class="sb-item sb-subitem" href="reflexoes.html"><span class="sb-item-icon">☯</span> Reflexões</a>
-      </details>
-      <details class="sb-group">
-        <summary class="sb-group-toggle"><span class="sb-item-icon">◗</span> Comunicação<span class="sb-group-caret">›</span></summary>
         <a class="sb-item sb-subitem" href="diccao.html"><span class="sb-item-icon">◗</span> Dicção</a>
         <a class="sb-item sb-subitem" href="conversacao.html"><span class="sb-item-icon">❞</span> Conversação</a>
       </details>
-      <a class="sb-item" href="biblia.html"><span class="sb-item-icon">✝</span> Bíblia</a>
-      <a class="sb-item" href="faculdade.html"><span class="sb-item-icon">▦</span> Faculdade</a>
-      <a class="sb-item" href="treino.html"><span class="sb-item-icon">◲</span> Treino</a>
-      <a class="sb-item active" href="financeiro.html"><span class="sb-item-icon">◫</span> Financeiro</a>
-      <a class="sb-item" href="trabalho.html"><span class="sb-item-icon">⚙</span> Trabalho</a>
-      <a class="sb-item" href="sistema.html"><span class="sb-item-icon">❖</span> Sistema</a>
+      <a class="sb-item active" href="financeiro.html"><span class="sb-item-icon">◫</span> Dinheiro</a>
       <details class="sb-group">
-        <summary class="sb-group-toggle"><span class="sb-item-icon">◆</span> Conquistas<span class="sb-group-caret">›</span></summary>
+        <summary class="sb-group-toggle"><span class="sb-item-icon">❖</span> Jogo<span class="sb-group-caret">›</span></summary>
+        <a class="sb-item sb-subitem" href="sistema.html"><span class="sb-item-icon">❖</span> Sistema</a>
         <a class="sb-item sb-subitem" href="conquistas.html"><span class="sb-item-icon">◆</span> Conquistas</a>
         <a class="sb-item sb-subitem" href="vitorias.html"><span class="sb-item-icon">✪</span> Vitórias</a>
         <a class="sb-item sb-subitem" href="jornada.html"><span class="sb-item-icon">◐</span> Jornada</a>
@@ -301,7 +298,7 @@
     </div>
 
     <!-- HERO -->
-    <div class="fin-hero">
+    <div class="fin-hero tile-inv">
       <div class="fh-top">
         <div>
           <div class="fh-lbl">Sobra do mês</div>
@@ -311,10 +308,10 @@
       </div>
       <div class="alloc" id="alloc"></div>
       <div class="alloc-leg">
-        <span><i style="background:rgba(245,245,240,0.72)"></i> Fixos <b id="lg-fix">R$ 0</b></span>
-        <span><i style="background:rgba(245,245,240,0.46)"></i> Parcelas <b id="lg-par">R$ 0</b></span>
-        <span><i style="background:rgba(245,245,240,0.26)"></i> Variável <b id="lg-var">R$ 0</b></span>
-        <span><i style="background:#86efac"></i> Investido <b id="lg-inv">R$ 0</b></span>
+        <span><i style="background:var(--seg-fix)"></i> Fixos <b id="lg-fix">R$ 0</b></span>
+        <span><i style="background:var(--seg-par)"></i> Parcelas <b id="lg-par">R$ 0</b></span>
+        <span><i style="background:var(--seg-var)"></i> Variável <b id="lg-var">R$ 0</b></span>
+        <span><i style="background:var(--seg-inv)"></i> Investido <b id="lg-inv">R$ 0</b></span>
         <span><i style="background:var(--muted)"></i> Sobra <b id="lg-sob">R$ 0</b></span>
       </div>
     </div>
@@ -790,19 +787,19 @@ function finBaseOpts() {
     interaction: { mode: 'index', intersect: false },
     plugins: {
       legend: { display: true, position: 'bottom',
-        labels: { color: '#7d7d7d', font: { family: 'DM Mono', size: 10 }, boxWidth: 10, boxHeight: 10, padding: 12 } },
+        labels: { color: '#7d7d7d', font: { family: 'Inter', size: 10 }, boxWidth: 10, boxHeight: 10, padding: 12 } },
       tooltip: {
         backgroundColor: '#181818', borderColor: 'rgba(245,245,240,0.12)', borderWidth: 1,
         titleColor: '#f5f5f0', bodyColor: '#b8b8b3',
-        titleFont: { family: 'DM Mono', size: 11 }, bodyFont: { family: 'DM Mono', size: 10 },
+        titleFont: { family: 'Inter', size: 11 }, bodyFont: { family: 'Inter', size: 10 },
         padding: 10,
         callbacks: { label: c => ' ' + c.dataset.label + ': ' + fmtBRL(c.parsed.y) },
       },
     },
     scales: {
-      x: { ticks: { color: '#555', font: { family: 'DM Mono', size: 9 }, maxRotation: 0, autoSkipPadding: 10 },
+      x: { ticks: { color: '#555', font: { family: 'Inter', size: 9 }, maxRotation: 0, autoSkipPadding: 10 },
            grid: { color: 'rgba(245,245,240,0.04)' }, border: { color: 'rgba(245,245,240,0.08)' } },
-      y: { ticks: { color: '#555', font: { family: 'DM Mono', size: 9 },
+      y: { ticks: { color: '#555', font: { family: 'Inter', size: 9 },
              callback: v => v >= 1000 ? 'R$ ' + Math.round(v / 1000) + 'k' : 'R$ ' + v },
            grid: { color: 'rgba(245,245,240,0.04)' }, border: { color: 'rgba(245,245,240,0.08)' } },
     },
@@ -842,7 +839,7 @@ function renderCharts() {
           backgroundColor: 'rgba(245,245,240,0.05)', tension: 0.3,
           pointRadius: 0, pointHoverRadius: 4, pointHoverBackgroundColor: '#f5f5f0', spanGaps: true },
         { label: 'Investido (custo)', data: cost.map(p => p.value),
-          borderColor: '#86efac', borderWidth: 1.2, borderDash: [4, 4], fill: false,
+          borderColor: '#f5f5f0', borderWidth: 1.2, borderDash: [4, 4], fill: false,
           tension: 0.3, pointRadius: 0, pointHoverRadius: 3 },
       ],
     },
@@ -860,8 +857,8 @@ function renderCharts() {
         { label: 'Renda', data: flow.map(f => f.income), backgroundColor: 'rgba(245,245,240,0.58)', borderRadius: 0, barPercentage: 0.9, categoryPercentage: 0.66 },
         { label: 'Saída', data: flow.map(f => f.outflow), backgroundColor: 'rgba(245,245,240,0.24)', borderRadius: 0, barPercentage: 0.9, categoryPercentage: 0.66 },
         { label: 'Sobra', data: flow.map(f => f.surplus), type: 'line',
-          borderColor: '#86efac', borderWidth: 1.6, tension: 0.3, pointRadius: 0, pointHoverRadius: 4,
-          pointHoverBackgroundColor: '#86efac' },
+          borderColor: '#f5f5f0', borderWidth: 1.6, tension: 0.3, pointRadius: 0, pointHoverRadius: 4,
+          pointHoverBackgroundColor: '#f5f5f0' },
       ],
     },
     options: fOpts,

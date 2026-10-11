@@ -12,7 +12,7 @@
 <meta name="apple-mobile-web-app-title" content="Project 90">
 <title>Project 90 — Treino</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Bebas+Neue&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/base.css">
 <link rel="stylesheet" href="css/components.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
@@ -26,14 +26,14 @@
   padding: 28px 32px; overflow-y: auto; height: 100vh;
   display: flex; flex-direction: column; gap: 24px;
 }
-.page-title { font-family: 'DM Serif Display', serif; font-size: 26px; font-weight: 400; display: flex; align-items: baseline; gap: 10px; }
+.page-title { font-family: var(--font-ui); font-weight: 500; font-size: 22px; font-weight: 400; display: flex; align-items: baseline; gap: 10px; }
 .page-title em { font-style: italic; opacity: 0.45; font-size: 22px; }
 .tr-sub { font-size: 12px; letter-spacing: 0.1em; color: var(--mid); margin-top: 6px; }
 
 /* seletor de split A/B/C (estilo do I/II da rotina noturna) */
 .tr-switch { display: inline-flex; border: 1px solid var(--border2); flex-shrink: 0; }
 .tr-sbtn {
-  background: none; border: none; color: var(--mid); font-family: 'Bebas Neue', sans-serif;
+  background: none; border: none; color: var(--mid); font-family: var(--font-ui); font-weight: 500;
   font-size: 15px; letter-spacing: 0.14em; padding: 3px 14px; cursor: pointer;
   transition: background 0.15s, color 0.15s;
 }
@@ -57,7 +57,7 @@
 .tx-kg-wrap { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
 .tx-kg {
   width: 62px; background: var(--surface2); border: 1px solid var(--border); color: var(--white);
-  font-family: 'DM Mono', monospace; font-size: 13px; text-align: right;
+  font-family: var(--font-ui); font-size: 13px; text-align: right;
   padding: 7px 8px; outline: none; transition: border-color 0.2s;
 }
 .tx-kg:focus { border-color: rgba(245,245,240,0.35); }
@@ -66,13 +66,13 @@
 .tx-delta { font-size: 11px; letter-spacing: 0.04em; white-space: nowrap; min-width: 40px; text-align: right; }
 .tx-delta.up { color: var(--green); }
 .tx-delta.dn { color: var(--red); }
-.tx-done-msg { font-size: 13px; color: rgba(134,239,172,0.9); line-height: 1.6; padding: 12px 0 2px; }
+.tx-done-msg { font-size: 13px; color: rgba(245,245,240,0.9); line-height: 1.6; padding: 12px 0 2px; }
 .tx-empty { font-size: 13px; color: var(--mid); line-height: 1.7; padding: 8px 0; }
 
 /* editor dos planos */
 .plan-tabs { display: inline-flex; border: 1px solid var(--border2); margin-bottom: 14px; }
 .plan-tab {
-  background: none; border: none; color: var(--mid); font-family: 'DM Mono', monospace;
+  background: none; border: none; color: var(--mid); font-family: var(--font-ui);
   font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; padding: 8px 16px; cursor: pointer;
   transition: background 0.15s, color 0.15s;
 }
@@ -90,7 +90,7 @@
 .pe-add { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
 .pe-add input {
   background: var(--surface2); border: 1px solid var(--border); color: var(--white);
-  font-family: 'DM Mono', monospace; font-size: 13px; padding: 8px 10px; outline: none; transition: border-color 0.2s;
+  font-family: var(--font-ui); font-size: 13px; padding: 8px 10px; outline: none; transition: border-color 0.2s;
 }
 .pe-add input:focus { border-color: rgba(245,245,240,0.35); }
 .pe-add input::placeholder { color: var(--mid); }
@@ -98,13 +98,13 @@
 .pe-add-sets { width: 56px; text-align: center; }
 .pe-add-reps { width: 76px; text-align: center; }
 .pe-add button {
-  background: none; border: 1px solid var(--border2); color: var(--mid); font-family: 'DM Mono', monospace;
+  background: none; border: 1px solid var(--border2); color: var(--mid); font-family: var(--font-ui);
   font-size: 13px; letter-spacing: 0.1em; padding: 0 16px; cursor: pointer; transition: color 0.2s, border-color 0.2s;
 }
 .pe-add button:hover { color: var(--white); border-color: rgba(245,245,240,0.35); }
 
 .tr-seed {
-  background: none; border: 1px solid var(--border2); color: var(--mid); font-family: 'DM Mono', monospace;
+  background: none; border: 1px solid var(--border2); color: var(--mid); font-family: var(--font-ui);
   font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; padding: 9px 16px; cursor: pointer;
   transition: color 0.2s, border-color 0.2s; margin-top: 12px;
 }
@@ -125,17 +125,17 @@
 .ml-row:hover .ml-del { opacity: 1; }
 .ml-del:hover { color: var(--white); }
 @media (hover: none) { .ml-del { opacity: 0.5; } }
-.ml-done-msg { font-size: 13px; color: rgba(134,239,172,0.9); line-height: 1.6; padding: 10px 0 2px; }
+.ml-done-msg { font-size: 13px; color: rgba(245,245,240,0.9); line-height: 1.6; padding: 10px 0 2px; }
 .ml-empty { font-size: 13px; color: var(--mid); line-height: 1.7; padding: 4px 0; }
 .ml-add { display: flex; gap: 8px; margin-top: 12px; }
 .ml-add input {
   flex: 1; background: var(--surface2); border: 1px solid var(--border); color: var(--white);
-  font-family: 'DM Mono', monospace; font-size: 13px; padding: 8px 10px; outline: none; transition: border-color 0.2s;
+  font-family: var(--font-ui); font-size: 13px; padding: 8px 10px; outline: none; transition: border-color 0.2s;
 }
 .ml-add input:focus { border-color: rgba(245,245,240,0.35); }
 .ml-add input::placeholder { color: var(--mid); }
 .ml-add button {
-  background: none; border: 1px solid var(--border2); color: var(--mid); font-family: 'DM Mono', monospace;
+  background: none; border: 1px solid var(--border2); color: var(--mid); font-family: var(--font-ui);
   font-size: 13px; letter-spacing: 0.1em; padding: 0 16px; cursor: pointer; transition: color 0.2s, border-color 0.2s;
 }
 .ml-add button:hover { color: var(--white); border-color: rgba(245,245,240,0.35); }
@@ -151,19 +151,19 @@
 .bw-form { display: flex; gap: 8px; margin-bottom: 14px; }
 .bw-form input {
   width: 90px; background: var(--surface2); border: 1px solid var(--border); color: var(--white);
-  font-family: 'DM Mono', monospace; font-size: 14px; text-align: right; padding: 8px 10px; outline: none;
+  font-family: var(--font-ui); font-size: 14px; text-align: right; padding: 8px 10px; outline: none;
   transition: border-color 0.2s;
 }
 .bw-form input:focus { border-color: rgba(245,245,240,0.35); }
 .bw-form button {
-  background: none; border: 1px solid var(--border2); color: var(--mid); font-family: 'DM Mono', monospace;
+  background: none; border: 1px solid var(--border2); color: var(--mid); font-family: var(--font-ui);
   font-size: 12px; letter-spacing: 0.1em; padding: 0 16px; cursor: pointer; transition: color 0.2s, border-color 0.2s;
 }
 .bw-form button:hover { color: var(--white); border-color: rgba(245,245,240,0.35); }
 .pg-chart { position: relative; width: 100%; height: 170px; }
 .pg-select {
   background: var(--surface2); border: 1px solid var(--border2); color: var(--white);
-  font-family: 'DM Mono', monospace; font-size: 12px; padding: 6px 10px; outline: none; cursor: pointer;
+  font-family: var(--font-ui); font-size: 12px; padding: 6px 10px; outline: none; cursor: pointer;
   max-width: 60%;
 }
 .pg-empty { font-size: 13px; color: var(--mid); line-height: 1.7; padding: 8px 0; }
@@ -183,7 +183,7 @@
 /* alimentação — cabeçalho com "marcar todas" */
 .ml-hd-right { display: inline-flex; align-items: center; gap: 12px; }
 .ml-allbtn {
-  background: none; border: none; color: var(--mid); font-family: 'DM Mono', monospace;
+  background: none; border: none; color: var(--mid); font-family: var(--font-ui);
   font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer;
   transition: color 0.15s; padding: 0;
 }
@@ -195,7 +195,7 @@
 @media (max-width: 900px) { .tr-row { grid-template-columns: 1fr; } }
 
 /* progresso do treino de hoje */
-.tx-count { font-family: 'Bebas Neue', sans-serif; font-size: 14px; letter-spacing: 0.06em; color: var(--white); margin-left: 8px; }
+.tx-count { font-family: var(--font-ui); font-weight: 500; font-size: 14px; letter-spacing: 0.06em; color: var(--white); margin-left: 8px; }
 .tx-bar { height: 2px; background: var(--muted); margin: 0 0 14px; }
 .tx-bar > span { display: block; height: 100%; background: var(--white); width: 0; transition: width 0.4s cubic-bezier(0.16,1,0.3,1); }
 .tx-bar[hidden] { display: none; }
@@ -213,7 +213,7 @@
 /* modal de editar exercício — seletor de plano */
 .exm-split { display: flex; border: 1px solid var(--border2); }
 .exm-split button {
-  flex: 1; background: none; border: none; color: var(--mid); font-family: 'Bebas Neue', sans-serif;
+  flex: 1; background: none; border: none; color: var(--mid); font-family: var(--font-ui); font-weight: 500;
   font-size: 15px; letter-spacing: 0.14em; padding: 8px 4px; cursor: pointer;
   transition: background 0.15s, color 0.15s;
 }
@@ -251,38 +251,33 @@
       <div class="sb-prog-meta"><span id="sb-days-left">56 restantes</span><span id="sb-pct2">38%</span></div>
     </div>
     <nav class="sb-nav">
-      <a class="sb-item" href="dashboard.html"><span class="sb-item-icon">◈</span> Dashboard</a>
+      <a class="sb-item" href="hoje.html"><span class="sb-item-icon">☀</span> Hoje</a>
       <details class="sb-group">
-        <summary class="sb-group-toggle"><span class="sb-item-icon">⚑</span> Pendências<span class="sb-group-caret">›</span></summary>
+        <summary class="sb-group-toggle"><span class="sb-item-icon">⚑</span> Planejar<span class="sb-group-caret">›</span></summary>
         <a class="sb-item sb-subitem" href="pendencias.html"><span class="sb-item-icon">⚑</span> Pendências</a>
         <a class="sb-item sb-subitem" href="calendario.html"><span class="sb-item-icon">⊞</span> Calendário</a>
-      </details>
-      <details class="sb-group">
-        <summary class="sb-group-toggle"><span class="sb-item-icon">◉</span> Rotina<span class="sb-group-caret">›</span></summary>
-        <a class="sb-item sb-subitem" href="habitos.html"><span class="sb-item-icon">◉</span> Hábitos</a>
         <a class="sb-item sb-subitem" href="tarefas.html"><span class="sb-item-icon">✓</span> Tarefas</a>
+        <a class="sb-item sb-subitem" href="faculdade.html"><span class="sb-item-icon">▦</span> Faculdade</a>
+        <a class="sb-item sb-subitem" href="trabalho.html"><span class="sb-item-icon">⚙</span> Trabalho</a>
       </details>
-      <a class="sb-item" href="metricas.html"><span class="sb-item-icon">△</span> Métricas</a>
-      <a class="sb-item" href="diario.html"><span class="sb-item-icon">◻</span> Diário</a>
-      <details class="sb-group">
-        <summary class="sb-group-toggle"><span class="sb-item-icon">✦</span> Conhecimento<span class="sb-group-caret">›</span></summary>
+      <details class="sb-group" open>
+        <summary class="sb-group-toggle has-active"><span class="sb-item-icon">△</span> Evoluir<span class="sb-group-caret">›</span></summary>
+        <a class="sb-item sb-subitem" href="dashboard.html"><span class="sb-item-icon">◈</span> Dashboard</a>
+        <a class="sb-item sb-subitem" href="habitos.html"><span class="sb-item-icon">◉</span> Hábitos</a>
+        <a class="sb-item sb-subitem" href="metricas.html"><span class="sb-item-icon">△</span> Métricas</a>
+        <a class="sb-item sb-subitem" href="diario.html"><span class="sb-item-icon">◻</span> Diário</a>
+        <a class="sb-item sb-subitem active" href="treino.html"><span class="sb-item-icon">◲</span> Treino</a>
+        <a class="sb-item sb-subitem" href="biblia.html"><span class="sb-item-icon">✝</span> Bíblia</a>
         <a class="sb-item sb-subitem" href="vocabulario.html"><span class="sb-item-icon">▤</span> Vocabulário</a>
         <a class="sb-item sb-subitem" href="biblioteca.html"><span class="sb-item-icon">❐</span> Biblioteca</a>
         <a class="sb-item sb-subitem" href="reflexoes.html"><span class="sb-item-icon">☯</span> Reflexões</a>
-      </details>
-      <details class="sb-group">
-        <summary class="sb-group-toggle"><span class="sb-item-icon">◗</span> Comunicação<span class="sb-group-caret">›</span></summary>
         <a class="sb-item sb-subitem" href="diccao.html"><span class="sb-item-icon">◗</span> Dicção</a>
         <a class="sb-item sb-subitem" href="conversacao.html"><span class="sb-item-icon">❞</span> Conversação</a>
       </details>
-      <a class="sb-item" href="biblia.html"><span class="sb-item-icon">✝</span> Bíblia</a>
-      <a class="sb-item" href="faculdade.html"><span class="sb-item-icon">▦</span> Faculdade</a>
-      <a class="sb-item" href="treino.html"><span class="sb-item-icon">◲</span> Treino</a>
-      <a class="sb-item" href="financeiro.html"><span class="sb-item-icon">◫</span> Financeiro</a>
-      <a class="sb-item" href="trabalho.html"><span class="sb-item-icon">⚙</span> Trabalho</a>
-      <a class="sb-item" href="sistema.html"><span class="sb-item-icon">❖</span> Sistema</a>
+      <a class="sb-item" href="financeiro.html"><span class="sb-item-icon">◫</span> Dinheiro</a>
       <details class="sb-group">
-        <summary class="sb-group-toggle"><span class="sb-item-icon">◆</span> Conquistas<span class="sb-group-caret">›</span></summary>
+        <summary class="sb-group-toggle"><span class="sb-item-icon">❖</span> Jogo<span class="sb-group-caret">›</span></summary>
+        <a class="sb-item sb-subitem" href="sistema.html"><span class="sb-item-icon">❖</span> Sistema</a>
         <a class="sb-item sb-subitem" href="conquistas.html"><span class="sb-item-icon">◆</span> Conquistas</a>
         <a class="sb-item sb-subitem" href="vitorias.html"><span class="sb-item-icon">✪</span> Vitórias</a>
         <a class="sb-item sb-subitem" href="jornada.html"><span class="sb-item-icon">◐</span> Jornada</a>
@@ -617,7 +612,7 @@ const CHART_OPTS = {
     tooltip: {
       backgroundColor: '#181818', borderColor: 'rgba(245,245,240,0.1)', borderWidth: 1,
       titleColor: '#f5f5f0', bodyColor: '#7d7d7d',
-      titleFont: { family: 'DM Mono', size: 11 }, bodyFont: { family: 'DM Mono', size: 10 },
+      titleFont: { family: 'Inter', size: 11 }, bodyFont: { family: 'Inter', size: 10 },
       callbacks: {
         title: ctx => 'Dia ' + ctx[0].label,
         label: ctx => ' ' + fmtKg(ctx.parsed.y) + ' kg',
@@ -626,9 +621,9 @@ const CHART_OPTS = {
   },
   layout: { padding: { left: 2, right: 4, top: 6 } },
   scales: {
-    x: { ticks: { color: '#555', font: { family: 'DM Mono', size: 10 }, maxTicksLimit: 8 },
+    x: { ticks: { color: '#555', font: { family: 'Inter', size: 10 }, maxTicksLimit: 8 },
          grid: { color: 'rgba(245,245,240,0.04)' }, border: { color: 'rgba(245,245,240,0.08)' } },
-    y: { ticks: { color: '#555', font: { family: 'DM Mono', size: 10 }, maxTicksLimit: 6, padding: 6 },
+    y: { ticks: { color: '#555', font: { family: 'Inter', size: 10 }, maxTicksLimit: 6, padding: 6 },
          grid: { color: 'rgba(245,245,240,0.04)' }, border: { color: 'rgba(245,245,240,0.08)' } },
   },
 };

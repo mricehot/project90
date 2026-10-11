@@ -12,7 +12,7 @@
 <meta name="apple-mobile-web-app-title" content="Project 90">
 <title>Project 90 — Tarefas</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Bebas+Neue&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/base.css">
 <link rel="stylesheet" href="css/components.css">
 <script src="js/supabase-config.js"></script>
@@ -25,13 +25,13 @@
 .tsk-main { padding: 30px 40px 64px; overflow-y: auto; display: flex; flex-direction: column; gap: 22px; }
 
 .topbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
-.page-title { font-family: 'DM Serif Display', serif; font-size: 26px; font-weight: 400; display: flex; align-items: baseline; gap: 10px; }
+.page-title { font-family: var(--font-ui); font-weight: 500; font-size: 22px; font-weight: 400; display: flex; align-items: baseline; gap: 10px; }
 .page-title em { font-style: italic; opacity: 0.45; font-size: 22px; }
 
 .g4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
 .stat-card { background: var(--surface); border: 1px solid var(--border); padding: 15px 18px; }
 .stat-lbl { font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--mid); margin-bottom: 6px; }
-.stat-val { font-family: 'Bebas Neue', sans-serif; font-size: 34px; line-height: 1; }
+.stat-val { font-family: var(--font-ui); font-weight: 500; font-size: 29px; line-height: 1; }
 .stat-val.warn { color: #fca5a5; }
 .stat-sub { font-size: 10px; letter-spacing: 0.1em; color: var(--mid); margin-top: 5px; }
 
@@ -47,14 +47,14 @@
 .qadd:focus-within .qadd-plus { color: var(--white); border-color: var(--white); }
 .qadd-input {
   flex: 1; background: none; border: none; outline: none; color: var(--white);
-  font-family: 'DM Mono', monospace; font-weight: 300; font-size: 14px; letter-spacing: 0.02em;
+  font-family: var(--font-ui); font-weight: 300; font-size: 14px; letter-spacing: 0.02em;
 }
 .qadd-input::placeholder { color: var(--mid); }
 .qadd-chips { display: flex; border-top: 1px solid var(--border); overflow: hidden; max-height: 0; transition: max-height 0.2s ease; }
 .qadd:focus-within .qadd-chips { max-height: 44px; }
 .qadd-chip {
   flex: 1; padding: 11px 8px; background: none; border: none; border-right: 1px solid var(--border);
-  color: var(--mid); font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.12em;
+  color: var(--mid); font-family: var(--font-ui); font-size: 11px; letter-spacing: 0.12em;
   text-transform: uppercase; cursor: pointer; transition: color 0.15s, background 0.15s;
 }
 .qadd-chip:last-child { border-right: none; }
@@ -65,7 +65,7 @@
 .tsk-group { margin-top: 6px; }
 .group-hd { font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--mid); margin-bottom: 4px; display: flex; align-items: center; gap: 10px; }
 .group-hd::after { content: ''; flex: 1; height: 1px; background: var(--border); }
-.group-hd .gc { font-family: 'Bebas Neue', sans-serif; font-size: 15px; letter-spacing: 0.06em; color: var(--white); }
+.group-hd .gc { font-family: var(--font-ui); font-weight: 500; font-size: 15px; letter-spacing: 0.06em; color: var(--white); }
 .tsk-group.accent .group-hd,
 .tsk-group.accent .group-hd .gc { color: #fca5a5; }
 
@@ -86,7 +86,7 @@
 }
 .tsk-check:hover { border-color: var(--white); }
 .tsk-check:active { transform: scale(0.86); }
-.tsk-check.done { background: #86efac; border-color: #86efac; color: var(--bg); }
+.tsk-check.done { background: #f5f5f0; border-color: #f5f5f0; color: var(--bg); }
 
 .tsk-body { flex: 1; min-width: 0; }
 .tsk-title { font-size: 14.5px; letter-spacing: 0.02em; color: var(--white); line-height: 1.4; word-break: break-word; }
@@ -126,7 +126,7 @@
 .dmenu button {
   display: flex; width: 100%; align-items: center; justify-content: space-between; gap: 18px;
   padding: 11px 14px; background: none; border: none; border-bottom: 1px solid var(--border);
-  color: var(--white); font-family: 'DM Mono', monospace; font-size: 13px; letter-spacing: 0.04em;
+  color: var(--white); font-family: var(--font-ui); font-size: 13px; letter-spacing: 0.04em;
   cursor: pointer; text-align: left; transition: background 0.12s;
 }
 .dmenu button:last-child { border-bottom: none; }
@@ -137,7 +137,7 @@
 /* ── CONCLUÍDAS ── */
 .done-toggle {
   margin-top: 14px; align-self: flex-start; background: none; border: 1px solid var(--border);
-  color: var(--mid); font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.16em;
+  color: var(--mid); font-family: var(--font-ui); font-size: 11px; letter-spacing: 0.16em;
   text-transform: uppercase; padding: 9px 16px; cursor: pointer; transition: color 0.15s, border-color 0.15s;
 }
 .done-toggle:hover { color: var(--white); border-color: var(--border2); }
@@ -151,7 +151,7 @@
 /* ── alternador de visão ── */
 .tsk-viewsw { display: inline-flex; border: 1px solid var(--border2); flex-shrink: 0; }
 .tsk-viewbtn {
-  background: none; border: none; color: var(--mid); font-family: 'DM Mono', monospace;
+  background: none; border: none; color: var(--mid); font-family: var(--font-ui);
   font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; padding: 7px 14px; cursor: pointer;
   transition: background 0.15s, color 0.15s;
 }
@@ -198,7 +198,7 @@ textarea.modal-input { resize: vertical; min-height: 56px; line-height: 1.6; }
 .m-quick[hidden] { display: none; }
 .m-quick button {
   padding: 8px 12px; background: var(--surface2); border: 1px solid var(--border2); color: var(--mid);
-  font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
+  font-family: var(--font-ui); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
   cursor: pointer; transition: color 0.15s, border-color 0.15s, background 0.15s;
 }
 .m-quick button:hover { color: var(--white); }
@@ -209,7 +209,7 @@ textarea.modal-input { resize: vertical; min-height: 56px; line-height: 1.6; }
 .m-days { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
 .m-day {
   width: 40px; padding: 8px 0; text-align: center; border: 1px solid var(--border2); background: var(--surface2);
-  color: var(--mid); font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.06em; cursor: pointer;
+  color: var(--mid); font-family: var(--font-ui); font-size: 11px; letter-spacing: 0.06em; cursor: pointer;
   text-transform: uppercase; transition: color 0.15s, border-color 0.15s, background 0.15s;
 }
 .m-day.on { background: var(--white); color: var(--bg); border-color: var(--white); }
@@ -255,38 +255,33 @@ textarea.modal-input { resize: vertical; min-height: 56px; line-height: 1.6; }
       <div class="sb-prog-meta"><span id="sb-days-left">56 restantes</span><span id="sb-pct2">38%</span></div>
     </div>
     <nav class="sb-nav">
-      <a class="sb-item" href="dashboard.html"><span class="sb-item-icon">◈</span> Dashboard</a>
-      <details class="sb-group">
-        <summary class="sb-group-toggle"><span class="sb-item-icon">⚑</span> Pendências<span class="sb-group-caret">›</span></summary>
+      <a class="sb-item" href="hoje.html"><span class="sb-item-icon">☀</span> Hoje</a>
+      <details class="sb-group" open>
+        <summary class="sb-group-toggle has-active"><span class="sb-item-icon">⚑</span> Planejar<span class="sb-group-caret">›</span></summary>
         <a class="sb-item sb-subitem" href="pendencias.html"><span class="sb-item-icon">⚑</span> Pendências</a>
         <a class="sb-item sb-subitem" href="calendario.html"><span class="sb-item-icon">⊞</span> Calendário</a>
-      </details>
-      <details class="sb-group" open>
-        <summary class="sb-group-toggle has-active"><span class="sb-item-icon">◉</span> Rotina<span class="sb-group-caret">›</span></summary>
-        <a class="sb-item sb-subitem" href="habitos.html"><span class="sb-item-icon">◉</span> Hábitos</a>
         <a class="sb-item sb-subitem active" href="tarefas.html"><span class="sb-item-icon">✓</span> Tarefas</a>
+        <a class="sb-item sb-subitem" href="faculdade.html"><span class="sb-item-icon">▦</span> Faculdade</a>
+        <a class="sb-item sb-subitem" href="trabalho.html"><span class="sb-item-icon">⚙</span> Trabalho</a>
       </details>
-      <a class="sb-item" href="metricas.html"><span class="sb-item-icon">△</span> Métricas</a>
-      <a class="sb-item" href="diario.html"><span class="sb-item-icon">◻</span> Diário</a>
       <details class="sb-group">
-        <summary class="sb-group-toggle"><span class="sb-item-icon">✦</span> Conhecimento<span class="sb-group-caret">›</span></summary>
+        <summary class="sb-group-toggle"><span class="sb-item-icon">△</span> Evoluir<span class="sb-group-caret">›</span></summary>
+        <a class="sb-item sb-subitem" href="dashboard.html"><span class="sb-item-icon">◈</span> Dashboard</a>
+        <a class="sb-item sb-subitem" href="habitos.html"><span class="sb-item-icon">◉</span> Hábitos</a>
+        <a class="sb-item sb-subitem" href="metricas.html"><span class="sb-item-icon">△</span> Métricas</a>
+        <a class="sb-item sb-subitem" href="diario.html"><span class="sb-item-icon">◻</span> Diário</a>
+        <a class="sb-item sb-subitem" href="treino.html"><span class="sb-item-icon">◲</span> Treino</a>
+        <a class="sb-item sb-subitem" href="biblia.html"><span class="sb-item-icon">✝</span> Bíblia</a>
         <a class="sb-item sb-subitem" href="vocabulario.html"><span class="sb-item-icon">▤</span> Vocabulário</a>
         <a class="sb-item sb-subitem" href="biblioteca.html"><span class="sb-item-icon">❐</span> Biblioteca</a>
         <a class="sb-item sb-subitem" href="reflexoes.html"><span class="sb-item-icon">☯</span> Reflexões</a>
-      </details>
-      <details class="sb-group">
-        <summary class="sb-group-toggle"><span class="sb-item-icon">◗</span> Comunicação<span class="sb-group-caret">›</span></summary>
         <a class="sb-item sb-subitem" href="diccao.html"><span class="sb-item-icon">◗</span> Dicção</a>
         <a class="sb-item sb-subitem" href="conversacao.html"><span class="sb-item-icon">❞</span> Conversação</a>
       </details>
-      <a class="sb-item" href="biblia.html"><span class="sb-item-icon">✝</span> Bíblia</a>
-      <a class="sb-item" href="faculdade.html"><span class="sb-item-icon">▦</span> Faculdade</a>
-      <a class="sb-item" href="treino.html"><span class="sb-item-icon">◲</span> Treino</a>
-      <a class="sb-item" href="financeiro.html"><span class="sb-item-icon">◫</span> Financeiro</a>
-      <a class="sb-item" href="trabalho.html"><span class="sb-item-icon">⚙</span> Trabalho</a>
-      <a class="sb-item" href="sistema.html"><span class="sb-item-icon">❖</span> Sistema</a>
+      <a class="sb-item" href="financeiro.html"><span class="sb-item-icon">◫</span> Dinheiro</a>
       <details class="sb-group">
-        <summary class="sb-group-toggle"><span class="sb-item-icon">◆</span> Conquistas<span class="sb-group-caret">›</span></summary>
+        <summary class="sb-group-toggle"><span class="sb-item-icon">❖</span> Jogo<span class="sb-group-caret">›</span></summary>
+        <a class="sb-item sb-subitem" href="sistema.html"><span class="sb-item-icon">❖</span> Sistema</a>
         <a class="sb-item sb-subitem" href="conquistas.html"><span class="sb-item-icon">◆</span> Conquistas</a>
         <a class="sb-item sb-subitem" href="vitorias.html"><span class="sb-item-icon">✪</span> Vitórias</a>
         <a class="sb-item sb-subitem" href="jornada.html"><span class="sb-item-icon">◐</span> Jornada</a>
