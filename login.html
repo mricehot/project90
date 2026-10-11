@@ -346,7 +346,7 @@ function _authMsg(kind, text) {
   const params = new URLSearchParams(location.hash.slice(1) + '&' + location.search.slice(1));
   if (params.get('error_description')) _authMsg('err', decodeURIComponent(params.get('error_description')));
   const { data: { session } } = await window.sb.auth.getSession();
-  if (session) window.location.replace('dashboard.html');
+  if (session) window.location.replace('hoje.html');
 })();
 
 async function doLogin() {
@@ -357,7 +357,7 @@ async function doLogin() {
   txt.textContent = 'Redirecionando para o Google...';
   const { error } = await window.sb.auth.signInWithOAuth({
     provider: 'google',
-    options: { redirectTo: location.origin + location.pathname.replace(/[^/]*$/, 'dashboard.html') }
+    options: { redirectTo: location.origin + location.pathname.replace(/[^/]*$/, 'hoje.html') }
   });
   if (error) {
     _authMsg('err', error.message || 'Não foi possível iniciar o login.');

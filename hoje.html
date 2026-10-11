@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#080808">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Project 90">
+<title>Project 90 — Hoje</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/components.css">
+<link rel="stylesheet" href="css/hoje.css">
+<script src="js/supabase-config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase.js"></script>
+<script src="js/store.js"></script>
+<script src="js/idle-game.js"></script>
+<script src="js/achievements.js"></script>
+</head>
+<body>
+
+<div id="cur"></div>
+<div id="cur-ring"></div>
+<div id="tip" class="tip"></div>
+<div class="toast" id="toast"></div>
+
+<div class="app">
+
+  <aside class="sidebar">
+    <div class="sb-logo">
+      <a href="index.html" class="sb-logomark">Project 90</a>
+      <div class="sb-logosub">Transformação pessoal</div>
+    </div>
+    <div class="sb-day">
+      <div class="sb-daynum" id="sb-daynum">34</div>
+      <div class="sb-daylbl">de 90 dias</div>
+      <div style="display:flex;justify-content:space-between;font-size:10px;letter-spacing:0.1em;color:var(--mid);margin-top:10px">
+        <span>Progresso</span><span id="sb-pct">38%</span>
+      </div>
+      <div class="sb-prog-bar-bg"><div class="sb-prog-bar-fill" id="sb-fill" style="width:0%"></div></div>
+      <div class="sb-prog-meta"><span id="sb-days-left">56 restantes</span><span id="sb-pct2">38%</span></div>
+    </div>
+    <nav class="sb-nav">
+      <a class="sb-item active" href="hoje.html"><span class="sb-item-icon">☀</span> Hoje</a>
+      <a class="sb-item" href="dashboard.html"><span class="sb-item-icon">◈</span> Dashboard</a>
+      <details class="sb-group" open>
+        <summary class="sb-group-toggle"><span class="sb-item-icon">⚑</span> Pendências<span class="sb-group-caret">›</span></summary>
+        <a class="sb-item sb-subitem" href="pendencias.html"><span class="sb-item-icon">⚑</span> Pendências</a>
+        <a class="sb-item sb-subitem" href="calendario.html"><span class="sb-item-icon">⊞</span> Calendário</a>
+      </details>
+      <details class="sb-group">
+        <summary class="sb-group-toggle"><span class="sb-item-icon">◉</span> Rotina<span class="sb-group-caret">›</span></summary>
+        <a class="sb-item sb-subitem" href="habitos.html"><span class="sb-item-icon">◉</span> Hábitos</a>
+        <a class="sb-item sb-subitem" href="tarefas.html"><span class="sb-item-icon">✓</span> Tarefas</a>
+      </details>
+      <a class="sb-item" href="metricas.html"><span class="sb-item-icon">△</span> Métricas</a>
+      <a class="sb-item" href="diario.html"><span class="sb-item-icon">◻</span> Diário</a>
+      <details class="sb-group">
+        <summary class="sb-group-toggle"><span class="sb-item-icon">✦</span> Conhecimento<span class="sb-group-caret">›</span></summary>
+        <a class="sb-item sb-subitem" href="vocabulario.html"><span class="sb-item-icon">▤</span> Vocabulário</a>
+        <a class="sb-item sb-subitem" href="biblioteca.html"><span class="sb-item-icon">❐</span> Biblioteca</a>
+        <a class="sb-item sb-subitem" href="reflexoes.html"><span class="sb-item-icon">☯</span> Reflexões</a>
+      </details>
+      <details class="sb-group">
+        <summary class="sb-group-toggle"><span class="sb-item-icon">◗</span> Comunicação<span class="sb-group-caret">›</span></summary>
+        <a class="sb-item sb-subitem" href="diccao.html"><span class="sb-item-icon">◗</span> Dicção</a>
+        <a class="sb-item sb-subitem" href="conversacao.html"><span class="sb-item-icon">❞</span> Conversação</a>
+      </details>
+      <a class="sb-item" href="biblia.html"><span class="sb-item-icon">✝</span> Bíblia</a>
+      <a class="sb-item" href="faculdade.html"><span class="sb-item-icon">▦</span> Faculdade</a>
+      <a class="sb-item" href="treino.html"><span class="sb-item-icon">◲</span> Treino</a>
+      <a class="sb-item" href="financeiro.html"><span class="sb-item-icon">◫</span> Financeiro</a>
+      <a class="sb-item" href="trabalho.html"><span class="sb-item-icon">⚙</span> Trabalho</a>
+      <a class="sb-item" href="sistema.html"><span class="sb-item-icon">❖</span> Sistema</a>
+      <details class="sb-group">
+        <summary class="sb-group-toggle"><span class="sb-item-icon">◆</span> Conquistas<span class="sb-group-caret">›</span></summary>
+        <a class="sb-item sb-subitem" href="conquistas.html"><span class="sb-item-icon">◆</span> Conquistas</a>
+        <a class="sb-item sb-subitem" href="vitorias.html"><span class="sb-item-icon">✪</span> Vitórias</a>
+        <a class="sb-item sb-subitem" href="jornada.html"><span class="sb-item-icon">◐</span> Jornada</a>
+      </details>
+    </nav>
+    <div class="sb-bottom">
+      <div class="sb-streak">
+        <span class="sb-streak-icon">🔥</span>
+        <div>
+          <div class="sb-streak-val" id="sb-streak-val">12</div>
+          <div class="sb-streak-lbl">Dias seguidos</div>
+        </div>
+      </div>
+      <a href="login.html" class="sb-logout">← Sair</a>
+    </div>
+  </aside>
+
+  <main class="hoje-main">
+
+    <header class="hj-top">
+      <div>
+        <h1 class="hj-greet" id="hj-greet">Hoje</h1>
+        <div class="hj-date" id="hj-date"></div>
+      </div>
+      <form class="hj-cap" id="hj-cap" autocomplete="off">
+        <input id="hj-cap-in" maxlength="120" placeholder="Anotar — ex: pagar internet dia 10" aria-label="Anotar uma tarefa" />
+        <kbd>Ctrl K</kbd>
+      </form>
+    </header>
+
+    <section class="hj-grid" id="hj-grid" aria-live="polite"></section>
+
+  </main>
+</div>
+
+<script>
+/* ── CURSOR ── */
+(function () {
+  const cur = document.getElementById('cur'), ring = document.getElementById('cur-ring');
+  let mx = 0, my = 0, rx = 0, ry = 0;
+  document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; cur.style.transform = `translate(${mx - 3}px,${my - 3}px)`; });
+  (function tick() { rx += (mx - rx - 15) * 0.1; ry += (my - ry - 15) * 0.1; ring.style.transform = `translate(${rx}px,${ry}px)`; requestAnimationFrame(tick); })();
+})();
+
+let toastTimer;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
+}
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+const pad2 = n => String(n).padStart(2, '0');
+const isoOf = d => d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
+const DOW = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'];
+const day = () => Store.getCurrentDay();
+
+/* ── SIDEBAR ── */
+function initSidebar() {
+  const DAY = day(), DAYS = Store.getTotalDays();
+  const pct = Math.round(DAY / DAYS * 100);
+  document.getElementById('sb-daynum').textContent = DAY;
+  document.getElementById('sb-pct').textContent = pct + '%';
+  document.getElementById('sb-pct2').textContent = pct + '%';
+  document.getElementById('sb-days-left').textContent = (DAYS - DAY) + ' restantes';
+  document.getElementById('sb-streak-val').textContent = Store.currentStreak(Store.getHabits(), DAY);
+  setTimeout(() => { document.getElementById('sb-fill').style.width = pct + '%'; }, 400);
+}
+
+/* ══ MOMENTOS DO DIA ══
+   Durante o dia  → prioridades, contas, tarefas e hábitos que faltam hoje
+   Ao chegar em casa → checklist de Pendências
+   Noite → rotina noturna de Pendências
+   O "agora" segue o horário, mas dá pra escolher outro momento (vale pro dia). */
+const FOCO_KEY = 'p90_hoje_foco';
+const NOMES = { dia: 'Durante o dia', casa: 'Ao chegar em casa', noite: 'Noite' };
+
+function defaultFoco() {
+  const h = new Date().getHours();
+  return h < 17 ? 'dia' : (h < 21 ? 'casa' : 'noite');
+}
+function getFoco(mom) {
+  let k = null;
+  try {
+    const v = JSON.parse(localStorage.getItem(FOCO_KEY) || 'null');
+    if (v && v.d === day() && NOMES[v.k]) k = v.k;
+  } catch (e) {}
+  if (!k) { k = defaultFoco(); if (mom[k].total === 0 && k !== 'dia') k = 'dia'; }
+  return k;
+}
+function setFoco(k) {
+  try { localStorage.setItem(FOCO_KEY, JSON.stringify({ d: day(), k })); } catch (e) {}
+  render();
+}
+
+function gatherDia() {
+  const d = day(), items = [];
+  const pri = Store.getDayPriorities(d);
+  [0, 1, 2].forEach(i => {
+    const p = pri[i];
+    if (p && p.text && !p.done) items.push({ kind: 'pri', id: i, text: p.text, tag: 'prioridade', taskId: p.taskId || null });
+  });
+  const linked = new Set(items.filter(x => x.taskId).map(x => x.taskId));
+
+  const ym = Store.finYm(), today = new Date().getDate();
+  (Store.getFinance().fixed || [])
+    .filter(f => f.active && f.dueDay <= today && !Store.finFixedPaidMark(f.id, ym))
+    .sort((a, b) => a.dueDay - b.dueDay)
+    .forEach(f => items.push({ kind: 'conta', id: f.id, text: f.label, when: f.dueDay < today ? 'venceu dia ' + f.dueDay : 'vence hoje', urgent: true }));
+
+  Store.tasksForToday()
+    .filter(t => { const s = Store.taskStatus(t); return s !== 'done' && s !== 'done-today' && !linked.has(t.id); })
+    .forEach(t => items.push({ kind: 'tarefa', id: t.id, text: t.title, when: Store.taskStatus(t) === 'overdue' ? 'atrasada' : 'hoje', urgent: true }));
+
+  Store.getHabits()
+    .filter(h => !h.paused && (h.createdDay || 1) <= d && Store.scheduledOn(h, d - 1) && h.history[h.history.length - 1] !== 'done')
+    .forEach(h => items.push({ kind: 'habito', id: h.id, text: h.name, tag: 'hábito' }));
+  return items;
+}
+
+function moments() {
+  const dia = gatherDia();
+  const casa = Store.getHomeHabits(), casaOk = new Set(Store.getHomeRoutine());
+  const noite = Store.getNightHabits(), noiteOk = new Set(Store.getNightRoutine());
+  return {
+    dia: { rows: dia, total: dia.length, pend: dia.length, urgent: dia.filter(x => x.urgent).length },
+    casa: {
+      rows: casa.map(h => ({ kind: 'casa', id: h.id, text: h.label, done: casaOk.has(h.id) })),
+      total: casa.length, pend: casa.filter(h => !casaOk.has(h.id)).length, urgent: 0,
+    },
+    noite: {
+      rows: noite.map(h => ({ kind: 'noite', id: h.id, text: h.label, done: noiteOk.has(h.id) })),
+      total: noite.length, pend: noite.filter(h => !noiteOk.has(h.id)).length, urgent: 0,
+    },
+  };
+}
+
+/* ── ações ── */
+function toggleItem(kind, id) {
+  const d = day();
+  if (kind === 'pri') {
+    const it = Store.getDayPriorities(d)[id];
+    if (it && it.taskId) { const t = Store.getTasks().find(x => x.id === it.taskId); if (t) Store.completeTask(t.id); }
+    Store.toggleDayPriority(d, id);
+  } else if (kind === 'habito') {
+    const hs = Store.getHabits(), h = hs.find(x => x.id === id);
+    if (!h || !h.history.length) return;
+    h.history[h.history.length - 1] = 'done';
+    h.streak += 1;
+    if (h.streak > h.maxStreak) h.maxStreak = h.streak;
+    Store.saveHabits(hs);
+  } else if (kind === 'tarefa') {
+    Store.completeTask(id);
+  } else if (kind === 'conta') {
+    Store.setFinFixedPaid(id, Store.finYm(), true);
+  } else if (kind === 'casa') {
+    Store.toggleHomeHabitDone(id);
+  } else if (kind === 'noite') {
+    Store.toggleNightHabitDone(id);
+  }
+  render();
+}
+
+/* ── captura rápida: vira uma tarefa, entendendo a data ── */
+const WD = { domingo: 0, segunda: 1, terca: 2, 'terça': 2, quarta: 3, quinta: 4, sexta: 5, sabado: 6, 'sábado': 6 };
+function parseCapture(raw) {
+  let s = ' ' + raw.trim() + ' ', iso = null, m;
+  const t0 = new Date(); t0.setHours(0, 0, 0, 0);
+  const plus = n => { const d = new Date(t0); d.setDate(d.getDate() + n); return d; };
+  if ((m = s.match(/\s(amanh[ãa])\s/i))) { iso = isoOf(plus(1)); s = s.replace(m[1], ' '); }
+  else if ((m = s.match(/\s(hoje)\s/i))) { iso = isoOf(plus(0)); s = s.replace(m[1], ' '); }
+  else if ((m = s.match(/\s(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?\s/))) {
+    let y = m[3] ? Number(m[3]) : t0.getFullYear(); if (y < 100) y += 2000;
+    let d = new Date(y, Number(m[2]) - 1, Number(m[1]));
+    if (!m[3] && d < t0) d = new Date(y + 1, Number(m[2]) - 1, Number(m[1]));
+    if (!isNaN(d)) { iso = isoOf(d); s = s.replace(m[0], ' '); }
+  } else if ((m = s.match(/\sdia\s+(\d{1,2})\s/i)) && Number(m[1]) >= 1 && Number(m[1]) <= 31) {
+    let d = new Date(t0.getFullYear(), t0.getMonth(), Number(m[1]));
+    if (d < t0) d = new Date(t0.getFullYear(), t0.getMonth() + 1, Number(m[1]));
+    iso = isoOf(d); s = s.replace(m[0], ' ');
+  } else if ((m = s.match(/\s(domingo|segunda|ter[çc]a|quarta|quinta|sexta|s[áa]bado)(?:-feira)?\s/i))) {
+    const target = WD[m[1].toLowerCase()];
+    let diff = (target - t0.getDay() + 7) % 7; if (diff === 0) diff = 7;
+    iso = isoOf(plus(diff)); s = s.replace(m[0], ' ');
+  }
+  s = s.replace(/\s+(para|pra|em|no|na|at[ée]|de|do|da)\s*$/i, '').replace(/\s{2,}/g, ' ').trim();
+  if (!s) s = raw.trim();
+  s = s.charAt(0).toUpperCase() + s.slice(1);
+  return { title: s, iso: iso || isoOf(t0), hadDate: !!iso };
+}
+function capture(raw) {
+  if (!raw.trim()) return;
+  const p = parseCapture(raw);
+  const t = Store.addTask({ title: p.title, sched: 'once', anchor: p.iso });
+  const when = p.iso === isoOf(new Date()) ? 'hoje' : p.iso.slice(8) + '/' + p.iso.slice(5, 7);
+  render();
+  window.p90toastUndo('Tarefa criada · ' + when, () => { Store.deleteTask(t.id); render(); });
+}
+
+/* ── próximos dias ── */
+const UP_KEY = 'p90_pend_venc';          // mesma escolha de Pendências › Vencimentos
+let upWin = 7;
+try { const v = Number(localStorage.getItem(UP_KEY)); if (v === 1 || v === 7 || v === 15) upWin = v; } catch (e) {}
+
+/* ── render ── */
+function rowHTML(r) {
+  const right = r.when
+    ? `<span class="hj-wh">${esc(r.when)}</span>`
+    : (r.tag ? `<span class="hj-tg">${esc(r.tag)}</span>` : '');
+  return `<button type="button" class="hj-row ${r.done ? 'done' : ''}" role="checkbox" aria-checked="${r.done ? 'true' : 'false'}" data-kind="${r.kind}" data-id="${r.id}">
+    <span class="hj-ck">${r.done ? '✓' : ''}</span><span class="hj-tx">${esc(r.text)}</span>${right}</button>`;
+}
+
+function render() {
+  const mom = moments(), foco = getFoco(mom), cur = mom[foco];
+  const h = new Date().getHours();
+  document.getElementById('hj-greet').textContent = h < 5 ? 'Boa madrugada' : h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite';
+  document.getElementById('hj-date').textContent =
+    new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' }) + ' · dia ' + day() + ' de ' + Store.getTotalDays();
+
+  // bloco "agora"
+  let nowBody;
+  if (cur.total === 0) {
+    nowBody = foco === 'dia'
+      ? '<div class="hj-empty">Nada pendente por aqui. Respire.</div>'
+      : `<div class="hj-empty">Lista vazia. Monte a sua em <a href="pendencias.html">Pendências</a>.</div>`;
+  } else if (cur.pend === 0) {
+    nowBody = '<div class="hj-rows">' + cur.rows.map(rowHTML).join('') + '</div><div class="hj-empty">Tudo feito neste momento.</div>';
+  } else {
+    nowBody = '<div class="hj-rows">' + cur.rows.map(rowHTML).join('') + '</div>';
+  }
+  const nowCount = foco === 'dia' ? cur.pend + ' pendente' + (cur.pend === 1 ? '' : 's') : (cur.total - cur.pend) + ' de ' + cur.total;
+
+  // momentos que não estão em foco
+  const others = Object.keys(NOMES).filter(k => k !== foco).map(k => {
+    const m = mom[k];
+    const big = k === 'dia' ? `${m.pend}<small>pendente${m.pend === 1 ? '' : 's'}</small>` : `${m.total - m.pend}<small>de ${m.total}</small>`;
+    return `<button type="button" class="hj-t" data-foco="${k}"><div class="hj-l">${NOMES[k]}</div><div class="hj-big">${big}</div></button>`;
+  }).join('');
+
+  const restantes = mom.dia.pend + mom.casa.pend + mom.noite.pend;
+  const urgent = mom.dia.urgent;
+  const streak = Store.currentStreak(Store.getHabits(), day());
+  const ml = Store.getWaterMl(), goal = Store.waterGoalMl();
+  const fmtL = v => v >= 1000 ? (v / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 2 }) + ' L' : v + ' ml';
+  const lit = Math.min(5, Math.round(ml / goal * 5));
+
+  // herói
+  let hero = '<div class="hj-sub">Sem dados ainda.</div>', heroHref = 'sistema.html';
+  try {
+    const S = Store.computeSystem();
+    const gs = P90Idle.normalize(Store.getIdleState(), Date.now());
+    const en = P90Idle.energyAvail(gs, S.exp);
+    hero = `<div class="hj-big">${S.rank}<small>nível ${S.level}</small></div><div class="hj-sub">energia <b>${en.toLocaleString('pt-BR')}</b>${gs.best ? ' · andar <b>' + gs.best + '</b>' : ''}</div>`;
+  } catch (e) {}
+
+  // próximos dias
+  const up = Store.upcomingDue(upWin);
+  const shown = up.slice(0, 6);
+  const upRows = shown.length
+    ? '<div class="hj-up">' + shown.map(it => {
+        const d = new Date(it.iso + 'T00:00:00');
+        return `<a href="${it.href}"><span class="hj-ud">${DOW[d.getDay()]} ${pad2(d.getDate())}</span><span class="hj-ut">${esc(it.title)}</span><span class="hj-us">${esc(it.sub || it.kind.toLowerCase())}</span></a>`;
+      }).join('') + (up.length > shown.length ? `<div class="hj-more">+${up.length - shown.length} mais em Pendências</div>` : '') + '</div>'
+    : `<div class="hj-none">Nada vencendo ${upWin === 1 ? 'amanhã' : 'nos próximos ' + upWin + ' dias'}.</div>`;
+
+  document.getElementById('hj-grid').innerHTML = `
+    <section class="hj-t hj-now" aria-label="Agora">
+      <div class="hj-l"><span>Agora · ${NOMES[foco]}</span><span>${nowCount}</span></div>
+      ${nowBody}
+    </section>
+    <div class="hj-t hj-rest"><div class="hj-l">Restantes hoje</div><div class="hj-big">${restantes}</div>
+      <div class="hj-sub">${urgent ? '<b>' + urgent + '</b> vence' + (urgent === 1 ? '' : 'm') + ' hoje ou atrasada' + (urgent === 1 ? '' : 's') : 'nada atrasado'}</div></div>
+    <div class="hj-t hj-seq"><div class="hj-l">Sequência</div><div class="hj-big">${streak}<small>dia${streak === 1 ? '' : 's'}</small></div></div>
+    ${others}
+    <div class="hj-t hj-agua"><div class="hj-l">Água</div><div class="hj-sub" style="margin-top:10px;color:var(--white)">${fmtL(ml)} de ${fmtL(goal)}</div>
+      <div class="hj-seg">${[0, 1, 2, 3, 4].map(i => `<span class="${i < lit ? 'on' : ''}"></span>`).join('')}</div>
+      <div class="hj-mini"><button type="button" data-water="-250" aria-label="Menos 250 ml">−250</button><button type="button" data-water="250" aria-label="Mais 250 ml">+250</button></div></div>
+    <section class="hj-t hj-next" aria-label="Próximos dias">
+      <div class="hj-next-hd"><span class="hj-l">Próximos dias</span>
+        <span class="hj-pills" role="group" aria-label="Período">${[[1, 'amanhã'], [7, '7 dias'], [15, '15 dias']].map(p => `<button type="button" data-win="${p[0]}" class="${p[0] === upWin ? 'on' : ''}">${p[1]}</button>`).join('')}</span></div>
+      ${upRows}
+    </section>
+    <a class="hj-t hj-hero" href="${heroHref}"><div class="hj-l">Herói</div>${hero}</a>`;
+}
+
+document.getElementById('hj-grid').addEventListener('click', e => {
+  const row = e.target.closest('.hj-row');
+  if (row) {
+    const kind = row.dataset.kind, id = Number(row.dataset.id);
+    const done = row.classList.contains('done');
+    if (!done && (kind === 'pri' || kind === 'habito' || kind === 'tarefa' || kind === 'conta')) {
+      row.classList.add('leaving');
+      setTimeout(() => toggleItem(kind, id), 230);
+    } else toggleItem(kind, id);
+    return;
+  }
+  const f = e.target.closest('[data-foco]');
+  if (f) { setFoco(f.dataset.foco); return; }
+  const w = e.target.closest('[data-water]');
+  if (w) { Store.addWater(Number(w.dataset.water)); render(); return; }
+  const p = e.target.closest('[data-win]');
+  if (p) {
+    upWin = Number(p.dataset.win);
+    try { localStorage.setItem(UP_KEY, String(upWin)); } catch (err) {}
+    render();
+  }
+});
+
+document.getElementById('hj-cap').addEventListener('submit', e => {
+  e.preventDefault();
+  const inp = document.getElementById('hj-cap-in');
+  capture(inp.value);
+  inp.value = '';
+});
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+    e.preventDefault();
+    document.getElementById('hj-cap-in').focus();
+  } else if (e.key === 'Escape' && document.activeElement === document.getElementById('hj-cap-in')) {
+    document.activeElement.blur();
+  }
+});
+
+initSidebar();
+render();
+window.addEventListener('p90:synced', () => { initSidebar(); render(); });
+</script>
+<script src="js/pwa.js"></script>
+</body>
+</html>

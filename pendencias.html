@@ -206,6 +206,7 @@ a.tc-row.vc-row:hover .tc-name { text-decoration: underline; text-underline-offs
       <div class="sb-prog-meta"><span id="sb-days-left">56 restantes</span><span id="sb-pct2">38%</span></div>
     </div>
     <nav class="sb-nav">
+      <a class="sb-item" href="hoje.html"><span class="sb-item-icon">☀</span> Hoje</a>
       <a class="sb-item" href="dashboard.html"><span class="sb-item-icon">◈</span> Dashboard</a>
       <details class="sb-group" open>
         <summary class="sb-group-toggle has-active"><span class="sb-item-icon">⚑</span> Pendências<span class="sb-group-caret">›</span></summary>
@@ -1166,50 +1167,8 @@ const VC_KEY = 'p90_pend_venc';
 let vcWin = 7;
 try { const v = Number(localStorage.getItem(VC_KEY)); if (v === 1 || v === 7 || v === 15) vcWin = v; } catch (e) {}
 
-function vcDays(iso) {
-  return Math.round((new Date(iso + 'T00:00:00') - new Date(todayISO() + 'T00:00:00')) / 86400000);
-}
-function vcIso(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
-
-// Tudo que vence de amanhã até `win` dias, ordenado por data.
 function vcCollect(win) {
-  const out = [];
-  const push = (iso, kind, title, sub, href) => {
-    const n = vcDays(iso);
-    if (n >= 1 && n <= win) out.push({ iso, n, kind, title, sub, href });
-  };
-
-  // Tarefas (próximo vencimento; as que se repetem entram na próxima ocorrência)
-  if (typeof Store.getTasks === 'function') {
-    Store.getTasks().filter(t => !t.archived).forEach(t => {
-      const due = Store.taskNextDue(t);
-      if (due) push(due, 'Tarefa', t.title, taskSchedText(t), 'tarefas.html');
-    });
-  }
-  // Faculdade
-  if (typeof Store.studyUpcoming === 'function') {
-    Store.studyUpcoming(win).soon.forEach(a => {
-      if (a.dueOn) push(a.dueOn, 'Faculdade', a.title, Store.studySubjectName(a.subjectId), 'faculdade.html');
-    });
-  }
-  // Trabalho
-  if (typeof Store.workUpcoming === 'function') {
-    Store.workUpcoming(win).soon.forEach(t => {
-      if (t.dueOn) push(t.dueOn, 'Trabalho', t.title, Store.workProjectName(t.projectId), 'trabalho.html');
-    });
-  }
-  // Financeiro: contas fixas ainda não pagas (próxima data do dia de vencimento)
-  if (typeof Store.getFinance === 'function') {
-    const now = new Date(), y = now.getFullYear(), m = now.getMonth();
-    Store.getFinance().fixed.filter(f => f.active && f.dueDay).forEach(f => {
-      const mk = (mm) => { const last = new Date(y, mm + 1, 0).getDate(); return new Date(y, mm, Math.min(f.dueDay, last)); };
-      [mk(m), mk(m + 1)].forEach(d => {
-        const ym = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
-        if (!Store.finFixedPaidMark(f.id, ym)) push(vcIso(d), 'Conta', f.label, 'R$ ' + Math.round(f.amount).toLocaleString('pt-BR'), 'financeiro.html');
-      });
-    });
-  }
-  return out.sort((a, b) => a.iso.localeCompare(b.iso) || a.title.localeCompare(b.title));
+  return Store.upcomingDue(win).map(it => it.kind === 'Tarefa' ? Object.assign({}, it, { sub: taskSchedText(it.task) }) : it);
 }
 
 function renderVencimentos() {

@@ -3429,6 +3429,43 @@ const Store = (() => {
     return { overdue, soon };
   }
 
+  // Tudo que vence de amanhã até `win` dias, por data: tarefas, faculdade,
+  // trabalho e contas fixas ainda não pagas. Alimenta "Vencimentos"
+  // (Pendências) e "Próximos dias" (Hoje). O que vence hoje ou já passou
+  // fica de fora de propósito — isso mora nos cards de "hoje".
+  function upcomingDue(win) {
+    const base = new Date(_localDate(0) + 'T00:00:00');
+    const daysTo = iso => Math.round((new Date(iso + 'T00:00:00') - base) / 86400000);
+    const out = [];
+    const push = (iso, kind, title, sub, href, extra) => {
+      const n = daysTo(iso);
+      if (n >= 1 && n <= win) out.push(Object.assign({ iso, n, kind, title, sub: sub || '', href }, extra || {}));
+    };
+    cache.tasks.filter(t => !t.archived).forEach(t => {
+      const due = taskNextDue(t);
+      if (due) push(due, 'Tarefa', t.title, '', 'tarefas.html', { task: t });
+    });
+    studyUpcoming(win).soon.forEach(a => {
+      if (a.dueOn) push(a.dueOn, 'Faculdade', a.title, studySubjectName(a.subjectId), 'faculdade.html');
+    });
+    workUpcoming(win).soon.forEach(t => {
+      if (t.dueOn) push(t.dueOn, 'Trabalho', t.title, workProjectName(t.projectId), 'trabalho.html');
+    });
+    const y = base.getFullYear(), m = base.getMonth();
+    const pad = v => String(v).padStart(2, '0');
+    (cache.finance.fixed || []).filter(f => f.active && f.dueDay).forEach(f => {
+      [m, m + 1].forEach(mm => {
+        const last = new Date(y, mm + 1, 0).getDate();
+        const d = new Date(y, mm, Math.min(f.dueDay, last));
+        const ym = d.getFullYear() + '-' + pad(d.getMonth() + 1);
+        if (!finFixedPaidMark(f.id, ym)) {
+          push(ym + '-' + pad(d.getDate()), 'Conta', f.label, 'R$ ' + Math.round(f.amount).toLocaleString('pt-BR'), 'financeiro.html');
+        }
+      });
+    });
+    return out.sort((a, b) => a.iso.localeCompare(b.iso) || a.title.localeCompare(b.title));
+  }
+
   // Furos ainda pendentes (perfilar e/ou topografar) em tarefas abertas de
   // projetos 'realce' não arquivados — o equivalente de workUpcoming() pra
   // quem não tem prazo (realce é acompanhado pelo progresso dos furos, não
@@ -4943,6 +4980,7 @@ const Store = (() => {
     bootstrap, isReady, resetProgress,
     // meta
     deleteJournalEntry, deleteWeeklyReview, deleteStudyReflection,
+    upcomingDue,
     getHomeHabits, addHomeHabit, restoreHomeHabit, renameHomeHabit, deleteHomeHabit, getHomeRoutine, toggleHomeHabitDone,
     getMeta, saveMeta, getTotalDays, getStartDate, getCurrentDay, useFreeze,
     // dados
