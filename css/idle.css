@@ -108,8 +108,8 @@
 .ia-v em { font-style: normal; color: var(--mid); }
 .ia-log { margin-top: 10px; }
 .gm-float.drop { font-family: 'DM Mono', monospace; font-size: 12px; letter-spacing: 0.04em; white-space: nowrap; padding: 3px 8px; background: rgba(8,8,8,0.85); border: 1px solid var(--border2); color: var(--white); }
-.gm-float.drop.r2 { border-color: rgba(134,239,172,0.5); color: var(--green); }
-.gm-float.drop.r3, .gm-float.drop.r4 { border-color: var(--green); color: var(--green); box-shadow: 0 0 18px rgba(134,239,172,0.25); }
+.gm-float.drop.r2 { border-color: rgba(245,245,240,0.5); color: var(--green); }
+.gm-float.drop.r3, .gm-float.drop.r4 { border-color: var(--green); color: var(--green); box-shadow: 0 0 18px rgba(245,245,240,0.25); }
 
 /* card do Dashboard */
 .idle-card { display: block; text-decoration: none; color: inherit; }
@@ -136,15 +136,15 @@
 .eq-btn.sell { color: var(--mid); }
 /* raridade: só brilho/contorno — o único acento de cor continua sendo o verde */
 .r0 .eq-name { color: var(--mid); }
-.r1 .eq-name { color: var(--white); }
+.r1 .eq-name { color: #c9c9c2; }
 .r2 .eq-name { color: var(--green); }
-.r3 .eq-name { color: var(--green); text-shadow: 0 0 14px rgba(134,239,172,0.35); }
-.r4 .eq-name { color: var(--green); text-shadow: 0 0 18px rgba(134,239,172,0.6); }
+.r3 .eq-name { color: var(--green); text-shadow: 0 0 14px rgba(245,245,240,0.35); }
+.r4 .eq-name { color: var(--green); text-shadow: 0 0 18px rgba(245,245,240,0.6); }
 .r3 .eq-ico, .r4 .eq-ico { filter: grayscale(1) brightness(1.6); }
 .bag-empty { font-size: 12px; color: var(--mid); line-height: 1.7; padding: 6px 0; }
 .bag-new { animation: none; }
 @media (prefers-reduced-motion: no-preference) {
-  @keyframes bagNew { 0% { background: rgba(134,239,172,0.16); } 100% { background: transparent; } }
+  @keyframes bagNew { 0% { background: rgba(245,245,240,0.16); } 100% { background: transparent; } }
   .bag-row.new { animation: bagNew 1.6s ease-out; }
 }
 @media (max-width: 520px) { .eq-btns { flex-direction: column; } }

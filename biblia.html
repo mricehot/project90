@@ -100,7 +100,7 @@
 }
 .tc-btn:hover:not(:disabled) { opacity: 0.85; transform: translateY(-1px); }
 .tc-btn:disabled { opacity: 0.35; cursor: default; }
-.tc-btn.done { background: rgba(134,239,172,0.12); color: #86efac; }
+.tc-btn.done { background: rgba(245,245,240,0.12); color: #f5f5f0; }
 
 .bib-bar-bg { height: 3px; background: var(--muted); margin-top: 16px; }
 .bib-bar-fill { height: 100%; background: var(--white); transition: width 0.9s cubic-bezier(0.16,1,0.3,1); }
@@ -109,7 +109,7 @@
 /* ── TOOLBAR + LISTA ── */
 .bib-toolbar { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
 .bib-filter { display: flex; align-items: center; gap: 8px; font-size: 12px; letter-spacing: 0.06em; color: var(--mid); cursor: pointer; }
-.bib-filter input { accent-color: #86efac; width: 15px; height: 15px; cursor: pointer; }
+.bib-filter input { accent-color: #f5f5f0; width: 15px; height: 15px; cursor: pointer; }
 .bib-jump {
   background: var(--surface2); border: 1px solid var(--border2); color: var(--white);
   font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
@@ -144,8 +144,8 @@
 .bk-prog { flex-shrink: 0; width: 54px; height: 2px; background: var(--muted); }
 .bk-prog-fill { display: block; height: 100%; background: var(--white); transition: width 0.6s cubic-bezier(0.16,1,0.3,1); }
 .bk-read { flex-shrink: 0; min-width: 40px; text-align: right; font-family: 'Bebas Neue', sans-serif; font-size: 14px; color: var(--mid); }
-.bk-group.all-read .bk-read { color: #86efac; }
-.bk-group.all-read .bk-prog-fill { background: #86efac; }
+.bk-group.all-read .bk-read { color: #f5f5f0; }
+.bk-group.all-read .bk-prog-fill { background: #f5f5f0; }
 .bk-body { display: none; }
 .bk-group.open .bk-body { display: block; }
 .bk-body .bib-row { padding-left: 38px; }
@@ -155,7 +155,7 @@
   display: flex; align-items: center; justify-content: center; cursor: pointer;
   font-size: 12px; color: var(--bg); background: none; transition: background 0.15s, border-color 0.15s;
 }
-.bib-row.read .bib-check { background: #86efac; border-color: #86efac; }
+.bib-row.read .bib-check { background: #f5f5f0; border-color: #f5f5f0; }
 .bib-daynum { font-family: 'Bebas Neue', sans-serif; font-size: 15px; color: var(--mid); width: 42px; flex-shrink: 0; }
 .bib-row.current .bib-daynum { color: var(--white); }
 .bib-ref { font-size: 13.5px; letter-spacing: 0.02em; color: var(--white); }

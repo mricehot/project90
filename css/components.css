@@ -119,7 +119,7 @@
 .form-success {
   font-size: 12px; letter-spacing: 0.08em; color: var(--green);
   margin-top: 8px; display: none; padding: 10px 14px;
-  border: 1px solid rgba(134,239,172,0.2); background: rgba(134,239,172,0.05);
+  border: 1px solid rgba(245,245,240,0.2); background: rgba(245,245,240,0.05);
 }
 .form-success.show { display: block; }
 
@@ -377,3 +377,20 @@
 @media (max-width: 1180px) {
   .g2, .g21 { grid-template-columns: 1fr; }
 }
+
+/* ═══════════════════════════════════════════════
+   BENTO — blocos arredondados, preto e cinza.
+   Só adiciona raio de canto (as cores/espaços ficam com cada página);
+   sem cor de destaque: o antigo verde virou o branco do texto.
+═══════════════════════════════════════════════ */
+.card, .stat-card, .sb-streak, .ach-card, .cal2-day-group, .ct-tip, .ex-card, .fin-card, .fin-hero,
+.jr-card, .kb-card, .lib-card, .next-up, .nudge, .prac-box, .prac-cta, .progress-banner, .quiz-box,
+.quiz-cta, .rd-item, .refl-form, .sys-card, .today-card, .week-review, .word-card, .jm-result { border-radius: 14px; }
+.modal, .unlock-modal { border-radius: 18px; }
+.dcc-filter, .dcc-search, .dcc-sort, .j-field, .jm-search, .voc-search, .voc-sort, .rq-field,
+.field-input, .modal-input, .modal-select, .modal-textarea, .card-add-input, .jm-select, .wr-select,
+.exp-quick input, .exp-quick select, .fac-newsubj input, .fac-qa input, .fsm-title-input, .fu-add input,
+.kb-add input, .kb-add select, .ml-add input, .pe-add input, .bw-form input, .pg-select, .nudge-pop select,
+.win-add-input, .wk-newproj input, .wk-qa input, .wk-rem-add input, .wk-rem-add select, .tx-kg,
+.rv-grade, .quiz-opt, .pri-link, .wk-rem-link, .bib-jump { border-radius: 8px; }
+.sb-streak-icon { filter: grayscale(1); }

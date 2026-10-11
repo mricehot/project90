@@ -55,7 +55,7 @@
 .qc-btn:disabled { opacity: 0.3; cursor: not-allowed; }
 
 /* ── REVIEW CTA (repetição espaçada) ── */
-.review-cta { border-color: rgba(134,239,172,0.4); }
+.review-cta { border-color: rgba(245,245,240,0.4); }
 .review-cta.empty { border-color: var(--border); }
 
 /* ── SRS BADGE no card de palavra ── */
@@ -63,10 +63,10 @@
 .srs-box { display: inline-flex; gap: 3px; }
 .srs-pip { width: 6px; height: 6px; border: 1px solid var(--border2); }
 .srs-pip.on { background: var(--white); border-color: var(--white); }
-.word-srs.due { color: #86efac; }
-.word-srs.due .srs-pip.on { background: #86efac; border-color: #86efac; }
-.word-srs.mastered { color: #86efac; }
-.word-srs.mastered .srs-pip.on { background: #86efac; border-color: #86efac; }
+.word-srs.due { color: #f5f5f0; }
+.word-srs.due .srs-pip.on { background: #f5f5f0; border-color: #f5f5f0; }
+.word-srs.mastered { color: #f5f5f0; }
+.word-srs.mastered .srs-pip.on { background: #f5f5f0; border-color: #f5f5f0; }
 
 /* ── FLASHCARD (revisão) ── reaproveita .quiz-overlay / .quiz-box ── */
 .rv-front { font-family: 'DM Serif Display', serif; font-size: 34px; text-align: center; margin: 6px 0 4px; word-break: break-word; }
@@ -81,7 +81,7 @@
 .rv-grade-row { display: flex; gap: 10px; margin-top: 22px; }
 .rv-grade { flex: 1; padding: 14px; border: 1px solid var(--border2); background: var(--surface2); color: var(--white); font-family: 'DM Mono', monospace; font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; transition: border-color 0.2s, background 0.2s, color 0.2s; }
 .rv-grade.again:hover { border-color: #fca5a5; background: rgba(252,165,165,0.09); color: #fca5a5; }
-.rv-grade.good:hover { border-color: #86efac; background: rgba(134,239,172,0.09); color: #86efac; }
+.rv-grade.good:hover { border-color: #f5f5f0; background: rgba(245,245,240,0.09); color: #f5f5f0; }
 .rv-progress { text-align: center; font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--mid); margin-top: 20px; }
 .rv-kbd { text-align: center; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--mid); margin-top: 14px; }
 .rv-kbd b { color: var(--white); font-weight: 400; padding: 1px 5px; border: 1px solid var(--border2); margin: 0 2px; }
@@ -99,14 +99,14 @@
 .vp-seg .s2 { background: rgba(245,245,240,0.48); }
 .vp-seg .s3 { background: rgba(245,245,240,0.64); }
 .vp-seg .s4 { background: rgba(245,245,240,0.82); }
-.vp-seg .s5 { background: #86efac; }
+.vp-seg .s5 { background: #f5f5f0; }
 .vp-rows { display: flex; flex-direction: column; gap: 9px; }
 .vp-row  { display: flex; align-items: center; gap: 12px; }
 .vp-name { width: 82px; flex-shrink: 0; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--mid); }
 .vp-track { flex: 1; height: 4px; background: var(--surface2); }
 .vp-fill  { height: 100%; background: var(--white); transition: width 0.6s cubic-bezier(0.16,1,0.3,1); }
-.vp-row.mastered .vp-fill { background: #86efac; }
-.vp-row.mastered .vp-name { color: #86efac; }
+.vp-row.mastered .vp-fill { background: #f5f5f0; }
+.vp-row.mastered .vp-name { color: #f5f5f0; }
 .vp-n { width: 30px; text-align: right; font-family: 'Bebas Neue', sans-serif; font-size: 15px; letter-spacing: 0.06em; }
 .vp-foot { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border); font-size: 11px; letter-spacing: 0.08em; color: var(--mid); }
 .vp-foot span { color: var(--white); }
@@ -143,10 +143,10 @@
 .wl-group-hd:first-child { margin-top: 4px; }
 .wl-group-hd::after { content: ''; flex: 1; height: 1px; background: var(--border); }
 .wl-group-hd .n { font-family: 'Bebas Neue', sans-serif; font-size: 15px; letter-spacing: 0.06em; color: var(--white); }
-.wl-group-hd.due { color: #86efac; }
-.wl-group-hd.due .n { color: #86efac; }
-.wl-group-hd.mastered { color: #86efac; }
-.wl-group-hd.mastered .n { color: #86efac; }
+.wl-group-hd.due { color: #f5f5f0; }
+.wl-group-hd.due .n { color: #f5f5f0; }
+.wl-group-hd.mastered { color: #f5f5f0; }
+.wl-group-hd.mastered .n { color: #f5f5f0; }
 
 /* ── WORD LIST ── */
 .word-list { display: flex; flex-direction: column; gap: 10px; }
@@ -207,11 +207,11 @@ textarea.modal-input { resize: vertical; min-height: 60px; line-height: 1.6; }
   letter-spacing: 0.02em; cursor: pointer; transition: border-color 0.2s, background 0.2s, color 0.2s;
 }
 .quiz-opt:hover:not(.disabled) { border-color: rgba(245,245,240,0.35); }
-.quiz-opt.correct { border-color: #86efac; background: rgba(134,239,172,0.09); color: #86efac; }
+.quiz-opt.correct { border-color: #f5f5f0; background: rgba(245,245,240,0.09); color: #f5f5f0; }
 .quiz-opt.wrong { border-color: #fca5a5; background: rgba(252,165,165,0.09); color: #fca5a5; }
 .quiz-opt.disabled { cursor: default; }
 .quiz-feedback { text-align: center; font-size: 13px; letter-spacing: 0.04em; min-height: 18px; margin-bottom: 4px; }
-.quiz-feedback.ok { color: #86efac; }
+.quiz-feedback.ok { color: #f5f5f0; }
 .quiz-feedback.no { color: #fca5a5; }
 .quiz-stats-row {
   display: flex; justify-content: space-between; padding-top: 18px; margin-top: 14px;

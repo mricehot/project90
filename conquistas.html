@@ -36,7 +36,7 @@
 .stat-val { font-family: 'Bebas Neue', sans-serif; font-size: 44px; line-height: 1; }
 .stat-sub { font-size: 11px; letter-spacing: 0.1em; color: var(--mid); margin-top: 6px; }
 .stat-delta { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; letter-spacing: 0.1em; margin-top: 6px; }
-.stat-delta.up { color: #86efac; }
+.stat-delta.up { color: #f5f5f0; }
 
 /* ── OVERALL PROGRESS BANNER ── */
 .progress-banner {
@@ -134,17 +134,17 @@
 }
 .ach-prog-req { font-size: 10px; letter-spacing: 0.1em; color: var(--mid); }
 .ach-prog-pct { font-size: 10px; letter-spacing: 0.1em; color: var(--mid); }
-.ach-prog-pct.done { color: #86efac; }
+.ach-prog-pct.done { color: #f5f5f0; }
 .ach-prog-bg { height: 1px; background: var(--muted); }
 .ach-prog-fill { height: 100%; background: var(--white); transition: width 1s cubic-bezier(0.16,1,0.3,1); }
-.ach-card.unlocked .ach-prog-fill { background: #86efac; }
+.ach-card.unlocked .ach-prog-fill { background: #f5f5f0; }
 
 /* unlocked badge */
 .ach-badge {
   position: absolute; top: 12px; right: 12px;
   font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase;
-  padding: 2px 7px; border: 1px solid rgba(134,239,172,0.3);
-  color: #86efac; background: rgba(134,239,172,0.07);
+  padding: 2px 7px; border: 1px solid rgba(245,245,240,0.3);
+  color: #f5f5f0; background: rgba(245,245,240,0.07);
   opacity: 0; transition: opacity 0.3s;
 }
 .ach-card.unlocked .ach-badge { opacity: 1; }
@@ -192,7 +192,7 @@
 .unlock-overlay.show .unlock-modal { transform: scale(1); }
 .unlock-icon { font-size: 52px; display: block; margin-bottom: 20px; animation: popIn 0.5s cubic-bezier(0.16,1,0.3,1) 0.2s both; }
 @keyframes popIn { from { transform: scale(0.4); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-.unlock-eyebrow { font-size: 10px; letter-spacing: 0.3em; text-transform: uppercase; color: #86efac; margin-bottom: 10px; }
+.unlock-eyebrow { font-size: 10px; letter-spacing: 0.3em; text-transform: uppercase; color: #f5f5f0; margin-bottom: 10px; }
 .unlock-title { font-family: 'DM Serif Display', serif; font-size: 26px; font-weight: 400; margin-bottom: 8px; }
 .unlock-title em { font-style: italic; opacity: 0.5; }
 .unlock-desc { font-size: 13px; letter-spacing: 0.04em; color: var(--mid); line-height: 1.7; margin-bottom: 32px; }
@@ -205,7 +205,7 @@
 .unlock-close:hover { opacity: 0.85; }
 .unlock-points {
   font-family: 'Bebas Neue', sans-serif; font-size: 28px; line-height: 1;
-  color: #86efac; margin-bottom: 24px; letter-spacing: 0.06em;
+  color: #f5f5f0; margin-bottom: 24px; letter-spacing: 0.06em;
 }
 .unlock-queue {
   margin-top: 16px; font-size: 10px; letter-spacing: 0.2em;
@@ -500,7 +500,7 @@ function showUnlockModal(a) {
   document.getElementById('ul-title').innerHTML    = `${a.name} <em>desbloqueada.</em>`;
   document.getElementById('ul-desc').textContent   = a.desc;
   document.getElementById('ul-points').textContent = `+${a.points} pts`;
-  document.getElementById('ul-points').style.color = '#86efac';
+  document.getElementById('ul-points').style.color = '#f5f5f0';
   document.getElementById('ul-btn').textContent    = unlockQueue.length > 0 ? `Próxima →` : 'Continuar →';
   document.getElementById('ul-queue').textContent  =
     unlockQueue.length > 0 ? `mais ${unlockQueue.length} conquista${unlockQueue.length > 1 ? 's' : ''}` : '';
