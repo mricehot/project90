@@ -8,7 +8,7 @@
 .hoje-main { flex: 1; min-width: 0; padding: 30px 36px 72px; overflow-y: auto; }
 
 .hj-top { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px 24px; flex-wrap: wrap; }
-.hj-greet { font-family: 'DM Serif Display', serif; font-size: 34px; line-height: 1.1; color: var(--white); }
+.hj-greet { font-family: var(--font-ui); font-weight: 500; font-size: 29px; line-height: 1.1; color: var(--white); }
 .hj-date { font-size: 12px; letter-spacing: 0.04em; color: var(--mid); margin-top: 6px; }
 
 .hj-cap { display: flex; align-items: center; gap: 10px; width: min(360px, 100%); border: 1px solid var(--border2); background: var(--surface); padding: 9px 12px;  border-radius: 10px; }
@@ -22,8 +22,8 @@
 button.hj-t, a.hj-t { cursor: pointer; transition: border-color 0.15s; }
 button.hj-t:hover, a.hj-t:hover { border-color: rgba(245,245,240,0.35); }
 .hj-l { font-size: 11px; letter-spacing: 0.08em; color: var(--mid); }
-.hj-big { font-family: 'Bebas Neue', sans-serif; font-size: 46px; line-height: 0.95; letter-spacing: 0.02em; margin-top: 10px; }
-.hj-big small { font-family: 'DM Mono', monospace; font-size: 12px; letter-spacing: 0; color: var(--mid); margin-left: 6px; }
+.hj-big { font-family: var(--font-ui); font-weight: 500; font-size: 33px; line-height: 0.95; letter-spacing: 0.02em; margin-top: 10px; }
+.hj-big small { font-family: var(--font-ui); font-size: 12px; letter-spacing: 0; color: var(--mid); margin-left: 6px; }
 .hj-sub { font-size: 12px; color: var(--mid); margin-top: 8px; line-height: 1.5; }
 .hj-sub b { color: var(--white); font-weight: 400; }
 

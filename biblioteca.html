@@ -12,7 +12,7 @@
 <meta name="apple-mobile-web-app-title" content="Project 90">
 <title>Project 90 — Biblioteca</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Bebas+Neue&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/base.css">
 <link rel="stylesheet" href="css/components.css">
 <script src="js/supabase-config.js"></script>
@@ -26,7 +26,7 @@
 .ynav { display: flex; align-items: center; gap: 4px; }
 .ynav button {
   background: var(--surface2); border: 1px solid var(--border2); color: var(--white);
-  font-family: 'DM Mono', monospace; font-size: 12px; letter-spacing: 0.04em;
+  font-family: var(--font-ui); font-size: 12px; letter-spacing: 0.04em;
   padding: 9px 12px; cursor: pointer; transition: border-color 0.2s, color 0.2s;
 }
 .ynav button:hover { border-color: rgba(245,245,240,0.35); }
@@ -36,12 +36,12 @@
 .lib-col { display: flex; flex-direction: column; gap: 22px; min-width: 0; }
 .lib-card { background: var(--surface); border: 1px solid var(--border); padding: 22px 24px; }
 .lc-hd { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
-.lc-title { font-family: 'DM Serif Display', serif; font-size: 17px; }
+.lc-title { font-family: var(--font-ui); font-weight: 500; font-size: 17px; }
 .lc-meta { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--mid); }
 .lc-meta b { color: var(--white); font-weight: 400; }
 .lc-add {
   background: none; border: 1px solid var(--border2); color: var(--mid);
-  font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
+  font-family: var(--font-ui); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
   padding: 8px 13px; cursor: pointer; transition: color 0.15s, border-color 0.15s;
 }
 .lc-add:hover { color: var(--white); border-color: rgba(245,245,240,0.35); }
@@ -49,7 +49,7 @@
 .btabs { display: flex; gap: 0; margin-bottom: 14px; }
 .btabs button {
   flex: 1; padding: 9px; background: none; border: 1px solid var(--border2); border-right-width: 0; color: var(--mid);
-  font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer;
+  font-family: var(--font-ui); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer;
 }
 .btabs button:last-child { border-right-width: 1px; }
 .btabs button.on { background: var(--white); color: var(--bg); border-color: var(--white); }
@@ -78,7 +78,7 @@
 .bbtn.danger:hover { color: var(--red); border-color: rgba(252,165,165,0.4); }
 .bbtn.next {
   width: auto; padding: 0 10px; border-color: var(--border2); color: var(--white);
-  font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase;
+  font-family: var(--font-ui); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase;
 }
 
 .lib-empty { font-size: 12px; color: var(--mid); line-height: 1.8; padding: 6px 0; }
@@ -88,7 +88,7 @@
 .pill.soon { color: var(--white); border-color: var(--border2); }
 
 /* ── META DO ANO ── */
-.goal-val { font-family: 'Bebas Neue', sans-serif; font-size: 40px; line-height: 1; }
+.goal-val { font-family: var(--font-ui); font-weight: 500; font-size: 29px; line-height: 1; }
 .goal-sub { font-size: 11px; letter-spacing: 0.1em; color: var(--mid); margin-top: 4px; }
 .gbar-bg { height: 4px; background: var(--muted); margin: 14px 0 4px; }
 .gbar-fill { height: 100%; background: #efc063; transition: width 0.7s cubic-bezier(0.16,1,0.3,1); }
@@ -98,7 +98,7 @@
 .genre-row .g-name { width: 92px; flex-shrink: 0; text-transform: uppercase; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .genre-row .g-track { flex: 1; height: 3px; background: var(--surface2); }
 .genre-row .g-fill { height: 100%; background: rgba(245,245,240,0.6); }
-.genre-row .g-amt { width: 22px; text-align: right; color: var(--white); font-family: 'DM Mono', monospace; }
+.genre-row .g-amt { width: 22px; text-align: right; color: var(--white); font-family: var(--font-ui); }
 
 /* ── MODAL LIVRO ── */
 .m-row { display: flex; gap: 12px; }
@@ -106,7 +106,7 @@
 .m-seg { display: flex; gap: 0; }
 .m-seg button {
   flex: 1; padding: 11px; background: var(--surface2); border: 1px solid var(--border2); color: var(--mid);
-  font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer;
+  font-family: var(--font-ui); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer;
   border-right-width: 0;
 }
 .m-seg button:last-child { border-right-width: 1px; }
@@ -121,7 +121,7 @@
 .star-clear:hover { color: var(--white); }
 .modal-textarea {
   width: 100%; background: var(--surface2); border: 1px solid var(--border); color: var(--white);
-  font-family: 'DM Mono', monospace; font-weight: 300; font-size: 13px; padding: 11px 13px; outline: none;
+  font-family: var(--font-ui); font-weight: 300; font-size: 13px; padding: 11px 13px; outline: none;
   resize: vertical; min-height: 70px;
 }
 .modal-textarea:focus { border-color: rgba(245,245,240,0.35); }

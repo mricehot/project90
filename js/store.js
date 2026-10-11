@@ -5105,7 +5105,7 @@ window.p90confirm = function (message, opts) {
     ov.style.cssText =
       'position:fixed;inset:0;z-index:2147483000;background:rgba(8,8,8,.85);' +
       'display:flex;align-items:center;justify-content:center;padding:24px;' +
-      "font-family:'DM Mono',monospace;";
+      "font-family: 'Inter',monospace;";
     ov.innerHTML =
       '<div role="alertdialog" aria-modal="true" style="background:var(--surface,#111);' +
       'border:1px solid var(--border2,rgba(245,245,240,.16));max-width:400px;width:100%;padding:32px 34px;">' +

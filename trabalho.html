@@ -12,7 +12,7 @@
 <meta name="apple-mobile-web-app-title" content="Project 90">
 <title>Project 90 — Trabalho</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Bebas+Neue&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/base.css">
 <link rel="stylesheet" href="css/components.css">
 <script src="js/supabase-config.js"></script>
@@ -26,7 +26,7 @@
   display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
   padding: 24px 32px 16px; border-bottom: 1px solid var(--border);
 }
-.page-title { font-family: 'DM Serif Display', serif; font-size: 26px; font-weight: 400; display: flex; align-items: baseline; gap: 10px; }
+.page-title { font-family: var(--font-ui); font-weight: 500; font-size: 22px; font-weight: 400; display: flex; align-items: baseline; gap: 10px; }
 .page-title em { font-style: italic; opacity: 0.45; font-size: 22px; }
 /* ── LEMBRETES ──
    Nota visível ligada (opcionalmente) a uma tarefa — sem horário, sem
@@ -51,7 +51,7 @@
 .wk-rem-link {
   display: inline-flex; align-items: center; gap: 5px; margin-top: 6px; max-width: 100%;
   background: var(--surface2); border: 1px solid var(--border); color: var(--mid);
-  font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.02em; padding: 4px 9px;
+  font-family: var(--font-ui); font-size: 11px; letter-spacing: 0.02em; padding: 4px 9px;
   cursor: pointer; transition: color 0.15s, border-color 0.15s; overflow: hidden;
   white-space: nowrap; text-overflow: ellipsis;
 }
@@ -59,19 +59,19 @@
 .wk-rem-add { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
 .wk-rem-add input {
   flex: 1; min-width: 160px; background: var(--surface2); border: 1px solid var(--border); color: var(--white);
-  font-family: 'DM Mono', monospace; font-size: 13px; letter-spacing: 0.02em; padding: 10px 14px;
+  font-family: var(--font-ui); font-size: 13px; letter-spacing: 0.02em; padding: 10px 14px;
   outline: none; transition: border-color 0.2s;
 }
 .wk-rem-add input:focus { border-color: rgba(245,245,240,0.35); }
 .wk-rem-add input::placeholder { color: var(--mid); }
 .wk-rem-add select {
   background: var(--surface2); border: 1px solid var(--border); color: var(--white);
-  font-family: 'DM Mono', monospace; font-size: 12px; padding: 0 10px; outline: none;
+  font-family: var(--font-ui); font-size: 12px; padding: 0 10px; outline: none;
   max-width: 220px; appearance: none; cursor: pointer; transition: border-color 0.2s;
 }
 .wk-rem-add select:focus { border-color: rgba(245,245,240,0.35); }
 .wk-rem-add button {
-  background: none; border: 1px solid var(--border2); color: var(--mid); font-family: 'DM Mono', monospace;
+  background: none; border: 1px solid var(--border2); color: var(--mid); font-family: var(--font-ui);
   font-size: 13px; letter-spacing: 0.1em; padding: 0 16px; cursor: pointer; transition: color 0.2s, border-color 0.2s;
 }
 .wk-rem-add button:hover { color: var(--white); border-color: rgba(245,245,240,0.35); }
@@ -80,7 +80,7 @@
 .wk-newproj { display: flex; gap: 10px; flex-wrap: wrap; }
 .wk-newproj input {
   flex: 1; min-width: 160px; background: var(--surface2); border: 1px solid var(--border); color: var(--white);
-  font-family: 'DM Mono', monospace; font-size: 13px; letter-spacing: 0.02em; padding: 10px 14px;
+  font-family: var(--font-ui); font-size: 13px; letter-spacing: 0.02em; padding: 10px 14px;
   outline: none; transition: border-color 0.2s;
 }
 .wk-newproj input:focus { border-color: rgba(245,245,240,0.35); }
@@ -96,7 +96,7 @@
 .wk-proj-name { flex: 1; min-width: 0; font-size: 14px; letter-spacing: 0.04em; color: var(--white); }
 .wk-proj-name-input {
   flex: 1; background: var(--surface2); border: 1px solid var(--border2); color: var(--white);
-  font-family: 'DM Mono', monospace; font-size: 14px; letter-spacing: 0.04em; padding: 6px 10px; outline: none;
+  font-family: var(--font-ui); font-size: 14px; letter-spacing: 0.04em; padding: 6px 10px; outline: none;
 }
 .wk-proj-count { font-size: 11px; letter-spacing: 0.08em; color: var(--mid); white-space: nowrap; flex-shrink: 0; }
 .wk-proj-count .over { color: var(--red); }
@@ -142,7 +142,7 @@
 .wk-qa { display: flex; gap: 8px; margin-top: 10px; }
 .wk-qa input {
   background: var(--surface2); border: 1px solid var(--border); color: var(--white);
-  font-family: 'DM Mono', monospace; font-size: 12px; letter-spacing: 0.02em; padding: 8px 10px;
+  font-family: var(--font-ui); font-size: 12px; letter-spacing: 0.02em; padding: 8px 10px;
   outline: none; transition: border-color 0.2s;
 }
 .wk-qa input:focus { border-color: rgba(245,245,240,0.35); }
@@ -150,7 +150,7 @@
 .wk-qa-title { flex: 1; min-width: 0; }
 .wk-qa-date { width: 140px; color-scheme: dark; }
 .wk-qa button {
-  background: none; border: 1px solid var(--border2); color: var(--mid); font-family: 'DM Mono', monospace;
+  background: none; border: 1px solid var(--border2); color: var(--mid); font-family: var(--font-ui);
   font-size: 13px; letter-spacing: 0.1em; padding: 0 14px; cursor: pointer; transition: color 0.2s, border-color 0.2s;
 }
 .wk-qa button:hover { color: var(--white); border-color: rgba(245,245,240,0.35); }
@@ -163,7 +163,7 @@
 /* alternador de visão */
 .wk-viewsw { display: inline-flex; border: 1px solid var(--border2); flex-shrink: 0; }
 .wk-viewbtn {
-  background: none; border: none; color: var(--mid); font-family: 'DM Mono', monospace;
+  background: none; border: none; color: var(--mid); font-family: var(--font-ui);
   font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; padding: 7px 14px; cursor: pointer;
   transition: background 0.15s, color 0.15s;
 }
@@ -207,7 +207,7 @@
 .kb-add { display: flex; flex-direction: column; gap: 6px; padding: 8px 10px 10px; border-top: 1px solid var(--border); }
 .kb-add select, .kb-add input {
   background: var(--surface2); border: 1px solid var(--border); color: var(--white);
-  font-family: 'DM Mono', monospace; font-size: 12px; padding: 7px 9px; outline: none;
+  font-family: var(--font-ui); font-size: 12px; padding: 7px 9px; outline: none;
 }
 .kb-add select { appearance: none; cursor: pointer; }
 .kb-add select:focus, .kb-add input:focus { border-color: rgba(245,245,240,0.35); }
@@ -215,7 +215,7 @@
 .kb-add-row input[type="date"] { flex-shrink: 0; width: 118px; color-scheme: dark; }
 .kb-add-title { flex: 1; min-width: 0; }
 .kb-add button {
-  background: none; border: 1px solid var(--border2); color: var(--mid); font-family: 'DM Mono', monospace;
+  background: none; border: 1px solid var(--border2); color: var(--mid); font-family: var(--font-ui);
   font-size: 12px; letter-spacing: 0.1em; padding: 7px; cursor: pointer; transition: color 0.2s, border-color 0.2s;
 }
 .kb-add button:hover { color: var(--white); border-color: rgba(245,245,240,0.35); }
@@ -223,13 +223,13 @@
 /* modal — situação */
 .wtm-status { display: flex; gap: 0; border: 1px solid var(--border2); }
 .wtm-status button {
-  flex: 1; background: none; border: none; color: var(--mid); font-family: 'DM Mono', monospace;
+  flex: 1; background: none; border: none; color: var(--mid); font-family: var(--font-ui);
   font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; padding: 9px 4px; cursor: pointer;
   transition: background 0.15s, color 0.15s;
 }
 .wtm-status button + button { border-left: 1px solid var(--border2); }
 .wtm-status button.active { background: var(--white); color: var(--bg); }
-textarea.modal-input { resize: vertical; min-height: 60px; line-height: 1.6; font-family: 'DM Mono', monospace; }
+textarea.modal-input { resize: vertical; min-height: 60px; line-height: 1.6; font-family: var(--font-ui); }
 
 
 /* ── LAYOUT: duas colunas (Tarefas | Realces) ── */
@@ -242,7 +242,7 @@ textarea.modal-input { resize: vertical; min-height: 60px; line-height: 1.6; fon
   display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap;
   margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px solid var(--border2);
 }
-.wk-col-title { font-family: 'Bebas Neue', sans-serif; font-size: 26px; letter-spacing: 0.08em; line-height: 1; }
+.wk-col-title { font-family: var(--font-ui); font-weight: 500; font-size: 22px; letter-spacing: 0.08em; line-height: 1; }
 .wk-col-sum { font-size: 11px; letter-spacing: 0.06em; color: var(--mid); line-height: 1.6; }
 .wk-col-sum b { color: var(--white); font-weight: 400; }
 .wk-col-sum .over { color: var(--red); }
@@ -263,7 +263,7 @@ textarea.modal-input { resize: vertical; min-height: 60px; line-height: 1.6; fon
 /* leque (tarefa de um realce) — botão de furos sempre visível */
 .wk-task-tools.always { opacity: 1; }
 .wk-lq-toggle {
-  background: none; border: 1px solid var(--border2); color: var(--mid); font-family: 'DM Mono', monospace;
+  background: none; border: 1px solid var(--border2); color: var(--mid); font-family: var(--font-ui);
   font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; padding: 4px 9px; cursor: pointer; white-space: nowrap;
   transition: color 0.15s, border-color 0.15s;
 }
@@ -283,12 +283,12 @@ textarea.modal-input { resize: vertical; min-height: 60px; line-height: 1.6; fon
 .fu-add { display: flex; gap: 6px; }
 .fu-add input {
   width: 78px; background: var(--surface2); border: 1px solid var(--border); color: var(--white);
-  font-family: 'DM Mono', monospace; font-size: 12px; padding: 6px 8px; outline: none;
+  font-family: var(--font-ui); font-size: 12px; padding: 6px 8px; outline: none;
 }
 .fu-add input:focus { border-color: rgba(245,245,240,0.35); }
 .fu-add input::placeholder { color: var(--mid); }
 .fu-btn, .fu-add button {
-  background: none; border: 1px solid var(--border2); color: var(--mid); font-family: 'DM Mono', monospace;
+  background: none; border: 1px solid var(--border2); color: var(--mid); font-family: var(--font-ui);
   font-size: 11px; letter-spacing: 0.06em; padding: 6px 10px; cursor: pointer; transition: color 0.15s, border-color 0.15s;
 }
 .fu-btn:hover, .fu-add button:hover { color: var(--white); border-color: rgba(245,245,240,0.4); }
@@ -299,13 +299,13 @@ textarea.modal-input { resize: vertical; min-height: 60px; line-height: 1.6; fon
 .fu-n { width: 36px; font-size: 12px; flex-shrink: 0; }
 .fu-b {
   width: 24px; height: 24px; flex-shrink: 0; background: none; border: 1px solid var(--border2); color: var(--mid);
-  font-family: 'DM Mono', monospace; font-size: 10px; cursor: pointer; transition: background 0.12s, color 0.12s;
+  font-family: var(--font-ui); font-size: 10px; cursor: pointer; transition: background 0.12s, color 0.12s;
 }
 .fu-b.on.p { background: var(--white); color: var(--bg); border-color: var(--white); }
 .fu-b.on.t { background: var(--green); color: var(--bg); border-color: var(--green); }
 .fu-m {
   width: 100%; min-width: 0; flex: 1; background: none; border: none; border-bottom: 1px solid var(--border);
-  color: var(--white); font-family: 'DM Mono', monospace; font-size: 11px; padding: 3px 2px; outline: none;
+  color: var(--white); font-family: var(--font-ui); font-size: 11px; padding: 3px 2px; outline: none;
 }
 .fu-m:focus { border-bottom-color: rgba(245,245,240,0.4); }
 .fu-m::placeholder { color: var(--mid); }

@@ -12,7 +12,7 @@
 <meta name="apple-mobile-web-app-title" content="Project 90">
 <title>Project 90 — Reflexões</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Bebas+Neue&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/base.css">
 <link rel="stylesheet" href="css/components.css">
 <script src="js/supabase-config.js"></script>
@@ -33,7 +33,7 @@ body { overflow: hidden; }
 /* ── TEMA DE HOJE ── */
 .today-card { background: var(--surface); border: 1px solid var(--border2); padding: 26px 30px; }
 .tc-eyebrow { font-size: 10px; letter-spacing: 0.24em; text-transform: uppercase; color: var(--mid); margin-bottom: 8px; }
-.tc-topic { font-family: 'DM Serif Display', serif; font-style: italic; font-size: 25px; line-height: 1.35; color: var(--white); }
+.tc-topic { font-family: var(--font-ui); font-weight: 500; font-style: italic; font-size: 21px; line-height: 1.35; color: var(--white); }
 .tc-day { font-size: 12px; letter-spacing: 0.06em; color: var(--mid); margin-top: 10px; }
 
 /* ── FORMULÁRIO DE REFLEXÃO ── */
@@ -46,7 +46,7 @@ body { overflow: hidden; }
 .prompt-lbl::before { content: ''; display: inline-block; width: 14px; height: 1px; background: var(--mid); }
 .rq-field {
   width: 100%; background: var(--surface2); border: 1px solid var(--border);
-  color: var(--white); font-family: 'DM Mono', monospace; font-weight: 300;
+  color: var(--white); font-family: var(--font-ui); font-weight: 300;
   font-size: 13px; letter-spacing: 0.04em; line-height: 1.85;
   padding: 14px 16px; resize: none; outline: none;
   transition: border-color 0.2s, background 0.2s; min-height: 76px;
@@ -72,7 +72,7 @@ body { overflow: hidden; }
 .refl-item { padding: 14px 20px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.15s; }
 .refl-item:hover { background: rgba(245,245,240,0.04); }
 .ri-top { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
-.ri-day { font-family: 'Bebas Neue', sans-serif; font-size: 15px; color: var(--white); }
+.ri-day { font-family: var(--font-ui); font-weight: 500; font-size: 15px; color: var(--white); }
 .ri-date { font-size: 10px; letter-spacing: 0.1em; color: var(--mid); }
 .ri-topic {
   font-size: 12px; letter-spacing: 0.02em; color: rgba(245,245,240,0.7); line-height: 1.5; margin-top: 4px;
@@ -86,7 +86,7 @@ body { overflow: hidden; }
 .rv-section:last-child { margin-bottom: 0; }
 .rv-lbl { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--mid); margin-bottom: 8px; }
 .rv-text {
-  font-family: 'DM Mono', monospace; font-weight: 300; font-size: 13.5px; line-height: 1.9;
+  font-family: var(--font-ui); font-weight: 300; font-size: 13.5px; line-height: 1.9;
   color: var(--white); letter-spacing: 0.03em; white-space: pre-wrap; word-break: break-word;
 }
 .rv-empty { text-align: center; color: var(--mid); font-size: 13px; padding: 16px 0; }

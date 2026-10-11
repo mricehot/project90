@@ -12,7 +12,7 @@
 <meta name="apple-mobile-web-app-title" content="Project 90">
 <title>Project 90 — Faculdade</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Bebas+Neue&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/base.css">
 <link rel="stylesheet" href="css/components.css">
 <script src="js/supabase-config.js"></script>
@@ -75,20 +75,20 @@
 .fsm-link:hover { color: var(--white); }
 .fsm-empty { font-size: 13px; color: var(--mid); padding: 14px 2px; }
 .fsm-add { margin-top: 12px; }
-.page-title { font-family: 'DM Serif Display', serif; font-size: 26px; font-weight: 400; display: flex; align-items: baseline; gap: 10px; }
+.page-title { font-family: var(--font-ui); font-weight: 500; font-size: 22px; font-weight: 400; display: flex; align-items: baseline; gap: 10px; }
 .page-title em { font-style: italic; opacity: 0.45; font-size: 22px; }
 
 .g3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
 .stat-card { background: var(--surface); border: 1px solid var(--border); padding: 18px 20px; }
 .stat-lbl { font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--mid); margin-bottom: 8px; }
-.stat-val { font-family: 'Bebas Neue', sans-serif; font-size: 38px; line-height: 1; }
+.stat-val { font-family: var(--font-ui); font-weight: 500; font-size: 27px; line-height: 1; }
 .stat-val.warn { color: var(--red); }
 
 /* nova disciplina */
 .fac-newsubj { display: flex; gap: 10px; }
 .fac-newsubj input {
   flex: 1; background: var(--surface2); border: 1px solid var(--border); color: var(--white);
-  font-family: 'DM Mono', monospace; font-size: 13px; letter-spacing: 0.02em; padding: 10px 14px;
+  font-family: var(--font-ui); font-size: 13px; letter-spacing: 0.02em; padding: 10px 14px;
   outline: none; transition: border-color 0.2s;
 }
 .fac-newsubj input:focus { border-color: rgba(245,245,240,0.35); }
@@ -105,7 +105,7 @@
 .fac-subj-name { flex: 1; min-width: 0; font-size: 14px; letter-spacing: 0.04em; color: var(--white); }
 .fac-subj-name-input {
   flex: 1; background: var(--surface2); border: 1px solid var(--border2); color: var(--white);
-  font-family: 'DM Mono', monospace; font-size: 14px; letter-spacing: 0.04em; padding: 6px 10px; outline: none;
+  font-family: var(--font-ui); font-size: 14px; letter-spacing: 0.04em; padding: 6px 10px; outline: none;
 }
 .fac-subj-count { font-size: 11px; letter-spacing: 0.08em; color: var(--mid); white-space: nowrap; flex-shrink: 0; }
 .fac-subj-count .over { color: var(--red); }
@@ -132,7 +132,7 @@
 .fsm-rename-btn:hover { color: var(--white); border-color: rgba(245,245,240,0.35); }
 .fsm-title-input {
   flex: 1; min-width: 0; background: var(--surface2); border: 1px solid var(--border2); color: var(--white);
-  font-family: 'DM Serif Display', serif; font-size: 22px; padding: 6px 10px; outline: none;
+  font-family: var(--font-ui); font-weight: 500; font-size: 22px; padding: 6px 10px; outline: none;
 }
 
 /* atividade */
@@ -166,7 +166,7 @@
 .fac-qa { display: flex; gap: 8px; margin-top: 10px; }
 .fac-qa input {
   background: var(--surface2); border: 1px solid var(--border); color: var(--white);
-  font-family: 'DM Mono', monospace; font-size: 12px; letter-spacing: 0.02em; padding: 8px 10px;
+  font-family: var(--font-ui); font-size: 12px; letter-spacing: 0.02em; padding: 8px 10px;
   outline: none; transition: border-color 0.2s;
 }
 .fac-qa input:focus { border-color: rgba(245,245,240,0.35); }
@@ -174,7 +174,7 @@
 .fac-qa-title { flex: 1; min-width: 0; }
 .fac-qa-date { width: 140px; color-scheme: dark; }
 .fac-qa button {
-  background: none; border: 1px solid var(--border2); color: var(--mid); font-family: 'DM Mono', monospace;
+  background: none; border: 1px solid var(--border2); color: var(--mid); font-family: var(--font-ui);
   font-size: 13px; letter-spacing: 0.1em; padding: 0 14px; cursor: pointer; transition: color 0.2s, border-color 0.2s;
 }
 .fac-qa button:hover { color: var(--white); border-color: rgba(245,245,240,0.35); }
@@ -190,7 +190,7 @@
 /* alternador de visão */
 .fac-viewsw { display: inline-flex; border: 1px solid var(--border2); flex-shrink: 0; }
 .fac-viewbtn {
-  background: none; border: none; color: var(--mid); font-family: 'DM Mono', monospace;
+  background: none; border: none; color: var(--mid); font-family: var(--font-ui);
   font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; padding: 7px 14px; cursor: pointer;
   transition: background 0.15s, color 0.15s;
 }
@@ -234,7 +234,7 @@
 .kb-add { display: flex; flex-direction: column; gap: 6px; padding: 8px 10px 10px; border-top: 1px solid var(--border); }
 .kb-add select, .kb-add input {
   background: var(--surface2); border: 1px solid var(--border); color: var(--white);
-  font-family: 'DM Mono', monospace; font-size: 12px; padding: 7px 9px; outline: none;
+  font-family: var(--font-ui); font-size: 12px; padding: 7px 9px; outline: none;
 }
 .kb-add select { appearance: none; cursor: pointer; }
 .kb-add select:focus, .kb-add input:focus { border-color: rgba(245,245,240,0.35); }
@@ -242,7 +242,7 @@
 .kb-add-row input[type="date"] { flex-shrink: 0; width: 118px; color-scheme: dark; }
 .kb-add-title { flex: 1; min-width: 0; }
 .kb-add button {
-  background: none; border: 1px solid var(--border2); color: var(--mid); font-family: 'DM Mono', monospace;
+  background: none; border: 1px solid var(--border2); color: var(--mid); font-family: var(--font-ui);
   font-size: 12px; letter-spacing: 0.1em; padding: 7px; cursor: pointer; transition: color 0.2s, border-color 0.2s;
 }
 .kb-add button:hover { color: var(--white); border-color: rgba(245,245,240,0.35); }
@@ -250,13 +250,13 @@
 /* modal — situação */
 .fm-status { display: flex; gap: 0; border: 1px solid var(--border2); }
 .fm-status button {
-  flex: 1; background: none; border: none; color: var(--mid); font-family: 'DM Mono', monospace;
+  flex: 1; background: none; border: none; color: var(--mid); font-family: var(--font-ui);
   font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; padding: 9px 4px; cursor: pointer;
   transition: background 0.15s, color 0.15s;
 }
 .fm-status button + button { border-left: 1px solid var(--border2); }
 .fm-status button.active { background: var(--white); color: var(--bg); }
-textarea.modal-input { resize: vertical; min-height: 60px; line-height: 1.6; font-family: 'DM Mono', monospace; }
+textarea.modal-input { resize: vertical; min-height: 60px; line-height: 1.6; font-family: var(--font-ui); }
 
 @media (max-width: 1080px) {
   .fac-main { grid-template-columns: 1fr 240px; }

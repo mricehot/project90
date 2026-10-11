@@ -12,7 +12,7 @@
 <meta name="apple-mobile-web-app-title" content="Project 90">
 <title>Project 90 — Login</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Bebas+Neue&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
 /* ── RESET ── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -47,7 +47,7 @@ html.sb-scrolling ::-webkit-scrollbar-thumb { background: var(--white); }
 html { scroll-behavior: smooth; }
 body {
   background: var(--bg); color: var(--white);
-  font-family: 'DM Mono', monospace; font-weight: 300;
+  font-family: var(--font-ui); font-weight: 300;
   -webkit-font-smoothing: antialiased;
   overflow: hidden; min-height: 100vh;
 }
@@ -117,11 +117,11 @@ input, textarea { cursor: text; }
   pointer-events: none;
 }
 .left-top    { position: relative; z-index: 2; }
-.left-logo   { font-family: 'Bebas Neue', sans-serif; font-size: 15px; letter-spacing: 0.2em; color: var(--white); text-decoration: none; display: flex; align-items: center; gap: 10px; opacity: 0.7; }
+.left-logo   { font-family: var(--font-ui); font-weight: 500; font-size: 15px; letter-spacing: 0.2em; color: var(--white); text-decoration: none; display: flex; align-items: center; gap: 10px; opacity: 0.7; }
 .left-logo::before { content: ''; display: block; width: 18px; height: 1px; background: var(--mid); }
 .left-center { position: relative; z-index: 2; flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 32px 0; }
-.left-big    { font-family: 'Bebas Neue', sans-serif; font-size: clamp(80px, 12vw, 140px); line-height: 0.85; letter-spacing: -0.01em; animation: flicker 4s infinite; }
-.left-sub    { font-family: 'DM Serif Display', serif; font-style: italic; font-size: 17px; color: var(--white); opacity: 0.45; margin-top: 10px; }
+.left-big    { font-family: var(--font-ui); font-weight: 500; font-size: clamp(80px, 12vw, 140px); line-height: 0.85; letter-spacing: -0.01em; animation: flicker 4s infinite; }
+.left-sub    { font-family: var(--font-ui); font-weight: 500; font-style: italic; font-size: 17px; color: var(--white); opacity: 0.45; margin-top: 10px; }
 .left-desc   { font-size: 13px; line-height: 1.85; color: var(--mid); margin-top: 20px; max-width: 260px; }
 .left-bottom { position: relative; z-index: 2; }
 
@@ -134,7 +134,7 @@ input, textarea { cursor: text; }
 .left-stats    { display: flex; border: 1px solid var(--border); }
 .ls            { flex: 1; padding: 10px 0; text-align: center; border-right: 1px solid var(--border); }
 .ls:last-child { border-right: none; }
-.ls-val        { font-family: 'Bebas Neue', sans-serif; font-size: 22px; line-height: 1; }
+.ls-val        { font-family: var(--font-ui); font-weight: 500; font-size: 22px; line-height: 1; }
 .ls-lbl        { font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--mid); margin-top: 3px; }
 
 /* RIGHT */
@@ -142,14 +142,14 @@ input, textarea { cursor: text; }
 
 .form-eyebrow { font-size: 10px; letter-spacing: 0.28em; text-transform: uppercase; color: var(--mid); margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
 .form-eyebrow::before { content: ''; display: inline-block; width: 16px; height: 1px; background: var(--mid); }
-.form-heading    { font-family: 'DM Serif Display', serif; font-size: clamp(24px, 3vw, 32px); font-weight: 400; line-height: 1.2; margin-bottom: 32px; }
+.form-heading    { font-family: var(--font-ui); font-weight: 500; font-size: clamp(24px, 3vw, 32px); font-weight: 400; line-height: 1.2; margin-bottom: 32px; }
 .form-heading em { font-style: italic; opacity: 0.4; }
 
 .field-wrap  { margin-bottom: 14px; }
 .field-lbl   { font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--mid); display: block; margin-bottom: 7px; }
 .field-input {
   width: 100%; background: var(--surface); border: 1px solid var(--border); color: var(--white);
-  font-family: 'DM Mono', monospace; font-weight: 300; font-size: 14px; letter-spacing: 0.04em;
+  font-family: var(--font-ui); font-weight: 300; font-size: 14px; letter-spacing: 0.04em;
   padding: 12px 14px; outline: none; transition: border-color 0.2s;
 }
 .field-input:focus { border-color: rgba(245,245,240,0.35); }
@@ -158,7 +158,7 @@ input, textarea { cursor: text; }
 
 .btn-pass {
   background: var(--surface); border: 1px solid var(--border); color: var(--mid);
-  padding: 12px 14px; cursor: pointer; font-family: 'DM Mono', monospace; font-size: 12px;
+  padding: 12px 14px; cursor: pointer; font-family: var(--font-ui); font-size: 12px;
   letter-spacing: 0.05em; transition: color 0.2s, border-color 0.2s; white-space: nowrap;
 }
 .btn-pass:hover { color: var(--white); border-color: var(--border2); }
@@ -174,7 +174,7 @@ input, textarea { cursor: text; }
 .btn-google {
   width: 100%; margin-top: 8px; padding: 14px; background: none;
   border: 1px solid var(--border2); color: var(--white); cursor: pointer;
-  font-family: 'DM Mono', monospace; font-size: 13px; letter-spacing: 0.14em;
+  font-family: var(--font-ui); font-size: 13px; letter-spacing: 0.14em;
   text-transform: uppercase; transition: background 0.2s, border-color 0.2s, transform 0.15s;
   display: flex; align-items: center; justify-content: center; gap: 12px;
 }

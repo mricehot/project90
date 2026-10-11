@@ -12,7 +12,7 @@
 <meta name="apple-mobile-web-app-title" content="Project 90">
 <title>Project 90 — Pendências</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Bebas+Neue&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/base.css">
 <link rel="stylesheet" href="css/components.css">
 <script src="js/supabase-config.js"></script>
@@ -26,7 +26,7 @@
 .pend-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 16px; align-items: start; }
 .pend-venc { grid-column: 1 / -1; }
 .vc-seg { display: inline-flex; border: 1px solid var(--border2); }
-.vc-seg button { background: none; border: none; color: var(--mid); font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; padding: 8px 14px; cursor: pointer; transition: background 0.15s, color 0.15s; }
+.vc-seg button { background: none; border: none; color: var(--mid); font-family: var(--font-ui); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; padding: 8px 14px; cursor: pointer; transition: background 0.15s, color 0.15s; }
 .vc-seg button + button { border-left: 1px solid var(--border2); }
 .vc-seg button:hover { color: var(--white); }
 .vc-seg button.on { background: var(--white); color: var(--bg); }
@@ -78,7 +78,7 @@ a.tc-row.vc-row:hover .tc-name { text-decoration: underline; text-underline-offs
 @media (hover: none) { .nr-del { opacity: 0.5; } }
 .shop-empty { font-size: 13px; color: var(--mid); line-height: 1.7; padding: 4px 0 10px; }
 .shop-clear {
-  background: none; border: none; color: var(--mid); font-family: 'DM Mono', monospace;
+  background: none; border: none; color: var(--mid); font-family: var(--font-ui);
   font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer;
   padding: 8px 0 0; text-decoration: underline; text-underline-offset: 2px;
 }
@@ -87,7 +87,7 @@ a.tc-row.vc-row:hover .tc-name { text-decoration: underline; text-underline-offs
 .card-add-row { display: flex; gap: 8px; align-items: center; margin: 4px 0 0; }
 .card-add-input {
   flex: 1; background: var(--surface2); border: 1px solid var(--border); color: var(--white);
-  font-family: 'DM Mono', monospace; font-weight: 300; font-size: 13px; letter-spacing: 0.03em;
+  font-family: var(--font-ui); font-weight: 300; font-size: 13px; letter-spacing: 0.03em;
   padding: 11px 13px; outline: none; transition: border-color 0.2s;
 }
 .card-add-input:focus { border-color: rgba(245,245,240,0.3); }
@@ -105,7 +105,7 @@ a.tc-row.vc-row:hover .tc-name { text-decoration: underline; text-underline-offs
 #nr-form:not([hidden]) { margin-top: 12px; }
 #hm-form:not([hidden]) { margin-top: 12px; }
 
-.h-badge { font-family: 'Bebas Neue', sans-serif; font-size: 12px; letter-spacing: 0.12em; color: var(--mid); border: 1px solid var(--border); padding: 3px 8px; white-space: nowrap; }
+.h-badge { font-family: var(--font-ui); font-weight: 500; font-size: 12px; letter-spacing: 0.12em; color: var(--mid); border: 1px solid var(--border); padding: 3px 8px; white-space: nowrap; }
 .h-badge.hot { color: var(--white); border-color: rgba(245,245,240,0.25); }
 
 /* ── PRIORIDADES DO DIA (TOP 3) ── */
@@ -113,16 +113,18 @@ a.tc-row.vc-row:hover .tc-name { text-decoration: underline; text-underline-offs
 .pri-row:last-of-type { border-bottom: none; }
 .pri-input {
   flex: 1; min-width: 0; background: none; border: none; color: var(--white);
-  font-family: 'DM Mono', monospace; font-weight: 300; font-size: 13px; letter-spacing: 0.02em;
+  font-family: var(--font-ui); font-weight: 300; font-size: 13px; letter-spacing: 0.02em;
   padding: 4px 0; outline: none;
 }
 .pri-input::placeholder { color: var(--mid); }
 .pri-row.done .pri-input { color: var(--mid); text-decoration: line-through; }
 .pri-done-msg { font-size: 13px; color: rgba(245,245,240,0.9); line-height: 1.6; padding: 10px 0 4px; }
+#priorities-card .h-badge.hot { border-color: rgba(10,10,10,0.3); }
+#priorities-card .pri-link { color: var(--mid); }
 .pri-row { transition: opacity 0.26s ease, transform 0.26s ease, max-height 0.26s ease, padding 0.26s ease; max-height: 80px; overflow: hidden; }
 .pri-row.leaving { opacity: 0; transform: translateX(14px); max-height: 0; padding-top: 0; padding-bottom: 0; border-bottom-width: 0; }
 @media (prefers-reduced-motion: reduce) { .pri-row { transition: none; } }
-.pri-donetoggle { display: block; width: 100%; text-align: left; background: none; border: none; border-top: 1px solid var(--border); margin-top: 6px; padding: 10px 2px 6px; color: var(--mid); font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; cursor: pointer; }
+.pri-donetoggle { display: block; width: 100%; text-align: left; background: none; border: none; border-top: 1px solid var(--border); margin-top: 6px; padding: 10px 2px 6px; color: var(--mid); font-family: var(--font-ui); font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; cursor: pointer; }
 .pri-donetoggle:hover { color: var(--white); }
 .pri-text { flex: 1; min-width: 0; font-size: 13px; line-height: 1.4; color: var(--mid); text-decoration: line-through; }
 
@@ -132,7 +134,7 @@ a.tc-row.vc-row:hover .tc-name { text-decoration: underline; text-underline-offs
 .pri-carry-row { display: flex; align-items: center; gap: 10px; padding: 5px 0; }
 .pri-carry-text { flex: 1; min-width: 0; font-size: 13px; line-height: 1.4; }
 .pri-carry-btn {
-  background: none; border: 1px solid var(--border2); color: var(--white); font-family: 'DM Mono', monospace;
+  background: none; border: 1px solid var(--border2); color: var(--white); font-family: var(--font-ui);
   font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; padding: 5px 9px; cursor: pointer; white-space: nowrap;
   transition: border-color 0.15s;
 }
@@ -142,7 +144,7 @@ a.tc-row.vc-row:hover .tc-name { text-decoration: underline; text-underline-offs
 .pri-carry-x:hover { color: var(--white); }
 .pri-link {
   flex-shrink: 0; max-width: 108px; background: var(--surface2); border: 1px solid var(--border);
-  color: var(--mid); font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.02em;
+  color: var(--mid); font-family: var(--font-ui); font-size: 10px; letter-spacing: 0.02em;
   padding: 5px 6px; outline: none; opacity: 0; transition: opacity 0.15s; cursor: pointer;
 }
 .pri-row:hover .pri-link, .pri-link:focus, .pri-link.linked { opacity: 1; }
@@ -152,14 +154,14 @@ a.tc-row.vc-row:hover .tc-name { text-decoration: underline; text-underline-offs
 
 /* ── ÁGUA ── */
 .wt-row { display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px; }
-.wt-val { font-family: 'Bebas Neue', sans-serif; font-size: 34px; line-height: 1; }
+.wt-val { font-family: var(--font-ui); font-weight: 500; font-size: 29px; line-height: 1; }
 .wt-goal { font-size: 11px; letter-spacing: 0.1em; color: var(--mid); }
 .wt-bar-bg { height: 4px; background: var(--muted); margin-bottom: 14px; }
-.wt-bar-fill { height: 100%; background: #7dd3fc; transition: width 0.4s ease; }
+.wt-bar-fill { height: 100%; background: rgba(245,245,240,0.6); transition: width 0.4s ease; }
 .wt-bar-fill.full { background: var(--green); }
 .wt-btns { display: flex; gap: 8px; flex-wrap: wrap; }
 .wt-btn {
-  background: none; border: 1px solid var(--border2); color: var(--white); font-family: 'DM Mono', monospace;
+  background: none; border: 1px solid var(--border2); color: var(--white); font-family: var(--font-ui);
   font-size: 12px; letter-spacing: 0.06em; padding: 8px 14px; cursor: pointer; transition: border-color 0.15s, color 0.15s;
 }
 .wt-btn:hover { border-color: rgba(245,245,240,0.4); }
@@ -169,7 +171,7 @@ a.tc-row.vc-row:hover .tc-name { text-decoration: underline; text-underline-offs
 /* ── ROTINA NOTURNA ── */
 .nr-hd-right { display: inline-flex; align-items: center; gap: 10px; }
 .nr-switch { display: inline-flex; border: 1px solid var(--border2); flex-shrink: 0; }
-.nr-rbtn { background: none; border: none; color: var(--mid); font-family: 'Bebas Neue', sans-serif;
+.nr-rbtn { background: none; border: none; color: var(--mid); font-family: var(--font-ui); font-weight: 500;
   font-size: 14px; letter-spacing: 0.12em; padding: 2px 11px; cursor: pointer;
   transition: background 0.15s, color 0.15s; }
 .nr-rbtn + .nr-rbtn { border-left: 1px solid var(--border2); }
@@ -277,7 +279,7 @@ a.tc-row.vc-row:hover .tc-name { text-decoration: underline; text-underline-offs
       </div>
 
       <!-- PRIORIDADES DO DIA (TOP 3) -->
-      <div class="card" id="priorities-card">
+      <div class="card tile-inv" id="priorities-card">
         <div class="card-hd">
           <span class="card-title">Prioridades do dia <span class="h-badge hot" id="pri-streak" style="margin-left:8px"></span></span>
           <span class="card-action" id="pri-count"></span>
