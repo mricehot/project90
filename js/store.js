@@ -699,6 +699,28 @@ const Store = (() => {
     shell.insertBefore(bar, shell.firstChild);
     shell.appendChild(backdrop);
 
+    // Barra inferior com os 5 destinos (só aparece no celular — ver components.css).
+    // O menu ☰ continua dando acesso a todas as páginas.
+    const DEST = [
+      { label: 'Hoje',     icon: '☀', href: 'hoje.html',        pages: ['hoje.html'] },
+      { label: 'Planejar', icon: '⚑', href: 'pendencias.html',  pages: ['pendencias.html', 'calendario.html', 'tarefas.html', 'faculdade.html', 'trabalho.html'] },
+      { label: 'Evoluir',  icon: '△', href: 'habitos.html',     pages: ['dashboard.html', 'habitos.html', 'metricas.html', 'diario.html', 'treino.html', 'biblia.html', 'vocabulario.html', 'biblioteca.html', 'reflexoes.html', 'diccao.html', 'conversacao.html'] },
+      { label: 'Dinheiro', icon: '◫', href: 'financeiro.html',  pages: ['financeiro.html'] },
+      { label: 'Jogo',     icon: '❖', href: 'sistema.html',     pages: ['sistema.html', 'conquistas.html', 'vitorias.html', 'jornada.html'] },
+    ];
+    const curPage = location.pathname.split('/').pop() || 'index.html';
+    if (!document.querySelector('.bottom-nav') && DEST.some(d => d.pages.indexOf(curPage) !== -1)) {
+      const bn = document.createElement('nav');
+      bn.className = 'bottom-nav';
+      bn.setAttribute('aria-label', 'Navegação principal');
+      bn.innerHTML = DEST.map(d => {
+        const on = d.pages.indexOf(curPage) !== -1;
+        return '<a href="' + d.href + '"' + (on ? ' class="on" aria-current="page"' : '') + '>' +
+          '<span class="bn-i" aria-hidden="true">' + d.icon + '</span><span class="bn-l">' + d.label + '</span></a>';
+      }).join('');
+      shell.appendChild(bn);
+    }
+
     const btn = bar.querySelector('.hamburger');
     const open = () => {
       document.body.classList.add('nav-open');

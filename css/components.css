@@ -293,6 +293,7 @@
 /* ── MOBILE NAV (barra superior + drawer) ── */
 .mobile-topbar   { display: none; }
 .sidebar-backdrop { display: none; }
+.bottom-nav { display: none; }
 
 /* ── RESPONSIVE ── */
 @media (max-width: 900px) {
@@ -347,6 +348,23 @@
   }
   .sidebar-backdrop.show { opacity: 1; pointer-events: auto; }
 
+
+  /* barra inferior: os 5 destinos */
+  .bottom-nav {
+    display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 95;
+    background: var(--surface); border-top: 1px solid var(--border2);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .bottom-nav a {
+    flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
+    padding: 9px 0 8px; color: var(--mid); text-decoration: none;
+    border-top: 2px solid transparent; margin-top: -1px;
+  }
+  .bottom-nav a.on { color: var(--white); border-top-color: var(--white); }
+  .bn-i { font-size: 17px; line-height: 1; }
+  .bn-l { font-size: 10.5px; letter-spacing: 0.04em; }
+  body { padding-bottom: calc(58px + env(safe-area-inset-bottom)); }
+  .toast { bottom: calc(76px + env(safe-area-inset-bottom)); }
   .g2, .g21 { grid-template-columns: 1fr; }
   .g4 { grid-template-columns: 1fr 1fr; }
 }
