@@ -409,3 +409,9 @@ body .page-title, body .hj-greet { font-weight: 500; letter-spacing: -0.01em; }
 .habit-card, .ct-cat, .empty-state, .gm-stage, .cal2-rail, .fac-rail, .refl-rail, .bib-rail, .qadd { border-radius: 14px; }
 .jm-box { border-radius: 18px; }
 .btn-sm, .modal-btn, .field-btn { border-radius: 8px; }
+.sb-mobile {
+  display: block; margin-bottom: 10px; cursor: pointer;
+  font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--mid); transition: color 0.2s; text-decoration: none;
+}
+.sb-mobile:hover { color: var(--white); }

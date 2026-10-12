@@ -294,7 +294,7 @@
   }
   function sheetMenu() {
     openSheet(`<h3>Project 90</h3>
-      <a class="link" href="hoje.html">Abrir o app completo</a>
+      <a class="link" href="hoje.html" data-act="full">Abrir o app completo</a>
       <button class="link" type="button" data-act="logout" style="width:100%">Sair</button>
       <div class="acts"><button class="btn" type="button" data-act="close">Fechar</button></div>`);
   }
@@ -364,6 +364,7 @@
         undoable('Gasto apagado', () => { Store.addFinExpense(snap); render(); });
         break;
       }
+      case 'full': try { localStorage.setItem('p90_ui', 'full'); } catch (e) {} break;   // deixa o link navegar
       case 'close': closeSheet(); break;
       case 'logout': {
         (async () => {

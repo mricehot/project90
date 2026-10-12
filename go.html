@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0a0a0a">
+<title>Project 90</title>
+<style>html,body{background:#0a0a0a;color:#8d8d88;font:14px system-ui,sans-serif;margin:0;padding:24px}</style>
+</head>
+<body>
+<noscript><a href="app.html" style="color:#f2f2ee">Entrar</a></noscript>
+<script>
+/* Porta de entrada: decide qual interface abrir.
+   · celular (largura ≤ 700px) → app.html (mobile, minimalista)
+   · computador/tablet grande   → hoje.html (app completo)
+   · escolha explícita guardada em localStorage 'p90_ui':
+       'full'   → sempre hoje.html (usuário abriu "o app completo")
+       'mobile' → sempre app.html
+   Preserva ?query e #hash (tokens do login) para a página de destino.
+   Acrescente ?dry para só mostrar o destino, sem redirecionar. */
+(function () {
+  var ui = null;
+  try { ui = localStorage.getItem('p90_ui'); } catch (e) {}
+  var phone = !!(window.matchMedia && window.matchMedia('(max-width: 700px)').matches);
+  var dest = ui === 'full' ? 'hoje.html' : (ui === 'mobile' || phone ? 'app.html' : 'hoje.html');
+  if (/[?&]dry\b/.test(location.search)) { document.body.textContent = dest; return; }
+  location.replace(dest + location.search.replace(/[?&]dry\b/, '') + location.hash);
+})();
+</script>
+</body>
+</html>
