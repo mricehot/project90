@@ -14,10 +14,12 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/app.css">
+<link rel="stylesheet" href="css/idle.css">
 <script src="js/supabase-config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/supabase.js"></script>
 <script src="js/store.js"></script>
+<script src="js/achievements.js"></script>
 </head>
 <body>
 
@@ -25,6 +27,7 @@
 
 <header class="top">
   <div class="top-row">
+    <button class="ghost back" id="back-btn" type="button" data-act="back" aria-label="Voltar" hidden>‹</button>
     <h1 id="title">Hoje</h1>
     <button class="ghost" id="menu-btn" type="button" aria-label="Menu">⋯</button>
   </div>
@@ -40,12 +43,16 @@
   <button class="tab" data-tab="habitos" type="button">Hábitos</button>
   <button class="tab" data-tab="tarefas" type="button">Tarefas</button>
   <button class="tab" data-tab="diario" type="button">Diário</button>
-  <button class="tab" data-tab="dinheiro" type="button">Dinheiro</button>
+  <button class="tab" data-tab="mais" type="button">Mais</button>
 </nav>
 
 <div class="scrim" id="scrim" hidden></div>
 <section class="sheet" id="sheet" hidden role="dialog" aria-modal="true"></section>
 
 <script src="js/app.js"></script>
+<script src="js/app-estudo.js"></script>
+<script src="js/app-leitura.js"></script>
+<script src="js/app-jogo.js"></script>
+<script src="js/app-extra.js"></script>
 </body>
 </html>
