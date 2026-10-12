@@ -6,8 +6,9 @@
 (function () {
   'use strict';
 
-  const TABS = ['hoje', 'habitos', 'tarefas', 'diario', 'dinheiro'];
-  const TITLES = { hoje: 'Hoje', habitos: 'Hábitos', tarefas: 'Tarefas', diario: 'Diário', dinheiro: 'Dinheiro' };
+  const TABS = ['hoje', 'habitos', 'tarefas', 'diario', 'mais'];
+  const MODS = {};   // módulos registrados (js/app-*.js): sub-telas de "Mais"
+  const TITLES = { hoje: 'Hoje', habitos: 'Hábitos', tarefas: 'Tarefas', diario: 'Diário', mais: 'Mais' };
   const MOODS = ['🔥', '💪', '😐', '😓', '💀'];
   const MOOD_LABEL = { '🔥': 'Em chamas', '💪': 'Forte', '😐': 'Neutro', '😓': 'Difícil', '💀': 'Horrível' };
   const DOW = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'];
@@ -228,6 +229,24 @@
     const s = $('#diary-saved'); if (s) s.textContent = 'Salvo';
   }
 
+  /* ══════════ MAIS ══════════ */
+  const GROUP_ORDER = ['Finanças', 'Estudo e trabalho', 'Leitura e conhecimento', 'Corpo', 'Jogo', 'Acompanhar'];
+  function viewMais() {
+    const mods = Object.keys(MODS).map(k => Object.assign({ key: k }, MODS[k])).filter(m => m.group);
+    let html = '';
+    GROUP_ORDER.concat(Array.from(new Set(mods.map(m => m.group))).filter(g => GROUP_ORDER.indexOf(g) === -1)).forEach(g => {
+      const list = mods.filter(m => m.group === g).sort((a, b) => (a.order || 0) - (b.order || 0));
+      if (!list.length) return;
+      html += `<h2>${esc(g)}</h2>` + list.map(m => {
+        let meta = ''; try { meta = m.meta ? m.meta() : ''; } catch (e) {}
+        return `<button class="navrow" type="button" data-act="goto" data-k="${m.key}"><span class="nm">${esc(m.title)}</span><span class="mt">${esc(meta)} ›</span></button>`;
+      }).join('');
+    });
+    html += `<h2>Conta</h2><a class="navrow" href="hoje.html" data-act="full"><span class="nm">Abrir o app completo</span><span class="mt">›</span></a>
+      <button class="navrow" type="button" data-act="logout"><span class="nm">Sair</span><span class="mt"></span></button>`;
+    return { sub: 'Todas as áreas', html };
+  }
+
   /* ══════════ DINHEIRO ══════════ */
   function viewDinheiro() {
     const ym = st.ym || Store.finYm(), s = Store.finMonthSummary(ym), fin = Store.getFinance();
@@ -365,6 +384,8 @@
         break;
       }
       case 'full': try { localStorage.setItem('p90_ui', 'full'); } catch (e) {} break;   // deixa o link navegar
+      case 'goto': location.hash = el.dataset.k; break;
+      case 'back': location.hash = 'mais'; break;
       case 'close': closeSheet(); break;
       case 'logout': {
         (async () => {
@@ -373,6 +394,10 @@
           location.replace('login.html');
         })();
         break;
+      }
+      default: {
+        const m = MODS[st.tab];
+        if (m && m.actions && m.actions[act]) m.actions[act](el, ev);
       }
     }
   }
@@ -406,30 +431,47 @@
       const hs = Store.getHabits(), h = hs.find(x => x.id === id);
       if (h) { h.name = name; Store.saveHabits(hs); }
       closeSheet(); render();
+    } else {
+      const m = MODS[st.tab];
+      if (m && m.forms && m.forms[kind]) m.forms[kind](form, id);
     }
   }
 
   /* ══════════ render + eventos ══════════ */
-  const VIEWS = { hoje: viewHoje, habitos: viewHabitos, tarefas: viewTarefas, diario: viewDiario, dinheiro: viewDinheiro };
-  function render(force) {
-    if (!VIEWS[st.tab]) st.tab = 'hoje';
-    if (!force && document.activeElement && document.activeElement.id === 'diary-text') return;   // não mexe no texto que está sendo digitado
-    const v = VIEWS[st.tab]();
-    $('#title').textContent = TITLES[st.tab];
-    $('#sub').textContent = v.sub || '';
-    $('#view').innerHTML = v.html;
-    document.querySelectorAll('.tab').forEach(b => b.classList.toggle('on', b.dataset.tab === st.tab));
-    $('#fab').hidden = st.tab === 'diario';
-    document.title = TITLES[st.tab] + ' · Project 90';
+  // Conquistas: quem checa/desbloqueia é js/achievements.js (usado pelas outras páginas).
+  let lastAch = 0;
+  function maybeAchievements() {
+    if (typeof window.notifyNewAchievements !== 'function' || !window.P90_ACHIEVEMENTS) return;
+    const now = Date.now(); if (now - lastAch < 3000) return; lastAch = now;
+    try { window.notifyNewAchievements(); } catch (e) {}
   }
-  function tabFromHash() { const h = (location.hash || '').slice(1); return TABS.indexOf(h) !== -1 ? h : 'hoje'; }
+
+  const VIEWS = { hoje: viewHoje, habitos: viewHabitos, tarefas: viewTarefas, diario: viewDiario, mais: viewMais };
+  const topTab = k => TABS.indexOf(k) !== -1 ? k : 'mais';
+  function render(force) {
+    if (!VIEWS[st.tab] && !MODS[st.tab]) st.tab = 'hoje';
+    if (!force && document.activeElement && document.activeElement.id === 'diary-text') return;   // não mexe no texto que está sendo digitado
+    const m = MODS[st.tab], v = m ? m.view() : VIEWS[st.tab]();
+    const title = m ? (m.title || st.tab) : TITLES[st.tab];
+    $('#title').textContent = title;
+    $('#sub').textContent = v.sub || '';
+    if (st.cleanup) { try { st.cleanup(); } catch (e) {} st.cleanup = null; }
+    $('#view').innerHTML = v.html;
+    $('#back-btn').hidden = TABS.indexOf(st.tab) !== -1;
+    document.querySelectorAll('.tab').forEach(b => b.classList.toggle('on', b.dataset.tab === topTab(st.tab)));
+    $('#fab').hidden = m ? !m.fab : st.tab === 'diario' || st.tab === 'mais';
+    document.title = title + ' · Project 90';
+    if (m && m.after) { try { const c = m.after(); st.cleanup = typeof c === 'function' ? c : null; } catch (e) { console.error(e); } }
+    maybeAchievements();
+  }
+  function tabFromHash() { const h = (location.hash || '').slice(1); return (TABS.indexOf(h) !== -1 || MODS[h]) ? h : 'hoje'; }
   function go(tab) { if (location.hash.slice(1) !== tab) location.hash = tab; else { st.tab = tab; render(); } }
 
   document.addEventListener('click', ev => {
     const t = ev.target.closest('[data-act], [data-tab], #fab, #menu-btn, #scrim');
     if (!t) return;
     if (t.dataset.tab) { go(t.dataset.tab); return; }
-    if (t.id === 'fab') { sheetAdd(); return; }
+    if (t.id === 'fab') { const m = MODS[st.tab]; if (m && m.fab) m.fab(); else sheetAdd(); return; }
     if (t.id === 'menu-btn') { sheetMenu(); return; }
     if (t.id === 'scrim') { closeSheet(); return; }
     if (t.dataset.act) onAction(t.dataset.act, t, ev);
@@ -449,6 +491,23 @@
   document.addEventListener('visibilitychange', () => { if (!document.hidden) render(); });
   window.addEventListener('pagehide', () => { clearTimeout(st.saveTimer); saveDiary(); });
 
+  MODS.dinheiro = { title: 'Dinheiro', group: 'Finanças', order: 0, view: viewDinheiro, fab: sheetAdd,
+    meta() { const s = Store.finMonthSummary(Store.finYm()); return 'sobra ' + fmt0(s.surplus); } };
+
+  const loaded = {};
+  function load(src) {   // carrega um script de dados uma única vez e redesenha quando chegar
+    if (loaded[src]) return; loaded[src] = true;
+    const s = document.createElement('script'); s.src = src; s.onload = () => render(true); document.head.appendChild(s);
+  }
+
+  window.P90App = {
+    esc, pad2, isoOf, todayISO, day, fmt0, fmt2, shortDate, parseMoney, note, undoable, parseTask,
+    rowHTML, section, openSheet, closeSheet, render: force => render(force), after, load,
+    open: st.open, cur: () => st.tab,
+    register(key, mod) { MODS[key] = mod; if (st.tab === key || st.tab === 'mais') render(); },
+    MOODS, DOW, MON,
+  };
+
   st.tab = tabFromHash();
-  render();
+  setTimeout(() => { st.tab = tabFromHash(); render(); }, 0);   // depois que os módulos (js/app-*.js) se registrarem
 })();

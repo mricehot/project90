@@ -330,8 +330,10 @@
     return a;
   }
 
+  function unmount(a) { const i = arenas.indexOf(a); if (i !== -1) arenas.splice(i, 1); }
+
   window.P90IdleView = {
-    init, whenReady, mount, start, stop, on, emit, save, recalc, refreshSys, setRunning, resync, warriorSVG,
+    init, whenReady, mount, unmount, start, stop, on, emit, save, recalc, refreshSys, setRunning, resync, warriorSVG,
     gs: () => gs, cache: () => C, away: () => lastSum, isRunning: () => running,
   };
 })();
