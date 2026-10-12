@@ -23,6 +23,7 @@ const Store = (() => {
 
   const MIRROR_KEY        = 'p90_cache';
   const DEFAULT_TOTAL_DAYS = 90;
+  const IDEA_STATUSES = ['ideia', 'andamento', 'feita', 'descartada'];
 
   /* ──────────────────────────────────────────
      CACHE
@@ -50,6 +51,7 @@ const Store = (() => {
       nightHabits:   [],
       nightRoutine:  {},
       homeHabits:    [],   // "Ao chegar em casa": [{ id, label, createdAt }]
+      ideas:         [],   // banco de ideias: [{ id, title, note, tag, status, createdAt, updatedAt }]
       homeRoutine:   {},   // { [dayNum]: [ids marcados] }
       studySubjects:   [],
       studyActivities: [],
@@ -258,6 +260,14 @@ const Store = (() => {
         const routine = (v && v.routine === 2) ? 2 : 1;
         cache.nightRoutine[k] = { ids: ids.slice(), routine };
       });
+    }
+    if (Array.isArray(data.ideas)) {
+      cache.ideas.length = 0;
+      data.ideas.forEach(i => cache.ideas.push({
+        id: i.id, title: i.title || '', note: i.note || '', tag: i.tag || '',
+        status: IDEA_STATUSES.indexOf(i.status) !== -1 ? i.status : 'ideia',
+        createdAt: i.createdAt, updatedAt: i.updatedAt || i.createdAt,
+      }));
     }
     if (Array.isArray(data.homeHabits)) {
       cache.homeHabits.length = 0;
@@ -1324,6 +1334,69 @@ const Store = (() => {
       if (error) throw error;
     });
     return snap;
+  }
+
+  /* ──────────────────────────────────────────
+     IDEIAS — banco de ideias ainda não implementadas (organização).
+       cache.ideas: [{ id, title, note, tag, status, createdAt, updatedAt }]
+       status: ideia → andamento → feita | descartada
+  ────────────────────────────────────────── */
+  function getIdeas() {
+    return cache.ideas.slice().sort((a, b) => (b.id - a.id));
+  }
+  function _pushIdea(i) {
+    _push(async () => {
+      const { error } = await window.sb.from('ideas').upsert({
+        user_id: _uid, id: i.id, title: i.title, note: i.note || null, tag: i.tag || null,
+        status: i.status, created_at: i.createdAt, updated_at: i.updatedAt,
+      }, { onConflict: 'user_id,id' });
+      if (error) throw error;
+    });
+  }
+  function addIdea(f) {
+    const t = String((f && f.title) || '').trim();
+    if (!t) return null;
+    const now = new Date().toISOString();
+    const id = (cache.ideas.reduce((m, x) => Math.max(m, x.id), 0) || 0) + 1;
+    const i = {
+      id, title: t, note: String(f.note || '').trim(), tag: String(f.tag || '').trim(),
+      status: IDEA_STATUSES.indexOf(f.status) !== -1 ? f.status : 'ideia', createdAt: now, updatedAt: now,
+    };
+    cache.ideas.push(i);
+    _saveMirror();
+    _pushIdea(i);
+    return i;
+  }
+  function updateIdea(id, patch) {
+    const i = cache.ideas.find(x => x.id === id);
+    if (!i || !patch) return null;
+    if (patch.title !== undefined) i.title = String(patch.title || '').trim() || i.title;
+    if (patch.note !== undefined) i.note = String(patch.note || '').trim();
+    if (patch.tag !== undefined) i.tag = String(patch.tag || '').trim();
+    if (patch.status !== undefined && IDEA_STATUSES.indexOf(patch.status) !== -1) i.status = patch.status;
+    i.updatedAt = new Date().toISOString();
+    _saveMirror();
+    _pushIdea(i);
+    return i;
+  }
+  function deleteIdea(id) {
+    const idx = cache.ideas.findIndex(x => x.id === id);
+    if (idx === -1) return null;
+    const snap = cache.ideas.splice(idx, 1)[0];
+    _saveMirror();
+    _push(async () => {
+      const { error } = await window.sb.from('ideas').delete().eq('user_id', _uid).eq('id', id);
+      if (error) throw error;
+    });
+    return snap;
+  }
+  // Desfazer de deleteIdea: recoloca com o mesmo id.
+  function restoreIdea(i) {
+    if (!i || cache.ideas.some(x => x.id === i.id)) return null;
+    cache.ideas.push({ id: i.id, title: i.title, note: i.note || '', tag: i.tag || '', status: i.status, createdAt: i.createdAt, updatedAt: new Date().toISOString() });
+    _saveMirror();
+    _pushIdea(cache.ideas[cache.ideas.length - 1]);
+    return i;
   }
 
   /* ──────────────────────────────────────────
@@ -5003,6 +5076,7 @@ const Store = (() => {
     // meta
     deleteJournalEntry, deleteWeeklyReview, deleteStudyReflection,
     upcomingDue,
+    getIdeas, addIdea, updateIdea, deleteIdea, restoreIdea,
     getHomeHabits, addHomeHabit, restoreHomeHabit, renameHomeHabit, deleteHomeHabit, getHomeRoutine, toggleHomeHabitDone,
     getMeta, saveMeta, getTotalDays, getStartDate, getCurrentDay, useFreeze,
     // dados

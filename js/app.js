@@ -230,7 +230,7 @@
   }
 
   /* ══════════ MAIS ══════════ */
-  const GROUP_ORDER = ['Finanças', 'Estudo e trabalho', 'Leitura e conhecimento', 'Corpo', 'Jogo', 'Acompanhar'];
+  const GROUP_ORDER = ['Organização', 'Finanças', 'Estudo e trabalho', 'Leitura e conhecimento', 'Corpo', 'Jogo', 'Acompanhar'];
   function viewMais() {
     const mods = Object.keys(MODS).map(k => Object.assign({ key: k }, MODS[k])).filter(m => m.group);
     let html = '';
