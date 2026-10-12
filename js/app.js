@@ -451,7 +451,10 @@
   function render(force) {
     if (!VIEWS[st.tab] && !MODS[st.tab]) st.tab = 'hoje';
     if (!force && document.activeElement && document.activeElement.id === 'diary-text') return;   // não mexe no texto que está sendo digitado
-    const m = MODS[st.tab], v = m ? m.view() : VIEWS[st.tab]();
+    const m = MODS[st.tab];
+    let v;
+    try { v = m ? m.view() : VIEWS[st.tab](); }
+    catch (e) { console.error('[Project 90] tela falhou:', e); v = { sub: '', html: '<div class="empty">Não foi possível abrir esta tela agora. Volte e tente de novo.</div>' }; }
     const title = m ? (m.title || st.tab) : TITLES[st.tab];
     $('#title').textContent = title;
     $('#sub').textContent = v.sub || '';
