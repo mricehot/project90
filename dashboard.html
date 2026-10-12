@@ -4,6 +4,17 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#080808">
+<script>
+/* Volta do login com Google: o OAuth sempre aterrissa aqui; manda para o destino
+   certo (celular → app.html). O hash com os tokens segue junto. */
+(function () {
+  try {
+    if (sessionStorage.getItem('p90_landing') !== '1') return;
+    sessionStorage.removeItem('p90_landing');
+    location.replace('go.html' + location.search + location.hash);
+  } catch (e) {}
+})();
+</script>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/favicon-32.png" sizes="32x32" type="image/png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -340,7 +351,7 @@ body { overflow: hidden; }
           <div class="sb-streak-lbl">Dias seguidos</div>
         </div>
       </div>
-      <a href="app.html" class="sb-logout" style="display:block;margin-bottom:8px">Versão mobile (beta) →</a>
+      <a href="app.html" class="sb-mobile" onclick="try{localStorage.setItem('p90_ui','mobile')}catch(e){}">Versão mobile (beta) →</a>
       <a href="login.html" class="sb-logout">← Sair</a>
     </div>
   </aside>

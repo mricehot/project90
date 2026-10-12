@@ -3,7 +3,7 @@
   "short_name": "Project 90",
   "description": "Rastreador de hábitos, diário, vocabulário e mais — um dia de cada vez, por 90 dias.",
   "lang": "pt-BR",
-  "start_url": "dashboard.html",
+  "start_url": "go.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",

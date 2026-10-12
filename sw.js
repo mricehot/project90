@@ -7,13 +7,13 @@
 ═══════════════════════════════════════════════ */
 importScripts('js/idb.js');
 
-const CACHE = 'p90-shell-v67';
+const CACHE = 'p90-shell-v68';
 const FONTS = 'p90-fonts-v1';
 
 const ASSETS = [
   './',
   'index.html', 'login.html',
-  'hoje.html', 'app.html', 'dashboard.html', 'pendencias.html', 'calendario.html', 'habitos.html', 'metricas.html', 'diario.html', 'conquistas.html', 'vitorias.html', 'jornada.html',
+  'hoje.html', 'app.html', 'go.html', 'dashboard.html', 'pendencias.html', 'calendario.html', 'habitos.html', 'metricas.html', 'diario.html', 'conquistas.html', 'vitorias.html', 'jornada.html',
   'vocabulario.html', 'diccao.html', 'conversacao.html', 'biblia.html', 'tarefas.html', 'faculdade.html', 'treino.html', 'financeiro.html', 'trabalho.html', 'sistema.html', 'biblioteca.html', 'reflexoes.html',
   'css/base.css', 'css/components.css', 'css/idle.css', 'css/hoje.css', 'css/app.css',
   'js/store.js', 'js/app.js', 'js/idle-game.js', 'js/idle-view.js', 'js/ui.js', 'js/achievements.js', 'js/quotes.js',
