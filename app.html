@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0a0a0a">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Project 90">
+<title>Project 90</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/app.css">
+<script src="js/supabase-config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase.js"></script>
+<script src="js/store.js"></script>
+</head>
+<body>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<header class="top">
+  <div class="top-row">
+    <h1 id="title">Hoje</h1>
+    <button class="ghost" id="menu-btn" type="button" aria-label="Menu">⋯</button>
+  </div>
+  <div class="sub" id="sub"></div>
+</header>
+
+<main id="view"></main>
+
+<button class="fab" id="fab" type="button" aria-label="Adicionar">+</button>
+
+<nav class="tabs" aria-label="Navegação principal">
+  <button class="tab" data-tab="hoje" type="button">Hoje</button>
+  <button class="tab" data-tab="habitos" type="button">Hábitos</button>
+  <button class="tab" data-tab="tarefas" type="button">Tarefas</button>
+  <button class="tab" data-tab="diario" type="button">Diário</button>
+  <button class="tab" data-tab="dinheiro" type="button">Dinheiro</button>
+</nav>
+
+<div class="scrim" id="scrim" hidden></div>
+<section class="sheet" id="sheet" hidden role="dialog" aria-modal="true"></section>
+
+<script src="js/app.js"></script>
+</body>
+</html>
